@@ -1,0 +1,53 @@
+---
+# file: tasks/run.yml
+
+- name: run - Get current docker status
+  with_items: "{{dockers|default([])}}"
+  command: "/usr/local/bin/docker-get-status {{item}}"
+  register: docker_current_status_command
+
+- name: run - Register docker_current_status
+  with_items: "{{docker_current_status_command.results}}"
+  set_fact:
+    docker_current_status: "{{docker_current_status |default({}) |combine( {item.item: item.stdout} ) }}"
+
+- name: run - Debug docker_current_status
+  with_items: "{{dockers|default([])}}"
+  debug: msg="{{docker_current_status[item]}}"
+  when: docker_debug|default(false)
+
+- name: run - Get current docker image
+  with_items: "{{dockers|default([])}}"
+  command: "/usr/local/bin/docker-get-image {{item}}"
+  register: docker_current_image_command
+
+- name: run - Register docker_current_image
+  with_items: "{{docker_current_image_command.results}}"
+  set_fact:
+    docker_current_image: "{{docker_current_image |default({}) |combine( {item.item: item.stdout} ) }}"
+
+- name: run - Debug docker_current_image
+  with_items: "{{dockers|default([])}}"
+  debug: msg="{{docker_current_image[item]}}"
+  when: docker_debug|default(false)
+
+- name: run - Stop current docker
+  with_items: "{{dockers|default([])}}"
+  command: "docker stop {{item}}"
+  when: ( docker_restart|default(false) and "{{docker_current_image[item]}}" != "{{docker_build_image[item]}}" or docker_force_restart|default(false) ) and "{{docker_current_status[item]}}" == "{{item}} running"
+
+- name: run - Remove current docker
+  with_items: "{{dockers|default([])}}"
+  command: "docker rm {{item}}"
+  when: ( docker_restart|default(false) and "{{docker_current_image[item]}}" != "{{docker_build_image[item]}}" or docker_force_restart|default(false) ) and "{{docker_current_status[item]}}" != ""
+
+- name: run - Run docker image
+  with_items: "{{dockers|default([])}}"
+  command: "/usr/local/bin/docker-run -q -c {{docker_cluster|default('\"\"')}} {{item}}"
+  when: docker_start|default(true) and "{{docker_current_image[item]}}" != "{{docker_build_image[item]}}" or docker_force_restart|default(false)
+
+- name: run - Start docker
+  with_items: "{{dockers|default([])}}"
+  command: "docker start {{item}}"
+  when: docker_start|default(true) and "{{docker_current_image[item]}}" == "{{docker_build_image[item]}}" and "{{docker_current_status[item]}}" != "{{item}} running"
+

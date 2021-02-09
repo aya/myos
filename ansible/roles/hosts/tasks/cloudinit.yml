@@ -1,0 +1,48 @@
+---
+# file: tasks/cloudinit.yml
+
+- name: cloudinit - install cloud-init packages
+  package: name="cloud-init" state="present"
+  become: yes
+  when: hosts_enable_cloudinit|default(false) and ansible_os_family|lower != "alpine"
+
+- name: cloudinit - install cloud-init packages
+  apk: name="{{item.name}}" state="{{item.state}}"
+  apk:
+    name: cloud-init
+    state: present
+    repository:
+    - http://dl-cdn.alpinelinux.org/alpine/edge/main
+    - http://dl-cdn.alpinelinux.org/alpine/edge/testing
+    - http://dl-cdn.alpinelinux.org/alpine/edge/community
+    - http://dl-cdn.alpinelinux.org/alpine/latest-stable/main
+    - http://dl-cdn.alpinelinux.org/alpine/latest-stable/community
+  with_items:
+  - { "name": "cloud-init", "state": "present" }
+  - { "name": "cloud-init-openrc", "state": "present" }
+  become: yes
+  when: hosts_enable_cloudinit|default(false) and ansible_os_family|lower == "alpine"
+
+- name: cloudinit - update /etc/cloud/cloud.cfg
+  template:
+    src: etc/cloud/cloud.cfg.j2
+    dest: /etc/cloud/cloud.cfg
+    force: yes
+  when: hosts_enable_cloudinit|default(false)
+
+- name: cloudinit - activate service
+  service:
+    name: cloud-init
+    state: started
+    enabled: yes
+  when: hosts_enable_cloudinit|default(false) and ansible_service_mgr|lower != "openrc"
+  become: yes
+
+- name: cloudinit - activate service (openrc)
+  service:
+    name: cloud-init
+    state: started
+    enabled: yes
+    runlevel: boot
+  when: hosts_enable_cloudinit|default(false) and ansible_service_mgr|lower == "openrc"
+  become: yes

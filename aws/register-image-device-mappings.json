@@ -1,0 +1,12 @@
+[
+    {
+        "DeviceName": "/dev/sda1",
+        "Ebs": {
+            "SnapshotId": "${AWS_SNAP_ID}"
+        }
+    },
+    {
+        "DeviceName": "/dev/sdb",
+        "VirtualName": "ephemeral0"
+    }
+]

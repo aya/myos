@@ -1,0 +1,105 @@
+#!/bin/bash
+### BEGIN INIT INFO
+# Provides: zram
+# Required-Start:
+# Required-Stop:
+# Default-Start: 2 3 4 5
+# Default-Stop: 0 1 6
+# Short-Description: Increased Performance In Linux With zRam (Virtual Swap Compressed in RAM)
+# Description: Adapted from systemd scripts at https://github.com/mystilleef/FedoraZram
+### END INIT INFO
+
+# percent of RAM assigned to zRam swap devices
+RATIO=33
+# priority of zRam swap devices
+PRIORITY=1024
+
+# load system specific configurations
+[ -r /etc/default/zram ] && . /etc/default/zram
+[ -r /etc/sysconfig/zram ] && . /etc/sysconfig/zram
+ 
+start() {
+    # get number of CPUs
+    num_cpus=$(grep -c ^processor /proc/cpuinfo 2>/dev/null)
+    # if something goes wrong, assume we have 1
+    [ $? -eq 0 ] && [ "${num_cpus:-0}" != 0 ] || num_cpus=1
+ 
+    # load kernel module
+    if /sbin/modinfo zram 2>/dev/null | grep -q ' zram_num_devices:' 2>/dev/null; then
+        /sbin/modprobe zram zram_num_devices=$num_cpus
+    elif /sbin/modinfo zram 2>/dev/null | grep -q ' num_devices:' 2>/dev/null; then
+        /sbin/modprobe zram num_devices=$num_cpus
+    else
+        /bin/echo "Unable to load zram kernel module." && exit 1
+    fi
+ 
+    # get amount of memory
+    mem_total_kb=$(awk '$1 == "MemTotal:" {print $2}' /proc/meminfo)
+	
+    # assign RATIO% of system memory to zram
+    mem_total_zram=$((mem_total_kb * ${RATIO:-33} / 100 * 1024))
+
+    # create one zram swap device per cpu
+    for i in $(seq 0 $((num_cpus - 1))); do
+        # enable lz4 if supported
+        /bin/grep -q lz4 /sys/block/zram$i/comp_algorithm 2>/dev/null && /bin/echo lz4 > /sys/block/zram$i/comp_algorithm 2>/dev/null
+        # initialize the device
+        /bin/echo $((mem_total_zram / num_cpus)) > /sys/block/zram$i/disksize 2>/dev/null
+        # create a swap filesystem
+        /sbin/mkswap /dev/zram$i >/dev/null 2>&1
+        # activate zram swap device
+        /bin/echo -n "Adding swap device /dev/zram$i... "
+        /sbin/swapon -p ${PRIORITY:-1024} /dev/zram$i >/dev/null 2>&1
+        result=$? && [ ${result} -eq 0 ] && /bin/echo "OK" || /bin/echo "ERROR"
+    done
+    [ ${result:-0} -ge ${return:-0} ] && return=${result}
+}
+ 
+stop() {
+    # remove swap devices
+    for dev in $(awk '$1 ~ /^\/dev\/zram/ {print $1}' /proc/swaps); do
+        /bin/echo -n "Removing swap device $dev... "
+        /sbin/swapoff $dev >/dev/null 2>&1
+        result=$? && [ ${result} -eq 0 ] && /bin/echo "OK" || /bin/echo "ERROR"
+    done
+    [ ${result:-0} -ge ${return:-0} ] && return=${result}
+    # remove zram kernel module
+    if grep -q "^zram " /proc/modules; then
+        sleep 1
+        /sbin/rmmod zram
+    fi
+}
+ 
+status() {
+    for block in /sys/block/zram*; do
+        [ -d "$block" ] && /bin/echo -n "/dev/${block/*\/}: " || continue
+        [ $(<$block/compr_data_size) -gt 0 ] \
+          && compr_ratio=$(awk "BEGIN { printf \"%.2f\", "$(<$block/orig_data_size)/$(<$block/compr_data_size)" }") \
+          || compr_ratio=0
+        [ -r $block/stat ] && [ -r $block/mm_stat ] \
+          && /usr/bin/awk 'NF==11 {printf("read: %8d, write: %8d, wait: %8d", $1, $5, $11)}' $block/stat && /bin/echo -n ", " \
+          && /usr/bin/awk 'NF==7 {printf("orig_data_size: %12d, compr_data_size: %12d", $1, $2)}' $block/mm_stat && /bin/echo -n ", " \
+          && /bin/echo "compr_ratio: $compr_ratio" \
+          || /bin/echo "read: $(<$block/num_reads), write: $(<$block/num_writes), orig_data_size: $(<$block/orig_data_size), compr_data_size: $(<$block/compr_data_size), compr_ratio: $compr_ratio"
+    done
+}
+ 
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    status)
+        status
+        ;;
+    *)
+        /bin/echo "Usage: $0 {start|stop|restart|status}"
+esac
+
+exit ${return:-1}

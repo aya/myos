@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = ssh://git@github.com/1001Pharmacies/ansible-aws-cli
+	branch = master
+	commit = f10e38af3a9b36648576f9850e0d09fcc7a057df
+	parent = 9ee8bfab9d2f5e5591c2e8a3d6f3a03b56b36196
+	method = merge
+	cmdver = 0.4.0

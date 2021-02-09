@@ -1,0 +1,4 @@
+#!/bin/sh
+# Author: Yann Autissier <yann.autissier@gmail.com>
+
+[ -n "$1" ] && :> $(docker inspect $1 | grep '"LogPath": "*"' | sed -e 's/.*"LogPath": "//g' | sed -e 's/",//g')

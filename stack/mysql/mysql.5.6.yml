@@ -1,0 +1,10 @@
+version: '3.6'
+
+services:
+  mysql:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/mysql/5.6
+      context: ../..
+      dockerfile: docker/mysql/5.6/Dockerfile
+    image: ${DOCKER_REPOSITORY}/mysql:${DOCKER_IMAGE_TAG}

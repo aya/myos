@@ -1,0 +1,8 @@
+---
+# Aditional disks that need to be formated and mounted.
+# See README for syntax and usage.
+disks_additional_disks: []
+disks_additional_packages: []
+disks_additional_services: []
+disks_discover_aws_nvme_ebs: False
+disks_package_use: auto

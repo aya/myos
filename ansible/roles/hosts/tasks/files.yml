@@ -1,0 +1,37 @@
+---
+# file: tasks/files.yml
+
+- name: files - copy files
+  with_items:
+  - /etc/issue.net
+  - /etc/profile.d/rc.sh
+  - /etc/profile.d/rc_functions.sh
+  copy: src=../files/{{item}} dest={{item}} owner=root group=root mode=0644
+  become: yes
+
+- name: files - copy binary files
+  with_items:
+  - /etc/init.d/zram
+  copy: src=../files/{{item}} dest={{item}} owner=root group=root mode=0755
+  become: yes
+
+- name: files - copy systemd files
+  with_items:
+  - /etc/systemd/system/zram.service
+  copy: src=../files/{{item}} dest={{item}} owner=root group=root mode=0644
+  when: ansible_service_mgr|lower == "systemd"
+  become: yes
+
+- name: files - copy openrc files
+  with_items:
+  - /etc/init.d/zram-openrc
+  - /etc/local.d/ansible.start
+  copy: src=../files/{{item}} dest={{item}} owner=root group=root mode=0755
+  when: ansible_service_mgr|lower == "openrc"
+  become: yes
+
+- name: files - get remote binary files
+  with_items:
+  - https://raw.githubusercontent.com/dylanaraps/pfetch/master/pfetch
+  get_url: url={{item}} dest=/usr/local/bin owner=root group=root mode=0755
+  become: yes

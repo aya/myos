@@ -1,0 +1,6 @@
+---
+# file: playbooks/aws-cli.yml
+
+- hosts: '{{ target | default("all") }}'
+  roles:
+  - aws-cli

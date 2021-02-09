@@ -1,0 +1,6 @@
+---
+# file: playbooks/disks.yml
+
+- hosts: '{{ target | default("all") }}'
+  roles:
+  - disks

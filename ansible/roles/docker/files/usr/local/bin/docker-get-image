@@ -1,0 +1,8 @@
+#!/bin/bash
+# Author: Yann Autissier <yann.autissier@gmail.com>
+
+[ -n "$1" ] || exit
+
+for docker in $@; do
+    docker inspect "${docker}" 2>/dev/null |awk '$1 == "\"Image\":" && $2 ~ /^\"sha/ {gsub(/(^\"|\",$)/, "", $2); print "'${docker}' "$2}'
+done

@@ -1,0 +1,7 @@
+version: '3.6'
+
+services:
+  drone-runner-docker:
+    environment:
+    - DRONE_DEBUG=true
+    - DRONE_TRACE=true

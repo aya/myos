@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = ssh://git@github.com/1001Pharmacies/docker-pdns-server
+	branch = master
+	commit = 6d3c4ce70cbb38d237be757206bfbf082ce2ba3e
+	parent = 9de6b77b0d944fe6efa7b020ba7c2dbbba5df4f8
+	method = merge
+	cmdver = 0.4.0

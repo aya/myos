@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = ssh://git@github.com/1001Pharmacies/ansible-docker
+	branch = master
+	commit = 6217a899084cba00447195d1873b211462b60d52
+	parent = 4745dad8cb8a826ee3ac47accda79f96957b5e13
+	method = merge
+	cmdver = 0.4.0

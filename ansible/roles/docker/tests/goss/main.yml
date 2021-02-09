@@ -1,0 +1,4 @@
+gossfile:
+  package.yml: {}
+  service.yml: {}
+  group.yml: {}

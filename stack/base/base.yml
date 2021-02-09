@@ -1,0 +1,61 @@
+version: '3.6'
+
+services:
+  cli:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/cli
+      - GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME}
+      - GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}
+      - SSH_BASTION_USERNAME=${SSH_BASTION_USERNAME}
+      - SSH_BASTION_HOSTNAME=${SSH_BASTION_HOSTNAME}
+      - SSH_PUBLIC_HOST_KEYS=${SSH_PUBLIC_HOST_KEYS}
+      - SSH_PRIVATE_IP_RANGE=${SSH_PRIVATE_IP_RANGE}
+      - UID=${UID}
+      - USER=${USER}
+      context: ../..
+      dockerfile: docker/cli/Dockerfile
+      target: ${DOCKER_BUILD_TARGET}
+    command: tail -f /dev/null
+    container_name: ${DOCKER_NAME_CLI}
+    depends_on:
+    - ssh
+    environment:
+    - SSH_AUTH_SOCK=/tmp/ssh-agent/socket
+    image: ${DOCKER_IMAGE_CLI}:${DOCKER_IMAGE_TAG}
+    networks:
+    - private
+    restart: always
+    volumes:
+    - ssh:/tmp/ssh-agent:ro
+    - ${MONOREPO_DIR}:${MONOREPO_DIR}:cached
+    working_dir: ${MONOREPO_DIR}
+  ssh:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/ssh
+      - UID=${UID}
+      - USER=${USER}
+      context: ../..
+      dockerfile: docker/ssh/Dockerfile
+      target: ${DOCKER_BUILD_TARGET}
+    container_name: ${DOCKER_NAME_SSH}
+    image: ${DOCKER_IMAGE_SSH}:${DOCKER_IMAGE_TAG}
+    networks:
+    - private
+    restart: always
+    volumes:
+    - ssh:/tmp/ssh-agent
+
+volumes:
+  ssh:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: uid=${UID}
+
+networks:
+  private:
+    external: true
+    name: ${DOCKER_NETWORK_PRIVATE}

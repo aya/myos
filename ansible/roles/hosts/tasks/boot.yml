@@ -1,0 +1,32 @@
+---
+# file: tasks/boot.yml
+
+- name: boot - define config
+  set_fact:
+    boot_config:
+    # set clocksource at boot
+    - dest: /etc/update-extlinux.conf
+      line: 'default_kernel_opts="\1 clocksource=tsc tsc=reliable"'
+      regex: '^default_kernel_opts="((?!.*clocksource=tsc tsc=reliable).*)"$'
+
+- name: boot - stat config file
+  changed_when: false
+  register: boot_config_stat
+  stat:
+    path: '{{item.dest}}'
+  with_items: '{{boot_config|default([])}}'
+
+- name: boot - update config
+  become: yes
+  lineinfile:
+    backrefs: true
+    dest: '{{item.0.dest}}'
+    line: '{{item.0.line}}'
+    regex: '{{item.0.regex}}'
+  with_together:
+  - '{{boot_config|default([])}}'
+  - '{{boot_config_stat.results}}'
+  when: item.1.stat.exists
+  register: boot_config_handler_notify
+  notify:
+  - update boot config

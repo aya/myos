@@ -1,0 +1,27 @@
+version: '3.6'
+
+services:
+  curator:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/elastic/curator
+      context: ../..
+      dockerfile: docker/elastic/curator/Dockerfile
+      target: ${DOCKER_BUILD_TARGET}
+    environment:
+    - DEPLOY=${DEPLOY}
+    - HOSTS=${ELASTICSEARCH_PROTOCOL}://${ELASTICSEARCH_HOST}
+    - LOGFORMAT=${CURATOR_LOGFORMAT}
+    - LOGLEVEL=${CURATOR_LOGLEVEL}
+    - MASTER_ONLY=${CURATOR_MASTER_ONLY}
+    - PORT=${ELASTICSEARCH_PORT}
+    - TIMEOUT=${CURATOR_TIMEOUT}
+    - USE_SSL=${CURATOR_USE_SSL}
+    networks:
+    - private
+    restart: always
+
+networks:
+  private:
+    external: true
+    name: ${DOCKER_NETWORK_PRIVATE}

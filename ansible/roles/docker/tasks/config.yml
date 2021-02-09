@@ -1,0 +1,18 @@
+---
+# file: tasks/config.yml
+
+- name: config - add docker storage setup
+  lineinfile: dest="{{docker_init_config_directory}}/{{docker_package}}-storage-setup" state="present" line="STORAGE_DRIVER=\"\""
+  when: docker_package|length > 0 and ansible_service_mgr == "systemd" and ansible_os_family|lower == "redhat"
+  become: yes
+
+# - name: config - disable docker iptables setup
+#   lineinfile: dest="/lib/systemd/system/docker.service" state="present" regex="^ExecStart=" line="ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock --iptables=false"
+#   notify: restart docker
+#   when: docker_package|length > 0 and ansible_service_mgr == "systemd"
+#   become: yes
+
+- name: config - setup docker mtu on Openstack VMs
+  lineinfile: dest="{{docker_init_config_directory}}/{{docker_package}}" state="present" backrefs=true regexp='^{{docker_opts}}=(?:\'|\")?((?:\s*[\w=\/\-\.](?<!--mtu=1450)\s*)*)(?:\'|\")?$' line='{{docker_opts}}="\1 --mtu=1450"'
+  when: docker_package|length > 0 and ansible_product_name == "OpenStack Nova"
+  become: yes

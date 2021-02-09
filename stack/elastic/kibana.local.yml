@@ -1,0 +1,6 @@
+version: '3.6'
+
+services:
+  kibana:
+    depends_on:
+    - elasticsearch

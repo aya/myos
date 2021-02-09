@@ -1,0 +1,8 @@
+---
+# file handlers/main.yml
+
+- name: restart docker
+  service:
+    name: "{{docker_service}}"
+    state: "restarted"
+

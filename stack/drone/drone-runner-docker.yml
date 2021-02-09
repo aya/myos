@@ -1,0 +1,24 @@
+version: '3.6'
+
+services:
+  drone-runner-docker:
+    depends_on:
+    - drone
+    environment:
+    - DRONE_RPC_SECRET=${DRONE_RPC_SECRET}
+    - DRONE_RPC_HOST=drone
+    - DRONE_RPC_PROTO=http
+    - DRONE_RUNNER_CAPACITY=${DRONE_RUNNER_CAPACITY}
+    - DRONE_RUNNER_NAME=${HOSTNAME}
+    labels:
+    - SERVICE_3000_IGNORE=true
+    networks:
+    - private
+    restart: always
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+
+networks:
+  private:
+      external: true
+      name: ${DOCKER_NETWORK_PRIVATE}

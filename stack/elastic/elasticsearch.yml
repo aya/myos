@@ -1,0 +1,49 @@
+version: '3.6'
+
+services:
+  elasticsearch:
+    depends_on:
+    - sysctl
+    environment:
+    - ES_JAVA_OPTS=-Xmx1024m -Xms1024m
+    - xpack.security.enabled=false
+    - xpack.monitoring.enabled=false
+    - xpack.graph.enabled=false
+    - xpack.watcher.enabled=false
+    - cluster.name=elasticsearch-${ENV}
+    - network.host=0.0.0.0
+    - http.cors.enabled=true
+    - http.cors.allow-credentials=true
+    - http.cors.allow-methods=OPTIONS,HEAD,GET,POST,PUT,DELETE
+    - http.cors.max-age=0
+    - http.cors.allow-origin=*
+    - http.cors.allow-headers=X-Requested-With,X-Auth-Token,Content-Type,Content-Length
+    labels:
+    - SERVICE_9200_CHECK_HTTP=/
+    - SERVICE_9200_NAME=${COMPOSE_SERVICE_NAME}-elasticsearch-9200
+    - SERVICE_9200_TAGS=${ELASTICSEARCH_SERVICE_9200_TAGS}
+    - SERVICE_9300_CHECK_TCP=true
+    - SERVICE_9300_NAME=${COMPOSE_SERVICE_NAME}-elasticsearch-9300
+    networks:
+    - private
+    - public
+    ports:
+    - 9200
+    - 9300
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+    - elasticsearch:/usr/share/elasticsearch/data
+    restart: always
+volumes:
+  elasticsearch:
+
+networks:
+  private:
+    external: true
+    name: ${DOCKER_NETWORK_PRIVATE}
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

@@ -1,0 +1,7 @@
+---
+# file vars/redhat.yml
+
+hosts_packages_distro:
+  - { "name": "vim", "state": "present" }
+  - { "name": "libselinux-python", "state": "present" }
+

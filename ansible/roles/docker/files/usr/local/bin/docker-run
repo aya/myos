@@ -1,0 +1,157 @@
+#!/bin/bash
+# Author: Yann Autissier <yann.autissier@gmail.com>
+
+DOCKER_IMAGE_REPOSITORY="centile"
+DOCKER_BUILD_DIRECTORY="/etc/docker"
+
+usage() {
+    echo Usage: $0 [ -c cluster] [ -i image ] [-f] [-q] [-t] name [name [...]]
+    echo -e "Run a docker from an image in the '${DOCKER_IMAGE_REPOSITORY}' repository."
+    echo  
+    echo -e "name\t is a directory with a Dockerfile, default in '${DOCKER_BUILD_DIRECTORY}/name'."
+    echo -e "\t'name' can contains a dash. The directory name will be extracted for the first part"
+    echo -e "\tbefore a dash."
+    echo
+    echo -e "Options:"
+    echo -e "\t-c 'cluster'\tAllow to override files in 'image' directory with existing files in"
+    echo -e "\t\t\tthe 'image/cluster' directory."
+    echo -e "\t -i 'image'\tthe docker image to run, default in '${DOCKER_IMAGE_REPOSITORY}' repository."
+    echo -e "\t -f\t\tforce run, stop and remove existing docker before running a new one."
+    echo -e "\t -q\t\tquiet mode, minimal output."
+    echo -e "\t -t\t\ttest mode, do nothing but output the command that would have been launched."
+    echo
+    echo -e "EXAMPLES"
+    echo 
+    echo -e "$0 elk"
+    echo -e "Run a docker named 'elk' from the '${DOCKER_IMAGE_REPOSITORY}/elk' image"
+    echo 
+    echo -e "$0 elk-es01"
+    echo -e "Run a docker named 'elk-es01' from the '${DOCKER_IMAGE_REPOSITORY}/elk-es01' image"
+    echo 
+    echo -e "$0 -i elk elk-es01"
+    echo -e "Run a docker named 'elk-es01' from the '${DOCKER_IMAGE_REPOSITORY}/elk' image"
+    echo 
+    exit 1
+}
+
+while [ $# -gt 0 ]; do
+    case $1 in
+        -c|--cluster) shift && CLUSTER="$1"
+        ;;
+        -i|--image) shift && IMAGE="$1"
+        ;;
+        -h|--help) usage
+        ;;
+        -f|--force) FORCE=1
+        ;;
+        -q|--quiet) QUIET=1
+        ;;
+        -t|--test) TEST=1
+        ;;
+        *) args="${args:-} $1"
+    esac
+    shift
+    args="${args# }"
+done
+
+# check args
+[ "${args:0:1}" = "-" ] && usage
+
+for arg in ${args}; do
+    # reset vars
+    image=""; DOCKER_OPT=""
+    # extract docker name
+    name="$(basename ${arg})"
+    # keep part before the dash as the directory name
+    dir="$(dirname ${arg})/${name%-*}"
+    # keep part after the dash as an image suffix name
+    [ "${name##*-}" != "${name}" ] && suffix="${name##*-}"
+    # if provided, set docker image from args
+    if [ -n "${IMAGE}" ]; then
+        # if docker image does not contain a /, add our default repository
+        [ "${IMAGE##*/}" != "${IMAGE}" ] && image="${IMAGE}" || image="${DOCKER_IMAGE_REPOSITORY}/${IMAGE}"
+    # else try to find an image from the docker name
+    else
+        # try docker name, docker name without ending numbers, docker name without suffix
+        for image in ${name} ${name%%[0-9]*} ${name%-*}; do
+            # search for image in ${DOCKER_IMAGE_REPOSITORY}
+            [ -n "$(docker images 2>/dev/null |awk '$1 == "'${DOCKER_IMAGE_REPOSITORY}/${image}'" {print $1}')" ] && image="${DOCKER_IMAGE_REPOSITORY}/${image}" && break
+            image="${name}"
+        done
+    fi
+
+    tag="$(docker images |awk '$1 == "'${image}'" {print $2}')"
+    [ -z "${tag}" ] && echo "ERROR: Cannot find image '${image}'" >2 && exit 2
+
+    # default to ${DOCKER_BUILD_DIRECTORY}/${dir} if ${dir} does not exists
+    [ ! -d "${dir}" ] && [ -d "${DOCKER_BUILD_DIRECTORY}/${dir}" ] && dir="${DOCKER_BUILD_DIRECTORY}/${dir#./}"
+
+    # directory exists && contains a Dockerfile
+    [ -d ${dir} ] && [ -f "${dir}/Dockerfile" ] || usage
+    # cluster directory exists
+    [ -n "${CLUSTER}" ] && { [ -d ${dir}/${CLUSTER} ] || usage; }
+
+    # search for Dockeropts files
+    files="${dir}/Dockeropts ${dir}/Dockeropts-${suffix}"
+    [ -n "${CLUSTER}" ] && files="${files} ${dir}/${CLUSTER}/Dockeropts ${dir}/${CLUSTER}/Dockeropts-${suffix}"
+
+    # source the Dockeropts files
+    for dockeropts in ${files}; do
+        [ -f "${dockeropts}" ] && . ${dockeropts}
+    done
+
+    # extract SYSCTL
+    [ -n "${SYSCTL}" ] && for sysctl in ${SYSCTL}; do
+        sysctl -w ${sysctl} 2>/dev/null
+    done
+
+    # extract DOCKER_OPT
+    [ -n "${DOCKER_OPT}" ] && DOCKER_OPTS="--${DOCKER_OPT/ / --}" || DOCKER_OPTS=""
+
+    # extract DOCKER_ENV
+    [ -n "${DOCKER_ENV}" ] && DOCKER_OPTS="${DOCKER_OPTS} -e ${DOCKER_ENV//\" /\" -e }"
+
+    # extract DOCKER_LINK
+    [ -n "${DOCKER_LINK}" ] && DOCKER_OPTS="--link ${DOCKER_LINK/ / --link }"
+
+    # extract DOCKER_PORT
+    [ -n "${DOCKER_PORT}" ] && DOCKER_OPTS="${DOCKER_OPTS} -p ${DOCKER_PORT// / -p }"
+
+    # extract DOCKER_ULIMIT
+    [ -n "${DOCKER_ULIMIT}" ] && DOCKER_OPTS="${DOCKER_OPTS} --ulimit ${DOCKER_ULIMIT// / --ulimit }"
+
+    # extract DOCKER_VOLUME
+    [ -n "${DOCKER_VOLUME}" ] && DOCKER_OPTS="${DOCKER_OPTS} -v ${DOCKER_VOLUME// / -v }"
+
+    # enable access to host volumes on selinux
+    for volume in ${HOST_VOLUME}; do
+        chcon -Rt svirt_sandbox_file_t ${volume} 2>/dev/null
+    done
+
+    # remove current docker
+    if [ ${FORCE} ]; then
+	if [ -n "$(docker ps -q --filter status=created,status=restarting,status=running,status=paused,status=exited,status=dead,name=${name})" ]; then
+            [ ! ${QUIET} ] && echo -n "Removing docker ${name}... "
+            if [ ${TEST} ]; then
+                echo docker rm -f ${name}
+            else
+                eval docker rm -f ${name} >/dev/null 2>&1
+                result=$? && [ ${result} -ne 0 ] && echo "ERROR" && { [ ${result:-0} -ge ${return:-0} ] && return=${result}; } && break
+		[ ! ${QUIET} ] && echo "OK"
+            fi
+        fi
+    fi
+
+    # launch docker
+    [ ${QUIET} ] && [ ! ${TEST} ] && echo -n "${name} "
+    [ ! ${QUIET} ] && echo -n "Running docker ${name}... "
+    if [ ${TEST} ]; then
+        echo docker run --restart=always ${DOCKER_OPTS} -d --name ${name} ${image} ${DOCKER_RUN:-}
+    else
+        eval docker run --restart=always ${DOCKER_OPTS} -d --name ${name} ${image} ${DOCKER_RUN:-} 2>/dev/null
+        result=$? && [ ${result} -ne 0 ] && echo "ERROR"
+    fi
+    [ ${result:-0} -ge ${return:-0} ] && return=${result}
+done
+
+exit ${return:-1}

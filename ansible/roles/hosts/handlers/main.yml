@@ -1,0 +1,11 @@
+---
+# file: handlers/main.yml
+
+- name: update boot config
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/sbin:/sbin"
+  with_together:
+  - '{{ boot_config }}'
+  - '{{ boot_config_handler_notify.results }}'
+  command: "update-extlinux"
+  when: item.1.changed and item.0.dest == "/etc/update-extlinux.conf"

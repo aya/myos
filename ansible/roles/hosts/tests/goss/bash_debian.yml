@@ -1,0 +1,13 @@
+file:
+  /etc/bash.bashrc:
+    exists: true
+    mode: "0644"
+    owner: root
+    group: root
+    filetype: file
+    contains:
+      - "source /etc/profile.d/bashrc.sh"
+
+gossfile:
+  bash_common.yml: {}
+

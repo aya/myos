@@ -1,0 +1,39 @@
+version: '3.6'
+
+services:
+  vsftpd-s3:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/vsftpd-s3
+      context: ../../..
+      dockerfile: docker/vsftpd-s3/Dockerfile
+    cap_add:
+    - sys_admin
+    devices:
+    - /dev/fuse
+    environment:
+    - AWS_ACCESS_KEY_ID=${VSFTPD_S3_AWS_ACCESS_KEY_ID}
+    - AWS_SECRET_ACCESS_KEY=${VSFTPD_S3_AWS_SECRET_ACCESS_KEY}
+    - DIR_REMOTE=${VSFTPD_S3_DIR_REMOTE}
+    - FTP_HOST=${VSFTPD_S3_FTP_HOST}
+    - FTP_PASS=${VSFTPD_S3_FTP_PASS}
+    - FTP_SYNC=${VSFTPD_S3_FTP_SYNC}
+    - FTP_USER=${VSFTPD_S3_FTP_USER}
+    - FTPD_USER=${VSFTPD_S3_FTPD_USER}
+    - FTPD_USERS=${VSFTPD_S3_FTPD_USERS}
+    - PASV_MAX_PORT=${VSFTPD_S3_PASV_MAX_PORT}
+    - PASV_MIN_PORT=${VSFTPD_S3_PASV_MIN_PORT}
+    image: ${DOCKER_REPOSITORY}/vsftpd-s3:${DOCKER_IMAGE_TAG}
+    labels:
+    - SERVICE_21_NAME=${COMPOSE_SERVICE_NAME}-vsftpd-s3-21
+    - SERVICE_21_CHECK_TCP=true
+    - SERVICE_21_CHECK_INITIAL_STATUS=passing
+    - SERVICE_22_NAME=${COMPOSE_SERVICE_NAME}-vsftpd-s3-22
+    - SERVICE_22_CHECK_TCP=true
+    - SERVICE_22_CHECK_INITIAL_STATUS=passing
+    - SERVICE_65000_IGNORE=true
+    hostname: ${HOSTNAME}
+    security_opt:
+    - apparmor:unconfined
+    network_mode: host
+    restart: always

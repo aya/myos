@@ -1,0 +1,12 @@
+file:
+  /etc/profile.d/bashrc.sh:
+    exists: true
+    mode: "0644"
+    owner: root
+    group: root
+    filetype: file
+    contains:
+      - /^function git_branch/
+      - /^function process_count/
+      - /^function load_average/
+

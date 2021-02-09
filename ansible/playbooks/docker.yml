@@ -1,0 +1,6 @@
+---
+# file: playbooks/docker.yml
+
+- hosts: '{{ target | default("all") }}'
+  roles:
+  - docker

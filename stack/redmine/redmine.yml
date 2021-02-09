@@ -1,0 +1,48 @@
+version: '3.6'
+
+services:
+  redmine:
+    environment:
+    - DB_ADAPTER=mysql2
+    - DB_HOST=${REDMINE_DB_HOST}
+    - DB_NAME=${REDMINE_DB_NAME}
+    - DB_USER=${REDMINE_DB_USER}
+    - DB_PASS=${REDMINE_DB_PASS}
+    - IMAP_ENABLED=${REDMINE_IMAP_ENABLED}
+    - IMAP_HOST=${REDMINE_IMAP_HOST}
+    - IMAP_INTERVAL=${REDMINE_IMAP_INTERVAL}
+    - IMAP_USER=${REDMINE_IMAP_USER}
+    - IMAP_PASS=${REDMINE_IMAP_PASS}
+    - INCOMING_EMAIL_PROJECT=${REDMINE_INCOMING_EMAIL_PROJECT}
+    - INCOMING_EMAIL_ALLOW_OVERRIDE=${REDMINE_INCOMING_EMAIL_ALLOW_OVERRIDE}
+    - REDMINE_FETCH_COMMITS=${REDMINE_FETCH_COMMITS}
+    - REDMINE_SECRET_TOKEN=${REDMINE_SECRET_TOKEN}
+    - SMTP_DOMAIN=${REDMINE_SMTP_DOMAIN}
+    - SMTP_USER=${REDMINE_SMTP_USER}
+    - SMTP_PASS=${REDMINE_SMTP_PASS}
+    - TZ=Europe/Paris
+    labels:
+    - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME}-redmine-80
+    - SERVICE_80_CHECK_TCP=true
+    - SERVICE_80_CHECK_INITIAL_STATUS=passing
+    - SERVICE_80_TAGS=${REDMINE_SERVICE_80_TAGS}
+    - SERVICE_443_IGNORE=true
+    networks:
+    - private
+    - public
+    ports:
+    - 80
+    restart: always
+    volumes:
+    - redmine:/home/redmine/data
+
+volumes:
+  redmine:
+
+networks:
+  private:
+    external: true
+    name: ${DOCKER_NETWORK_PRIVATE}
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

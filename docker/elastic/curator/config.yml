@@ -1,0 +1,18 @@
+---
+client:
+  hosts: ${HOSTS:elasticsearch}
+  port: ${PORT:9200}
+  url_prefix:
+  use_ssl: ${USE_SSL:False}
+  certificate:
+  client_cert:
+  client_key:
+  ssl_no_validate: False
+  http_auth:
+  timeout: ${TIMEOUT:30}
+  master_only: ${MASTER_ONLY:False}
+logging:
+  loglevel: ${LOGLEVEL:INFO}
+  logfile:
+  logformat: ${LOGFORMAT:default}
+  blacklist: ['elasticsearch', 'urllib3']

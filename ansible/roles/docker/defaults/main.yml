@@ -1,0 +1,41 @@
+---
+# file: defaults/main.yml
+
+# minimum kernel version
+docker_check_kernel: '3.10'
+
+# architecture
+docker_check_machine: 'x86_64'
+
+# The docker package name
+docker_package: docker
+
+# A list of package to install/remove
+# docker_packages:
+#   - { "name": "docker", "state": "absent" }
+
+# Location of configuration files loaded by the init script
+docker_init_config_directory: "/etc/sysconfig"
+
+# docker daemon options environment variable
+docker_opts: "OPTIONS"
+
+# services
+docker_services:
+  - docker
+
+# dockers
+# dockers:
+#   - nginx
+
+# docker cluster
+# docker_cluster: ""
+
+# Start docker
+docker_start: true
+
+# Stop and remove running docker to start a new one when image has been updated
+docker_restart: true
+
+# Stop and remove running docker to start a new one even if image has not been updated
+docker_force_restart: false

@@ -1,0 +1,18 @@
+file:
+  /bin/consul:
+    exists: true
+    filetype: file
+    mode: "0755"
+    owner: root
+    sha256: 99bacb9dc1c6b7eaff75326e4ae0396ac2f29eb8ab95bc2124c718d926c3aef4
+port:
+  tcp6:8500:
+    listening: true
+    ip:
+process:
+  consul:
+    running: true
+user:
+  consul:
+    exists: true
+    uid: 100

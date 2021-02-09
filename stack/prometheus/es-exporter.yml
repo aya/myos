@@ -1,0 +1,30 @@
+version: '3.6'
+
+services:
+  es-exporter:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/es-exporter
+      context: ../..
+      dockerfile: docker/es-exporter/Dockerfile
+    command: -e ${ES_EXPORTER_ELASTICSEARCH_URL}
+    image: ${DOCKER_REPOSITORY}/es-exporter:${DOCKER_IMAGE_TAG}
+    labels:
+    - SERVICE_9206_NAME=${COMPOSE_SERVICE_NAME}-es-exporter-9206
+    - SERVICE_9206_CHECK_TCP=true
+    - SERVICE_9206_CHECK_INITIAL_STATUS=passing
+    - SERVICE_9206_TAGS=${ES_EXPORTER_SERVICE_9206_TAGS}
+    networks:
+    - private
+    - public
+    ports:
+    - 9206
+    restart: always
+
+networks:
+  private:
+    external: true
+    name: ${DOCKER_NETWORK_PRIVATE}
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

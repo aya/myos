@@ -1,0 +1,7 @@
+#!/bin/sh
+# Author: Yann Autissier <yann.autissier@gmail.com>
+
+[ -n "$1" ] && \
+  docker_log=$(docker inspect $1 2>/dev/null | grep '"LogPath": "*"' | sed -e 's/.*"LogPath": "//g' | sed -e 's/",//g') && \
+  [ -f "${docker_log}" ] && \
+  tail -n 100 ${docker_log} > ${docker_log}

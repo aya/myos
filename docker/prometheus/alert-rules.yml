@@ -1,0 +1,147 @@
+groups:
+- name: example
+  rules:
+
+  # CET / CEST
+  - record: is_european_summer_time
+    expr: |
+      (vector(1) and (month() > 3 and month() < 10))
+      or
+      (vector(1) and (month() == 3 and (day_of_month() - day_of_week()) >= 25) and absent((day_of_month() >= 25) and (day_of_week() == 0)))
+      or
+      (vector(1) and (month() == 10 and (day_of_month() - day_of_week()) < 25) and absent((day_of_month() >= 25) and (day_of_week() == 0)))
+      or
+      (vector(1) and ((month() == 10 and hour() < 1) or (month() == 3 and hour() > 0)) and ((day_of_month() >= 25) and (day_of_week() == 0)))
+      or
+      vector(0)
+  # French time (UTC+1) CET / CEST
+  - record: european_french_time
+    expr: time() + 3600 + 3600 * is_european_summer_time
+
+  # Alert for any instance that is unreachable for a few seconds.
+  - alert: InstanceDown-01-low
+    expr: probe_success == 0
+    for: 30s
+    labels:
+      severity: "low"
+      type: "timeout"
+    annotations:
+      summary: "Instance {{ $labels.instance }} down"
+      description: "Instance {{ $labels.instance }} of job {{ $labels.job }} has been down for a few seconds."
+
+  # Alert for any instance that is unreachable for some time.
+  - alert: InstanceDown-02-medium
+    expr: probe_success == 0
+    for: 5m
+    labels:
+      severity: "medium"
+      type: "timeout"
+    annotations:
+      summary: "Instance {{ $labels.instance }} down"
+      description: "Instance {{ $labels.instance }} of job {{ $labels.job }} has been down for 10 minutes"
+
+  # Alert for any instance that is unreachable for a long time.
+  - alert: InstanceDown-03-high
+    expr: probe_success == 0
+    for: 1h
+    labels:
+      severity: "high"
+      type: "timeout"
+    annotations:
+      summary: "Instance {{ $labels.instance }} down"
+      description: "Instance {{ $labels.instance }} of job {{ $labels.job }} has been down for 1 hour"
+
+  # Alert for any instance that is unreachable for a very long time.
+  - alert: InstanceDown-04-critical
+    expr: probe_success == 0
+    for: 12h
+    labels:
+      severity: "critical"
+      type: "timeout"
+    annotations:
+      summary: "Instance {{ $labels.instance }} down"
+      description: "Instance {{ $labels.instance }} of job {{ $labels.job }} has been down for more than 12 hours"
+
+  # Alert for GMV < 250€ from 8AM to 10PM on weekdays
+  - alert: "GMV (daytime) below lower threshold"
+    # Prometheus time is GMT
+    expr: gmv_hourly_return_value < 250 and ON() hour(european_french_time) > 8 < 22
+    for: 1h
+    labels:
+      severity: "high"
+      type: "lower than static threshold"
+      instance: "Hourly GMV"
+    annotations:
+      summary: "{{ $labels.instance }} GMV alert"
+      description: '`Hourly GMV` has been *Lower than 250€*, for more than 1 hour.
+        \n
+        \n> Current value is *{{ .Value | printf "%.2f" }}* (over the last hour)'
+
+  # Alert for GMV  too low (under static 50€) over night 10PM to 8AM
+  - alert: "GMV nightly below lower threshold"
+    # Prometheus time is GMT
+    expr: gmv_hourly_return_value < 50 and ON() hour(european_french_time) < 8 > 22
+    for: 4h
+    labels:
+      severity: "low"
+      type: "lower than static threshold"
+      instance: "Hourly GMV"
+    annotations:
+      summary: "{{ $labels.instance }} GMV alert"
+      description: '`Hourly GMV` (night) has been *Lower than 50€*, for more than 4 hour.
+        \n
+        \n> Current value is *{{ .Value | printf "%.2f" }}* (over the last hour)
+        \n
+        \nGMV is usually very low between 23:30 and 05:00, but this still may require attention'
+
+  # Alert for GMV significantly lower (<33%) than mean value over last 4 weeks from 8AM to 10PM on weekdays
+  - alert: "GMV less than 33% compared to last 4 weeks"
+    # Prometheus time is GMT
+    expr: gmv_hourly_return_value < .33 * ( gmv_hourly_oneweekago_return_value + gmv_hourly_twoweeksago_return_value + gmv_hourly_threeweeksago_return_value + gmv_hourly_fourweeksago_return_value ) * .25 and ON() hour(european_french_time) > 8 < 22
+    for: 1h
+    labels:
+      severity: "low"
+      type: "lower than last 4 weeks"
+      instance: "Hourly GMV"
+    annotations:
+      summary: "{{ $labels.instance }} GMV alert"
+      description: '`Hourly GMV` has been *significantly lower than usual*, for more than 1 hour.
+        \n
+        \n> Current value is *{{ .Value | printf "%.2f" }}* (over the last hour)'
+      query: '>Mean value observed this month is {{ range query "((gmv_hourly_oneweekago_return_value + gmv_hourly_twoweeksago_return_value + gmv_hourly_threeweeksago_return_value + gmv_hourly_fourweeksago_return_value ) * .25)" }}*{{ .Value | printf "%.2f" }}*{{ end }} (same day of the week, same hour)'
+
+  # Alert for GMV critically lower (<20%) than mean value over last 4 weeks from 8AM to 10PM on weekdays
+  - alert: "GMV less than 20% compared to last 4 weeks"
+    # Prometheus time is GMT
+    expr: gmv_hourly_return_value < .20 * ( gmv_hourly_oneweekago_return_value + gmv_hourly_twoweeksago_return_value + gmv_hourly_threeweeksago_return_value + gmv_hourly_fourweeksago_return_value ) * .25 and ON() hour(european_french_time) > 8 < 22
+    for: 1h
+    labels:
+      severity: "high"
+      type: "low over last 4 weeks"
+      instance: "Hourly GMV"
+    annotations:
+      summary: "{{ $labels.instance }} GMV alert"
+      description: '`Hourly GMV` has been *critically lower than usual*, for more than 1 hour.
+        \n
+        \n> Current value is *{{ .Value | printf "%.2f" }}* (over the last hour)'
+      query: '>Mean value observed this month is {{ range query "((gmv_hourly_oneweekago_return_value + gmv_hourly_twoweeksago_return_value + gmv_hourly_threeweeksago_return_value + gmv_hourly_fourweeksago_return_value ) * .25)" }}*{{ .Value | printf "%.2f" }}*{{ end }} (same day of the week, same hour)'
+
+  # Alert for GMV suspiciously higher (>500%) than mean value over last 4 weeks from 8AM to 10PM on weekdays
+  - alert: "GMV more than 500% compared to last 4 weeks"
+    # Prometheus time is GMT
+    expr: gmv_hourly_return_value > 5 * ( gmv_hourly_oneweekago_return_value + gmv_hourly_twoweeksago_return_value + gmv_hourly_threeweeksago_return_value + gmv_hourly_fourweeksago_return_value ) * .25 and ON() hour(european_french_time) > 8 < 22
+    for: 1h
+    labels:
+      severity: "low"
+      type: "low over last 4 weeks"
+      instance: "Hourly GMV"
+    annotations:
+      summary: "{{ $labels.instance }} GMV alert"
+      description: '`Hourly GMV` has been *much higher than usual*, for more than 1 hour.
+        \n(If there is an ongoing sale, it is most probably ok)
+        \n
+        \n> Current value is *{{ .Value | printf "%.2f" }}* (over the last hour)'
+      query: '>Mean value observed this month is {{ range query "((gmv_hourly_oneweekago_return_value + gmv_hourly_twoweeksago_return_value + gmv_hourly_threeweeksago_return_value + gmv_hourly_fourweeksago_return_value ) * .25)" }}*{{ .Value | printf "%.2f" }}*{{ end }} (same day of the week, same hour)'
+
+
+

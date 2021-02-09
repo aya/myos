@@ -1,0 +1,21 @@
+---
+# file: tasks/package.yml
+
+- name: package - packages pre installation
+  with_items: "{{docker_packages|default([])}}"
+  package: name="{{item.name}}" state="{{item.state}}"
+  become: yes
+
+- name: package - add docker GPG key
+  apt_key: url=https://download.docker.com/linux/debian/gpg
+  when: ansible_os_family|lower == "debian"
+
+- name: add docker APT repository
+  apt_repository:
+    repo: deb [arch=amd64] https://download.docker.com/linux/{{ansible_distribution|lower}} {{ansible_distribution_release}} stable
+  when: ansible_os_family|lower == "debian"
+
+- name: package - add docker package
+  package: name="{{docker_package}}" state=present
+  when: docker_package|length > 0
+  become: yes

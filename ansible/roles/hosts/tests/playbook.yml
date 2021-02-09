@@ -1,0 +1,6 @@
+---
+# file: tests/playbook.yml
+
+- hosts: '{{ target | default("all") }}'
+  tasks:
+    - import_tasks: main.yml

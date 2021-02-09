@@ -1,0 +1,66 @@
+---
+# file: tasks/user.yml
+
+- name: user - create ~/.env
+  template:
+    src: .env.j2
+    dest: ~/.env
+    force: no
+    mode: 0400
+
+- name: user - create ~/.rc.d
+  file: path=~/.rc.d/ state={{hosts_enable_rc|default(false)|ternary('directory', 'absent')}} mode="0700"
+
+- name: user - activate rc functions
+  with_items: "{{hosts_rc_functions|default([])}}"
+  file: path="~/.rc.d/{{item}}" state="touch" mode="0600"
+  when: hosts_enable_rc|default(false)
+
+- name: user - disable rc functions
+  with_items: "{{hosts_rc_cleanup|default([])}}"
+  file: path="~/.rc.d/{{item}}" state="absent" mode="0600"
+  when: hosts_enable_rc|default(false)
+
+- name: user - create directories
+  with_items:
+  - ~/.config
+  - ~/.config/git
+  file:
+    path: "{{item}}"
+    state: directory
+
+- name: user - update ~/.config/git/ignore
+  with_items:
+  - '.nfs*'
+  - '*~'
+  - '*.log'
+  - '*.swp'
+  lineinfile: dest=~/.config/git/ignore create=yes line='{{item}}'
+
+- name: user - update ~/.profile
+  with_items:
+  - alias ctop='docker run --rm -ti --volume /var/run/docker.sock:/var/run/docker.sock:ro quay.io/vektorlab/ctop:latest'
+  - alias vi='vim'
+  - export EDITOR='vim'
+  - export PAGER='less'
+  lineinfile: dest=~/.profile create=yes line='{{item}}'
+
+- name: user - update ~/.screenrc
+  with_items:
+  - defscrollback 1024
+  - hardstatus alwayslastline "%{= kw}[%{G}$USER@%H%{-}] \# %?%-Lw%?[%{G}%n%f %t%{-}]%?%+Lw%?%?%=%-17< [%{B}%l%{-}]"
+  - shell -$SHELL
+  lineinfile: dest=~/.screenrc create=yes line='{{item}}'
+
+- name: user - update ~/.vimrc
+  with_items:
+  - :set et ai bg=dark sw=4 ts=4 encoding=utf-8 mouse=""
+  - :syn on
+  - :filetype plugin indent on
+  lineinfile: dest=~/.vimrc create=yes line='{{item}}'
+
+- name: user - update ~/Makefile
+  template:
+    src: Makefile.j2
+    dest: ~/Makefile
+    force: yes

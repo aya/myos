@@ -1,0 +1,4 @@
+#!/bin/sh
+# Author: Yann Autissier <yann.autissier@gmail.com>
+
+docker ps -q --no-trunc --filter status=exited,status=created,status=dead |while read docker; do docker rm ${docker}; done

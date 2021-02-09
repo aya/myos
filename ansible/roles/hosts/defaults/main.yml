@@ -1,0 +1,142 @@
+---
+# file: defaults/main.yml
+
+# enable cloud-init
+hosts_enable_cloudinit: false
+
+# enable rc.local script
+hosts_enable_local: false
+
+# run user specific rc functions on ssh connection
+hosts_enable_rc: false
+
+# Activate zram swap devices on host
+hosts_enable_zram: false
+
+# git repositories to clone
+hosts_git_repositories: []
+#  - { "repo": "ssh://git@github.com/aya/infra", "dest": "/src" }
+
+# list of rc functions to call at user connection
+hosts_rc_functions:
+    # customize PS1 variable
+    - 01_custom_ps1
+    # customize PROMPT variable
+    - 02_custom_prompt
+    # launch a ssh agent and load all private keys located in ~/.ssh
+    - 03_ssh_agent
+    # create and/or attach a tmux session
+    # - 04_attach_tmux
+    # create and/or attach a screen session
+    - 05_attach_screen
+    # display system information
+    - 06_pfetch
+
+# list of rc functions to cleanup (remove files)
+# hosts_rc_cleanup:
+#     - 03_ssh_agent
+#     - 04_attach_tmux
+
+# packages to install
+hosts_packages: []
+
+# packages specific to a distribution
+hosts_packages_distro: []
+
+# packages common to all distributions
+hosts_packages_common:
+  - { "name": "bash", "state": "present" }
+  - { "name": "ca-certificates", "state": "present" }
+  - { "name": "rsync", "state": "present" }
+  - { "name": "screen", "state": "present" }
+  - { "name": "tzdata", "state": "present" }
+
+# a list of SSH private keys to copy
+hosts_ssh_private_keys: []
+# - ~/.ssh/id_rsa
+
+# a list of public hosts keys to add to known_hosts
+hosts_ssh_public_hosts_keys:
+  - { "name": "github.com", "key": "files/etc/ssh/github.com.pub" }
+
+# a list of github usernames to get public keys
+hosts_ssh_users: []
+# - aya
+
+# a list of environment variables to write to user ~/.env
+hosts_user_env: []
+# - SHELL
+
+hosts_cloudinit_config:
+    users:
+    - default
+    disable_root: true
+    mount_default_fields: [~, ~, 'auto', 'defaults,nofail', '0', '2']
+    resize_rootfs_tmp: /dev
+    ssh_pwauth:   0
+    preserve_hostname: false
+    datasource_list:
+    - Ec2
+    datasource:
+      Ec2:
+        metadata_urls:
+        - 'http://169.254.169.254'
+        timeout: 5
+        max_wait: 10
+    cloud_init_modules:
+    - migrator
+    - seed_random
+    - bootcmd
+    - write-files
+    - growpart
+    - resizefs
+    - disk_setup
+    - mounts
+    - set_hostname
+    - update_hostname
+    - update_etc_hosts
+    - resolv_conf
+    - ca-certs
+    - rsyslog
+    - users-groups
+    - ssh
+    cloud_config_modules:
+    - ssh-import-id
+    - locale
+    - set-passwords
+    - apk-configure
+    - ntp
+    - timezone
+    - disable-ec2-metadata
+    - runcmd
+    cloud_final_modules:
+    - package-update-upgrade-install
+    - puppet
+    - chef
+    - mcollective
+    - salt-minion
+    - rightscale_userdata
+    - scripts-vendor
+    - scripts-per-once
+    - scripts-per-boot
+    - scripts-per-instance
+    - scripts-user
+    - ssh-authkey-fingerprints
+    - keys-to-console
+    - phone-home
+    - final-message
+    - power-state-change
+    system_info:
+      distro: alpine
+      default_user:
+        name: alpine
+        lock_passwd: True
+        gecos: alpine Cloud User
+        groups: [adm, sudo]
+        sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+        shell: /bin/ash
+      paths:
+        cloud_dir: /var/lib/cloud/
+        templates_dir: /etc/cloud/templates/
+      ssh_svcname: sshd
+

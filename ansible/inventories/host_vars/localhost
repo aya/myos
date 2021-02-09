@@ -1,0 +1,25 @@
+---
+# file: inventories/host_vars/localhost
+
+aws_access_key_id: "{{ lookup('env','ANSIBLE_AWS_ACCESS_KEY_ID') }}"
+aws_output_format: "{{ lookup('env','ANSIBLE_AWS_DEFAULT_OUTPUT') or 'json' }}"
+aws_region: "{{ lookup('env','ANSIBLE_AWS_DEFAULT_REGION') or 'eu-west-1' }}"
+aws_secret_access_key: "{{ lookup('env','ANSIBLE_AWS_SECRET_ACCESS_KEY') }}"
+disks_additional_disks:
+- disk: /dev/xvdb
+  disable_periodic_fsck: true
+  fstype: ext4
+  mount_options: defaults
+  mount: /var/lib/docker
+  service: docker
+- disk: "{{ lookup('env','ANSIBLE_DISKS_NFS_DISK') }}"
+  fstype: nfs
+  mount_options: "{{ lookup('env','ANSIBLE_DISKS_NFS_OPTIONS') }}"
+  mount: "{{ lookup('env','ANSIBLE_DISKS_NFS_PATH') }}"
+disks_additional_services:
+- rpc.statd
+docker_image_tag: "{{ lookup('env','ANSIBLE_DOCKER_IMAGE_TAG') or 'latest' }}"
+docker_registry: "{{ lookup('env','ANSIBLE_DOCKER_REGISTRY') }}"
+hosts_enable_local: true
+hosts_enable_rc: true
+hosts_enable_zram: true

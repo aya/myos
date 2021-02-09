@@ -1,0 +1,14 @@
+version: '3.6'
+
+services:
+  sysctl:
+    command: sh -c 'sysctl -q -w ${SYSCTL_CONFIG} ||:'
+    image: alpine:latest
+    networks:
+    - private
+    privileged: true
+
+networks:
+  private:
+    external: true
+    name: ${DOCKER_NETWORK_PRIVATE}

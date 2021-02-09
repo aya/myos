@@ -1,0 +1,82 @@
+[
+  {
+    "_id": "37f6fac0-7c6a-11e7-aa55-3b0d52c71c60",
+    "_migrationVersion": {
+      "dashboard": "7.0.0"
+    },
+    "_references": [
+      {
+        "id": "22518e70-7c69-11e7-aa55-3b0d52c71c60",
+        "name": "panel_0",
+        "type": "visualization"
+      },
+      {
+        "id": "c618e4e0-7c69-11e7-aa55-3b0d52c71c60",
+        "name": "panel_1",
+        "type": "visualization"
+      }
+    ],
+    "_source": {
+      "description": "",
+      "hits": 0,
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[],\"query\":{\"query\":\"\",\"language\":\"lucene\"},\"version\":true,\"highlightAll\":true}"
+      },
+      "optionsJSON": "{\"darkTheme\": false}",
+      "panelsJSON": "[{\"size_x\":12,\"size_y\":10,\"panelIndex\":1,\"col\":1,\"row\":4,\"panelRefName\":\"panel_0\"},{\"size_x\":12,\"size_y\":3,\"panelIndex\":2,\"col\":1,\"row\":1,\"panelRefName\":\"panel_1\"}]",
+      "timeRestore": false,
+      "title": "[APM] Errors",
+      "uiStateJSON": "{\"P-1\": {\"vis\": {\"params\": {\"sort\": {\"columnIndex\": null, \"direction\": null}}}}}",
+      "version": 1
+    },
+    "_type": "dashboard"
+  },
+  {
+    "_id": "22518e70-7c69-11e7-aa55-3b0d52c71c60",
+    "_migrationVersion": {
+      "visualization": "7.0.0"
+    },
+    "_references": [
+      {
+        "id": "apm-*",
+        "name": "kibanaSavedObjectMeta.searchSourceJSON.index",
+        "type": "index-pattern"
+      }
+    ],
+    "_source": {
+      "description": "",
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"filter\":[],\"query\":{\"query\":\"\",\"language\":\"lucene\"},\"indexRefName\":\"kibanaSavedObjectMeta.searchSourceJSON.index\"}"
+      },
+      "title": "Top Errors for Time Period [APM]",
+      "uiStateJSON": "{\"vis\": {\"params\": {\"sort\": {\"columnIndex\": null, \"direction\": null}}}}",
+      "version": 1,
+      "visState": "{\"title\":\"Top Errors for Time Period [APM]\",\"type\":\"table\",\"params\":{\"sort\":{\"columnIndex\":null,\"direction\":null},\"perPage\":25,\"showPartialRows\":false,\"totalFunc\":\"sum\",\"showTotal\":false,\"showMetricsAtAllLevels\":false,\"dimensions\":{\"metrics\":[{\"accessor\":1,\"format\":{\"id\":\"string\"},\"params\":{},\"aggType\":\"top_hits\"},{\"accessor\":2,\"format\":{\"id\":\"number\"},\"params\":{},\"aggType\":\"count\"},{\"accessor\":3,\"format\":{\"id\":\"string\"},\"params\":{},\"aggType\":\"top_hits\"},{\"accessor\":4,\"format\":{\"id\":\"string\"},\"params\":{},\"aggType\":\"top_hits\"},{\"accessor\":5,\"format\":{\"id\":\"string\"},\"params\":{},\"aggType\":\"top_hits\"}],\"buckets\":[{\"accessor\":0,\"format\":{\"id\":\"terms\",\"params\":{\"id\":\"string\",\"otherBucketLabel\":\"Other\",\"missingBucketLabel\":\"Missing\"}},\"params\":{},\"aggType\":\"terms\"}]}},\"aggs\":[{\"id\":\"2\",\"enabled\":true,\"type\":\"terms\",\"schema\":\"bucket\",\"params\":{\"field\":\"error.culprit\",\"size\":100,\"order\":\"desc\",\"orderBy\":\"1\",\"otherBucket\":false,\"otherBucketLabel\":\"Other\",\"missingBucket\":false,\"missingBucketLabel\":\"Missing\",\"customLabel\":\"Error Culprit\"}},{\"id\":\"5\",\"enabled\":true,\"type\":\"top_hits\",\"schema\":\"metric\",\"params\":{\"field\":\"error.exception.message\",\"aggregate\":\"concat\",\"size\":1,\"sortField\":\"@timestamp\",\"sortOrder\":\"desc\",\"customLabel\":\"Message\"}},{\"id\":\"1\",\"enabled\":true,\"type\":\"count\",\"schema\":\"metric\",\"params\":{\"customLabel\":\"Number of Errors\"}},{\"id\":\"4\",\"enabled\":true,\"type\":\"top_hits\",\"schema\":\"metric\",\"params\":{\"field\":\"error.exception.type\",\"aggregate\":\"concat\",\"size\":1,\"sortField\":\"@timestamp\",\"sortOrder\":\"desc\",\"customLabel\":\"Type\"}},{\"id\":\"6\",\"enabled\":true,\"type\":\"top_hits\",\"schema\":\"metric\",\"params\":{\"field\":\"service.name\",\"aggregate\":\"concat\",\"size\":1,\"sortField\":\"@timestamp\",\"sortOrder\":\"desc\",\"customLabel\":\"App Name\"}},{\"id\":\"7\",\"enabled\":true,\"type\":\"top_hits\",\"schema\":\"metric\",\"params\":{\"field\":\"error.grouping_key\",\"aggregate\":\"concat\",\"size\":1,\"sortField\":\"@timestamp\",\"sortOrder\":\"desc\",\"customLabel\":\"Error Grouping Key\"}}]}"
+    },
+    "_type": "visualization"
+  },
+  {
+    "_id": "c618e4e0-7c69-11e7-aa55-3b0d52c71c60",
+    "_migrationVersion": {
+      "visualization": "7.0.0"
+    },
+    "_references": [
+      {
+        "id": "apm-*",
+        "name": "kibanaSavedObjectMeta.searchSourceJSON.index",
+        "type": "index-pattern"
+      }
+    ],
+    "_source": {
+      "description": "",
+      "kibanaSavedObjectMeta": {
+        "searchSourceJSON": "{\"query\":{\"query\":\"\",\"language\":\"lucene\"},\"indexRefName\":\"kibanaSavedObjectMeta.searchSourceJSON.index\"}"
+      },
+      "title": "Error Occurrences [APM]",
+      "uiStateJSON": "{}",
+      "version": 1,
+      "visState": "{\"params\":{\"time_field\":\"@timestamp\",\"series\":[{\"line_width\":\"0\",\"terms_field\":\"error.grouping_key\",\"point_size\":1,\"color\":\"rgba(0,156,224,1)\",\"label\":\"Occurrences\",\"metrics\":[{\"type\":\"count\",\"id\":\"61ca57f2-469d-11e7-af02-69e470af7417\"}],\"seperate_axis\":0,\"split_mode\":\"terms\",\"chart_type\":\"bar\",\"stacked\":\"none\",\"axis_position\":\"right\",\"formatter\":\"number\",\"id\":\"61ca57f1-469d-11e7-af02-69e470af7417\",\"fill\":\"1\"}],\"axis_formatter\":\"number\",\"interval\":\">=1m\",\"filter\":\"processor.event:error\",\"show_legend\":0,\"show_grid\":1,\"axis_position\":\"left\",\"type\":\"timeseries\",\"id\":\"61ca57f0-469d-11e7-af02-69e470af7417\"},\"type\":\"metrics\",\"aggs\":[],\"title\":\"Error Occurrences [APM]\"}"
+    },
+    "_type": "visualization"
+  }
+]

@@ -1,0 +1,18 @@
+#!/sbin/openrc-run
+
+depend() {
+	need localmount swap
+	after bootmisc modules
+}
+
+start() {
+	/etc/init.d/zram start
+}
+
+stop() {
+	/etc/init.d/zram stop
+}
+
+status() {
+	/etc/init.d/zram status
+}

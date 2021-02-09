@@ -1,0 +1,32 @@
+---
+# file: tasks/service.yml
+
+- name: service - start docker daemon
+  with_items: "{{docker_services|default([])}}"
+  service:
+    name: "{{item}}"
+    state: started
+    enabled: yes
+  become: yes
+  when: ansible_service_mgr|lower != "openrc" and ansible_os_family|lower != "alpine"
+
+- name: service - force openrc status
+  shell: "kill -0 $(cat /run/{{item}}.pid) && [ ! -h /run/openrc/started/{{item}} ] && ln -s /etc/init.d/{{item}} /run/openrc/started/{{item}} && service {{item}} restart ||:"
+  with_items: "{{docker_services|default([])}}"
+  become: yes
+  when: ansible_service_mgr|lower == "openrc" or ansible_os_family|lower == "alpine"
+
+- name: service - start docker daemon
+  with_items: "{{docker_services|default([])}}"
+  service:
+    name: "{{item}}"
+    state: started
+    enabled: yes
+    runlevel: boot
+  become: yes
+  when: ansible_service_mgr|lower == "openrc" or ansible_os_family|lower == "alpine"
+
+- name: service - force docker restart
+  shell: "[ ! -d /var/lib/docker/tmp ] && service docker restart ||:"
+  become: yes
+  when: ansible_service_mgr|lower == "openrc" or ansible_os_family|lower == "alpine"

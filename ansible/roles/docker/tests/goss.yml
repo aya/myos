@@ -1,0 +1,43 @@
+---
+# file: tests/goss.yml
+
+  - name: tests - create temporary directory
+    command: mktemp -d
+    register: tests_mktemp
+
+  - name: tests - register goss installation
+    environment: 
+      PATH: "/usr/local/bin:{{ansible_env.PATH}}"
+    command: which goss
+    register: tests_goss_installed
+
+  - name: tests - register specific OS goss files
+    set_fact:
+      goss_file:
+        - "goss/main_{{ansible_distribution|lower}}-{{ansible_distribution_major_version|lower}}.yml" # main_centos-6.yml main_centos-7.yml
+        - "goss/main_{{ansible_distribution|lower}}.yml"                                              # main_centos.yml main_ubuntu.yml
+        - "goss/main_{{ansible_os_family|lower}}.yml"                                                 # main_redhat.yml main_debian.yml
+        - "goss/main_{{ansible_system|lower}}.yml"                                                    # main_linux.yml
+        - "goss/main.yml"                                                                             # main.yml
+
+  - name: tests - register goss file
+    set_fact:
+      tests_goss_file: "{{lookup('first_found', goss_file)}}"
+
+  - name: tests - copy test files
+    copy: src=goss/ dest="{{tests_mktemp.stdout}}"
+
+  - name: tests - launch tests
+    environment: 
+      PATH: "/usr/local/bin:{{ansible_env.PATH}}"
+    goss: path="{{tests_mktemp.stdout}}/{{tests_goss_file|basename}}" format=rspecish
+    register: tests_goss_results
+    ignore_errors: true
+    become: yes
+
+  - name: tests - remove temporary directory
+    file: path="{{tests_mktemp.stdout}}" state=absent
+
+  - name: tests - failure message
+    fail: msg="{{tests_goss_results.msg}}"
+    when: tests_goss_results|failed

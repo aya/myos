@@ -1,0 +1,7 @@
+version: '3.6'
+
+services:
+  drone:
+    environment:
+    - DRONE_LOGS_DEBUG=true
+    - DRONE_LOGS_TRACE=true

@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = ssh://git@github.com/1001Pharmacies/docker-vsftpd-s3
+	branch = master
+	commit = 6d5b3310525d8cb1be32f0461a8633aba8641b24
+	parent = 162fd1a1c05971c62996f6be53522c74559f567b
+	method = merge
+	cmdver = 0.4.0

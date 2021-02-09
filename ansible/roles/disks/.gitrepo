@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
+;
+[subrepo]
+	remote = ssh://git@github.com/1001Pharmacies/ansible-disks
+	branch = master
+	commit = c0ac6978d715b461fbf20aca719cd5196bc60645
+	parent = d01cccd9bab3a63d60ba251e3719767635ccd5d2
+	method = merge
+	cmdver = 0.4.0

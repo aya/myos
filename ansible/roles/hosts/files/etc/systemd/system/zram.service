@@ -1,0 +1,12 @@
+[Unit]
+Description=Increased Performance In Linux With zRam (Virtual Swap Compressed in RAM)
+ 
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+EnvironmentFile=-/etc/sysconfig/zram
+ExecStart=/etc/init.d/zram start
+ExecStop=/etc/init.d/zram stop
+ 
+[Install]
+WantedBy=sysinit.target

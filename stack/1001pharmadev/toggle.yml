@@ -1,0 +1,43 @@
+version: '3.6'
+
+services:
+  toggle-api:
+    image: 1001pharmadev/qandidate-toggle-api:latest
+    depends_on:
+    - redis
+    environment:
+    - TOGGLE__REDIS_DSN=tcp://redis:6379
+    labels:
+    - SERVICE_80_CHECK_HTTP=/toggles
+    - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME}-toggle-api-80
+    - SERVICE_80_TAGS=${TOGGLE_API_SERVICE_80_TAGS}
+    networks:
+    - private
+    - public
+    ports:
+    - 80
+    restart: always
+  toggle-ui:
+    image: 1001pharmadev/qandidate-toggle-ui:latest
+    depends_on:
+    - toggle-api
+    environment:
+    - TOGGLE__API_BASE_URL=${TOGGLE__API_BASE_URL}
+    labels:
+    - SERVICE_80_CHECK_HTTP=/
+    - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME}-toggle-ui-80
+    - SERVICE_80_TAGS=${TOGGLE_UI_SERVICE_80_TAGS}
+    networks:
+    - private
+    - public
+    ports:
+    - 80
+    restart: always
+
+networks:
+  private:
+    external: true
+    name: ${DOCKER_NETWORK_PRIVATE}
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

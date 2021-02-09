@@ -1,0 +1,17 @@
+---
+# file: tasks/build.yml
+
+- name: build - Build docker image
+  with_items: "{{dockers|default([])}}"
+  command: "/usr/local/bin/docker-build -q -c {{docker_cluster|default('\"\"')}} {{item}}"
+  register: docker_build_image_command
+
+- name: build - Register docker_build_image
+  with_items: "{{docker_build_image_command.results}}"
+  set_fact:
+    docker_build_image: "{{docker_build_image |default({}) |combine( {item.item: item.stdout} ) }}"
+
+- name: build - Debug docker_elk_build_image
+  with_items: "{{dockers|default([])}}"
+  debug: msg="{{docker_build_image[item]}}"
+  when: docker_debug|default(false)

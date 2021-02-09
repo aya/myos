@@ -1,0 +1,29 @@
+version: '3.6'
+
+services:
+  redis:
+    depends_on:
+    - sysctl
+    image: redis:alpine
+    command: redis-server --appendonly yes
+    labels:
+    - SERVICE_6379_CHECK_TCP=true
+    - SERVICE_6379_NAME=${COMPOSE_SERVICE_NAME}-redis-6379
+    networks:
+    - private
+    ports:
+    - 6379
+    volumes:
+    - redis:/data
+    restart: always
+
+volumes:
+  redis:
+
+networks:
+  private:
+    external: true
+    name: ${DOCKER_NETWORK_PRIVATE}
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

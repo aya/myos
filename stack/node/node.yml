@@ -1,0 +1,110 @@
+version: '3.6'
+
+services:
+  consul:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/consul
+      context: ../..
+      dockerfile: docker/consul/Dockerfile
+    image: ${DOCKER_REPOSITORY_INFRA_NODE}/consul:${DOCKER_IMAGE_TAG}
+    environment:
+      CONSUL_BIND_INTERFACE: '${DOCKER_HOST_IFACE}'
+      CONSUL_CLIENT_INTERFACE: '${DOCKER_HOST_IFACE}'
+      CONSUL_HTTP_TOKEN: '${CONSUL_CONSUL_HTTP_TOKEN}'
+      CONSUL_LOCAL_CONFIG: '{ "log_level": "warn"
+                            , "enable_script_checks": true
+                            , "acl": { "enabled": true
+                                     , "default_policy": "deny"
+                                     , "enable_token_persistence": true
+                                     , "tokens": { "master": "$CONSUL_ACL_TOKENS_MASTER"
+                                                 , "agent": "$CONSUL_CONSUL_HTTP_TOKEN"
+                                                 }
+                                     }
+                            }'
+    hostname: ${HOSTNAME}
+    labels:
+    - SERVICE_8300_IGNORE=true
+    - SERVICE_8301_IGNORE=true
+    - SERVICE_8302_IGNORE=true
+    - SERVICE_8500_CHECK_HTTP=/ui
+    - SERVICE_8500_NAME=${COMPOSE_SERVICE_NAME}-consul-8500
+    - SERVICE_8500_TAGS=${CONSUL_SERVICE_8500_TAGS}
+    - SERVICE_8600_IGNORE=true
+    - SERVICE_ADDRESS=${DOCKER_HOST_INET}
+    network_mode: host
+    restart: always
+    volumes:
+    - consul:/consul/data
+    - /var/run/docker.sock:/var/run/docker.sock
+  fabio:
+    command: -registry.backend "consul" -registry.consul.addr "consul:8500" -registry.consul.token "$FABIO_CONSUL_HTTP_TOKEN" -proxy.addr ":80,:443;cs=local" -proxy.cs "cs=local;type=file;cert=/certs/${SSL_HOSTNAME}.crt.pem;key=/certs/${SSL_HOSTNAME}.key.pem"
+    depends_on:
+    - consul
+    extra_hosts:
+    - consul:${DOCKER_HOST_INET}
+    hostname: ${HOSTNAME}
+    image: fabiolb/fabio:latest
+    labels:
+    - SERVICE_80_CHECK_TCP=true
+    - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME}-fabio-80
+    - SERVICE_443_CHECK_TCP=true
+    - SERVICE_443_NAME=${COMPOSE_SERVICE_NAME}-fabio-443
+    - SERVICE_9998_CHECK_TCP=true
+    - SERVICE_9998_NAME=${COMPOSE_SERVICE_NAME}-fabio-9998
+    - SERVICE_9998_TAGS=${FABIO_SERVICE_9998_TAGS}
+    - SERVICE_9999_IGNORE=true
+    ports:
+    - 80:80
+    - 443:443
+    - 9998
+    networks:
+    - public
+    restart: always
+    volumes:
+      - ssl-certs:/certs
+  portainer:
+    image: portainer/portainer:latest
+    labels:
+    - SERVICE_8000_IGNORE=true
+    - SERVICE_9000_CHECK_HTTP=/
+    - SERVICE_9000_NAME=${COMPOSE_SERVICE_NAME}-portainer-9000
+    - SERVICE_9000_TAGS=${PORTAINER_SERVICE_9000_TAGS}
+    networks:
+    - public
+    ports:
+    - 8000
+    - 9000
+    restart: always
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - portainer:/data
+  registrator:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/registrator
+      context: ../..
+      dockerfile: docker/registrator/Dockerfile
+    command: -internal -cleanup -deregister always -resync=30 -useIpFromNetwork node -useIpFromLabel SERVICE_ADDRESS consul://consul:8500
+    depends_on:
+    - consul
+    environment:
+    - CONSUL_HTTP_TOKEN=${REGISTRATOR_CONSUL_HTTP_TOKEN}
+    extra_hosts:
+    - consul:${DOCKER_HOST_INET}
+    hostname: ${HOSTNAME}
+    image: ${DOCKER_REPOSITORY_INFRA_NODE}/registrator:${DOCKER_IMAGE_TAG}
+    network_mode: host
+    restart: always
+    volumes:
+    - /var/run/docker.sock:/tmp/docker.sock
+
+volumes:
+  consul:
+  portainer:
+  ssl-certs:
+
+networks:
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

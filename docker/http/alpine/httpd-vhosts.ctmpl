@@ -1,0 +1,21 @@
+{{ $serverName := printf "%s.%s.%s" (env "APP") (env "ENV") (env "USER") }}
+{{ $serviceName := printf "%s-%s-%s-php-9000" (env "USER") (env "ENV") (env "APP") }}
+<VirtualHost *:80>
+    ServerAdmin technique@1001pharmacies.com
+    DocumentRoot "/var/www/web"
+    ServerName {{ $serverName }}
+    ServerAlias *
+    <FilesMatch "\.php$">
+        SetHandler  "proxy:balancer://php/"
+    </FilesMatch>
+    <Proxy "balancer://php/">
+{{ range service $serviceName }}        BalancerMember "fcgi://{{ .Address }}:{{ .Port }}/" disablereuse=On timeout=900
+{{ end }}        ProxySet lbmethod=bybusyness
+    </Proxy>
+    <Directory /var/www/web>
+        AllowOverride All
+        CGIPassAuth On
+        Options +FollowSymLinks
+        Require all granted
+    </Directory>
+</VirtualHost>

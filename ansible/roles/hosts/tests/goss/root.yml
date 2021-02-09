@@ -1,0 +1,9 @@
+file:
+  /root/.screenrc:
+    exists: true
+    mode: "0644"
+    owner: root
+    group: root
+    filetype: file
+    contains:
+      - /^hardstatus alwayslastline/

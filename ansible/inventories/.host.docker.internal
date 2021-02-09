@@ -1,0 +1,1 @@
+localhost ansible_host=host.docker.internal

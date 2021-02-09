@@ -1,0 +1,41 @@
+version: '3.6'
+
+services:
+  redmine3:
+    image: sameersbn/redmine:3.4.12
+    environment:
+    - DB_ADAPTER=mysql2
+    - DB_HOST=${REDMINE3_DB_HOST}
+    - DB_NAME=${REDMINE3_DB_NAME}
+    - DB_USER=${REDMINE3_DB_USER}
+    - DB_PASS=${REDMINE3_DB_PASS}
+    - REDMINE_SECRET_TOKEN=${REDMINE3_REDMINE_SECRET_TOKEN}
+    - SMTP_DOMAIN=${REDMINE3_SMTP_DOMAIN}
+    - SMTP_USER=${REDMINE3_SMTP_USER}
+    - SMTP_PASS=${REDMINE3_SMTP_PASS}
+    - TZ=Europe/Paris
+    labels:
+    - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME}-redmine3-80
+    - SERVICE_80_CHECK_TCP=true
+    - SERVICE_80_CHECK_INITIAL_STATUS=passing
+    - SERVICE_80_TAGS=${REDMINE3_SERVICE_80_TAGS}
+    - SERVICE_443_IGNORE=true
+    networks:
+    - private
+    - public
+    ports:
+    - 80
+    restart: always
+    volumes:
+    - redmine3:/home/redmine/data
+
+volumes:
+  redmine3:
+
+networks:
+  private:
+    external: true
+    name: ${DOCKER_NETWORK_PRIVATE}
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

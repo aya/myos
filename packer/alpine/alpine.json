@@ -1,0 +1,105 @@
+{
+  "builders": [
+    {
+      "accelerator": "{{user `accelerator`}}",
+      "boot_command": [
+        "{{user `username`}}<enter>",
+        "passwd<enter>{{user `password`}}<enter>{{user `password`}}<enter>",
+        "ifconfig eth0 up \u0026\u0026 udhcpc -i eth0<enter>",
+        "apk add --repository http://dl-cdn.alpinelinux.org/alpine/v{{user `alpine_version`}}/main dropbear dropbear-openrc openssh-sftp-server<enter>",
+        "rc-update add dropbear<enter>",
+        "echo -e 'auto eth0\\niface eth0 inet dhcp' > /etc/network/interfaces<enter>",
+        "rc-service dropbear start<enter>",
+        "<wait>"
+      ],
+      "boot_wait": "{{user `boot_wait`}}",
+      "disk_interface": "virtio",
+      "disk_size": "{{user `iso_size`}}",
+      "format": "raw",
+      "headless": true,
+      "host_port_max": "{{user `ssh_port_max`}}",
+      "host_port_min": "{{user `ssh_port_min`}}",
+      "iso_checksum": "file:http://dl-cdn.alpinelinux.org/alpine/v{{user `alpine_version`}}/releases/{{user `alpine_arch`}}/alpine-virt-{{user `alpine_release`}}-{{user `alpine_arch`}}.iso.sha256",
+      "iso_url": "http://dl-cdn.alpinelinux.org/alpine/v{{user `alpine_version`}}/releases/{{user `alpine_arch`}}/alpine-virt-{{user `alpine_release`}}-{{user `alpine_arch`}}.iso",
+      "net_device": "virtio-net",
+      "output_directory": "{{user `output`}}",
+      "qemuargs": [
+        [
+          "-device",
+          "virtio-rng-pci,rng=rng0,bus=pci.0,addr=0x7"
+        ],
+        [
+          "-object",
+          "rng-random,filename=/dev/urandom,id=rng0"
+        ]
+      ],
+      "shutdown_command": "/sbin/poweroff",
+      "ssh_file_transfer_method": "sftp",
+      "ssh_password": "{{user `password`}}",
+      "ssh_port": 22,
+      "ssh_timeout": "{{user `ssh_wait_timeout`}}",
+      "ssh_username": "{{user `username`}}",
+      "type": "qemu",
+      "vm_name": "{{user `iso_name`}}.iso",
+      "vnc_bind_address": "{{user `vnc_bind_address`}}",
+      "vnc_port_max": "{{user `vnc_port_max`}}",
+      "vnc_port_min": "{{user `vnc_port_min`}}"
+    }
+  ],
+  "provisioners": [
+    {
+      "environment_vars": [
+        "ALPINE_VERSION={{user `alpine_version`}}",
+        "HOSTNAME={{user `hostname`}}"
+      ],
+      "script": "packer/alpine/setup.sh",
+      "type": "shell"
+    },
+    {
+      "expect_disconnect": true,
+      "inline": [
+        "/usr/bin/eject -s",
+        "/sbin/reboot"
+      ],
+      "type": "shell"
+    },
+    {
+      "extra_arguments": [
+        "--extra-vars",
+        "{{user `ansible_extra_vars`}}",
+        "{{user `ansible_verbose`}}"
+      ],
+      "inventory_directory": "ansible/inventories",
+      "pause_before": "16s",
+      "playbook_file": "ansible/playbook.yml",
+      "sftp_command": "/usr/lib/ssh/sftp-server -e",
+      "type": "ansible",
+      "user": "{{user `ansible_user`}}"
+    }
+  ],
+  "variables": {
+    "accelerator": "kvm",
+    "alpine_arch": "x86_64",
+    "alpine_release": "3.12.0",
+    "alpine_version": "3.12",
+    "ansible_extra_vars": "target=default",
+    "ansible_user": "root",
+    "ansible_verbose": "-v",
+    "boot_wait": "8s",
+    "hostname": "alpine",
+    "iso_name": "alpine-3.12.0-x86_64",
+    "iso_size": "1024",
+    "output": "build/iso",
+    "password": "alpine",
+    "qemuargs": "",
+    "ssh_port_max": "2222",
+    "ssh_port_min": "2222",
+    "ssh_wait_timeout": "32s",
+    "template": "alpine",
+    "username": "root",
+    "vnc_bind_address": "127.0.0.1",
+    "vnc_port_max": "5900",
+    "vnc_port_min": "5900"
+  }
+}
+

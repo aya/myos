@@ -1,0 +1,49 @@
+version: '3.6'
+
+services:
+  cadvisor-exporter:
+    image: google/cadvisor:latest
+    hostname: ${HOSTNAME}
+    labels:
+    - SERVICE_8080_NAME=${COMPOSE_SERVICE_NAME}-cadvisor-exporter-8080
+    - SERVICE_8080_CHECK_TCP=true
+    - SERVICE_8080_CHECK_INITIAL_STATUS=passing
+    - SERVICE_8080_TAGS=${CADVISOR_SERVICE_EXPORTER_8080_TAGS}
+    - SERVICE_9200_IGNORE=true
+    networks:
+    - public
+    ports:
+    - 8080
+    restart: always
+    volumes:
+    - /:/rootfs:ro
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+    - /var/run:/var/run:rw
+  node-exporter:
+    command:
+    - --collector.filesystem.ignored-mount-points
+    - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    - '--path.procfs=/host/proc'
+    - '--path.sysfs=/host/sys'
+    image: prom/node-exporter:latest
+    hostname: ${HOSTNAME}
+    labels:
+    - SERVICE_9100_NAME=${COMPOSE_SERVICE_NAME}-node-exporter-9100
+    - SERVICE_9100_CHECK_TCP=true
+    - SERVICE_9100_CHECK_INITIAL_STATUS=passing
+    - SERVICE_9100_TAGS=${SERVICE_NODE_EXPORTER_HTTP_TAGS}
+    networks:
+    - public
+    ports:
+    - 9100
+    restart: always
+    volumes:
+    - /:/rootfs:ro
+    - /proc:/host/proc:ro
+    - /sys:/host/sys:ro
+
+networks:
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

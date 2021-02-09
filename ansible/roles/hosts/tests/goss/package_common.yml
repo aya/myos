@@ -1,0 +1,11 @@
+package:
+  bash:
+    installed: true
+  ca-certificates:
+    installed: true
+  screen:
+    installed: true
+  rsync:
+    installed: true
+  tzdata:
+    installed: true

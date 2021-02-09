@@ -1,0 +1,15 @@
+---
+# file: vars/debian.yml
+
+docker_check_kernel: '3.2'
+
+docker_package: docker-ce
+docker_packages:
+  - { "name": "apt-transport-https", "state": "present" }
+  - { "name": "ca-certificates", "state": "present" }
+  - { "name": "curl", "state": "present" }
+  - { "name": "gnupg2", "state": "present" }
+  - { "name": "software-properties-common", "state": "present" }
+
+docker_init_config_directory: "/etc/default"
+docker_opts: "DOCKER_OPTS"

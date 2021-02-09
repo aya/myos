@@ -1,0 +1,35 @@
+USER    := 1001pharmacies
+APP     ?= $(shell hostname -s)
+CMDS    := exec
+SERVICE ?= php
+-include .env
+
+ansible:
+	@make -C $(ANSIBLE_GIT_DIRECTORY) ansible-run-localhost $(foreach var,$(ENV_USER_VARS),$(if $($(var)),$(var)='$($(var))'))
+
+ansible-%:
+	@make -C $(ANSIBLE_GIT_DIRECTORY) ansible-run-localhost $(foreach var,$(ENV_USER_VARS),$(if $($(var)),$(var)='$($(var))')) ANSIBLE_TAGS=$*
+
+ansible-pull:
+	@$(foreach var,$(ENV_USER_VARS),$(if $($(var)),$(var)='$($(var))')) $(if $(ANSIBLE_CONFIG),ANSIBLE_CONFIG=$(ANSIBLE_GIT_DIRECTORY)/$(ANSIBLE_CONFIG)) ansible-pull --url $(ANSIBLE_GIT_REPOSITORY) $(if $(ANSIBLE_GIT_KEY_FILE),--key-file $(ANSIBLE_GIT_KEY_FILE)) $(if $(ANSIBLE_GIT_VERSION),--checkout $(ANSIBLE_GIT_VERSION)) $(if $(ANSIBLE_GIT_DIRECTORY),--directory $(ANSIBLE_GIT_DIRECTORY)) $(if $(ANSIBLE_TAGS),--tags $(ANSIBLE_TAGS)) $(if $(ANSIBLE_EXTRA_VARS),--extra-vars '$(ANSIBLE_EXTRA_VARS)') $(if $(findstring true,$(FORCE)),--force) $(if $(findstring true,$(DRYRUN)),--check) --full $(if $(ANSIBLE_INVENTORY),--inventory $(ANSIBLE_INVENTORY)) $(ANSIBLE_VERBOSE) $(ANSIBLE_PLAYBOOK)
+
+exec:
+	@make -C $(ANSIBLE_GIT_DIRECTORY) exec ARGS='$(ARGS)' DOCKER_NAME=$(USER)_$(ENV)_$(APP)_$(SERVICE) ENV=$(ENV) DOCKER_RUN_WORKDIR=
+
+connect:
+	@docker exec -it $(USER)_$(ENV)_$(APP)_$(SERVICE) /bin/bash || true
+
+logs:
+	@docker logs --follow --tail 100 $(USER)_$(ENV)_$(APP)_$(SERVICE) || true
+
+logs-nofollow:
+	@docker logs --tail 100 $(USER)_$(ENV)_$(APP)_$(SERVICE) || true
+
+run:
+	@$(ARGS)
+
+ifneq ($(filter $(CMDS),$(firstword $(MAKECMDGOALS))),)
+ARGS    := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
+ARGS    := $(subst :,\:,$(ARGS))
+$(eval $(ARGS):;@:)
+endif

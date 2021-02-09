@@ -1,0 +1,20 @@
+version: '3.6'
+
+services:
+  php-daemon:
+    image: newrelic/php-daemon:latest
+    # command: "/usr/bin/newrelic-daemon --loglevel debug"
+    labels:
+    - SERVICE_31339_NAME=${COMPOSE_SERVICE_NAME}-php-daemon-31339
+    - SERVICE_31339_CHECK_TCP=true
+    - SERVICE_31339_CHECK_INITIAL_STATUS=passing
+    networks:
+    - private
+    ports:
+    - 31339
+    restart: always
+
+networks:
+  private:
+    external: true
+    name: ${DOCKER_NETWORK_PRIVATE}

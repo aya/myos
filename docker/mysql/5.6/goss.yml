@@ -1,0 +1,23 @@
+file:
+  /usr/sbin/mysqld:
+    exists: true
+    filetype: file
+    mode: "0755"
+    owner: root
+    sha256: bf5ba9081d08792048ef8459e1ea6ddd155b82bc1a22cd5c8666e47050cd6208
+package:
+  mysql-server:
+    installed: true
+  mysql-common:
+    installed: true
+port:
+  tcp6:3306:
+    listening: true
+    ip:
+process:
+  mysqld:
+    running: true
+user:
+  mysql:
+    exists: true
+    uid: 999

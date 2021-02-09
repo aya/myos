@@ -1,0 +1,7 @@
+[default]
+{% if aws_output_format|length %}
+output = {{ aws_output_format }}
+{% endif %}
+{% if aws_region|length %}
+region = {{ aws_region }}
+{% endif %}

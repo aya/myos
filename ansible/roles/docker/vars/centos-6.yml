@@ -1,0 +1,11 @@
+---
+# file vars/centos-6.yml
+
+docker_check_kernel: '2.6.32-431'
+docker_opts: "other_args"
+docker_package: docker-io
+docker_packages: docker
+  - { "name": "docker", "state": "absent" }
+  - { "name": "epel-release", "state": "present" }
+  - { "name": "curl", "state": "present" }
+  - { "name": "device-mapper-libs", "state": "present" }

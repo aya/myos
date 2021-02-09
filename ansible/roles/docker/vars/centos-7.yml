@@ -1,0 +1,13 @@
+---
+# file vars/centos-7.yml
+
+docker_check_kernel: '3.10.0-327'
+
+docker_package: docker-latest
+docker_packages:
+  - { "name": "docker", "state": "absent" }
+  - { "name": "curl", "state": "present" }
+  - { "name": "device-mapper-libs", "state": "present" }
+docker_services:
+  - docker-latest-storage-setup
+  - docker-latest
