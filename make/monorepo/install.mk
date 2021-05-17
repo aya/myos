@@ -1,8 +1,8 @@
 ##
 # INSTALL
 
-.PHONY: install-infra
-install-infra: infra-install
+.PHONY: install-myos
+install-myos: myos-install
 
 .PHONY: install-$(SHARED)
 install-$(SHARED): $(SHARED)

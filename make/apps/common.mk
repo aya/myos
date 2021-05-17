@@ -2,20 +2,20 @@
 # COMMON
 
 .PHONY: bootstrap
-bootstrap: bootstrap-git bootstrap-docker ## Bootstrap application
+bootstrap: bootstrap-git bootstrap-docker app-bootstrap ## Bootstrap application
 
 .PHONY: boostrap-docker
 bootstrap-docker: docker-network-create
-	$(if $(filter bootstrap-$(APP),$(MAKETARGETS)),$(call make,bootstrap-$(APP)))
 	$(call make,docker-compose-up)
 
 .PHONY: bootstrap-git
-bootstrap-git:
-ifneq ($(SUBREPO),)
-	if ! git config remote.subrepo/$(SUBREPO).url > /dev/null ; \
-		then git remote add subrepo/$(SUBREPO) $(GIT_REPOSITORY); \
+bootstrap-git: bootstrap-git-$(APP_DIR)
+
+.PHONY: bootstrap-git-%
+bootstrap-git-%:
+	if ! git config remote.origin.url > /dev/null ; \
+		then git clone $(GIT_REPOSITORY) $*; \
 	fi
-endif
 
 .PHONY: config
 config: docker-compose-config ## View docker compose file
@@ -26,7 +26,7 @@ connect: docker-compose-connect ## Connect to docker $(SERVICE)
 .PHONY: connect@%
 connect@%: SERVICE ?= $(DOCKER_SERVICE)
 connect@%: ## Connect to docker $(SERVICE) on first remote host
-	$(call make,ssh-connect,../infra,APP SERVICE)
+	$(call make,ssh-connect,$(MYOS),APP SERVICE)
 
 .PHONY: down
 down: docker-compose-down ## Remove application dockers
@@ -42,7 +42,7 @@ endif
 .PHONY: exec@%
 exec@%: SERVICE ?= $(DOCKER_SERVICE)
 exec@%: ## Exec a command in docker $(SERVICE) on all remote hosts
-	$(call make,ssh-exec,../infra,APP ARGS SERVICE)
+	$(call make,ssh-exec,$(MYOS),APP ARGS SERVICE)
 
 .PHONY: logs
 logs: docker-compose-logs ## Display application dockers logs
@@ -72,14 +72,14 @@ endif
 .PHONY: run@%
 run@%: SERVICE ?= $(DOCKER_SERVICE)
 run@%: ## Run a command on all remote hosts
-	$(call make,ssh-run,../infra,APP ARGS)
+	$(call make,ssh-run,$(MYOS),APP ARGS)
 
 .PHONY: scale
 scale: docker-compose-scale ## Scale application to NUM dockers
 
 .PHONY: ssh@%
 ssh@%: ## Connect to first remote host
-	$(call make,ssh,../infra,APP)
+	$(call make,ssh,$(MYOS),APP)
 
 # target stack: Call docker-stack function with each value of $(STACK)
 .PHONY: stack
@@ -96,7 +96,7 @@ stack-%:
 	$(eval command := $(lastword $(subst -, ,$*)))
 	$(if $(findstring -,$*), \
 	  $(if $(filter $(command),$(filter-out %-%,$(patsubst docker-compose-%,%,$(filter docker-compose-%,$(MAKETARGETS))))), \
-	    $(call make,docker-compose-$(command) STACK="$(stack)" $(if $(filter node,$(stack)),COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME_INFRA_NODE)),,ARGS COMPOSE_IGNORE_ORPHANS SERVICE)))
+	    $(call make,docker-compose-$(command) STACK="$(stack)" $(if $(filter node,$(stack)),COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME_NODE)),,ARGS COMPOSE_IGNORE_ORPHANS SERVICE)))
 
 .PHONY: start
 start: docker-compose-start ## Start application dockers

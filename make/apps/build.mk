@@ -7,7 +7,7 @@ build: docker-compose-build ## Build application docker images
 
 # target build@%: Build application docker images to deploy
 .PHONY: build@% app-build
-build@%: infra-base
+build@%: myos-base
 	$(eval DRYRUN_IGNORE   := true)
 	$(eval SERVICES        ?= $(shell $(call docker-compose,--log-level critical config --services)))
 	$(eval DRYRUN_IGNORE   := false)

@@ -13,7 +13,7 @@ update-$(PARAMETERS): $(PARAMETERS)
 
 $(PARAMETERS): SSH_PUBLIC_HOST_KEYS := $(PARAMETERS_REMOTE_HOST) $(SSH_BASTION_HOSTNAME) $(SSH_REMOTE_HOSTS)
 $(PARAMETERS): MAKE_VARS += SSH_BASTION_HOSTNAME SSH_BASTION_USERNAME SSH_PRIVATE_IP_RANGE SSH_PUBLIC_HOST_KEYS
-$(PARAMETERS): infra-base
+$(PARAMETERS): myos-base
 	$(call exec,[ -d $(PARAMETERS) ] && cd $(PARAMETERS) && git pull --quiet || git clone --quiet $(GIT_PARAMETERS_REPOSITORY))
 
 ## Update release version number in .env
@@ -23,16 +23,16 @@ update-release:
 
 ## Update remotes
 .PHONY: update-remotes
-update-remotes: infra-base
+update-remotes: myos-base
 	$(call exec,git fetch --all --prune --tags -u)
 
 .PHONY: update-remote-%
-update-remote-%: infra-base
+update-remote-%: myos-base
 	$(call exec,git fetch --prune --tags -u $*)
 
 ## Update subrepos
 .PHONY: update-subrepos
-update-subrepos: infra-base git-stash $(APPS) git-unstash ## Update subrepos
+update-subrepos: myos-base git-stash $(APPS) git-unstash ## Update subrepos
 	$(call exec,git push upstream $(BRANCH))
 
 .PHONY: update-subrepo-%
@@ -40,8 +40,8 @@ update-subrepo-%:
 	$(if $(wildcard $*/Makefile),$(call make,update-subrepo,$*))
 
 .PHONY: update-upstream
-update-upstream: infra-base .git/refs/remotes/upstream/master
+update-upstream: myos-base .git/refs/remotes/upstream/master
 	$(call exec,git fetch --tags upstream)
 
-.git/refs/remotes/upstream/master: infra-base
+.git/refs/remotes/upstream/master: myos-base
 	$(call exec,git remote add upstream $(GIT_UPSTREAM_REPOSITORY) 2>/dev/null ||:)

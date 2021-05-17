@@ -1,4 +1,4 @@
-APPS                            ?= $(INFRA) $(sort $(filter-out $(DIRS) $(INFRA), $(patsubst %/,%,$(wildcard */)) ))
+APPS                            ?= $(MYOS) $(sort $(filter-out $(DIRS) $(MYOS), $(patsubst %/,%,$(wildcard */)) ))
 APPS_NAME                       ?= $(foreach app,$(APPS),$(or $(shell awk -F '=' '$$1 == "APP" {print $$2}' $(or $(wildcard $(app)/.env),$(wildcard $(app)/.env.$(ENV)),$(app)/.env.dist) 2>/dev/null),$(app)))
 CMDS                            += copy master-tag release release-check release-create release-finish subrepo-push update-subrepo
 CONTEXT                         += APPS APPS_NAME ENV RELEASE_INSTALL

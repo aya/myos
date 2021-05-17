@@ -2,12 +2,12 @@
 # DOCKER
 
 .PHONY: docker-build
-docker-build: docker-images-infra
+docker-build: docker-images-myos
 	$(foreach image,$(or $(SERVICE),$(DOCKER_IMAGES)),$(call make,docker-build-$(image)))
 
 .PHONY: docker-build-%
 docker-build-%:
-	if grep -q DOCKER_REPOSITORY docker/$*/Dockerfile 2>/dev/null; then $(eval DOCKER_BUILD_ARGS:=$(subst $(DOCKER_REPOSITORY),$(DOCKER_REPOSITORY_INFRA),$(DOCKER_BUILD_ARGS))) true; fi
+	if grep -q DOCKER_REPOSITORY docker/$*/Dockerfile 2>/dev/null; then $(eval DOCKER_BUILD_ARGS:=$(subst $(DOCKER_REPOSITORY),$(DOCKER_REPOSITORY_MYOS),$(DOCKER_BUILD_ARGS))) true; fi
 	$(if $(wildcard docker/$*/Dockerfile),$(call docker-build,docker/$*))
 	$(if $(findstring :,$*),$(eval DOCKERFILES := $(wildcard docker/$(subst :,/,$*)/Dockerfile)),$(eval DOCKERFILES := $(wildcard docker/$*/*/Dockerfile)))
 	$(foreach dockerfile,$(DOCKERFILES),$(call docker-build,$(dir $(dockerfile)),$(DOCKER_REPOSITORY)/$(word 2,$(subst /, ,$(dir $(dockerfile)))):$(lastword $(subst /, ,$(dir $(dockerfile)))),"") && true)
@@ -27,7 +27,7 @@ docker-commit-%:
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-commit,$(service),,,$*))
 
 .PHONY: docker-compose-build
-docker-compose-build: docker-images-infra
+docker-compose-build: docker-images-myos
 	$(eval DRYRUN_IGNORE := true)
 	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
 	$(eval DRYRUN_IGNORE := false)
@@ -66,7 +66,7 @@ docker-compose-ps:
 	$(call docker-compose,ps)
 
 .PHONY: docker-compose-rebuild
-docker-compose-rebuild: docker-images-infra
+docker-compose-rebuild: docker-images-myos
 	$(call make,docker-compose-build DOCKER_BUILD_NO_CACHE=true)
 
 .PHONY: docker-compose-recreate
@@ -111,18 +111,27 @@ docker-compose-stop:
 	$(call docker-compose,stop $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 .PHONY: docker-compose-up
-docker-compose-up: docker-images-infra
+docker-compose-up: docker-images-myos
 	$(eval DRYRUN_IGNORE := true)
 	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
 	$(eval DRYRUN_IGNORE := false)
 	$(call docker-compose,up $(DOCKER_COMPOSE_UP_OPTIONS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
-.PHONY: docker-images-infra
-docker-images-infra:
-	$(foreach image,$(subst $(quote),,$(DOCKER_IMAGES_INFRA)),$(call make,infra-docker-build-$(image)))
+.PHONY: docker-images-myos
+docker-images-myos:
+	$(foreach image,$(subst $(quote),,$(DOCKER_IMAGES_MYOS)),$(call make,myos-docker-build-$(image)))
+
+.PHONY: docker-images-rm
+docker-images-rm:
+	$(call make,docker-images-rm-$(DOCKER_REPOSITORY)/)
+
+.PHONY: docker-images-rm-%
+docker-images-rm-%:
+	docker images |awk '$$1 ~ /^$(subst /,\/,$*)/ {print $$3}' |sort -u |while read image; do docker rmi -f $$image; done
 
 .PHONY: docker-login
-docker-login: infra-aws-ecr-login
+docker-login: myos-base
+	$(ECHO) docker login
 
 .PHONY: docker-network-create
 docker-network-create: docker-network-create-$(DOCKER_NETWORK)
@@ -175,6 +184,13 @@ docker-rebuild:
 docker-rebuild-%:
 	$(call make,docker-build-$* DOCKER_BUILD_CACHE=false)
 
+.PHONY: docker-rm
+docker-rm: docker-rm-$(COMPOSE_PROJECT_NAME)
+
+.PHONY: docker-rm-%
+docker-rm-%:
+	docker ps -a |awk '$$NF ~ /^$*/ {print $$NF}' |while read docker; do docker rm -f $$docker; done
+
 .PHONY: docker-run
 docker-run: SERVICE ?= $(DOCKER_SERVICE)
 docker-run:
@@ -209,3 +225,10 @@ ifneq ($(filter $(DEPLOY),true),)
 else
 	printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}target${COLOR_RESET} $@ ${COLOR_GREEN}not enabled in${COLOR_RESET} $(APP).\n" >&2
 endif
+
+.PHONY: docker-volume-rm
+docker-volume-rm: docker-volume-rm-$(COMPOSE_PROJECT_NAME)
+
+.PHONY: docker-volume-rm-%
+docker-volume-rm-%:
+	docker volume ls |awk '$$2 ~ /^$*/ {print $$2}' |sort -u |while read volume; do docker volume rm $$volume; done

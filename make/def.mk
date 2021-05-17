@@ -2,12 +2,12 @@ comma                           ?= ,
 dollar                          ?= $
 dquote                          ?= "
 quote                           ?= '
-APP                             ?= $(if $(wildcard .git),$(if $(wildcard */.gitrepo),,$(notdir $(CURDIR))),$(notdir $(CURDIR)))
+APP                             ?= $(if $(wildcard .git),$(notdir $(CURDIR)))
 APP_DIR                         ?= $(if $(APP),$(CURDIR))
 BRANCH                          ?= $(shell git rev-parse --abbrev-ref HEAD)
 CMDS                            ?= exec exec:% exec@% run run:% run@%
 COMMIT                          ?= $(shell git rev-parse $(BRANCH) 2>/dev/null)
-CONTEXT                         ?= $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null) BRANCH ENV_FILE UID USER VERSION
+CONTEXT                         ?= APP BRANCH ENV_FILE $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null) UID USER VERSION
 DEBUG                           ?= false
 DOCKER                          ?= true
 DRONE                           ?= false
@@ -17,14 +17,14 @@ DRYRUN_RECURSIVE                ?= false
 ENV                             ?= local
 ENV_DEPLOY                      ?= preprod prod
 ENV_FILE                        ?= $(wildcard ../$(PARAMETERS)/$(ENV)/$(APP)/.env) .env
-ENV_LIST                        ?= local dev tests preprod prod
+ENV_LIST                        ?= local dev tests preprod prod #TODO: staging develop
 ENV_RESET                       ?= false
 ENV_VARS                        ?= APP APP_DIR BRANCH ENV HOSTNAME GID MONOREPO MONOREPO_DIR TAG UID USER VERSION
 GID                             ?= $(shell id -g)
 GIT_PARAMETERS_REPOSITORY       ?= $(call pop,$(GIT_UPSTREAM_REPOSITORY))/$(PARAMETERS)
 GIT_REPOSITORY                  ?= $(if $(SUBREPO),$(shell awk -F ' = ' '$$1 ~ /^[[\s\t]]*remote$$/ {print $$2}' .gitrepo),$(shell git config --get remote.origin.url))
 GIT_UPSTREAM_REPOSITORY         ?= $(if $(findstring ://,$(GIT_REPOSITORY)),$(call pop,$(call pop,$(GIT_REPOSITORY)))/,$(call pop,$(GIT_REPOSITORY),:):)$(GIT_UPSTREAM_USER)/$(lastword $(subst /, ,$(GIT_REPOSITORY)))
-GIT_UPSTREAM_USER               ?= $(MONOREPO)
+GIT_UPSTREAM_USER               ?= $(MONOREPO) #TODO
 HOSTNAME                        ?= $(shell hostname |sed 's/\..*//')
 MAKE_ARGS                       ?= $(foreach var,$(MAKE_VARS),$(if $($(var)),$(var)='$($(var))'))
 MAKE_VARS                       ?= ENV
@@ -76,19 +76,6 @@ DRYRUN_RECURSIVE                := true
 endif
 endif
 
-ifeq ($(HOST_SYSTEM),DARWIN)
-define getent-group
-$(shell dscl . -read /Groups/$(1) 2>/dev/null |awk '$$1 == "PrimaryGroupID:" {print $$2}')
-endef
-ifneq ($(DOCKER),true)
-SED_SUFFIX='\'\''
-endif
-else
-define getent-group
-$(shell getent group $(1) 2>/dev/null |awk -F: '{print $$3}')
-endef
-endif
-
 define conf
 	$(eval file := $(1))
 	$(eval block := $(2))
@@ -115,14 +102,20 @@ define conf
 	done < "$(file)"
 endef
 
+define env
+	IFS=$$'\n'; $(ECHO) env $(foreach var,$(ENV_VARS),$(if $($(var)),$(var)='$($(var))')) $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A)' .env.dist - 2>/dev/null) $$(cat $(ENV_FILE) 2>/dev/null |awk -F "=" '$$1 ~! /^\(#|$$\)/') $(1)
+endef
+
 define force
 	while true; do [ $$(ps x |awk 'BEGIN {nargs=split("'"$$*"'",args)} $$field == args[1] { matched=1; for (i=1;i<=NF-field;i++) { if ($$(i+field) == args[i+1]) {matched++} } if (matched == nargs) {found++} } END {print found+0}' field=4) -eq 0 ] && $(ECHO) $(1) || sleep 1; done
 endef
 
-pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
-
-define sed
-$(call exec,sed -i $(SED_SUFFIX) '\''$(1)'\'' $(2))
+define getent-group
+ifeq ($(HOST_SYSTEM),DARWIN)
+$(shell dscl . -read /Groups/$(1) 2>/dev/null |awk '$$1 == "PrimaryGroupID:" {print $$2}')
+else
+$(shell getent group $(1) 2>/dev/null |awk -F: '{print $$3}')
+endif
 endef
 
 ##
@@ -153,12 +146,23 @@ define make
 	$(if $(filter $(DRYRUN_RECURSIVE),true),$(MAKE) $(MAKE_DIR) $(patsubst %,-o %,$(MAKE_OLDFILE)) MAKE_OLDFILE="$(MAKE_OLDFILE)" DRYRUN=$(DRYRUN) RECURSIVE=$(RECURSIVE) $(MAKE_ARGS) $(cmd))
 endef
 
+pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
+
+define sed
+ifeq ($(HOST_SYSTEM),DARWIN)
+ifneq ($(DOCKER),true)
+SED_SUFFIX='\'\''
+endif
+endif
+$(call exec,sed -i $(SED_SUFFIX) '\''$(1)'\'' $(2))
+endef
+
 ifneq ($(MONOREPO),)
 ifneq ($(wildcard .gitrepo),)
-INFRA                           := ../infra
+MYOS                           := ../myos
 MAKE_SUBDIRS                    := subrepo
 else
-INFRA                           := infra
+MYOS                           := myos
 MAKE_SUBDIRS                    := monorepo
 endif
 endif
@@ -187,12 +191,10 @@ $(foreach env,$(ENV_LIST),$(eval TARGET := %\:$(env)) $(eval ASSIGN_ENV := ENV:=
 # set ENV=$(env) for each target ending with @$(env)
 $(foreach env,$(ENV_LIST),$(eval %@$(env): ENV:=$(env)))
 
-# Accept arguments for CMDS targets
+# Accept arguments for CMDS targets and turn them into do-nothing targets
 ifneq ($(filter $(CMDS),$(firstword $(MAKECMDGOALS))),)
-# set $ARGS with following arguments
 ARGS                            := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 ARGS                            := $(subst :,\:,$(ARGS))
 ARGS                            := $(subst &,\&,$(ARGS))
-# ...and turn them into do-nothing targets
 $(eval $(ARGS):;@:)
 endif

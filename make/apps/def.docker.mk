@@ -27,7 +27,7 @@ DOCKER_BUILD_VARS               ?= APP BRANCH DOCKER_GID DOCKER_REPOSITORY GID G
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
 DOCKER_COMPOSE_UP_OPTIONS       ?= -d
 DOCKER_GID                      ?= $(call getent-group,docker)
-DOCKER_IMAGE_TAG                ?= $(if $(filter-out $(APP),infra),$(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest)),latest)
+DOCKER_IMAGE_TAG                ?= $(if $(filter-out $(APP),myos),$(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest)),latest)
 DOCKER_IMAGES                   ?= $(patsubst %/,%,$(patsubst docker/%,%,$(dir $(wildcard docker/*/Dockerfile))))
 DOCKER_PLUGIN                   ?= rexray/s3fs:latest
 DOCKER_PLUGIN_ARGS              ?= $(foreach var,$(DOCKER_PLUGIN_VARS),$(if $(DOCKER_PLUGIN_$(var)),$(var)='$(DOCKER_PLUGIN_$(var))'))
@@ -62,7 +62,7 @@ DOCKER_COMPOSE_DOWN_OPTIONS     := --rmi all -v
 DOCKER_COMPOSE_UP_OPTIONS       := -d --build
 DOCKER_BUILD_CACHE              := false
 ENV_SUFFIX                      := $(DRONE_BUILD_NUMBER)
-ifneq ($(APP), infra)
+ifneq ($(APP), myos)
 COMPOSE_PROJECT_NAME            := $(USER)_$(ENV)$(ENV_SUFFIX)_$(APP)
 COMPOSE_SERVICE_NAME            := $(subst _,-,$(COMPOSE_PROJECT_NAME))
 DOCKER_REPOSITORY               := $(USER)/$(ENV)/$(APP)

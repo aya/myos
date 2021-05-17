@@ -1,8 +1,8 @@
 ##
-# INFRA
+# MYOS
 
-.PHONY: infra-%
-infra-%: ;
-ifneq ($(wildcard $(INFRA)),)
-	$(call make,$*,$(INFRA))
+.PHONY: myos-%
+myos-%: ;
+ifneq ($(wildcard $(MYOS)),)
+	$(call make,$*,$(MYOS))
 endif
