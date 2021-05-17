@@ -1,6 +1,6 @@
 CMDS                            += packer
 ENV_VARS                        += PACKER_CACHE_DIR PACKER_KEY_INTERVAL PACKER_LOG
-KVM_GID                         ?= $(call getent-group,kvm)
+KVM_GID                         ?= $(call gid,kvm)
 PACKER_ARCH                     ?= $(PACKER_ALPINE_ARCH)
 PACKER_BOOT_WAIT                ?= 11s
 PACKER_BUILD_ARGS               ?= -on-error=cleanup $(foreach var,$(PACKER_BUILD_VARS),$(if $($(var)),-var $(var)='$($(var))'))

@@ -26,7 +26,7 @@ DOCKER_BUILD_TARGETS            ?= local debug tests preprod prod
 DOCKER_BUILD_VARS               ?= APP BRANCH DOCKER_GID DOCKER_REPOSITORY GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME TARGET UID USER VERSION
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
 DOCKER_COMPOSE_UP_OPTIONS       ?= -d
-DOCKER_GID                      ?= $(call getent-group,docker)
+DOCKER_GID                      ?= $(call gid,docker)
 DOCKER_IMAGE_TAG                ?= $(if $(filter-out $(APP),myos),$(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest)),latest)
 DOCKER_IMAGES                   ?= $(patsubst %/,%,$(patsubst docker/%,%,$(dir $(wildcard docker/*/Dockerfile))))
 DOCKER_PLUGIN                   ?= rexray/s3fs:latest
@@ -58,12 +58,12 @@ DOCKER_INTERNAL_DOCKER_HOST     ?= $(shell /sbin/ip addr show docker0 2>/dev/nul
 endif
 
 ifeq ($(DRONE), true)
+APP_PATH_PREFIX                 := $(DRONE_BUILD_NUMBER)
 DOCKER_COMPOSE_DOWN_OPTIONS     := --rmi all -v
 DOCKER_COMPOSE_UP_OPTIONS       := -d --build
 DOCKER_BUILD_CACHE              := false
-ENV_SUFFIX                      := $(DRONE_BUILD_NUMBER)
 ifneq ($(APP), myos)
-COMPOSE_PROJECT_NAME            := $(USER)_$(ENV)$(ENV_SUFFIX)_$(APP)
+COMPOSE_PROJECT_NAME            := $(USER)_$(ENV)$(APP_PATH_PREFIX)_$(APP)
 COMPOSE_SERVICE_NAME            := $(subst _,-,$(COMPOSE_PROJECT_NAME))
 DOCKER_REPOSITORY               := $(USER)/$(ENV)/$(APP)
 endif

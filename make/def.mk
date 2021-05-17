@@ -4,44 +4,53 @@ dquote                          ?= "
 quote                           ?= '
 APP                             ?= $(if $(wildcard .git),$(notdir $(CURDIR)))
 APP_DIR                         ?= $(if $(APP),$(CURDIR))
-BRANCH                          ?= $(shell git rev-parse --abbrev-ref HEAD)
+APP_DOMAIN                      ?= $(if ${DOMAIN},${ENV}.${DOMAIN},${ENV})
+APP_HOST                        ?= $(if ${APP_DOMAIN},${APP}.${APP_DOMAIN},${APP})
+APP_NAME                        ?= ${APP}
+APP_PATH                        ?= /${APP_PATH_PREFIX}
+APP_SCHEME                      ?= https
+APP_URI                         ?= ${APP_HOST}${APP_PATH}
+APP_URL                         ?= ${APP_SCHEME}://${APP_URI}
+BRANCH                          ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
 CMDS                            ?= exec exec:% exec@% run run:% run@%
 COMMIT                          ?= $(shell git rev-parse $(BRANCH) 2>/dev/null)
-CONTEXT                         ?= APP BRANCH ENV_FILE $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null) UID USER VERSION
+CONTEXT                         ?= $(if $(APP),APP BRANCH VERSION) $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null) UID USER
 DEBUG                           ?= false
 DOCKER                          ?= true
+DOMAIN                          ?= localhost
 DRONE                           ?= false
 DRYRUN                          ?= false
 DRYRUN_IGNORE                   ?= false
 DRYRUN_RECURSIVE                ?= false
-ENV                             ?= local
+ENV                             ?= dist
 ENV_DEPLOY                      ?= preprod prod
 ENV_FILE                        ?= $(wildcard ../$(PARAMETERS)/$(ENV)/$(APP)/.env) .env
 ENV_LIST                        ?= local dev tests preprod prod #TODO: staging develop
 ENV_RESET                       ?= false
-ENV_VARS                        ?= APP APP_DIR BRANCH ENV HOSTNAME GID MONOREPO MONOREPO_DIR TAG UID USER VERSION
-GID                             ?= $(shell id -g)
+ENV_VARS                        ?= APP APP_DIR APP_DOMAIN BRANCH ENV HOSTNAME GID MONOREPO MONOREPO_DIR TAG UID USER VERSION
+GID                             ?= $(shell id -g 2>/dev/null)
 GIT_PARAMETERS_REPOSITORY       ?= $(call pop,$(GIT_UPSTREAM_REPOSITORY))/$(PARAMETERS)
-GIT_REPOSITORY                  ?= $(if $(SUBREPO),$(shell awk -F ' = ' '$$1 ~ /^[[\s\t]]*remote$$/ {print $$2}' .gitrepo),$(shell git config --get remote.origin.url))
+GIT_REPOSITORY                  ?= $(if $(SUBREPO),$(shell awk -F ' = ' '$$1 ~ /^[[\s\t]]*remote$$/ {print $$2}' .gitrepo 2>/dev/null),$(shell git config --get remote.origin.url 2>/dev/null))
 GIT_UPSTREAM_REPOSITORY         ?= $(if $(findstring ://,$(GIT_REPOSITORY)),$(call pop,$(call pop,$(GIT_REPOSITORY)))/,$(call pop,$(GIT_REPOSITORY),:):)$(GIT_UPSTREAM_USER)/$(lastword $(subst /, ,$(GIT_REPOSITORY)))
-GIT_UPSTREAM_USER               ?= $(MONOREPO) #TODO
-HOSTNAME                        ?= $(shell hostname |sed 's/\..*//')
+GIT_UPSTREAM_USER               ?= $(or $(MONOREPO),$(USER))
+HOSTNAME                        ?= $(shell hostname 2>/dev/null |sed 's/\..*//')
 MAKE_ARGS                       ?= $(foreach var,$(MAKE_VARS),$(if $($(var)),$(var)='$($(var))'))
 MAKE_VARS                       ?= ENV
 MAKECMDVARS                     ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter command\ line,$(origin $(var))),$(var))))
 MAKECMDARGS                     ?= $(foreach var,$(MAKECMDVARS),$(var)='$($(var))')
-MAKETARGETS                     ?= $(filter-out $(.VARIABLES),$(shell $(MAKE) -qp |awk -F':' '/^[a-zA-Z0-9][^$$\#\/\t=]*:([^=]|$$)/ {print $$1}' |sort -u))
+MAKETARGETS                     ?= $(filter-out $(.VARIABLES),$(shell $(MAKE) -qp 2>/dev/null |awk -F':' '/^[a-zA-Z0-9][^$$\#\/\t=]*:([^=]|$$)/ {print $$1}' |sort -u))
 MONOREPO                        ?= $(if $(wildcard .git),$(if $(wildcard */.gitrepo),$(notdir $(CURDIR))),$(if $(SUBREPO),$(notdir $(realpath $(CURDIR)/..))))
 MONOREPO_DIR                    ?= $(if $(wildcard .git),$(if $(wildcard */.gitrepo),$(CURDIR)),$(if $(SUBREPO),$(realpath $(CURDIR)/..)))
 PARAMETERS                      ?= parameters
 RECURSIVE                       ?= true
 SHARED                          ?= shared
+SSH_DIR                         ?= ${HOME}/.ssh
 SUBREPO                         ?= $(if $(wildcard .gitrepo),$(notdir $(CURDIR)))
 SUBREPO_DIR                     ?= $(if $(SUBREPO),$(CURDIR))
 SUBREPO_COMMIT                  ?= $(if $(SUBREPO),$(shell git rev-parse subrepo/$(SUBREPO)/$(BRANCH) 2>/dev/null))
 TAG                             ?= $(shell git tag -l --points-at $(BRANCH) 2>/dev/null)
-UID                             ?= $(shell id -u)
-USER                            ?= $(shell id -nu)
+UID                             ?= $(shell id -u 2>/dev/null)
+USER                            ?= $(shell id -nu 2>/dev/null)
 VERBOSE                         ?= true
 VERSION                         ?= $(shell git describe --tags $(BRANCH) 2>/dev/null || git rev-parse $(BRANCH) 2>/dev/null)
 
@@ -49,6 +58,16 @@ ifeq ($(DOCKER), true)
 ENV_ARGS                         = $(foreach var,$(ENV_VARS),$(if $($(var)),-e $(var)='$($(var))')) $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A) {print "-e "$$0}' .env.dist - 2>/dev/null)
 else
 ENV_ARGS                         = $(foreach var,$(ENV_VARS),$(if $($(var)),$(var)='$($(var))')) $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A)' .env.dist - 2>/dev/null)
+endif
+
+ifneq ($(DEBUG), true)
+.SILENT:
+endif
+ifeq ($(DRYRUN), true)
+ECHO                             = $(if $(filter $(DRYRUN_IGNORE),true),,printf '${COLOR_BROWN}$(APP)${COLOR_RESET}[${COLOR_GREEN}$(MAKELEVEL)${COLOR_RESET}] ${COLOR_BLUE}$@${COLOR_RESET}:${COLOR_RESET} '; echo)
+ifeq ($(RECURSIVE), true)
+DRYRUN_RECURSIVE                := true
+endif
 endif
 
 # Guess OS
@@ -66,13 +85,29 @@ HOST_SYSTEM                     := DARWIN
 endif
 endif
 
-ifneq ($(DEBUG), true)
-.SILENT:
+ifneq ($(MONOREPO),)
+ifneq ($(wildcard .gitrepo),)
+MYOS                           := ../myos
+MAKE_SUBDIRS                    := subrepo
+else
+MYOS                           := myos
+MAKE_SUBDIRS                    := monorepo
 endif
-ifeq ($(DRYRUN), true)
-ECHO                             = $(if $(filter $(DRYRUN_IGNORE),true),,printf '${COLOR_BROWN}$(APP)${COLOR_RESET}[${COLOR_GREEN}$(MAKELEVEL)${COLOR_RESET}] ${COLOR_BLUE}$@${COLOR_RESET}:${COLOR_RESET} '; echo)
-ifeq ($(RECURSIVE), true)
-DRYRUN_RECURSIVE                := true
+endif
+
+ifneq ($(APP),)
+MAKE_SUBDIRS                    += apps $(foreach type,$(APP_TYPE),$(if $(wildcard $(MAKE_DIR)/apps/$(type)),apps/$(type)))
+endif
+
+# include .env files
+include $(wildcard $(ENV_FILE))
+# include variables definitions
+include $(wildcard $(MAKE_DIR)/def.*.mk)
+include $(foreach subdir,$(MAKE_SUBDIRS),$(wildcard $(MAKE_DIR)/$(subdir)/def.mk $(MAKE_DIR)/$(subdir)/def.*.mk))
+
+ifeq ($(HOST_SYSTEM),DARWIN)
+ifneq ($(DOCKER),true)
+SED_SUFFIX                      := '\'\''
 endif
 endif
 
@@ -102,21 +137,19 @@ define conf
 	done < "$(file)"
 endef
 
-define env
-	IFS=$$'\n'; $(ECHO) env $(foreach var,$(ENV_VARS),$(if $($(var)),$(var)='$($(var))')) $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A)' .env.dist - 2>/dev/null) $$(cat $(ENV_FILE) 2>/dev/null |awk -F "=" '$$1 ~! /^\(#|$$\)/') $(1)
-endef
+env = IFS=$$'\n'; env $(env_reset) $(env_vars) $(env_dist) $(env_file)
 
-define force
-	while true; do [ $$(ps x |awk 'BEGIN {nargs=split("'"$$*"'",args)} $$field == args[1] { matched=1; for (i=1;i<=NF-field;i++) { if ($$(i+field) == args[i+1]) {matched++} } if (matched == nargs) {found++} } END {print found+0}' field=4) -eq 0 ] && $(ECHO) $(1) || sleep 1; done
-endef
+env_dist = $$(printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A)' .env.dist - 2>/dev/null)
+env_file = $$(cat $(ENV_FILE) 2>/dev/null |awk -F "=" '$$1 ~! /^\(\#|$$\)/')
+env_vars = $(foreach var,$(ENV_VARS),$(if $($(var)),$(var)='$($(var))'))
 
-define getent-group
-ifeq ($(HOST_SYSTEM),DARWIN)
-$(shell dscl . -read /Groups/$(1) 2>/dev/null |awk '$$1 == "PrimaryGroupID:" {print $$2}')
-else
-$(shell getent group $(1) 2>/dev/null |awk -F: '{print $$3}')
-endif
-endef
+.PHONY: hello-world
+hello-world:
+	$(env) env
+
+force = $$(while true; do [ $$(ps x |awk 'BEGIN {nargs=split("'"$$*"'",args)} $$field == args[1] { matched=1; for (i=1;i<=NF-field;i++) { if ($$(i+field) == args[i+1]) {matched++} } if (matched == nargs) {found++} } END {print found+0}' field=4) -eq 0 ] && $(ECHO) $(command) || sleep 1; done)
+
+gid = $$(grep '^$(1):' /etc/group 2>/dev/null |awk -F: '{print $$3}')
 
 ##
 # function make
@@ -148,37 +181,9 @@ endef
 
 pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
 
-define sed
-ifeq ($(HOST_SYSTEM),DARWIN)
-ifneq ($(DOCKER),true)
-SED_SUFFIX='\'\''
-endif
-endif
-$(call exec,sed -i $(SED_SUFFIX) '\''$(1)'\'' $(2))
-endef
+sed = $(call exec,sed -i $(SED_SUFFIX) '\''$(1)'\'' $(2))
 
-ifneq ($(MONOREPO),)
-ifneq ($(wildcard .gitrepo),)
-MYOS                           := ../myos
-MAKE_SUBDIRS                    := subrepo
-else
-MYOS                           := myos
-MAKE_SUBDIRS                    := monorepo
-endif
-endif
-
-ifneq ($(APP),)
-MAKE_SUBDIRS                    += apps $(foreach type,$(APP_TYPE),$(if $(wildcard $(MAKE_DIR)/apps/$(type)),apps/$(type)))
-endif
-
-# include .env files
-include $(wildcard $(ENV_FILE))
-# include variables definitions
-include $(wildcard $(MAKE_DIR)/def.*.mk)
-include $(foreach subdir,$(MAKE_SUBDIRS),$(wildcard $(MAKE_DIR)/$(subdir)/def.mk $(MAKE_DIR)/$(subdir)/def.*.mk))
-
-# set ENV=$(env) for each target ending with :$(env) and call $* target
-# set ../$(PARAMETERS)/$(env)/$(APP)/.env as last .env readed file to override values of .env file
+# set ENV=$(env) for target ending with :$(env) and call $* target
 define TARGET:ENV
 .PHONY: $(TARGET)
 $(TARGET): $(ASSIGN_ENV)
@@ -186,6 +191,10 @@ $(TARGET): $(ASSIGN_ENV_FILE)
 $(TARGET):
 	$$(call make,$$*,,ENV_FILE)
 endef
+
+# eval each target:$(env) targets
+# override value of $(ENV) with $(env)
+# override values of .env files with ../$(PARAMETERS)/$(env)/$(APP)/.env file
 $(foreach env,$(ENV_LIST),$(eval TARGET := %\:$(env)) $(eval ASSIGN_ENV := ENV:=$(env)) $(eval ASSIGN_ENV_FILE := ENV_FILE+=$(wildcard ../$(PARAMETERS)/$(env)/$(APP)/.env)) $(eval $(TARGET:ENV)))
 
 # set ENV=$(env) for each target ending with @$(env)

@@ -59,7 +59,7 @@ up: $(APPS) ## Create application dockers
 .PHONY: $(APPS)
 $(APPS):
 	$(if $(wildcard $@/Makefile), \
-      $(call make,-o install-myos $(patsubst apps-%,%,$(MAKECMDGOALS)) STATUS=0,$(patsubst %/,%,$@),ENV_SUFFIX), \
+      $(call make,$(patsubst apps-%,%,$(MAKECMDGOALS)) STATUS=0,$(patsubst %/,%,$@),APP_PATH_PREFIX), \
       printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}no app available in folder${COLOR_RESET} $@.\n" >&2)
 
 # run targets in $(APPS)

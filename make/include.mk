@@ -2,4 +2,4 @@ MAKE_DIR                        := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_L
 MAKE_FILES                      := env.mk def.mk
 include $(wildcard $(patsubst %,$(MAKE_DIR)/%,$(MAKE_FILES))) $(filter-out $(wildcard $(patsubst %,$(MAKE_DIR)/%,include.mk def.*.mk $(MAKE_FILES))),$(wildcard $(MAKE_DIR)/*.mk))
 include $(foreach subdir,$(MAKE_SUBDIRS),$(filter-out $(wildcard $(MAKE_DIR)/$(subdir)/def.mk $(MAKE_DIR)/$(subdir)/def.*.mk),$(wildcard $(MAKE_DIR)/$(subdir)/*.mk)))
-include $(wildcard *.mk $(filter-out $(wildcard $(MAKE_DIR)/*.mk),$(wildcard */*.mk)))
+include $(wildcard *.mk) $(filter-out $(wildcard $(MAKE_DIR)/*.mk),$(wildcard */def.mk */def.*.mk) $(filter-out $(wildcard */def.mk */def.*.mk),$(wildcard */*.mk)))

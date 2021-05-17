@@ -4,10 +4,9 @@ include make/include.mk
 ##
 # APP
 
-app-build: build-rm infra-base
-	$(call install-parameters,,curator,build)
-	$(call make,docker-compose-build)
-	$(call make,up)
+app-build: build-rm myos-base
+	$(call install-parameters,,*,build)
+	$(call make,docker-compose-build up)
 	$(call make,docker-compose-exec ARGS='rm -Rf /root/.npm /log-buffer/*' SERVICE=logagent)
 	$(call make,docker-commit)
 
