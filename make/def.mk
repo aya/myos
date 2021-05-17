@@ -137,19 +137,9 @@ define conf
 	done < "$(file)"
 endef
 
-env = IFS=$$'\n'; env $(env_reset) $(env_vars) $(env_dist) $(env_file)
-
-env_dist = $$(printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A)' .env.dist - 2>/dev/null)
-env_file = $$(cat $(ENV_FILE) 2>/dev/null |awk -F "=" '$$1 ~! /^\(\#|$$\)/')
-env_vars = $(foreach var,$(ENV_VARS),$(if $($(var)),$(var)='$($(var))'))
-
-.PHONY: hello-world
-hello-world:
-	$(env) env
-
 force = $$(while true; do [ $$(ps x |awk 'BEGIN {nargs=split("'"$$*"'",args)} $$field == args[1] { matched=1; for (i=1;i<=NF-field;i++) { if ($$(i+field) == args[i+1]) {matched++} } if (matched == nargs) {found++} } END {print found+0}' field=4) -eq 0 ] && $(ECHO) $(command) || sleep 1; done)
 
-gid = $$(grep '^$(1):' /etc/group 2>/dev/null |awk -F: '{print $$3}')
+gid = $(shell grep '^$(1):' /etc/group 2>/dev/null |awk -F: '{print $$3}')
 
 ##
 # function make

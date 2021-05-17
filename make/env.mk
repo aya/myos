@@ -7,9 +7,14 @@
 # include .env file
 -include .env
 
+env = IFS=$$'\n'; env $(env_reset) $(env_vars) "$(env.dist)" "$(env.file)" sh -c '$(1)'
+
+env.dist = $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A)' .env.dist - 2>/dev/null)
+env.file = $(shell cat $(ENV_FILE) 2>/dev/null |sed '/^[ \t]*$$/d;/^[ \t]*\#/d;')
 ifneq (,$(filter true,$(ENV_RESET)))
 env_reset := -i
 endif
+env_vars = $(foreach var,$(ENV_VARS),$(if $($(var)),$(var)='$($(var))'))
 
 SHELL:=/bin/bash
 
