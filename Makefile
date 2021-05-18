@@ -13,3 +13,7 @@ app-build: build-rm myos-base
 app-deploy: deploy-ping
 
 app-install: base node up
+
+app-tests:
+	echo ENV: $(env)
+	echo DOCKER_ENV: $(DOCKER_ENV)

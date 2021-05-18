@@ -7,8 +7,12 @@
 # include .env file
 -include .env
 
-env = $(env.args) "$(env.dist)" "$(env.file)"
-env.docker = $(env.docker.args) "$(env.docker.dist)" $(env.docker.file)
+ifneq (,$(filter true,$(ENV_RESET)))
+env_reset := -i
+endif
+
+env = $(env.args) $(env.dist) $(env.file)
+env.docker = $(env.docker.args) $(env.docker.dist) $(env.docker.file)
 
 env.args = $(foreach var,$(ENV_VARS),$(if $($(var)),$(var)='$($(var))'))
 env.dist = $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A)' .env.dist - 2>/dev/null)
@@ -16,9 +20,6 @@ env.file = $(shell cat $(ENV_FILE) 2>/dev/null |sed '/^[ \t]*$$/d;/^[ \t]*\#/d;'
 env.docker.args = $(foreach var,$(ENV_VARS),$(if $($(var)),-e $(var)='$($(var))'))
 env.docker.dist = $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A) {print "-e "$$0}' .env.dist - 2>/dev/null)
 env.docker.file = $(patsubst %,--env-file %,$(ENV_FILE))
-ifneq (,$(filter true,$(ENV_RESET)))
-env_reset := -i
-endif
 
 SHELL:=/bin/bash
 

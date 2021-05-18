@@ -1,6 +1,7 @@
 COMPOSE_VERSION                 ?= 1.24.1
 COMPOSE_PROJECT_NAME_MYOS       ?= $(USER)_$(ENV)_myos
 COMPOSE_PROJECT_NAME_NODE       ?= node
+DOCKER_ENV                      ?= $(env.docker)
 DOCKER_EXEC_OPTIONS             ?=
 DOCKER_IMAGE                    ?= $(DOCKER_IMAGE_CLI)
 DOCKER_IMAGE_CLI                ?= $(DOCKER_REPOSITORY_MYOS)/cli
@@ -44,24 +45,24 @@ define exec
 endef
 else
 define exec
-	$(ECHO) docker exec $(ENV_ARGS) $(DOCKER_EXEC_OPTIONS) $(DOCKER_RUN_WORKDIR) $(DOCKER_NAME) sh -c '$(or $(1),$(SHELL))'
+	$(ECHO) docker exec $(DOCKER_EXEC_OPTIONS) $(DOCKER_ENV) $(DOCKER_RUN_WORKDIR) $(DOCKER_NAME) sh -c '$(or $(1),$(SHELL))'
 endef
 endif
 define run
-	$(ECHO) docker run $(DOCKER_RUN_OPTIONS) $(patsubst %,--env-file %,$(ENV_FILE)) $(ENV_ARGS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(1)
+	$(ECHO) docker run $(DOCKER_RUN_OPTIONS) $(DOCKER_ENV) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(1)
 endef
 
 else
 
 SHELL                           := /bin/bash
 define docker-run
-	$(ECHO) docker run $(DOCKER_RUN_OPTIONS) $(patsubst %,--env-file %,$(ENV_FILE)) $(env.docker.args) $(env.docker.dist) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(or $(1),$(DOCKER_IMAGE):$(DOCKER_IMAGE_TAG)) $(2)
+	$(ECHO) docker run $(DOCKER_RUN_OPTIONS) $(DOCKER_ENV) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(or $(1),$(DOCKER_IMAGE):$(DOCKER_IMAGE_TAG)) $(2)
 endef
 define exec
 	$(call run,sh -c '$(or $(1),$(SHELL))')
 endef
 define run
-	IFS=$$'\n'; env $(env_reset) $(env.args) $(env.dist) $(env.file) $(1)
+	IFS=$$'\n'; env $(env_reset) $(env) $(1)
 endef
 
 endif
