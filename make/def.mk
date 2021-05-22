@@ -15,6 +15,7 @@ BRANCH                          ?= $(shell git rev-parse --abbrev-ref HEAD 2>/de
 CMDS                            ?= exec exec:% exec@% run run:% run@%
 COMMIT                          ?= $(shell git rev-parse $(BRANCH) 2>/dev/null)
 CONTEXT                         ?= $(if $(APP),APP BRANCH VERSION) $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null) UID USER
+CONTEXT_DEBUG                   ?= APP_DIR MAKE_DIR MAKE_SUBDIRS MAKEFILE_LIST MONOREPO_DIR env
 DEBUG                           ?= false
 DOCKER                          ?= true
 DOMAIN                          ?= localhost
@@ -36,11 +37,13 @@ GIT_UPSTREAM_USER               ?= $(or $(MONOREPO),$(USER))
 HOSTNAME                        ?= $(shell hostname 2>/dev/null |sed 's/\..*//')
 MAKE_ARGS                       ?= $(foreach var,$(MAKE_VARS),$(if $($(var)),$(var)='$($(var))'))
 MAKE_VARS                       ?= ENV
+MAKE_SUBDIRS                    ?= $(if $(filter myos,$(MYOS)),monorepo,$(if $(SUBREPO),subrepo )$(if $(APP),apps $(foreach type,$(APP_TYPE),$(if $(wildcard $(MAKE_DIR)/apps/$(type)),apps/$(type)))))
 MAKECMDVARS                     ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter command\ line,$(origin $(var))),$(var))))
 MAKECMDARGS                     ?= $(foreach var,$(MAKECMDVARS),$(var)='$($(var))')
 MAKETARGETS                     ?= $(filter-out $(.VARIABLES),$(shell $(MAKE) -qp 2>/dev/null |awk -F':' '/^[a-zA-Z0-9][^$$\#\/\t=]*:([^=]|$$)/ {print $$1}' |sort -u))
-MONOREPO                        ?= $(if $(wildcard .git),$(if $(wildcard */.gitrepo),$(notdir $(CURDIR))),$(if $(SUBREPO),$(notdir $(realpath $(CURDIR)/..))))
-MONOREPO_DIR                    ?= $(if $(wildcard .git),$(if $(wildcard */.gitrepo),$(CURDIR)),$(if $(SUBREPO),$(realpath $(CURDIR)/..)))
+MONOREPO                        ?= $(if $(filter myos,$(MYOS)),$(notdir $(CURDIR)),$(if $(APP),$(notdir $(realpath $(CURDIR)/..))))
+MONOREPO_DIR                    ?= $(if $(MONOREPO),$(if $(filter myos,$(MYOS)),$(realpath $(CURDIR)),$(if $(APP),$(realpath $(CURDIR)/..))))
+MYOS                            ?= $(if $(filter $(MAKE_DIR),$(call pop,$(MAKE_DIR))),,$(call pop,$(MAKE_DIR)))
 PARAMETERS                      ?= parameters
 RECURSIVE                       ?= true
 SHARED                          ?= shared
@@ -62,6 +65,8 @@ endif
 
 ifneq ($(DEBUG), true)
 .SILENT:
+else
+CONTEXT                         += $(CONTEXT_DEBUG)
 endif
 ifeq ($(DRYRUN), true)
 ECHO                             = $(if $(filter $(DRYRUN_IGNORE),true),,printf '${COLOR_BROWN}$(APP)${COLOR_RESET}[${COLOR_GREEN}$(MAKELEVEL)${COLOR_RESET}] ${COLOR_BLUE}$@${COLOR_RESET}:${COLOR_RESET} '; echo)
@@ -85,23 +90,9 @@ HOST_SYSTEM                     := DARWIN
 endif
 endif
 
-ifneq ($(MONOREPO),)
-ifneq ($(wildcard .gitrepo),)
-MYOS                           := ../myos
-MAKE_SUBDIRS                    := subrepo
-else
-MYOS                           := myos
-MAKE_SUBDIRS                    := monorepo
-endif
-endif
-
-ifneq ($(APP),)
-MAKE_SUBDIRS                    += apps $(foreach type,$(APP_TYPE),$(if $(wildcard $(MAKE_DIR)/apps/$(type)),apps/$(type)))
-endif
-
 # include .env files
 include $(wildcard $(ENV_FILE))
-# include variables definitions
+# include *.mk
 include $(wildcard $(MAKE_DIR)/def.*.mk)
 include $(foreach subdir,$(MAKE_SUBDIRS),$(wildcard $(MAKE_DIR)/$(subdir)/def.mk $(MAKE_DIR)/$(subdir)/def.*.mk))
 

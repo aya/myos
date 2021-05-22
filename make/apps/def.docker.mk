@@ -27,7 +27,7 @@ DOCKER_BUILD_VARS               ?= APP BRANCH DOCKER_GID DOCKER_REPOSITORY GID G
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
 DOCKER_COMPOSE_UP_OPTIONS       ?= -d
 DOCKER_GID                      ?= $(call gid,docker)
-DOCKER_IMAGE_TAG                ?= $(if $(filter-out $(APP),myos),$(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest)),latest)
+DOCKER_IMAGE_TAG                ?= $(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest))
 DOCKER_IMAGES                   ?= $(patsubst %/,%,$(patsubst docker/%,%,$(dir $(wildcard docker/*/Dockerfile))))
 DOCKER_PLUGIN                   ?= rexray/s3fs:latest
 DOCKER_PLUGIN_ARGS              ?= $(foreach var,$(DOCKER_PLUGIN_VARS),$(if $(DOCKER_PLUGIN_$(var)),$(var)='$(DOCKER_PLUGIN_$(var))'))
@@ -42,7 +42,7 @@ DOCKER_REGISTRY_USERNAME        ?= $(USER)
 DOCKER_REGISTRY_REPOSITORY      ?= $(addsuffix /,$(DOCKER_REGISTRY))$(subst $(USER),$(DOCKER_REGISTRY_USERNAME),$(DOCKER_REPOSITORY))
 DOCKER_REPOSITORY               ?= $(subst _,/,$(COMPOSE_PROJECT_NAME))
 DOCKER_SHELL                    ?= $(SHELL)
-ENV_VARS                        += COMPOSE_PROJECT_NAME COMPOSE_SERVICE_NAME DOCKER_BUILD_TARGET DOCKER_GID DOCKER_HOST_IFACE DOCKER_HOST_INET DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_REPOSITORY DOCKER_SHELL
+ENV_VARS                        += COMPOSE_PROJECT_NAME COMPOSE_SERVICE_NAME DOCKER_BUILD_TARGET DOCKER_GID DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_REPOSITORY DOCKER_SHELL
 
 # https://github.com/docker/libnetwork/pull/2348
 ifeq ($(HOST_SYSTEM), DARWIN)
@@ -59,14 +59,12 @@ endif
 
 ifeq ($(DRONE), true)
 APP_PATH_PREFIX                 := $(DRONE_BUILD_NUMBER)
-DOCKER_COMPOSE_DOWN_OPTIONS     := --rmi all -v
-DOCKER_COMPOSE_UP_OPTIONS       := -d --build
-DOCKER_BUILD_CACHE              := false
-ifneq ($(APP), myos)
 COMPOSE_PROJECT_NAME            := $(USER)_$(ENV)$(APP_PATH_PREFIX)_$(APP)
 COMPOSE_SERVICE_NAME            := $(subst _,-,$(COMPOSE_PROJECT_NAME))
+DOCKER_BUILD_CACHE              := false
+DOCKER_COMPOSE_DOWN_OPTIONS     := --rmi all -v
+DOCKER_COMPOSE_UP_OPTIONS       := -d --build
 DOCKER_REPOSITORY               := $(USER)/$(ENV)/$(APP)
-endif
 endif
 
 ifeq ($(DOCKER), true)

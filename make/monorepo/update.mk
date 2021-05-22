@@ -14,7 +14,7 @@ update-$(PARAMETERS): $(PARAMETERS)
 $(PARAMETERS): SSH_PUBLIC_HOST_KEYS := $(PARAMETERS_REMOTE_HOST) $(SSH_BASTION_HOSTNAME) $(SSH_REMOTE_HOSTS)
 $(PARAMETERS): MAKE_VARS += SSH_BASTION_HOSTNAME SSH_BASTION_USERNAME SSH_PRIVATE_IP_RANGE SSH_PUBLIC_HOST_KEYS
 $(PARAMETERS): myos-base
-	$(call exec,[ -d $(PARAMETERS) ] && cd $(PARAMETERS) && git pull --quiet || git clone --quiet $(GIT_PARAMETERS_REPOSITORY))
+	$(call exec,[ -d $(PARAMETERS) ] && cd $(PARAMETERS) && git pull --quiet || git clone --quiet $(APP_PARAMETERS_REPOSITORY))
 
 ## Update release version number in .env
 .PHONY: update-release
@@ -44,4 +44,4 @@ update-upstream: myos-base .git/refs/remotes/upstream/master
 	$(call exec,git fetch --tags upstream)
 
 .git/refs/remotes/upstream/master: myos-base
-	$(call exec,git remote add upstream $(GIT_UPSTREAM_REPOSITORY) 2>/dev/null ||:)
+	$(call exec,git remote add upstream $(APP_UPSTREAM_REPOSITORY) 2>/dev/null ||:)

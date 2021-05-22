@@ -1,3 +1,5 @@
+ENV_VARS += DOCKER_HOST_IFACE DOCKER_HOST_INET
+
 .PHONY: node
 node: docker-network-create-$(DOCKER_NETWORK_PUBLIC) node-openssl stack-node-up
 

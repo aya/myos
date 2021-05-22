@@ -6,7 +6,7 @@ COMMIT_BEFORE                   := $(if $(filter 0000000000000000000000000000000
 endif
 ifneq (,$(filter $(DRONE_BUILD_EVENT),tag))
 COMMIT_AFTER                    := $(DRONE_TAG)
-COMMIT_BEFORE                   := $(shell git describe --abbrev=0 --tags $(DRONE_TAG)^)
+COMMIT_BEFORE                   := $(shell git describe --abbrev=0 --tags $(DRONE_TAG)^ 2>/dev/null)
 endif
 APPS_IMPACTED                   := $(shell git diff --name-only $(COMMIT_BEFORE) $(COMMIT_AFTER) 2>/dev/null |awk -F '/' 'NF>1 && !seen[$$1]++ {print $$1}')
 # prevent drone to make down myos
