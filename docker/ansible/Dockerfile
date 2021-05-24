@@ -2,7 +2,8 @@ FROM alpine:latest as dist
 ARG DOCKER_BUILD_DIR
 
 RUN apk --no-cache add \
-        ansible
+        ansible \
+        py3-pip
 
 RUN pip3 install boto
 

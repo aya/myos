@@ -28,8 +28,7 @@ hosts_packages:
 - { "name": "util-linux", "state": "present" }
 - { "name": "vim", "state": "present" }
 - { "name": "zsh", "state": "present" }
-hosts_ssh_private_keys:
-- "{{ lookup('env','ANSIBLE_SSH_PRIVATE_KEY') or '~/.ssh/id_rsa' }}"
+hosts_ssh_private_keys: "{{ lookup('env','ANSIBLE_SSH_PRIVATE_KEYS').split(' ').default([]) }}"
 hosts_ssh_users:
 - aya
 hosts_user_env:

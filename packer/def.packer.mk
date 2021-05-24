@@ -74,7 +74,7 @@ ifeq ($(DOCKER), true)
 
 # packer ansible provisionner needs:
 ## empty local ssh agent (ssh-add -D)
-## ANSIBLE_SSH_PRIVATE_KEY set to a key giving access to ANSIBLE_GIT_REPOSITORY without password
+## ANSIBLE_SSH_PRIVATE_KEYS set to a key giving access to ANSIBLE_GIT_REPOSITORY without password
 ## ANSIBLE_AWS_ACCESS_KEY_ID and ANSIBLE_AWS_SECRET_ACCESS_KEY
 define packer
 	$(call run,$(DOCKER_RUN_OPTIONS_PACKER) $(DOCKER_SSH_AUTH) -p $(PACKER_SSH_PORT):$(PACKER_SSH_PORT) -p $(PACKER_VNC_PORT):$(PACKER_VNC_PORT) $(DOCKER_REPOSITORY)/packer:$(DOCKER_IMAGE_TAG) $(1))
@@ -117,7 +117,7 @@ define packer-build
 	echo 'nfs_path: $(ANSIBLE_DISKS_NFS_PATH)'                  >> $(PACKER_ISO_INFO)
 	echo 'pass: $(password)'                                    >> $(PACKER_ISO_INFO)
 	echo 'size: $(iso_size)'                                    >> $(PACKER_ISO_INFO)
-	echo 'ssh_key: $(ANSIBLE_SSH_PRIVATE_KEY)'                  >> $(PACKER_ISO_INFO)
+	echo 'ssh_key: $(ANSIBLE_SSH_PRIVATE_KEYS)'                 >> $(PACKER_ISO_INFO)
 	echo 'user: $(username)'                                    >> $(PACKER_ISO_INFO)
 endef
 
