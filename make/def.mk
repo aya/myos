@@ -11,6 +11,8 @@ APP_PATH                        ?= /${APP_PATH_PREFIX}
 APP_SCHEME                      ?= https
 APP_URI                         ?= ${APP_HOST}${APP_PATH}
 APP_URL                         ?= ${APP_SCHEME}://${APP_URI}
+APPS                            ?= $(if $(MONOREPO),$(sort $(patsubst $(MONOREPO_DIR)/%/.git,%,$(wildcard $(MONOREPO_DIR)/*/.git))))
+APPS_NAME                       ?= $(foreach app,$(APPS),$(or $(shell awk -F '=' '$$1 == "APP" {print $$2}' $(or $(wildcard $(MONOREPO_DIR)/$(app)/.env),$(wildcard $(MONOREPO_DIR)/$(app)/.env.$(ENV)),$(MONOREPO_DIR)/$(app)/.env.dist) 2>/dev/null),$(app)))
 BRANCH                          ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
 CMDS                            ?= exec exec:% exec@% run run:% run@%
 COMMIT                          ?= $(shell git rev-parse $(BRANCH) 2>/dev/null)
@@ -92,9 +94,6 @@ endif
 
 # include .env files
 include $(wildcard $(ENV_FILE))
-# include *.mk
-include $(wildcard $(MAKE_DIR)/def.*.mk)
-include $(foreach subdir,$(MAKE_SUBDIRS),$(wildcard $(MAKE_DIR)/$(subdir)/def.mk $(MAKE_DIR)/$(subdir)/def.*.mk))
 
 ifeq ($(HOST_SYSTEM),DARWIN)
 ifneq ($(DOCKER),true)

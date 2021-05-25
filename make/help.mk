@@ -23,17 +23,14 @@ blank1 blank2:
 ## Show available targets
 target:
 	printf "${COLOR_BROWN}Targets:${COLOR_RESET}\n"
-	awk 'BEGIN {FS = ":.*?## "}; $$0 ~ /^[a-zA-Z_-]+:.*?## .*$$/ {printf "${COLOR_BLUE}%-30s${COLOR_RESET} %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	awk 'BEGIN {FS = ":.*?## "}; $$0 ~ /^[a-zA-Z_-]+:.*?## .*$$/ {printf "${COLOR_BLUE}%-31s${COLOR_RESET} %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .PHONY: context
 ## Show current context
 context:
 	printf "${COLOR_BROWN}Context:${COLOR_RESET}\n"
-	$(MAKE) $(CONTEXT)
+	$(MAKE) $(foreach var,$(CONTEXT),context-$(var))
 
-.PHONY: $(CONTEXT)
-$(CONTEXT):
-	@printf "${COLOR_BLUE}%-30s${COLOR_RESET} ${COLOR_GREEN}%s${COLOR_RESET}\n" $@ "$($@)"
-
-.PHONY: print-%
-print-%: ; @printf "${COLOR_BLUE}%-30s${COLOR_RESET} ${COLOR_GREEN}%s${COLOR_RESET}\n" $* "$($*)"
+.PHONY: context--%
+context-%:
+	printf "${COLOR_BLUE}%-31s${COLOR_RESET} ${COLOR_GREEN}%s${COLOR_RESET}\n" $* "$($*)"
