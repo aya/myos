@@ -8,7 +8,6 @@ install-assets: install-assets-$(SYMFONY_ENV)
 install-assets-%: bootstrap
 	$(call docker-compose-exec,$(DOCKER_SERVICE),app/console assetic:dump --env=$*)
 	$(call docker-compose-exec,$(DOCKER_SERVICE),app/console assets:install --env=$*)
-	$(if $(filter $(ENV),$(ENV_DEPLOY)),$(call docker-compose-exec,$(DOCKER_SERVICE),chown -R www-data web/bundles/ web/css/ web/js/))
 
 .PHONY: install-codecept
 install-codecept: bootstrap install-phpunit vendor/codeception/codeception/codecept

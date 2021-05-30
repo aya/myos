@@ -4,13 +4,13 @@ dquote                          ?= "
 quote                           ?= '
 APP                             ?= $(if $(wildcard .git),$(notdir $(CURDIR)))
 APP_DIR                         ?= $(if $(APP),$(CURDIR))
-APP_DOMAIN                      ?= $(if ${DOMAIN},${ENV}.${DOMAIN},${ENV})
-APP_HOST                        ?= $(if ${APP_DOMAIN},${APP}.${APP_DOMAIN},${APP})
-APP_NAME                        ?= ${APP}
-APP_PATH                        ?= /${APP_PATH_PREFIX}
+APP_DOMAIN                      ?= $(if $(APP),$(ENV)$(addprefix .,$(DOMAIN)))
+APP_HOST                        ?= $(if $(APP),$(APP)$(addprefix .,$(APP_DOMAIN)))
+APP_NAME                        ?= $(APP)
+APP_PATH                        ?= /$(APP_PATH_PREFIX)
 APP_SCHEME                      ?= https
-APP_URI                         ?= ${APP_HOST}${APP_PATH}
-APP_URL                         ?= ${APP_SCHEME}://${APP_URI}
+APP_URI                         ?= $(if $(APP),$(APP_HOST)$(APP_PATH))
+APP_URL                         ?= $(if $(APP),$(APP_SCHEME)://$(APP_URI))
 APPS                            ?= $(if $(MONOREPO),$(sort $(patsubst $(MONOREPO_DIR)/%/.git,%,$(wildcard $(MONOREPO_DIR)/*/.git))))
 APPS_NAME                       ?= $(foreach app,$(APPS),$(or $(shell awk -F '=' '$$1 == "APP" {print $$2}' $(or $(wildcard $(MONOREPO_DIR)/$(app)/.env),$(wildcard $(MONOREPO_DIR)/$(app)/.env.$(ENV)),$(MONOREPO_DIR)/$(app)/.env.dist) 2>/dev/null),$(app)))
 BRANCH                          ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
@@ -40,8 +40,10 @@ HOSTNAME                        ?= $(shell hostname 2>/dev/null |sed 's/\..*//')
 MAKE_ARGS                       ?= $(foreach var,$(MAKE_VARS),$(if $($(var)),$(var)='$($(var))'))
 MAKE_VARS                       ?= ENV
 MAKE_SUBDIRS                    ?= $(if $(filter myos,$(MYOS)),monorepo,$(if $(SUBREPO),subrepo )$(if $(APP),apps $(foreach type,$(APP_TYPE),$(if $(wildcard $(MAKE_DIR)/apps/$(type)),apps/$(type)))))
-MAKECMDVARS                     ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter command\ line,$(origin $(var))),$(var))))
 MAKECMDARGS                     ?= $(foreach var,$(MAKECMDVARS),$(var)='$($(var))')
+MAKECMDVARS                     ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter command\ line,$(origin $(var))),$(var))))
+MAKEENVVARS                     ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter environment,$(origin $(var))),$(var))))
+MAKEFILEVARS                    ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter file,$(origin $(var))),$(var))))
 MAKETARGETS                     ?= $(filter-out $(.VARIABLES),$(shell $(MAKE) -qp 2>/dev/null |awk -F':' '/^[a-zA-Z0-9][^$$\#\/\t=]*:([^=]|$$)/ {print $$1}' |sort -u))
 MONOREPO                        ?= $(if $(filter myos,$(MYOS)),$(notdir $(CURDIR)),$(if $(APP),$(notdir $(realpath $(CURDIR)/..))))
 MONOREPO_DIR                    ?= $(if $(MONOREPO),$(if $(filter myos,$(MYOS)),$(realpath $(CURDIR)),$(if $(APP),$(realpath $(CURDIR)/..))))

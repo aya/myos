@@ -4,6 +4,10 @@
 .env: .env.dist
 	$(call .env,,,$(wildcard ../$(PARAMETERS)/$(ENV)/$(APP)/.env .env.$(ENV)))
 
+.PHONY: .env-clean
+.env-clean:
+	rm -f .env || true
+
 # include .env file
 -include .env
 
@@ -55,13 +59,14 @@ endef
 	  # keep variables that exists in .env.dist
 	  # keep variables that does not exist in .env
 	  # read variables definition in a subshell with multiline support
-	    # create a new environment (empty if $(ENV_RESET) is true)
+	    # create a new environment (empty if $(ENV_RESET) is true) with
+		# $(env.args)
 	      # read environment variables and keep only those existing in .env.dist
 	      # add .env overrides variables definition
 	      # add .env.dist variables definition
 	      # remove empty lines or comments
 	      # remove duplicate variables
-	    # replace variabless in stdin with their value from the new environment
+	    # replace variables in stdin with their value from the new environment
 	  # remove residual empty lines or comments
 	  # sort alphabetically
 	  # add variables definition to the .env file
@@ -75,7 +80,7 @@ define .env_update
 	  |awk -F '=' 'ARGV[1] == FILENAME { A[$$1]; next } ($$1 in A)' $(env_dist) - 2>/dev/null \
 	  |awk -F '=' 'ARGV[1] == FILENAME { A[$$1]; next } !($$1 in A)' $(env_file) - 2>/dev/null \
 	  |(IFS=$$'\n'; \
-	    env $(env_reset) \
+	    env $(env_reset) $(env.args) \
 	      $$(env |awk -F '=' 'NR == FNR { if($$1 !~ /^(#|$$)/) { A[$$1]; next } } ($$1 in A)' $(env_dist) - \
 	        |cat - $(env_over) \
 	        |cat - $(env_dist) \

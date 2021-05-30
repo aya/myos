@@ -33,4 +33,7 @@ context:
 
 .PHONY: context--%
 context-%:
-	printf "${COLOR_BLUE}%-31s${COLOR_RESET} ${COLOR_GREEN}%s${COLOR_RESET}\n" $* "$($*)"
+	printf "${COLOR_BLUE}%-31s${COLOR_RESET}" $*
+	printf "${COLOR_GREEN}"
+	$(call PRINTF,$($*))
+	printf "${COLOR_RESET}"

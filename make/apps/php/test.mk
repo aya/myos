@@ -25,14 +25,6 @@ test-coverage-codeception-%: bootstrap install-codecept ## Run codeception tests
 test-func: bootstrap install-phpunit ## Run functional tests
 	$(call docker-compose-exec,$(DOCKER_SERVICE),bin/phpunit --testsuite functional)
 
-## Loop unit tests
-.PHONY: test-loop
-test-loop: bootstrap install-phpunit ## Loop unit tests
-	while true; \
-		do $(MAKE) test; \
-		read continue; \
-	done;
-
 ## Run search tests
 .PHONY: test-search
 test-search: bootstrap install-phpunit ## Run search tests
