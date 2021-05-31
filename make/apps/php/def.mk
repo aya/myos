@@ -1,4 +1,4 @@
-BUILD_APP_VARS                  += SYMFONY_ENV
+BUILD_ENV_VARS                  += SYMFONY_ENV
 DOCKER_SERVICE                  ?= php
 
 ifneq (,$(filter $(ENV),$(ENV_DEPLOY)))

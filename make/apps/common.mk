@@ -51,7 +51,7 @@ logs: docker-compose-logs ## Display application dockers logs
 ps: docker-compose-ps ## List application dockers
 
 .PHONY: recreate
-recreate: docker-compose-recreate start-up ## Recreate application dockers
+recreate: docker-compose-recreate app-start ## Recreate application dockers
 
 .PHONY: reinstall
 reinstall: clean ## Reinstall application
@@ -59,7 +59,7 @@ reinstall: clean ## Reinstall application
 	$(call make,install)
 
 .PHONY: restart
-restart: docker-compose-restart start-up ## Restart application
+restart: docker-compose-restart app-start ## Restart application
 
 .PHONY: run
 run: ## Run a command in a new docker
@@ -108,7 +108,7 @@ stop: docker-compose-stop ## Stop application dockers
 tests: app-tests ## Test application
 
 .PHONY: up
-up: docker-compose-up start-up ## Create application dockers
+up: docker-compose-up app-start ## Create application dockers
 
 .PHONY: update app-update
 update: app-update ## Update application

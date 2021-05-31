@@ -2,7 +2,7 @@
 # RELEASE
 
 .PHONY: release
-release: release-create # Create release [version]
+release: release-create ## Create release [version]
 
 .PHONY: release-check
 release-check:
@@ -20,16 +20,16 @@ endif
 
 .PHONY: release-create
 release-create: release-check git-stash ## Create release [version]
-	$(call make,branch-create-upstream-develop BRANCH=$(RELEASE_BRANCH))
+	$(call make,git-branch-create-upstream-develop BRANCH=$(RELEASE_BRANCH))
 	$(call make,git-unstash,,STATUS)
 
 .PHONY: release-finish
 release-finish: release-check git-stash ## Finish release [version]
-	$(call make,branch-merge-upstream-master BRANCH=$(RELEASE_BRANCH))
+	$(call make,git-branch-merge-upstream-master BRANCH=$(RELEASE_BRANCH))
 	$(call make,update-subrepos)
-	$(call make,tag-create-upstream-master TAG=$(RELEASE_VERSION))
+	$(call make,git-tag-create-upstream-master TAG=$(RELEASE_VERSION))
 	$(call make,subrepos-tag-create-master TAG=$(RELEASE_VERSION))
-	$(call make,tag-merge-upstream-develop TAG=$(RELEASE_VERSION))
-	$(call make,branch-delete BRANCH=$(RELEASE_BRANCH))
+	$(call make,git-tag-merge-upstream-develop TAG=$(RELEASE_VERSION))
+	$(call make,git-branch-delete BRANCH=$(RELEASE_BRANCH))
 	$(call make,subrepos-branch-delete BRANCH=$(RELEASE_BRANCH))
 	$(call make,git-unstash,,STATUS)

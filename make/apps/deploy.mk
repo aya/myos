@@ -1,11 +1,10 @@
-##########
-# DEPLOY #
-##########
+##
+# DEPLOY
 
 .PHONY: deploy app-deploy
 # target deploy: Run post install hooks in the deployed application
 ## Called by ansible after creation of the docker application on remote host
-deploy: app-deploy ## Run post install hooks in the deployed application
+deploy: app-deploy deploy-ping ## Run post install hooks in the deployed application
 
 .PHONY: deploy@%
 # target deploy@%: Deploy application docker images
@@ -18,8 +17,8 @@ deploy@%: myos-base build@% ## Deploy application docker images
 	$(call make,docker-tag-latest docker-push-latest)
 
 .PHONY: deploy-ping
-deploy-ping: deploy-ping-slack
+deploy-ping: deploy-ping-hook
 
-.PHONY: deploy-ping-slack
-deploy-ping-slack:
-	curl -X POST --data-urlencode 'payload={"text": "$(DEPLOY_PING_TEXT)"}' $(DEPLOY_SLACK_HOOK) ||:
+.PHONY: deploy-ping-hook
+deploy-ping-hook:
+	curl -X POST --data-urlencode 'payload={"text": "$(DEPLOY_HOOK_TEXT)"}' $(DEPLOY_HOOK_URL) ||:

@@ -1,3 +1,12 @@
+DOCKER_BUILD_VARS               += $(SSH_ENV_VARS)
+ENV_VARS                        += $(SSH_ENV_VARS)
+SSH_BASTION_HOSTNAME            ?=
+SSH_BASTION_USERNAME            ?=
+SSH_ENV_VARS                    ?= SSH_BASTION_HOSTNAME SSH_BASTION_USERNAME SSH_PUBLIC_HOST_KEYS SSH_PRIVATE_IP_RANGE
+SSH_PUBLIC_HOST_KEYS            ?= $(SSH_REMOTE_HOSTS) $(SSH_BASTION_HOSTNAME)
+SSH_PRIVATE_IP_RANGE            ?= 10.10.*
+SSH_REMOTE_HOSTS                ?= github.com gitlab.com
+
 define ssh-connect
 	$(eval hosts := $(1))
 	$(eval command := $(2))

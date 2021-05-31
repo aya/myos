@@ -13,11 +13,3 @@ subrepos-tag-create-%:
 .PHONY: subrepos-push
 subrepos-push:
 	$(call make,subrepo-push,..,SUBREPO BRANCH)
-
-.PHONY: git-stash
-git-stash:
-	$(call make,git-stash,..)
-
-.PHONY: git-unstash
-git-unstash:
-	$(call make,git-unstash,..)
