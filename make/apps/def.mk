@@ -1,7 +1,6 @@
 APP_DIR                         ?= $(CURDIR)
 APP_DOMAIN                      ?= $(ENV)$(addprefix .,$(DOMAIN))
 APP_HOST                        ?= $(APP)$(addprefix .,$(APP_DOMAIN))
-APP_NAME                        ?= $(APP)
 APP_PARAMETERS_REPOSITORY       ?= $(GIT_PARAMETERS_REPOSITORY)
 APP_PATH                        ?= /$(APP_PATH_PREFIX)
 APP_REPOSITORY                  ?= $(GIT_REPOSITORY)

@@ -111,12 +111,11 @@ tests: app-tests ## Test application
 up: docker-compose-up app-start ## Create application dockers
 
 .PHONY: update app-update
-update: app-update ## Update application
+update: update-app app-update ## Update application
 
 # target %: Always fired target
 ## this target is fired everytime make is runned to call the stack target and
 ## update COMPOSE_FILE variable with all .yml files of the current project stack
-.PHONY: FORCE
 %: FORCE stack %-rule-exists ;
 
 # target %-rule-exists: Print a warning message if $* target does not exists

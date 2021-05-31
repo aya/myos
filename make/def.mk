@@ -3,6 +3,7 @@ dollar                          ?= $
 dquote                          ?= "
 quote                           ?= '
 APP                             ?= $(if $(wildcard .git),$(notdir $(CURDIR)))
+APP_NAME                        ?= $(APP)
 APP_TYPE                        ?= $(if $(SUBREPO),subrepo) $(if $(MYOS),,myos)
 APPS                            ?= $(if $(MONOREPO),$(sort $(patsubst $(MONOREPO_DIR)/%/.git,%,$(wildcard $(MONOREPO_DIR)/*/.git))))
 APPS_NAME                       ?= $(foreach app,$(APPS),$(or $(shell awk -F '=' '$$1 == "APP" {print $$2}' $(or $(wildcard $(MONOREPO_DIR)/$(app)/.env),$(wildcard $(MONOREPO_DIR)/$(app)/.env.$(ENV)),$(MONOREPO_DIR)/$(app)/.env.dist) 2>/dev/null),$(app)))
@@ -44,6 +45,7 @@ MAKE_VARS                       ?= ENV
 MONOREPO                        ?= $(if $(filter myos,$(MYOS)),$(notdir $(CURDIR)),$(if $(APP),$(notdir $(realpath $(CURDIR)/..))))
 MONOREPO_DIR                    ?= $(if $(MONOREPO),$(if $(filter myos,$(MYOS)),$(realpath $(CURDIR)),$(if $(APP),$(realpath $(CURDIR)/..))))
 MYOS                            ?= $(if $(filter $(MAKE_DIR),$(call pop,$(MAKE_DIR))),,$(call pop,$(MAKE_DIR)))
+QUIET                           ?= $(if $(filter false,$(VERBOSE)),--quiet)
 RECURSIVE                       ?= true
 SHARED                          ?= shared
 SSH_DIR                         ?= ${HOME}/.ssh

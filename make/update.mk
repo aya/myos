@@ -1,11 +1,20 @@
 ##
 # UPDATE
 
-.PHONY: update-parameters
-update-app: $(APP) ## Update application source files
+.PHONY: update-apps
+update-apps:
+	$(foreach app,$(APPS),$(call make,update-app APP_NAME=$(app)))
 
-$(APP): myos-base
-	$(call exec,[ -d ../$(APP) ] && cd ../$(APP) && git pull --quiet origin $(BRANCH) || git clone --quiet $(APP_REPOSITORY) ../$(APP))
+.PHONY: update-app
+update-app: update-app-$(APP_NAME) ; ## Update application source files
+
+.PHONY: update-app-%
+update-app-%: myos-base % ;
+
+.PHONY: $(APP)
+$(APP): APP_DIR := $(if $(filter myos,$(MYOS)),,../)$(APP)
+$(APP):
+	$(call exec,[ -d $(APP_DIR) ] && cd $(APP_DIR) && git pull $(QUIET) origin $(BRANCH) || git clone $(QUIET) $(APP_REPOSITORY) $(APP_DIR))
 
 ## Update /etc/hosts
 .PHONY: update-hosts

@@ -3,6 +3,7 @@ COLOR_RESET                     ?= \033[0m
 COLOR_GREEN                     ?= \033[32m
 COLOR_BROWN                     ?= \033[33m
 COLOR_BLUE                      ?= \033[36m
+.PHONY: FORCE
 
 ##
 # HELP
