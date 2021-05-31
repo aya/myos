@@ -26,11 +26,11 @@ build-env: bootstrap
 build-init:
 	$(ECHO) rm -rf build && $(ECHO) mkdir -p build
 
-# target build-$(SHARED): Create shared folder in docker $(SERVICE) to deploy
-.PHONY: build-$(SHARED)
-build-$(SHARED): SERVICE ?= $(DOCKER_SERVICE)
-build-$(SHARED): bootstrap
-	$(call docker-compose-exec,$(SERVICE),mkdir -p /$(SHARED) && $(foreach folder,$(SHARED_FOLDERS),rm -rf $(folder) && mkdir -p $(dir $(folder)) && ln -s /$(SHARED)/$(notdir $(folder)) $(folder) &&) true)
+# target build-shared: Create shared folder in docker $(SERVICE) to deploy
+.PHONY: build-shared
+build-shared: SERVICE ?= $(DOCKER_SERVICE)
+build-shared: bootstrap
+	$(call docker-compose-exec,$(SERVICE),mkdir -p /$(notdir $(SHARED)) && $(foreach folder,$(SHARED_FOLDERS),rm -rf $(folder) && mkdir -p $(dir $(folder)) && ln -s /$(notdir $(SHARED))/$(notdir $(folder)) $(folder) &&) true)
 
 # target rebuild: Rebuild application docker images on local host
 .PHONY: rebuild

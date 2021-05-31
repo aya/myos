@@ -142,7 +142,7 @@ define docker-stack-update
 	$(eval version         := $(or $(2),$(if $(findstring :,$(stack)),$(lastword $(subst :, ,$(stack))),latest)))
 	$(eval path            := $(patsubst %/,%,$(or $(3),$(if $(findstring /,$(1)),$(if $(wildcard stack/$(1) stack/$(1).yml),stack/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard stack/$(1).yml),$(dir $(1)),$(1))),$(dir $(1)))),stack/$(name))))
 	$(eval COMPOSE_FILE    += $(wildcard $(path)/$(name).yml $(path)/$(name).$(ENV).yml $(path)/$(name).$(ENV).$(version).yml $(path)/$(name).$(version).yml))
-	$(if $(wildcard $(path)/.env.dist),$(call .env,,$(path)/.env.dist,$(wildcard ../$(PARAMETERS)/$(ENV)/$(APP)/.env $(path)/.env.$(ENV) .env)))
+	$(if $(wildcard $(path)/.env.dist),$(call .env,,$(path)/.env.dist,$(wildcard $(PARAMETERS)/$(ENV)/$(APP)/.env $(path)/.env.$(ENV) .env)))
 endef
 define docker-tag
 	$(eval service         := $(or $(1),$(DOCKER_SERVICE)))

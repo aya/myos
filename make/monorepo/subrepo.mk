@@ -1,6 +1,13 @@
 ##
 # SUBREPO
 
+## Delete branch $(BRANCH) on $(SUBREPO) remote
+.PHONY: subrepo-branch-delete
+subrepo-branch-delete: myos-base subrepo-check
+ifneq ($(words $(BRANCH)),0)
+	$(call exec,[ $$(git ls-remote --heads $(REMOTE) $(BRANCH) |wc -l) -eq 1 ] && git push $(REMOTE) :$(BRANCH) || echo Unable to delete branch $(BRANCH) on remote $(REMOTE).)
+endif
+
 .PHONY: subrepo-check
 subrepo-check:
 ifeq ($(words $(ARGS)), 0)
@@ -11,15 +18,22 @@ endif
 	$(eval SUBREPO ?= $(word 1, $(ARGS)))
 	$(eval REMOTE  := subrepo/$(SUBREPO))
 
-## Delete branch $(BRANCH) on $(SUBREPO) remote
-.PHONY: subrepo-branch-delete
-subrepo-branch-delete: myos-base subrepo-check
-ifneq ($(words $(BRANCH)),0)
-	$(call exec,[ $$(git ls-remote --heads $(REMOTE) $(BRANCH) |wc -l) -eq 1 ] && git push $(REMOTE) :$(BRANCH) || echo Unable to delete branch $(BRANCH) on remote $(REMOTE).)
-endif
+## Check if monorepo is up to date with subrepo. subrepo-push saves the parent commit in file subrepo/.gitrepo
+.PHONY: subrepo-git-diff
+subrepo-git-diff: myos-base subrepo-check
+## Get parent commit in .gitrepo : awk '$1 == "parent" {print $3}' subrepo/.gitrepo
+## Get child of parent commit : git rev-list --ancestry-path parent..HEAD |tail -n 1
+## Compare child commit with our tree : git diff --quiet child -- subrepo
+	$(eval DRYRUN_IGNORE := true)
+	$(eval DIFF = $(shell $(call exec,git diff --quiet $(shell $(call exec,git rev-list --ancestry-path $(shell awk '$$1 == "parent" {print $$3}' $(SUBREPO)/.gitrepo)..HEAD |tail -n 1)) -- $(SUBREPO); echo $$?)) )
+	$(eval DRYRUN_IGNORE := false)
+
+.PHONY: subrepo-git-fetch
+subrepo-git-fetch: myos-base subrepo-check
+	$(call exec,git fetch --prune $(REMOTE))
 
 .PHONY: subrepo-tag-create-%
-subrepo-tag-create-%: myos-base subrepo-check git-fetch-subrepo ## Create $(TAG) tag to reference $(REMOTE)/$* branch
+subrepo-tag-create-%: myos-base subrepo-check subrepo-git-fetch ## Create $(TAG) tag to reference $(REMOTE)/$* branch
 ifneq ($(words $(TAG)),0)
 	$(call exec,[ $$(git ls-remote --tags $(REMOTE) $(TAG) |wc -l) -eq 0 ] || git push $(REMOTE) :refs/tags/$(TAG))
 	$(call exec,git push $(REMOTE) refs/remotes/subrepo/$(SUBREPO)/$*:refs/tags/$(TAG))
@@ -27,7 +41,7 @@ endif
 
 ## Push to subrepo.
 .PHONY: subrepo-push
-subrepo-push: myos-base subrepo-check git-fetch-subrepo git-diff-subrepo
+subrepo-push: myos-base subrepo-check subrepo-git-fetch subrepo-git-diff
 # update .gitrepo only on master branch
 ifeq ($(BRANCH),master)
 	$(eval UPDATE_SUBREPO_OPTIONS += -u)

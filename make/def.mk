@@ -20,7 +20,7 @@ DRYRUN                          ?= false
 DRYRUN_IGNORE                   ?= false
 DRYRUN_RECURSIVE                ?= false
 ENV                             ?= dist
-ENV_FILE                        ?= $(wildcard ../$(PARAMETERS)/$(ENV)/$(APP)/.env) .env
+ENV_FILE                        ?= $(wildcard $(PARAMETERS)/$(ENV)/$(APP)/.env) .env
 ENV_LIST                        ?= debug local tests release master #TODO: staging develop
 ENV_RESET                       ?= false
 ENV_VARS                        ?= APP BRANCH ENV HOSTNAME GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME MONOREPO MONOREPO_DIR TAG UID USER VERSION
@@ -45,9 +45,11 @@ MAKE_VARS                       ?= ENV
 MONOREPO                        ?= $(if $(filter myos,$(MYOS)),$(notdir $(CURDIR)),$(if $(APP),$(notdir $(realpath $(CURDIR)/..))))
 MONOREPO_DIR                    ?= $(if $(MONOREPO),$(if $(filter myos,$(MYOS)),$(realpath $(CURDIR)),$(if $(APP),$(realpath $(CURDIR)/..))))
 MYOS                            ?= $(if $(filter $(MAKE_DIR),$(call pop,$(MAKE_DIR))),,$(call pop,$(MAKE_DIR)))
+PARAMETERS                      ?= $(RELATIVE)parameters
 QUIET                           ?= $(if $(filter false,$(VERBOSE)),--quiet)
 RECURSIVE                       ?= true
-SHARED                          ?= shared
+RELATIVE                        ?= $(if $(filter myos,$(MYOS)),,../)
+SHARED                          ?= $(RELATIVE)shared
 SSH_DIR                         ?= ${HOME}/.ssh
 SUBREPO                         ?= $(if $(wildcard .gitrepo),$(notdir $(CURDIR)))
 TAG                             ?= $(shell git tag -l --points-at $(BRANCH) 2>/dev/null)
@@ -171,8 +173,8 @@ endef
 
 # eval each target:$(env) targets
 # override value of $(ENV) with $(env)
-# override values of .env files with ../$(PARAMETERS)/$(env)/$(APP)/.env file
-$(foreach env,$(ENV_LIST),$(eval TARGET := %\:$(env)) $(eval ASSIGN_ENV := ENV:=$(env)) $(eval ASSIGN_ENV_FILE := ENV_FILE+=$(wildcard ../$(PARAMETERS)/$(env)/$(APP)/.env)) $(eval $(TARGET:ENV)))
+# override values of .env files with $(PARAMETERS)/$(env)/$(APP)/.env file
+$(foreach env,$(ENV_LIST),$(eval TARGET := %\:$(env)) $(eval ASSIGN_ENV := ENV:=$(env)) $(eval ASSIGN_ENV_FILE := ENV_FILE+=$(wildcard $(PARAMETERS)/$(env)/$(APP)/.env)) $(eval $(TARGET:ENV)))
 
 # set ENV=$(env) for each target ending with @$(env)
 $(foreach env,$(ENV_LIST),$(eval %@$(env): ENV:=$(env)))

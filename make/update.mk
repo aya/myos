@@ -12,7 +12,7 @@ update-app: update-app-$(APP_NAME) ; ## Update application source files
 update-app-%: myos-base % ;
 
 .PHONY: $(APP)
-$(APP): APP_DIR := $(if $(filter myos,$(MYOS)),,../)$(APP)
+$(APP): APP_DIR := $(RELATIVE)$(APP)
 $(APP):
 	$(call exec,[ -d $(APP_DIR) ] && cd $(APP_DIR) && git pull $(QUIET) origin $(BRANCH) || git clone $(QUIET) $(APP_REPOSITORY) $(APP_DIR))
 
@@ -45,3 +45,9 @@ update-upstream: myos-base .git/refs/remotes/upstream/master
 
 .git/refs/remotes/upstream/master: myos-base
 	$(call exec,git remote add upstream $(APP_UPSTREAM_REPOSITORY) 2>/dev/null ||:)
+
+.PHONY: update-shared
+update-shared: $(SHARED)
+
+$(SHARED):
+	$(ECHO) mkdir -p $(SHARED)

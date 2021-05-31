@@ -2,7 +2,7 @@
 # target .env:
 # update .env file when .env.dist file is newer
 .env: .env.dist
-	$(call .env,,,$(wildcard ../$(PARAMETERS)/$(ENV)/$(APP)/.env .env.$(ENV)))
+	$(call .env,,,$(wildcard $(PARAMETERS)/$(ENV)/$(APP)/.env .env.$(ENV)))
 
 .PHONY: .env-clean
 .env-clean:
