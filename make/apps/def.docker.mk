@@ -14,9 +14,11 @@ COMPOSE_FILE_TMPFS              ?= false
 else
 COMPOSE_FILE_TMPFS              ?= true
 endif
+COMPOSE_IGNORE_ORPHANS          ?= false
 COMPOSE_PROJECT_NAME            ?= $(USER)_$(ENV)_$(APP)
 COMPOSE_SERVICE_NAME            ?= $(subst _,-,$(COMPOSE_PROJECT_NAME))
-CONTEXT                         += COMPOSE_FILE COMPOSE_PROJECT_NAME DOCKER_IMAGE_TAG DOCKER_REPOSITORY DOCKER_SERVICE
+CONTEXT                         += COMPOSE_FILE DOCKER_IMAGE_TAG DOCKER_REPOSITORY DOCKER_SERVICE
+CONTEXT_DEBUG                   += DOCKER_REGISTRY_REPOSITORY
 DOCKER_BUILD_ARGS               ?= $(if $(filter $(DOCKER_BUILD_NO_CACHE),true),--pull --no-cache) $(foreach var,$(DOCKER_BUILD_VARS),$(if $($(var)),--build-arg $(var)='$($(var))'))
 DOCKER_BUILD_CACHE              ?= true
 DOCKER_BUILD_NO_CACHE           ?= false
@@ -41,6 +43,7 @@ DOCKER_REGISTRY                 ?= registry
 DOCKER_REGISTRY_USERNAME        ?= $(USER)
 DOCKER_REGISTRY_REPOSITORY      ?= $(addsuffix /,$(DOCKER_REGISTRY))$(subst $(USER),$(DOCKER_REGISTRY_USERNAME),$(DOCKER_REPOSITORY))
 DOCKER_REPOSITORY               ?= $(subst _,/,$(COMPOSE_PROJECT_NAME))
+DOCKER_SERVICE                  ?= $(shell $(call docker-compose,--log-level critical config --services) |tail -1)
 DOCKER_SHELL                    ?= $(SHELL)
 ENV_VARS                        += COMPOSE_PROJECT_NAME COMPOSE_SERVICE_NAME DOCKER_BUILD_TARGET DOCKER_GID DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_REPOSITORY DOCKER_SHELL
 

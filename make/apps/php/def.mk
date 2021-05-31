@@ -1,5 +1,4 @@
 BUILD_ENV_VARS                  += SYMFONY_ENV
-DOCKER_SERVICE                  ?= php
 
 ifneq (,$(filter $(ENV),$(ENV_DEPLOY)))
 SYMFONY_ENV                     ?= prod

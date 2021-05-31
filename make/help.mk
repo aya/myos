@@ -29,9 +29,9 @@ target:
 ## Show current context
 context:
 	printf "${COLOR_BROWN}Context:${COLOR_RESET}\n"
-	$(MAKE) $(foreach var,$(CONTEXT),context-$(var))
+	$(MAKE) $(foreach var,$(CONTEXT),$(if $($(var)),context-$(var)))
 
-.PHONY: context--%
+.PHONY: context-%
 context-%:
 	printf "${COLOR_BLUE}%-31s${COLOR_RESET}" $*
 	printf "${COLOR_GREEN}"

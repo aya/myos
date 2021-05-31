@@ -57,3 +57,11 @@ subrepos-branch-delete: $(APPS) ;
 
 .PHONY: subrepos-tag-create-%
 subrepos-tag-create-%: $(APPS) ;
+
+.PHONY: subrepos-update
+subrepos-update: myos-base git-stash $(APPS) git-unstash ## Update subrepos
+	$(call exec,git push upstream $(BRANCH))
+
+.PHONY: subrepo-update-%
+subrepo-update-%:
+	$(if $(wildcard $*/Makefile),$(call make,subrepo-update,$*))

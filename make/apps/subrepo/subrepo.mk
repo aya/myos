@@ -1,15 +1,17 @@
-## Update subrepos
-.PHONY: update-subrepo update-subrepos
-update-subrepo update-subrepos: bootstrap-git git-stash subrepos-push git-unstash
+##
+# SUBREPO
 
-.PHONY: subrepos-branch-delete
-subrepos-branch-delete:
+.PHONY: subrepo-branch-delete subrepos-branch-delete
+subrepo-branch-delete subrepos-branch-delete:
 	$(call make,subrepo-branch-delete,..,SUBREPO BRANCH)
 
-.PHONY: subrepos-tag-create-%
-subrepos-tag-create-%:
+.PHONY: subrepo-push subrepos-push
+subrepo-push subrepos-push:
+	$(call make,subrepo-push,..,SUBREPO BRANCH)
+
+.PHONY: subrepo-tag-create-% subrepos-tag-create-%
+subrepo-tag-create-% subrepos-tag-create-%:
 	$(call make,subrepo-tag-create-$*,..,SUBREPO TAG)
 
-.PHONY: subrepos-push
-subrepos-push:
-	$(call make,subrepo-push,..,SUBREPO BRANCH)
+.PHONY: subrepo-update subrepos-update
+subrepo-update subrepos-update: bootstrap-git git-stash subrepo-push git-unstash

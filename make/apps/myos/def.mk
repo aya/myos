@@ -1,7 +1,5 @@
 CMDS                            += ssh-run
 COMPOSE_IGNORE_ORPHANS          := true
-CONTEXT                         += GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME
-DOCKER_SERVICE                  ?= cli
 ENV_VARS                        += COMPOSE_IGNORE_ORPHANS DOCKER_IMAGE_CLI DOCKER_IMAGE_SSH DOCKER_NAME_CLI DOCKER_NAME_SSH
 HOME                            ?= /home/$(USER)
 NFS_DISK                        ?= $(NFS_HOST):/$(SHARED)
