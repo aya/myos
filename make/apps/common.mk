@@ -95,7 +95,7 @@ stack-%:
 	$(eval stack   := $(subst -$(lastword $(subst -, ,$*)),,$*))
 	$(eval command := $(lastword $(subst -, ,$*)))
 	$(if $(findstring -,$*), \
-	  $(if $(filter $(command),$(filter-out %-%,$(patsubst docker-compose-%,%,$(filter docker-compose-%,$(MAKETARGETS))))), \
+	  $(if $(filter $(command),$(filter-out %-%,$(patsubst docker-compose-%,%,$(filter docker-compose-%,$(MAKE_TARGETS))))), \
 	    $(call make,docker-compose-$(command) STACK="$(stack)" $(if $(filter node,$(stack)),COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME_NODE)),,ARGS COMPOSE_IGNORE_ORPHANS SERVICE)))
 
 .PHONY: start
@@ -121,4 +121,4 @@ update: app-update ## Update application
 
 # target %-rule-exists: Print a warning message if $* target does not exists
 %-rule-exists:
-	$(if $(filter $*,$(MAKECMDGOALS)),$(if $(filter-out $*,$(MAKETARGETS)),printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}target${COLOR_RESET} $* ${COLOR_GREEN}not available in app${COLOR_RESET} $(APP).\n" >&2))
+	$(if $(filter $*,$(MAKECMDGOALS)),$(if $(filter-out $*,$(MAKE_TARGETS)),printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}target${COLOR_RESET} $* ${COLOR_GREEN}not available in app${COLOR_RESET} $(APP).\n" >&2))

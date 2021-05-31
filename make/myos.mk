@@ -3,6 +3,6 @@
 
 .PHONY: myos-%
 myos-%: ;
-ifneq ($(wildcard $(MYOS)),)
+ifeq ($(wildcard $(MYOS)),$(MYOS))
 	$(call make,$*,$(MYOS))
 endif

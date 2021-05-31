@@ -29,7 +29,7 @@ target:
 ## Show current context
 context:
 	printf "${COLOR_BROWN}Context:${COLOR_RESET}\n"
-	$(MAKE) $(foreach var,$(CONTEXT),$(if $($(var)),context-$(var)))
+	$(MAKE) $(foreach var,$(CONTEXT),$(if $($(var)),context-$(var))) FORCE
 
 .PHONY: context-%
 context-%:
