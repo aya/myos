@@ -1,46 +1,40 @@
 ##
 # BUILD
 
-# target build: Build application docker images on local host
-.PHONY: build
-build: docker-compose-build ## Build application docker images
-
-# target build@%: Build application docker images to deploy
-.PHONY: build@% app-build
-build@%: myos-base
-	$(eval DRYRUN_IGNORE   := true)
-	$(eval SERVICES        ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE   := false)
-	$(eval docker_images   += $(foreach service,$(SERVICES),$(if $(shell docker images -q $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG) 2>/dev/null),$(service))))
-	$(eval build_app       := $(or $(filter $(DOCKER_BUILD_CACHE),false),$(filter-out $(docker_images),$(SERVICES))))
-	$(if $(build_app),$(call make,build-init app-build),$(if $(filter $(VERBOSE),true),$(foreach service,$(SERVICES),echo "docker image $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG) has id $(shell docker images -q $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG) 2>/dev/null)" &&) true))
-
-# target build-env: Build .env file in docker $(SERVICE) to deploy
+# target build-env: Build .env file in docker SERVICE to deploy
+# on local host
 .PHONY: build-env
 build-env: SERVICE ?= $(DOCKER_SERVICE)
 build-env: bootstrap
-	$(call docker-compose-exec,$(SERVICE),rm -f .env && make .env ENV=$(ENV) && echo BUILD=true >> .env && echo BUILD_DATE='"\'"'$(shell date "+%d/%m/%Y %H:%M:%S %z" 2>/dev/null)'"\'"' >> .env && echo BUILD_STATUS='"\'"'$(shell git status -uno --porcelain 2>/dev/null)'"\'"' >> .env && echo DOCKER=false >> .env && $(foreach var,$(BUILD_ENV_VARS),$(if $($(var)),sed -i '/^$(var)=/d' .env && echo $(var)='$($(var))' >> .env &&)) true)
+	$(call docker-compose-exec,$(SERVICE), \
+		rm -f .env \
+		&& make .env ENV=$(ENV) \
+		&& echo BUILD=true >> .env \
+		&& echo BUILD_DATE='"\'"'$(shell date "+%d/%m/%Y %H:%M:%S %z" 2>/dev/null)'"\'"' >> .env \
+		&& echo BUILD_STATUS='"\'"'$(shell git status -uno --porcelain 2>/dev/null)'"\'"' >> .env \
+		&& echo DOCKER=false >> .env \
+		&& $(foreach var,$(BUILD_ENV_VARS), \
+			$(if $($(var)),sed -i '/^$(var)=/d' .env && echo $(var)='$($(var))' >> .env &&) \
+		) true \
+	)
 
 # target build-init: Empty build directory
+# on local host
 .PHONY: build-init
 build-init:
 	$(ECHO) rm -rf build && $(ECHO) mkdir -p build
 
-# target build-shared: Create shared folder in docker $(SERVICE) to deploy
+# target build-shared: Create SHARED folder in docker SERVICE to deploy
+# on local host
 .PHONY: build-shared
 build-shared: SERVICE ?= $(DOCKER_SERVICE)
 build-shared: bootstrap
-	$(call docker-compose-exec,$(SERVICE),mkdir -p /$(notdir $(SHARED)) && $(foreach folder,$(SHARED_FOLDERS),rm -rf $(folder) && mkdir -p $(dir $(folder)) && ln -s /$(notdir $(SHARED))/$(notdir $(folder)) $(folder) &&) true)
-
-# target rebuild: Rebuild application docker images on local host
-.PHONY: rebuild
-rebuild: docker-compose-rebuild ## Rebuild application dockers images
-
-# target rebuild@%: Rebuild application docker images on local host
-.PHONY: rebuild@%
-rebuild@%: ## Rebuild application dockers images
-	$(call make,build@$* DOCKER_BUILD_CACHE=false)
-
-# target rebuild-images: Rebuild docker/* images
-.PHONY: rebuild-images
-rebuild-images: docker-rebuild-images ## Rebuild docker/* images
+	$(call docker-compose-exec,$(SERVICE), \
+		mkdir -p /$(notdir $(SHARED)) \
+		&& $(foreach folder,$(SHARED_FOLDERS), \
+			rm -rf $(folder) \
+			&& mkdir -p $(dir $(folder)) \
+			&& ln -s /$(notdir $(SHARED))/$(notdir $(folder)) $(folder) \
+			&& \
+		) true \
+	)

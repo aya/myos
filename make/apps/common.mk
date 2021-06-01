@@ -1,66 +1,155 @@
 ##
 # COMMON
 
+# target bootstrap: Update application files and start dockers
+# on local host
 .PHONY: bootstrap
-bootstrap: bootstrap-git bootstrap-docker app-bootstrap ## Bootstrap application
+bootstrap: bootstrap-git bootstrap-docker app-bootstrap ## Update application files and start dockers
 
+# target bootstrap-docker: Build and start application dockers
+# on local host
 .PHONY: boostrap-docker
 bootstrap-docker: docker-network-create
 	$(call make,docker-compose-up)
 
+# target bootstrap-git: Fire update-app
 .PHONY: bootstrap-git
-bootstrap-git: bootstrap-git-$(APP_DIR)
+bootstrap-git: update-app
 
+# target bootstrap-git-%: Clone GIT_REPOSITORY in folder %
+# on local host
 .PHONY: bootstrap-git-%
 bootstrap-git-%:
 	if ! git config remote.origin.url > /dev/null ; \
-		then git clone $(GIT_REPOSITORY) $*; \
+		then git clone $(QUIET) $(GIT_REPOSITORY) $*; \
 	fi
 
+# target build: Build application docker images to run
+# on local host
+.PHONY: build
+build: docker-compose-build ## Build application docker images
+
+# target build@%: Build application docker images to deploy of % ENV
+# on local host
+.PHONY: build@% app-build
+build@%: myos-base
+	$(eval DRYRUN_IGNORE   := true)
+	$(eval SERVICES        ?= $(shell $(call docker-compose,--log-level critical config --services)))
+	$(eval DRYRUN_IGNORE   := false)
+	$(eval docker_images   += $(foreach service,$(SERVICES),$(if $(shell docker images -q $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG) 2>/dev/null),$(service))))
+	$(eval build_app       := $(or $(filter $(DOCKER_BUILD_CACHE),false),$(filter-out $(docker_images),$(SERVICES))))
+	$(if $(build_app), \
+		$(call make,build-init app-build), \
+		$(if $(filter $(VERBOSE),true), \
+			$(foreach service,$(SERVICES), \
+				echo "docker image $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG) has id $(shell docker images -q $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG) 2>/dev/null)" && \
+			) true \
+		) \
+	)
+
+# target clean: Clean application and docker images
+# on local host
+.PHONY: clean app-clean
+clean: app-clean docker-compose-down .env-clean ## Clean application and docker images
+
+# target clean@%: Clean deployed application and docker images of % ENV
+# on local host
+.PHONY: clean@%
+clean@%:
+	$(call make,docker-compose-down DOCKER_COMPOSE_DOWN_OPTIONS='--rmi all -v')
+
+# target config: View application docker compose file
+# on local host
 .PHONY: config
-config: docker-compose-config ## View docker compose file
+config: docker-compose-config ## View application docker compose file
 
+# target connect: Connect to docker SERVICE
+# on local host
 .PHONY: connect
-connect: docker-compose-connect ## Connect to docker $(SERVICE)
+connect: docker-compose-connect ## Connect to docker SERVICE
 
+# target connect@%: Connect to docker SERVICE of % ENV
+# on first remote host
 .PHONY: connect@%
 connect@%: SERVICE ?= $(DOCKER_SERVICE)
-connect@%: ## Connect to docker $(SERVICE) on first remote host
+connect@%:
 	$(call make,ssh-connect,$(MYOS),APP SERVICE)
 
+# target deploy: Fire deploy@ENV
+.PHONY: deploy
+deploy: deploy@$(ENV) ## Deploy application dockers
+
+# target down: Remove application dockers
+# on local host
 .PHONY: down
 down: docker-compose-down ## Remove application dockers
 
+# target exec: Exec command in docker SERVICE
+# on local host
 .PHONY: exec
-exec: ## Exec a command in docker $(SERVICE)
+exec: ## Exec command in docker SERVICE
 ifneq (,$(filter $(ENV),$(ENV_DEPLOY)))
 	$(call exec,$(ARGS))
 else
 	$(call make,docker-compose-exec,,ARGS)
 endif
 
+# target exec@%: Exec command in docker SERVICE of % ENV
+# on all remote hosts
 .PHONY: exec@%
 exec@%: SERVICE ?= $(DOCKER_SERVICE)
-exec@%: ## Exec a command in docker $(SERVICE) on all remote hosts
+exec@%:
 	$(call make,ssh-exec,$(MYOS),APP ARGS SERVICE)
 
+# target install app-install: Install application
+# on local host
+.PHONY: install app-install
+install: app-install ## Install application
+
+# target logs: Display application dockers logs
+# on local host
 .PHONY: logs
 logs: docker-compose-logs ## Display application dockers logs
 
+# target ps: List application dockers
+# on local host
 .PHONY: ps
 ps: docker-compose-ps ## List application dockers
 
+# target rebuild: Rebuild application docker images
+# on local host
+.PHONY: rebuild
+rebuild: docker-compose-rebuild ## Rebuild application dockers images
+
+# target rebuild@%: Rebuild application docker images
+# on local host
+.PHONY: rebuild@%
+rebuild@%:
+	$(call make,build@$* DOCKER_BUILD_CACHE=false)
+
+# target recreate: Recreate application dockers
+# on local host
 .PHONY: recreate
 recreate: docker-compose-recreate app-start ## Recreate application dockers
 
+# target reinstall: Fire clean and call install target
+# on local host
 .PHONY: reinstall
 reinstall: clean ## Reinstall application
 	$(call make,.env)
 	$(call make,install)
 
+# target release: Fire release-create
+.PHONY: release
+release: release-create ## Create release VERSION
+
+# target restart: Restart application dockers
+# on local host
 .PHONY: restart
 restart: docker-compose-restart app-start ## Restart application
 
+# target run: Run command in a new docker SERVICE
+# on local host
 .PHONY: run
 run: ## Run a command in a new docker
 ifneq (,$(filter $(ENV),$(ENV_DEPLOY)))
@@ -69,27 +158,34 @@ else
 	$(call make,docker-compose-run,,ARGS)
 endif
 
+# target run@%: Run command in a new docker SERVICE of % ENV
+# on all remote hosts
 .PHONY: run@%
 run@%: SERVICE ?= $(DOCKER_SERVICE)
-run@%: ## Run a command on all remote hosts
+run@%:
 	$(call make,ssh-run,$(MYOS),APP ARGS)
 
+# target scale: Scale SERVICE application to NUM dockers
+# on local host
 .PHONY: scale
-scale: docker-compose-scale ## Scale application to NUM dockers
+scale: docker-compose-scale ## Scale SERVICE application to NUM dockers
 
+# target ssh@%: Connect to % ENV
+# on first remote host
 .PHONY: ssh@%
-ssh@%: ## Connect to first remote host
+ssh@%:
 	$(call make,ssh,$(MYOS),APP)
 
-# target stack: Call docker-stack function with each value of $(STACK)
+# target stack: Call docker-stack for each STACK
+## it updates COMPOSE_FILE with all .yml files of the current stack
 .PHONY: stack
 stack:
 	$(foreach stackz,$(STACK),$(call docker-stack,$(stackz)))
 
-# target stack-%: Call docker-compose-* command on a given stack
-## ex: calling stack-base-up will fire the docker-compose-up target on the base stack
-## it splits $* on dashes and extracts stack from the beginning of $* and command
-## from the last part of $*
+# target stack-%: Call docker-compose-% target on a given stack
+## it splits % on dashes and extracts stack from the beginning and command from
+## the last part of %
+## ex: stack-base-up will fire the docker-compose-up target in the base stack
 .PHONY: stack-%
 stack-%:
 	$(eval stack   := $(subst -$(lastword $(subst -, ,$*)),,$*))
@@ -98,26 +194,40 @@ stack-%:
 	  $(if $(filter $(command),$(filter-out %-%,$(patsubst docker-compose-%,%,$(filter docker-compose-%,$(MAKE_TARGETS))))), \
 	    $(call make,docker-compose-$(command) STACK="$(stack)" $(if $(filter node,$(stack)),COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME_NODE)),,ARGS COMPOSE_IGNORE_ORPHANS SERVICE)))
 
+# target start: Start application dockers
+# on local host
 .PHONY: start
 start: docker-compose-start ## Start application dockers
 
+# target stop: Stop application dockers
+# on local host
 .PHONY: stop
 stop: docker-compose-stop ## Stop application dockers
 
+# target tests app-tests: Test application
+# on local host
 .PHONY: tests app-tests
 tests: app-tests ## Test application
 
+# target up: Create and start application dockers
+# on local host
 .PHONY: up
 up: docker-compose-up app-start ## Create application dockers
 
+# target update app-update: Update application files
+# on local host
 .PHONY: update app-update
-update: update-app app-update ## Update application
+update: update-app app-update ## Update application files
+
+# target upgrade app-upgrade: Upgrade application
+# on local host
+.PHONY: upgrade app-upgrade
+upgrade: update app-upgrade release-upgrade ## Upgrade application
 
 # target %: Always fired target
-## this target is fired everytime make is runned to call the stack target and
-## update COMPOSE_FILE variable with all .yml files of the current project stack
+## it fires the stack and %-rule-exists targets everytime
 %: FORCE stack %-rule-exists ;
 
-# target %-rule-exists: Print a warning message if $* target does not exists
+# target %-rule-exists: Print a warning message if % target does not exists
 %-rule-exists:
 	$(if $(filter $*,$(MAKECMDGOALS)),$(if $(filter-out $*,$(MAKE_TARGETS)),printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}target${COLOR_RESET} $* ${COLOR_GREEN}not available in app${COLOR_RESET} $(APP).\n" >&2))

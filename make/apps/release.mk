@@ -16,22 +16,19 @@ endif
 	$(if $(filter VERSION=%,$(MAKEFLAGS)), $(eval RELEASE_VERSION:=$(VERSION)) $(eval RELEASE_BRANCH := release/$(RELEASE_VERSION)))
 	$(if $(findstring $(firstword $(subst /, ,$(RELEASE_BRANCH))),release),,$(error Please provide a VERSION or a release BRANCH))
 
-# target release-create: Create release VERSION from upstream/develop branch
+# target release-create: Create release VERSION from upstream/wip branch
 .PHONY: release-create
 release-create: release-check git-stash
-	$(call make,git-branch-create-upstream-develop BRANCH=$(RELEASE_BRANCH))
+	$(call make,git-branch-create-upstream-wip BRANCH=$(RELEASE_BRANCH))
 	$(call make,git-unstash,,STATUS)
 
 # target release-finish: Merge release VERSION in master branch
 .PHONY: release-finish
 release-finish: release-check git-stash
 	$(call make,git-branch-merge-upstream-master BRANCH=$(RELEASE_BRANCH))
-	$(call make,subrepos-update)
 	$(call make,git-tag-create-upstream-master TAG=$(RELEASE_VERSION))
-	$(call make,subrepos-tag-create-master TAG=$(RELEASE_VERSION))
-	$(call make,git-tag-merge-upstream-develop TAG=$(RELEASE_VERSION))
+	$(call make,git-tag-merge-upstream-wip TAG=$(RELEASE_VERSION))
 	$(call make,git-branch-delete BRANCH=$(RELEASE_BRANCH))
-	$(call make,subrepos-branch-delete BRANCH=$(RELEASE_BRANCH))
 	$(call make,git-unstash,,STATUS)
 
 # target release-update: Update RELEASE with RELEASE_VERSION in .env

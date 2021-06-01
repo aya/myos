@@ -36,18 +36,22 @@ ifeq ($(DOCKER), true)
 
 DOCKER_SSH_AUTH                 := -e SSH_AUTH_SOCK=/tmp/ssh-agent/socket -v $(DOCKER_VOLUME_SSH):/tmp/ssh-agent
 
+# function docker-run: Run new DOCKER_IMAGE:DOCKER_IMAGE_TAG docker with arg 2
 define docker-run
 	$(call run,$(or $(1),$(DOCKER_IMAGE):$(DOCKER_IMAGE_TAG)) $(2))
 endef
 ifeq ($(DRONE), true)
+# function exec: Run new DOCKER_IMAGE docker with arg 1
 define exec
 	$(call run,$(DOCKER_SSH_AUTH) $(DOCKER_IMAGE) sh -c '$(or $(1),$(SHELL))')
 endef
 else
+# function exec: Exec arg 1 in docker DOCKER_NAME
 define exec
 	$(ECHO) docker exec $(DOCKER_EXEC_OPTIONS) $(DOCKER_ENV) $(DOCKER_RUN_WORKDIR) $(DOCKER_NAME) sh -c '$(or $(1),$(SHELL))'
 endef
 endif
+# function run: Pass arg 1 to docker run
 define run
 	$(ECHO) docker run $(DOCKER_RUN_OPTIONS) $(DOCKER_ENV) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(1)
 endef
@@ -55,18 +59,22 @@ endef
 else
 
 SHELL                           := /bin/bash
+# function docker-run: Run new DOCKER_IMAGE:DOCKER_IMAGE_TAG docker with arg 2
 define docker-run
 	$(ECHO) docker run $(DOCKER_RUN_OPTIONS) $(DOCKER_ENV) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(or $(1),$(DOCKER_IMAGE):$(DOCKER_IMAGE_TAG)) $(2)
 endef
+# function exec: Call run with arg 1
 define exec
 	$(call run,sh -c '$(or $(1),$(SHELL))')
 endef
+# function run: Exec arg 1
 define run
 	IFS=$$'\n'; env $(env_reset) $(env) $(1)
 endef
 
 endif
 
+# function docker-volume-copy: Copy files from a docker volume to another
 define docker-volume-copy
 	$(eval from            := $(1))
 	$(eval to              := $(2))

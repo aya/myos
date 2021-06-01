@@ -72,9 +72,11 @@ endif
 
 ifeq ($(DOCKER), true)
 
+# function docker-compose: Run docker-compose with arg 1
 define docker-compose
 	$(call run,docker/compose:$(COMPOSE_VERSION) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
 endef
+# function docker-compose-exec: Run docker-compose-exec with arg 2 in service 1
 define docker-compose-exec
 	$(call run,docker/compose:$(COMPOSE_VERSION) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) exec -T $(1) sh -c '$(2)')
 endef
@@ -91,6 +93,7 @@ endef
 
 endif
 
+# function docker-build: Build docker image
 define docker-build
 	$(eval path            := $(patsubst %/,%,$(1)))
 	$(eval tag             := $(or $(2),$(DOCKER_REPOSITORY)/$(lastword $(subst /, ,$(path))):$(DOCKER_IMAGE_TAG)))
@@ -99,6 +102,7 @@ define docker-build
 	$(eval build_image     := $(or $(filter $(DOCKER_BUILD_CACHE),false),$(if $(image_id),,true)))
 	$(if $(build_image),$(ECHO) docker build $(DOCKER_BUILD_ARGS) --build-arg DOCKER_BUILD_DIR="$(path)" --tag $(tag) $(if $(target),--target $(target)) -f $(path)/Dockerfile .,$(if $(filter $(VERBOSE),true),echo "docker image $(tag) has id $(image_id)",true))
 endef
+# function docker-commit: Commit docker image
 define docker-commit
 	$(eval service         := $(or $(1),$(DOCKER_SERVICE)))
 	$(eval container       := $(or $(2),$(firstword $(shell $(call docker-compose,--log-level critical ps -q $(service))))))
@@ -107,6 +111,7 @@ define docker-commit
 	$(if $(filter $(VERBOSE),true),echo docker commit $(container) $(repository):$(tag))
 	$(ECHO) docker commit $(container) $(repository):$(tag)
 endef
+# function docker-push: Push docker image
 define docker-push
 	$(eval service         := $(or $(1),$(DOCKER_SERVICE)))
 	$(eval name            := $(or $(2),$(DOCKER_REGISTRY_REPOSITORY)/$(service)))
@@ -114,8 +119,7 @@ define docker-push
 	$(if $(filter $(VERBOSE),true),echo docker push $(name):$(tag))
 	$(ECHO) docker push $(name):$(tag)
 endef
-##
-# docker-stack
+# function docker-stack: Call itself recursively for each stack to expand stacks
 # docker-stack: if 1st arg is a variable and can be expand to values, it calls
 # itself again, once whith each value, else calls docker-stack-update function
 	# 1st arg: stacks, extract it from stack_names:stack_versions
@@ -125,8 +129,7 @@ define docker-stack
 	$(eval versions        := $(or $(if $(findstring :,$(1)),$(lastword $(subst :, ,$(1)))),$(2)))
 	$(if $($(stacks)),$(foreach substack,$($(stacks)),$(call docker-stack,$(substack),$(if $(findstring :,$(1)),$(versions)))),$(call docker-stack-update,$(stacks),$(versions)))
 endef
-##
-# docker-stack-update
+# function docker-stack-update: Update COMPOSE_FILE with .yml files of the stack
 # docker-stack-update: adds all .yml files of the stack to COMPOSE_FILE variable
 # and update the .env file with the .env.dist files of the stack
 	# 1st arg: stack_path/stack_name:stack_version
@@ -144,6 +147,7 @@ define docker-stack-update
 	$(eval COMPOSE_FILE    += $(wildcard $(path)/$(name).yml $(path)/$(name).$(ENV).yml $(path)/$(name).$(ENV).$(version).yml $(path)/$(name).$(version).yml))
 	$(if $(wildcard $(path)/.env.dist),$(call .env,,$(path)/.env.dist,$(wildcard $(PARAMETERS)/$(ENV)/$(APP)/.env $(path)/.env.$(ENV) .env)))
 endef
+# function docker-tag: Tag docker image
 define docker-tag
 	$(eval service         := $(or $(1),$(DOCKER_SERVICE)))
 	$(eval source          := $(or $(2),$(DOCKER_REPOSITORY)/$(service)))
