@@ -38,12 +38,15 @@ define ansible-pull
 	IFS=$$'\n'; $(ECHO) env $(foreach var,$(ENV_VARS),$(if $($(var)),$(var)='$($(var))')) $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A)' .env.dist - 2>/dev/null) $$(cat $(ENV_FILE) 2>/dev/null |awk -F "=" '$$1 ~! /^\(#|$$\)/') ansible-pull $(ANSIBLE_ARGS) $(ANSIBLE_VERBOSE) $(1)
 endef
 else
+# function ansible: Call run ansible ANSIBLE_ARGS with arg 1
 define ansible
 	$(call run,ansible $(ANSIBLE_ARGS) $(ANSIBLE_VERBOSE) $(1))
 endef
+# function ansible-playbook: Call run ansible-playbook ANSIBLE_ARGS with arg 1
 define ansible-playbook
 	$(call run,ansible-playbook $(ANSIBLE_ARGS) $(ANSIBLE_VERBOSE) $(1))
 endef
+# function ansible-pull: Call run ansible-pull ANSIBLE_ARGS with arg 1
 define ansible-pull
 	$(call run,ansible-pull $(ANSIBLE_ARGS) $(ANSIBLE_VERBOSE) $(1))
 endef

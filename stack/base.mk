@@ -1,14 +1,18 @@
+# target base: Fire docker-network-create stack-base-up base-ssh-add
 .PHONY: base
 base: docker-network-create stack-base-up base-ssh-add
 
+# target ssh-add: Fire base-ssh-add
 .PHONY: ssh-add
 ssh-add: base-ssh-add
 
+# target base-ssh-add: Fire base-ssh-key and exec ssh-add file SSH_PRIVATE_KEYS in folder SSH_DIR
 .PHONY: base-ssh-add
 base-ssh-add: base-ssh-key
 	$(eval SSH_PRIVATE_KEYS := $(foreach file,$(SSH_DIR)/id_rsa $(filter-out $(wildcard $(SSH_DIR)/id_rsa),$(wildcard $(SSH_DIR)/*)),$(if $(shell grep "PRIVATE KEY" $(file) 2>/dev/null),$(notdir $(file)))))
 	$(call docker-run,$(DOCKER_SSH_AUTH) $(DOCKER_IMAGE_CLI),sh -c "$(foreach file,$(patsubst %,$(SSH_DIR)/%,$(SSH_PRIVATE_KEYS)),ssh-add -l |grep -qw $$(ssh-keygen -lf $(file) 2>/dev/null |awk '{print $$2}') 2>/dev/null || ssh-add $(file) ||: &&) true")
 
+# target base-ssh-key: Setup ssh private key SSH_KEY in SSH_DIR
 .PHONY: base-ssh-key
 base-ssh-key: stack-base-up
 ifneq (,$(filter true,$(DRONE)))

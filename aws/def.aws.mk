@@ -17,6 +17,7 @@ define aws
 	$(call run,$(DOCKER_SSH_AUTH) -v $$HOME/.aws:/root/.aws:ro anigeo/awscli:latest $(1))
 endef
 else
+# function aws: Call run aws with arg 1
 define aws
 	$(call run,aws $(1))
 endef

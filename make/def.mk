@@ -4,7 +4,7 @@ dquote                          ?= "
 quote                           ?= '
 APP                             ?= $(if $(wildcard .git),$(notdir $(CURDIR)))
 APP_NAME                        ?= $(APP)
-APP_TYPE                        ?= $(if $(SUBREPO),subrepo) $(if $(MYOS),,myos)
+APP_TYPE                        ?= $(if $(SUBREPO),subrepo) $(if $(filter .,$(MYOS)),myos)
 APPS                            ?= $(if $(MONOREPO),$(sort $(patsubst $(MONOREPO_DIR)/%/.git,%,$(wildcard $(MONOREPO_DIR)/*/.git))))
 APPS_NAME                       ?= $(foreach app,$(APPS),$(or $(shell awk -F '=' '$$1 == "APP" {print $$2}' $(or $(wildcard $(MONOREPO_DIR)/$(app)/.env),$(wildcard $(MONOREPO_DIR)/$(app)/.env.$(ENV)),$(MONOREPO_DIR)/$(app)/.env.dist) 2>/dev/null),$(app)))
 BRANCH                          ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
@@ -41,15 +41,16 @@ MAKE_ENV_ARGS                   ?= $(foreach var,$(filter $(ENV_VARS),$(MAKE_ENV
 MAKE_ENV_VARS                   ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter environment,$(origin $(var))),$(var))))
 MAKE_FILE_ARGS                  ?= $(foreach var,$(filter $(ENV_VARS),$(MAKE_FILE_VARS)),$(var)='$($(var))')
 MAKE_FILE_VARS                  ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter file,$(origin $(var))),$(var))))
+MAKE_OLDFILE                    ?= $@
 MAKE_TARGETS                    ?= $(filter-out $(.VARIABLES),$(shell $(MAKE) -qp 2>/dev/null |awk -F':' '/^[a-zA-Z0-9][^$$\#\/\t=]*:([^=]|$$)/ {print $$1}' |sort -u))
 MAKE_VARS                       ?= ENV
 MONOREPO                        ?= $(if $(filter myos,$(MYOS)),$(notdir $(CURDIR)),$(if $(APP),$(notdir $(realpath $(CURDIR)/..))))
 MONOREPO_DIR                    ?= $(if $(MONOREPO),$(if $(filter myos,$(MYOS)),$(realpath $(CURDIR)),$(if $(APP),$(realpath $(CURDIR)/..))))
-MYOS                            ?= $(if $(filter $(MAKE_DIR),$(call pop,$(MAKE_DIR))),,$(call pop,$(MAKE_DIR)))
+MYOS                            ?= $(if $(filter $(MAKE_DIR),$(call pop,$(MAKE_DIR))),.,$(call pop,$(MAKE_DIR)))
 PARAMETERS                      ?= $(RELATIVE)parameters
 QUIET                           ?= $(if $(filter false,$(VERBOSE)),--quiet)
 RECURSIVE                       ?= true
-RELATIVE                        ?= $(if $(filter myos,$(MYOS)),,../)
+RELATIVE                        ?= $(if $(filter myos,$(MYOS)),./,../)
 SHARED                          ?= $(RELATIVE)shared
 SSH_DIR                         ?= ${HOME}/.ssh
 SUBREPO                         ?= $(if $(wildcard .gitrepo),$(notdir $(CURDIR)))
@@ -129,10 +130,10 @@ define conf
 	done < "$(file)"
 endef
 
-# macro force: Run command sine die
-# return never
-## it starts command if it is not already running
-force = $$(while true; do [ $$(ps x |awk 'BEGIN {nargs=split("'"$$*"'",args)} $$field == args[1] { matched=1; for (i=1;i<=NF-field;i++) { if ($$(i+field) == args[i+1]) {matched++} } if (matched == nargs) {found++} } END {print found+0}' field=4) -eq 0 ] && $(ECHO) $(command) || sleep 1; done)
+# macro force: Run command 1 sine die
+## it starts command 1 if it is not already running
+## it returns never
+force = $$(while true; do [ $$(ps x |awk 'BEGIN {nargs=split("'"$$*"'",args)} $$field == args[1] { matched=1; for (i=1;i<=NF-field;i++) { if ($$(i+field) == args[i+1]) {matched++} } if (matched == nargs) {found++} } END {print found+0}' field=4) -eq 0 ] && $(ECHO) $(1) || sleep 1; done)
 
 # macro gid: Return GID of group 1
 gid = $(shell grep '^$(1):' /etc/group 2>/dev/null |awk -F: '{print $$3}')

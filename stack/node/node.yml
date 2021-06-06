@@ -7,7 +7,7 @@ services:
       - DOCKER_BUILD_DIR=docker/consul
       context: ../..
       dockerfile: docker/consul/Dockerfile
-    image: ${DOCKER_REPOSITORY_INFRA_NODE}/consul:${DOCKER_IMAGE_TAG}
+    image: ${DOCKER_REPOSITORY_NODE}/consul:${DOCKER_IMAGE_TAG}
     environment:
       CONSUL_BIND_INTERFACE: '${DOCKER_HOST_IFACE}'
       CONSUL_CLIENT_INTERFACE: '${DOCKER_HOST_IFACE}'
@@ -38,7 +38,7 @@ services:
     - consul:/consul/data
     - /var/run/docker.sock:/var/run/docker.sock
   fabio:
-    command: -registry.backend "consul" -registry.consul.addr "consul:8500" -registry.consul.token "$FABIO_CONSUL_HTTP_TOKEN" -proxy.addr ":80,:443;cs=local" -proxy.cs "cs=local;type=file;cert=/certs/${SSL_HOSTNAME}.crt.pem;key=/certs/${SSL_HOSTNAME}.key.pem"
+    command: -registry.backend "consul" -registry.consul.addr "consul:8500" -registry.consul.token "$FABIO_CONSUL_HTTP_TOKEN" -proxy.addr ":80,:443;cs=local" -proxy.cs "cs=local;type=file;cert=/certs/${DOMAIN}.crt.pem;key=/certs/${DOMAIN}.key.pem"
     depends_on:
     - consul
     extra_hosts:
@@ -93,7 +93,7 @@ services:
     extra_hosts:
     - consul:${DOCKER_HOST_INET}
     hostname: ${HOSTNAME}
-    image: ${DOCKER_REPOSITORY_INFRA_NODE}/registrator:${DOCKER_IMAGE_TAG}
+    image: ${DOCKER_REPOSITORY_NODE}/registrator:${DOCKER_IMAGE_TAG}
     network_mode: host
     restart: always
     volumes:

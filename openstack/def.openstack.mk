@@ -12,6 +12,7 @@ define openstack
 	$(call run,$(DOCKER_SSH_AUTH) $(DOCKER_REPOSITORY)/openstack:$(DOCKER_IMAGE_TAG) $(1))
 endef
 else
+# function openstack: Call run openstack with arg 1
 define openstack
 	$(call run,openstack $(1))
 endef

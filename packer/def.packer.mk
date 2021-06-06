@@ -86,9 +86,11 @@ endef
 
 else
 
+# function packer: Call run packer with arg 1
 define packer
 	$(call run,packer $(1))
 endef
+# function packer-qemu: Call run qemu-system-% for PACKER_QEMU_ARCH
 define packer-qemu
 	echo Running $(1)
 	$(call run,qemu-system-$(PACKER_QEMU_ARCH) $(PACKER_QEMU_ARGS) -m 512m -drive file=$(1)$(comma)format=raw -net nic$(comma)model=virtio -net user$(comma)hostfwd=tcp:$(PACKER_SSH_ADDRESS):$(PACKER_SSH_PORT)-:22 -vnc $(PACKER_VNC_ADDRESS):$(subst 590,,$(PACKER_VNC_PORT)))
@@ -96,6 +98,7 @@ endef
 
 endif
 
+# function packer-build: Call packer build with arg 1, Add build infos to file PACKER_ISO_INFO
 define packer-build
 	$(eval PACKER_TEMPLATE := $(notdir $(basename $(1))))
 	echo Building $(PACKER_ISO_FILE)

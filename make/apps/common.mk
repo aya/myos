@@ -33,9 +33,6 @@ build: docker-compose-build ## Build application docker images
 # on local host
 .PHONY: build@% app-build
 build@%: myos-base
-	$(eval DRYRUN_IGNORE   := true)
-	$(eval SERVICES        ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE   := false)
 	$(eval docker_images   += $(foreach service,$(SERVICES),$(if $(shell docker images -q $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG) 2>/dev/null),$(service))))
 	$(eval build_app       := $(or $(filter $(DOCKER_BUILD_CACHE),false),$(filter-out $(docker_images),$(SERVICES))))
 	$(if $(build_app), \
@@ -75,7 +72,7 @@ connect@%: SERVICE ?= $(DOCKER_SERVICE)
 connect@%:
 	$(call make,ssh-connect,$(MYOS),APP SERVICE)
 
-# target deploy: Fire deploy@ENV
+# target deploy: Fire deploy@% for ENV
 .PHONY: deploy
 deploy: deploy@$(ENV) ## Deploy application dockers
 
@@ -84,7 +81,7 @@ deploy: deploy@$(ENV) ## Deploy application dockers
 .PHONY: down
 down: docker-compose-down ## Remove application dockers
 
-# target exec: Exec command in docker SERVICE
+# target exec: Exec ARGS in docker SERVICE
 # on local host
 .PHONY: exec
 exec: ## Exec command in docker SERVICE
@@ -94,7 +91,7 @@ else
 	$(call make,docker-compose-exec,,ARGS)
 endif
 
-# target exec@%: Exec command in docker SERVICE of % ENV
+# target exec@%: Exec ARGS in docker SERVICE of % ENV
 # on all remote hosts
 .PHONY: exec@%
 exec@%: SERVICE ?= $(DOCKER_SERVICE)
@@ -104,7 +101,7 @@ exec@%:
 # target install app-install: Install application
 # on local host
 .PHONY: install app-install
-install: app-install ## Install application
+install: update-app app-install ## Install application
 
 # target logs: Display application dockers logs
 # on local host
@@ -132,7 +129,7 @@ rebuild@%:
 .PHONY: recreate
 recreate: docker-compose-recreate app-start ## Recreate application dockers
 
-# target reinstall: Fire clean and call install target
+# target reinstall: Fire clean, Call .env target, Call install target
 # on local host
 .PHONY: reinstall
 reinstall: clean ## Reinstall application
@@ -148,7 +145,7 @@ release: release-create ## Create release VERSION
 .PHONY: restart
 restart: docker-compose-restart app-start ## Restart application
 
-# target run: Run command in a new docker SERVICE
+# target run: Run command ARGS in a new docker SERVICE
 # on local host
 .PHONY: run
 run: ## Run a command in a new docker
@@ -158,7 +155,7 @@ else
 	$(call make,docker-compose-run,,ARGS)
 endif
 
-# target run@%: Run command in a new docker SERVICE of % ENV
+# target run@%: Run command ARGS in a new docker SERVICE of % ENV
 # on all remote hosts
 .PHONY: run@%
 run@%: SERVICE ?= $(DOCKER_SERVICE)
@@ -182,7 +179,7 @@ ssh@%:
 stack:
 	$(foreach stackz,$(STACK),$(call docker-stack,$(stackz)))
 
-# target stack-%: Call docker-compose-% target on a given stack
+# target stack-%: Call docker-compose-% target on STACK
 ## it splits % on dashes and extracts stack from the beginning and command from
 ## the last part of %
 ## ex: stack-base-up will fire the docker-compose-up target in the base stack
@@ -194,9 +191,9 @@ stack-%:
 	  $(if $(filter $(command),$(filter-out %-%,$(patsubst docker-compose-%,%,$(filter docker-compose-%,$(MAKE_TARGETS))))), \
 	    $(call make,docker-compose-$(command) STACK="$(stack)" $(if $(filter node,$(stack)),COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME_NODE)),,ARGS COMPOSE_IGNORE_ORPHANS SERVICE)))
 
-# target start: Start application dockers
+# target start app-start: Start application dockers
 # on local host
-.PHONY: start
+.PHONY: start app-start
 start: docker-compose-start ## Start application dockers
 
 # target stop: Stop application dockers

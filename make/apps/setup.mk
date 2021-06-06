@@ -7,6 +7,14 @@ ifeq ($(SETUP_SYSCTL),true)
 	$(foreach config,$(SETUP_SYSCTL_CONFIG),$(call docker-run,--privileged alpine:latest,sysctl -q -w $(config)) &&) true
 endif
 
+.PHONY: setup-nfsd
+setup-nfsd:
+ifeq ($(SETUP_NFSD),true)
+ifeq ($(HOST_SYSTEM),DARWIN)
+	$(call setup-nfsd-osx)
+endif
+endif
+
 define setup-nfsd-osx
 	$(eval dir:=$(or $(1),$(MONOREPO_DIR)))
 	$(eval uid:=$(or $(2),$(UID)))

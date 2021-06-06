@@ -1,7 +1,7 @@
 ##
 # DOCKER
 
-# target docker-build: Fire docker-images-myos and call docker-build-% target for each DOCKER_IMAGES
+# target docker-build: Fire docker-images-myos, Call docker-build-% target for each DOCKER_IMAGES
 .PHONY: docker-build
 docker-build: docker-images-myos
 	$(foreach image,$(or $(SERVICE),$(DOCKER_IMAGES)),$(call make,docker-build-$(image)))
@@ -17,25 +17,16 @@ docker-build-%:
 # target docker-commit: Call docker-commit for each SERVICES
 .PHONY: docker-commit
 docker-commit:
-	$(eval DRYRUN_IGNORE := true)
-	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE := false)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-commit,$(service)))
 
 # target docker-commit-%: Call docker-commit with tag % for each SERVICES
 .PHONY: docker-commit-%
 docker-commit-%:
-	$(eval DRYRUN_IGNORE := true)
-	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE := false)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-commit,$(service),,,$*))
 
-# target docker-compose-build: Fire docker-images-myos and call docker-compose build SERVICE
+# target docker-compose-build: Fire docker-images-myos, Call docker-compose build SERVICE
 .PHONY: docker-compose-build
 docker-compose-build: docker-images-myos
-	$(eval DRYRUN_IGNORE := true)
-	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE := false)
 	$(call docker-compose,build $(if $(filter $(DOCKER_BUILD_NO_CACHE),true),--pull --no-cache) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-config: Call docker-compose config
@@ -52,9 +43,6 @@ docker-compose-connect:
 # target docker-compose-down: Call docker-compose rm SERVICE or docker-compose down
 .PHONY: docker-compose-down
 docker-compose-down:
-	$(eval DRYRUN_IGNORE := true)
-	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE := false)
 	$(if $(filter $(SERVICE),$(SERVICES)),$(call docker-compose,rm -fs $(SERVICE)),$(call docker-compose,down $(DOCKER_COMPOSE_DOWN_OPTIONS)))
 
 # target docker-compose-exec: Call docker-compose-exec SERVICE ARGS
@@ -66,9 +54,6 @@ docker-compose-exec:
 # target docker-compose-logs: Call docker-compose logs SERVICE
 .PHONY: docker-compose-logs
 docker-compose-logs:
-	$(eval DRYRUN_IGNORE := true)
-	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE := false)
 	$(call docker-compose,logs -f --tail=100 $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE))) || true
 
 # target docker-compose-ps: Call docker-compose ps
@@ -88,17 +73,11 @@ docker-compose-recreate: docker-compose-rm docker-compose-up
 # target docker-compose-restart: Call docker-compose restart SERVICE
 .PHONY: docker-compose-restart
 docker-compose-restart:
-	$(eval DRYRUN_IGNORE := true)
-	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE := false)
 	$(call docker-compose,restart $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-rm: Call docker-compose rm SERVICE
 .PHONY: docker-compose-rm
 docker-compose-rm:
-	$(eval DRYRUN_IGNORE := true)
-	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE := false)
 	$(call docker-compose,rm -fs $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-run: Call docker-compose run SERVICE ARGS
@@ -116,25 +95,16 @@ docker-compose-scale:
 # target docker-compose-start: Call docker-compose start SERVICE
 .PHONY: docker-compose-start
 docker-compose-start:
-	$(eval DRYRUN_IGNORE := true)
-	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE := false)
 	$(call docker-compose,start $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-stop: Call docker-compose stop SERVICE
 .PHONY: docker-compose-stop
 docker-compose-stop:
-	$(eval DRYRUN_IGNORE := true)
-	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE := false)
 	$(call docker-compose,stop $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
-# target docker-compose-up: Fire docker-image-myos and call docker-compose up SERVICE
+# target docker-compose-up: Fire docker-image-myos, Call docker-compose up SERVICE
 .PHONY: docker-compose-up
 docker-compose-up: docker-images-myos
-	$(eval DRYRUN_IGNORE := true)
-	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE := false)
 	$(call docker-compose,up $(DOCKER_COMPOSE_UP_OPTIONS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-images-myos: Call myos-docker-build-% target for each DOCKER_IMAGES_MYOS
@@ -152,7 +122,7 @@ docker-images-rm:
 docker-images-rm-%:
 	docker images |awk '$$1 ~ /^$(subst /,\/,$*)/ {print $$3}' |sort -u |while read image; do docker rmi -f $$image; done
 
-# target docker-login: Exec docker login
+# target docker-login: Exec 'docker login'
 .PHONY: docker-login
 docker-login: myos-base
 	$(ECHO) docker login
@@ -161,7 +131,7 @@ docker-login: myos-base
 .PHONY: docker-network-create
 docker-network-create: docker-network-create-$(DOCKER_NETWORK)
 
-# target docker-network-create-%: Create docker network %
+# target docker-network-create-%: Exec 'docker network create %'
 .PHONY: docker-network-create-%
 docker-network-create-%:
 	[ -n "$(shell docker network ls -q --filter name='^$*$$' 2>/dev/null)" ] \
@@ -177,7 +147,7 @@ docker-network-rm-%:
 	[ -z "$(shell docker network ls -q --filter name='^$*$$' 2>/dev/null)" ] \
 	  || { echo -n "Removing docker network $* ... " && $(ECHO) docker network rm $* >/dev/null 2>&1 && echo "done" || echo "ERROR"; }
 
-# target docker-plugin-install: Install docker plugin DOCKER_PLUGIN with DOCKER_PLUGIN_OPTIONS
+# target docker-plugin-install: Exec 'docker plugin install DOCKER_PLUGIN_OPTIONS DOCKER_PLUGIN'
 .PHONY: docker-plugin-install
 docker-plugin-install:
 	$(eval docker_plugin_state := $(shell docker plugin ls | awk '$$2 == "$(DOCKER_PLUGIN)" {print $$NF}') )
@@ -187,9 +157,6 @@ docker-plugin-install:
 .PHONY: docker-push
 docker-push:
 ifneq ($(filter $(DEPLOY),true),)
-	$(eval DRYRUN_IGNORE := true)
-	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE := false)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-push,$(service)))
 else
 	printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}target${COLOR_RESET} $@ ${COLOR_GREEN}not enabled in${COLOR_RESET} $(APP).\n" >&2
@@ -199,9 +166,6 @@ endif
 .PHONY: docker-push-%
 docker-push-%:
 ifneq ($(filter $(DEPLOY),true),)
-	$(eval DRYRUN_IGNORE := true)
-	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE := false)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-push,$(service),,$*))
 else
 	printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}target${COLOR_RESET} $@ ${COLOR_GREEN}not enabled in${COLOR_RESET} $(APP).\n" >&2
@@ -245,9 +209,6 @@ docker-run-%: docker-build-%
 .PHONY: docker-tag
 docker-tag:
 ifneq ($(filter $(DEPLOY),true),)
-	$(eval DRYRUN_IGNORE := true)
-	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE := false)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-tag,$(service)))
 else
 	printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}target${COLOR_RESET} $@ ${COLOR_GREEN}not enabled in${COLOR_RESET} $(APP).\n" >&2
@@ -257,9 +218,6 @@ endif
 .PHONY: docker-tag-%
 docker-tag-%:
 ifneq ($(filter $(DEPLOY),true),)
-	$(eval DRYRUN_IGNORE := true)
-	$(eval SERVICES      ?= $(shell $(call docker-compose,--log-level critical config --services)))
-	$(eval DRYRUN_IGNORE := false)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-tag,$(service),,,,$*))
 else
 	printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}target${COLOR_RESET} $@ ${COLOR_GREEN}not enabled in${COLOR_RESET} $(APP).\n" >&2

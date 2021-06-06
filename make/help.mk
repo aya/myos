@@ -13,7 +13,7 @@ COLOR_BLUE                      ?= \033[36m
 blank1 blank2:
 	printf "\n"
 
-# target context: Call context-% for each CONTEXT
+# target context: Call context-% target for each CONTEXT
 .PHONY: context
 context:
 	printf "${COLOR_BROWN}Context:${COLOR_RESET}\n"
@@ -30,7 +30,7 @@ context-%:
 # target doc: Fire functions macros target variables
 doc: functions macros targets variables ;
 
-# target doc: Fire functions-% macros-% target-% variables-%
+# target doc-%: Fire functions-% macros-% target-% variables-%
 doc-%: functions-% macros-% targets-% variables-%;
 
 # target help: Fire usage blank1 target blank2 context

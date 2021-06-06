@@ -10,7 +10,7 @@ update-apps:
 .PHONY: update-app
 update-app: update-app-$(APP_NAME) ;
 
-# target update-app-%: Fire % target
+# target update-app-%: Fire myos-base %
 .PHONY: update-app-%
 update-app-%: myos-base % ;
 
