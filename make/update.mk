@@ -1,6 +1,16 @@
 ##
 # UPDATE
 
+# target install-app install-apps: Call install-app for each ARGS
+.PHONY: install-app install-apps
+install-app install-apps:
+	$(foreach url,$(ARGS),$(call install-app,$(url)))
+
+# target install-app-%: Call install-app for %
+.PHONY: install-app-%
+install-app-%:
+	$(call install-app,$*)
+
 # target update-apps: Call update-app target for each APPS
 .PHONY: update-apps
 update-apps:
@@ -14,11 +24,11 @@ update-app: update-app-$(APP_NAME) ;
 .PHONY: update-app-%
 update-app-%: myos-base % ;
 
-# target $(APP): Clone or pull application files
+# target $(APP): Call update-app
 .PHONY: $(APP)
 $(APP): APP_DIR := $(RELATIVE)$(APP)
 $(APP):
-	$(call exec,[ -d $(APP_DIR) ] && cd $(APP_DIR) && git pull $(QUIET) origin $(BRANCH) || git clone $(QUIET) $(APP_REPOSITORY) $(APP_DIR))
+	$(call update-app)
 
 # target update-hosts: Update /etc/hosts
 # on local host
@@ -38,7 +48,7 @@ update-parameters: $(PARAMETERS)
 $(PARAMETERS): SSH_PUBLIC_HOST_KEYS := $(PARAMETERS_REMOTE_HOST) $(SSH_BASTION_HOSTNAME) $(SSH_REMOTE_HOSTS)
 $(PARAMETERS): MAKE_VARS += SSH_BASTION_HOSTNAME SSH_BASTION_USERNAME SSH_PRIVATE_IP_RANGE SSH_PUBLIC_HOST_KEYS
 $(PARAMETERS): myos-base
-	$(call exec,[ -d $(PARAMETERS) ] && cd $(PARAMETERS) && git pull --quiet || git clone --quiet $(APP_PARAMETERS_REPOSITORY))
+	$(call update-app,$(PARAMETERS),$(PARAMETERS_REPOSITORY))
 
 # target update-remote-%: fetch git remote %
 .PHONY: update-remote-%

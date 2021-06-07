@@ -8,7 +8,7 @@ APP_TYPE                        ?= $(if $(SUBREPO),subrepo) $(if $(filter .,$(MY
 APPS                            ?= $(if $(MONOREPO),$(sort $(patsubst $(MONOREPO_DIR)/%/.git,%,$(wildcard $(MONOREPO_DIR)/*/.git))))
 APPS_NAME                       ?= $(foreach app,$(APPS),$(or $(shell awk -F '=' '$$1 == "APP" {print $$2}' $(or $(wildcard $(MONOREPO_DIR)/$(app)/.env),$(wildcard $(MONOREPO_DIR)/$(app)/.env.$(ENV)),$(MONOREPO_DIR)/$(app)/.env.dist) 2>/dev/null),$(app)))
 BRANCH                          ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
-CMDS                            ?= exec exec:% exec@% run run:% run@%
+CMDS                            ?= exec exec:% exec@% install-app install-apps run run:% run@%
 COMMIT                          ?= $(shell git rev-parse $(BRANCH) 2>/dev/null)
 CONTEXT                         ?= $(if $(APP),APP BRANCH VERSION) $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null)
 CONTEXT_DEBUG                   ?= MAKEFILE_LIST env APPS GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME LOG_LEVEL MAKE_DIR MAKE_SUBDIRS MAKE_CMD_ARGS MAKE_ENV_ARGS MONOREPO_DIR UID USER
@@ -27,7 +27,6 @@ ENV_VARS                        ?= APP BRANCH ENV HOSTNAME GID GIT_AUTHOR_EMAIL 
 GID                             ?= $(shell id -g 2>/dev/null)
 GIT_AUTHOR_EMAIL                ?= $(shell git config user.email 2>/dev/null)
 GIT_AUTHOR_NAME                 ?= $(shell git config user.name 2>/dev/null)
-GIT_PARAMETERS_REPOSITORY       ?= $(call pop,$(GIT_UPSTREAM_REPOSITORY))/$(notdir $(PARAMETERS))
 GIT_REPOSITORY                  ?= $(if $(SUBREPO),$(shell awk -F ' = ' '$$1 ~ /^[[\s\t]]*remote$$/ {print $$2}' .gitrepo 2>/dev/null),$(shell git config --get remote.origin.url 2>/dev/null))
 GIT_UPSTREAM_REPOSITORY         ?= $(if $(findstring ://,$(GIT_REPOSITORY)),$(call pop,$(call pop,$(GIT_REPOSITORY)))/,$(call pop,$(GIT_REPOSITORY),:):)$(GIT_UPSTREAM_USER)/$(lastword $(subst /, ,$(GIT_REPOSITORY)))
 GIT_UPSTREAM_USER               ?= $(or $(MONOREPO),$(USER))
@@ -48,6 +47,7 @@ MONOREPO                        ?= $(if $(filter myos,$(MYOS)),$(notdir $(CURDIR
 MONOREPO_DIR                    ?= $(if $(MONOREPO),$(if $(filter myos,$(MYOS)),$(realpath $(CURDIR)),$(if $(APP),$(realpath $(CURDIR)/..))))
 MYOS                            ?= $(if $(filter $(MAKE_DIR),$(call pop,$(MAKE_DIR))),.,$(call pop,$(MAKE_DIR)))
 PARAMETERS                      ?= $(RELATIVE)parameters
+PARAMETERS_REPOSITORY           ?= $(call pop,$(GIT_UPSTREAM_REPOSITORY))/$(notdir $(PARAMETERS))
 QUIET                           ?= $(if $(filter false,$(VERBOSE)),--quiet)
 RECURSIVE                       ?= true
 RELATIVE                        ?= $(if $(filter myos,$(MYOS)),./,../)
@@ -169,6 +169,23 @@ pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
 
 # macro sed: Exec sed script 1 on file 2
 sed = $(call exec,sed -i $(SED_SUFFIX) '\''$(1)'\'' $(2))
+
+# function install-app: Exec 'git clone url 1 dir 2'
+## it installs application source files
+define install-app
+	$(eval url := $(or $(1), $(APP_REPOSITORY)))
+	$(eval dir := $(or $(2), $(RELATIVE)$(lastword $(subst /, ,$(url)))))
+	[ -d $(dir) ] || $(call exec,$(ECHO) git clone $(QUIET) $(url) $(dir))
+endef
+
+# function update-app: Exec 'cd dir 1 && git pull'
+## it updates application source files
+define update-app
+	$(eval dir := $(or $(1), $(APP_DIR)))
+	$(eval url := $(or $(2), $(APP_REPOSITORY)))
+	$(call install-app,$(url),$(dir))
+	[ -d $(dir) ] && $(call exec,cd $(dir) && $(ECHO) git pull $(QUIET))
+endef
 
 # function TARGET:ENV: Create a new target ending with :env
 ## it sets ENV, ENV_FILE and calls original target

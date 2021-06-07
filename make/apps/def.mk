@@ -1,7 +1,6 @@
 APP_DIR                         ?= $(CURDIR)
 APP_DOMAIN                      ?= $(ENV)$(addprefix .,$(DOMAIN))
 APP_HOST                        ?= $(APP)$(addprefix .,$(APP_DOMAIN))
-APP_PARAMETERS_REPOSITORY       ?= $(GIT_PARAMETERS_REPOSITORY)
 APP_PARENT                      ?= $(MONOREPO)
 APP_PARENT_DIR                  ?= $(MONOREPO_DIR)
 APP_PATH                        ?= /$(APP_PATH_PREFIX)
@@ -11,7 +10,7 @@ APP_UPSTREAM_REPOSITORY         ?= $(or $(shell git config --get remote.upstream
 APP_URI                         ?= $(APP_HOST)$(APP_PATH)
 APP_URL                         ?= $(APP_SCHEME)://$(APP_URI)
 BUILD_ENV_VARS                  ?= APP BRANCH COMMIT DEPLOY_HOOK_URL ENV VERSION
-CONTEXT_DEBUG                   += APP_DIR APP_DOMAIN APP_HOST APP_PATH APP_URL APP_REPOSITORY APP_UPSTREAM_REPOSITORY APP_PARAMETERS_REPOSITORY CONSUL_HTTP_TOKEN SERVICES
+CONTEXT_DEBUG                   += APP_DIR APP_DOMAIN APP_HOST APP_PATH APP_URL APP_REPOSITORY APP_UPSTREAM_REPOSITORY CONSUL_HTTP_TOKEN SERVICES
 ENV_DEPLOY                      ?= $(shell ls .git/refs/heads/)
 ENV_VARS                        += APP_DIR APP_DOMAIN APP_HOST APP_PATH APP_URL CONSUL_HTTP_TOKEN $(if $(filter true,$(MOUNT_NFS)),NFS_CONFIG)
 MOUNT_NFS                       ?= false
