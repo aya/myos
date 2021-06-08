@@ -5,7 +5,7 @@ include make/include.mk
 
 app-bootstrap: setup-sysctl setup-nfsd
 
-app-build: base install-build-parameters
+app-build: base install-build-config
 	$(call make,docker-compose-build docker-compose-up)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call make,app-build-$(service)))
 	$(call make,docker-commit)

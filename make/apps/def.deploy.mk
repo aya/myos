@@ -1,3 +1,9 @@
+CODEDEPLOY_APP_NAME             ?= $(APP)
+CODEDEPLOY_DEPLOYMENT_GROUP     ?= $(CODEDEPLOY_APP_NAME)_$(ENV)
+CODEDEPLOY_DEPLOYMENT_CONFIG    ?= CodeDeployDefault.AllAtOnce
+CODEDEPLOY_DESCRIPTION          ?= app: *$(APP)* branch: *$(BRANCH)* env: *$(ENV)* version: *$(VERSION)*
+CODEDEPLOY_GITHUB_REPO          ?= $(patsubst $(call pop,$(call pop,$(GIT_REPOSITORY)))/%,%,$(GIT_REPOSITORY))
+CODEDEPLOY_GITHUB_COMMIT_ID     ?= $(COMMIT)
 DEPLOY                          ?= false
 DEPLOY_HASH                     ?= $(shell date +%s)
 DEPLOY_HOOK_TEXT                ?= app: *$(APP)* branch: *$(BRANCH)* env: *$(ENV)* version: *$(VERSION)* container: *$(CONTAINER)* host: *$(HOST)*

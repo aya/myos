@@ -18,7 +18,7 @@ COMPOSE_IGNORE_ORPHANS          ?= false
 COMPOSE_PROJECT_NAME            ?= $(USER)_$(ENV)_$(APP)
 COMPOSE_SERVICE_NAME            ?= $(subst _,-,$(COMPOSE_PROJECT_NAME))
 CONTEXT                         += COMPOSE_FILE DOCKER_IMAGE_TAG DOCKER_REPOSITORY DOCKER_SERVICE
-CONTEXT_DEBUG                   += DOCKER_REGISTRY_REPOSITORY
+CONTEXT_DEBUG                   += DOCKER_REGISTRY
 DOCKER_BUILD_ARGS               ?= $(if $(filter $(DOCKER_BUILD_NO_CACHE),true),--pull --no-cache) $(foreach var,$(DOCKER_BUILD_VARS),$(if $($(var)),--build-arg $(var)='$($(var))'))
 DOCKER_BUILD_CACHE              ?= true
 DOCKER_BUILD_NO_CACHE           ?= false
@@ -145,7 +145,7 @@ define docker-stack-update
 	$(eval version         := $(or $(2),$(if $(findstring :,$(stack)),$(lastword $(subst :, ,$(stack))),latest)))
 	$(eval path            := $(patsubst %/,%,$(or $(3),$(if $(findstring /,$(1)),$(if $(wildcard stack/$(1) stack/$(1).yml),stack/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard stack/$(1).yml),$(dir $(1)),$(1))),$(dir $(1)))),stack/$(name))))
 	$(eval COMPOSE_FILE    += $(wildcard $(path)/$(name).yml $(path)/$(name).$(ENV).yml $(path)/$(name).$(ENV).$(version).yml $(path)/$(name).$(version).yml))
-	$(if $(wildcard $(path)/.env.dist),$(call .env,,$(path)/.env.dist,$(wildcard $(PARAMETERS)/$(ENV)/$(APP)/.env $(path)/.env.$(ENV) .env)))
+	$(if $(wildcard $(path)/.env.dist),$(call .env,,$(path)/.env.dist,$(wildcard $(CONFIG)/$(ENV)/$(APP)/.env $(path)/.env.$(ENV) .env)))
 endef
 # function docker-tag: Tag docker image
 define docker-tag

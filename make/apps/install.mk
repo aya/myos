@@ -24,17 +24,17 @@ install-pgsql-database-%: myos-base
 	$(call exec,[ $$(PGPASSWORD=$* psql -h postgres -U $* -d $* -c "\d" 2>/dev/null |wc -l) -eq 0 ] && [ -f "${APP_DIR}/$*.pgsql.gz" ] && gzip -cd "${APP_DIR}/$*.pgsql.gz" |PGPASSWORD="postgres" psql -h postgres -U postgres -d $* || true)
 	$(call exec,[ $$(PGPASSWORD=$* psql -h postgres -U $* -d $* -c "\d" 2>/dev/null |wc -l) -eq 0 ] && [ -f "${APP_DIR}/$*.pgsql" ] && PGPASSWORD="postgres" psql -h postgres -U postgres -c "ALTER ROLE $* WITH SUPERUSER" && PGPASSWORD="postgres" pg_restore -h postgres --no-owner --role=$* -U postgres -d $* ${APP_DIR}/$*.pgsql && PGPASSWORD="postgres" psql -h postgres -U postgres -c "ALTER ROLE $* WITH NOSUPERUSER" || true)
 
-# target install-build-parameters: Call install-parameters with file * and dest build
-.PHONY: install-build-parameters
-install-build-parameters:
-	$(call install-parameters,,*,build)
+# target install-build-config: Call install-config with file * and dest build
+.PHONY: install-build-config
+install-build-config:
+	$(call install-config,,*,build)
 
-# target install-parameters: Call install-parameters
-.PHONY: install-parameters
-install-parameters:
-	$(call install-parameters)
+# target install-config: Call install-config
+.PHONY: install-config
+install-config:
+	$(call install-config)
 
-# target install-parameters-%: Call install-parameters with app %
-.PHONY: install-parameters-%
-install-parameters-%:
-	$(call install-parameters,$*)
+# target install-config-%: Call install-config with app %
+.PHONY: install-config-%
+install-config-%:
+	$(call install-config,$*)

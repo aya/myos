@@ -4,7 +4,7 @@
 # target .env: Update .env
 ## it updates .env file when .env.dist file is newer
 .env: .env.dist
-	$(call .env,,,$(wildcard $(PARAMETERS)/$(ENV)/$(APP)/.env .env.$(ENV)))
+	$(call .env,,,$(wildcard $(CONFIG)/$(ENV)/$(APP)/.env .env.$(ENV)))
 
 # target .env-clean: Remove .env
 .PHONY: .env-clean
