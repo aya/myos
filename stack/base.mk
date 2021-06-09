@@ -10,7 +10,7 @@ ssh-add: base-ssh-add
 .PHONY: base-ssh-add
 base-ssh-add: base-ssh-key
 	$(eval SSH_PRIVATE_KEYS := $(foreach file,$(SSH_DIR)/id_rsa $(filter-out $(wildcard $(SSH_DIR)/id_rsa),$(wildcard $(SSH_DIR)/*)),$(if $(shell grep "PRIVATE KEY" $(file) 2>/dev/null),$(notdir $(file)))))
-	$(call docker-run,$(DOCKER_SSH_AUTH) $(DOCKER_IMAGE_CLI),sh -c "$(foreach file,$(patsubst %,$(SSH_DIR)/%,$(SSH_PRIVATE_KEYS)),ssh-add -l |grep -qw $$(ssh-keygen -lf $(file) 2>/dev/null |awk '{print $$2}') 2>/dev/null || ssh-add $(file) ||: &&) true")
+	$(call docker-run,$(DOCKER_IMAGE_CLI),sh -c "$(foreach file,$(patsubst %,$(SSH_DIR)/%,$(SSH_PRIVATE_KEYS)),ssh-add -l |grep -qw $$(ssh-keygen -lf $(file) 2>/dev/null |awk '{print $$2}') 2>/dev/null || ssh-add $(file) ||: &&) true")
 
 # target base-ssh-key: Setup ssh private key SSH_KEY in SSH_DIR
 .PHONY: base-ssh-key

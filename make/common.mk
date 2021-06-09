@@ -7,13 +7,6 @@ $(APP): APP_DIR := $(RELATIVE)$(APP)
 $(APP): myos-base
 	$(call update-app)
 
-# target $(CONFIG): Update config files
-.PHONY: $(CONFIG)
-$(CONFIG): SSH_PUBLIC_HOST_KEYS := $(CONFIG_REMOTE_HOST) $(SSH_BASTION_HOSTNAME) $(SSH_REMOTE_HOSTS)
-$(CONFIG): MAKE_VARS += SSH_BASTION_HOSTNAME SSH_BASTION_USERNAME SSH_PRIVATE_IP_RANGE SSH_PUBLIC_HOST_KEYS
-$(CONFIG): myos-base
-	$(call update-app,$(CONFIG_REPOSITORY),$(CONFIG))
-
 # target install-app install-apps: Call install-app for each ARGS
 .PHONY: install-app install-apps
 install-app install-apps: myos-base install-app-required
@@ -41,9 +34,12 @@ update-app: update-app-$(APP_NAME) ;
 .PHONY: update-app-%
 update-app-%: % ;
 
-# target update-config: Fire CONFIG
+# target update-config: Update config files
 .PHONY: update-config
-update-config: $(CONFIG)
+update-config: SSH_PUBLIC_HOST_KEYS := $(CONFIG_REMOTE_HOST) $(SSH_BASTION_HOSTNAME) $(SSH_REMOTE_HOSTS)
+update-config: MAKE_VARS += SSH_BASTION_HOSTNAME SSH_BASTION_USERNAME SSH_PRIVATE_IP_RANGE SSH_PUBLIC_HOST_KEYS
+update-config: myos-base
+	$(call update-app,$(CONFIG_REPOSITORY),$(CONFIG))
 
 # target update-hosts: Update /etc/hosts
 # on local host

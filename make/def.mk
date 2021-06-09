@@ -13,7 +13,7 @@ COMMIT                          ?= $(or $(SUBREPO_COMMIT),$(GIT_COMMIT))
 CONFIG                          ?= $(RELATIVE)config
 CONFIG_REPOSITORY               ?= $(call pop,$(or $(APP_UPSTREAM_REPOSITORY),$(GIT_UPSTREAM_REPOSITORY)))/$(notdir $(CONFIG))
 CONTEXT                         ?= $(if $(APP),APP BRANCH VERSION) $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null)
-CONTEXT_DEBUG                   ?= MAKEFILE_LIST env APPS GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME LOG_LEVEL MAKE_DIR MAKE_SUBDIRS MAKE_CMD_ARGS MAKE_ENV_ARGS MONOREPO_DIR UID USER
+CONTEXT_DEBUG                   ?= MAKEFILE_LIST env env.docker APPS GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME LOG_LEVEL MAKE_DIR MAKE_SUBDIRS MAKE_CMD_ARGS MAKE_ENV_ARGS MONOREPO_DIR UID USER
 DEBUG                           ?= false
 DOCKER                          ?= true
 DOMAIN                          ?= localhost
@@ -22,7 +22,7 @@ DRYRUN                          ?= false
 DRYRUN_IGNORE                   ?= false
 DRYRUN_RECURSIVE                ?= false
 ENV                             ?= dist
-ENV_FILE                        ?= $(wildcard $(CONFIG)/$(ENV)/$(APP)/.env) .env
+ENV_FILE                        ?= $(wildcard $(CONFIG)/$(ENV)/$(APP)/.env .env)
 ENV_LIST                        ?= debug local tests release master #TODO: staging develop
 ENV_RESET                       ?= false
 ENV_VARS                        ?= APP BRANCH ENV HOSTNAME GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME MONOREPO MONOREPO_DIR TAG UID USER VERSION
@@ -180,8 +180,8 @@ sed = $(call exec,sed -i $(SED_SUFFIX) '\''$(1)'\'' $(2))
 define install-app
 	$(eval url := $(or $(1), $(APP_REPOSITORY)))
 	$(eval dir := $(or $(2), $(RELATIVE)$(lastword $(subst /, ,$(url)))))
-	[ -d $(dir) ] && $(call update-app,$(url),$(dir))
-	[ -d $(dir) ] || $(call exec,$(ECHO) git clone $(QUIET) $(url) $(dir))
+	[ -d $(dir)/.git ] && $(call update-app,$(url),$(dir))
+	[ -d $(dir)/.git ] || $(call exec,$(ECHO) git clone $(QUIET) $(url) $(dir))
 endef
 
 # function update-app: Exec 'cd dir 1 && git pull' or Call install-app
@@ -189,8 +189,8 @@ endef
 define update-app
 	$(eval url := $(or $(1), $(APP_REPOSITORY)))
 	$(eval dir := $(or $(2), $(APP_DIR)))
-	[ -d $(dir) ] && $(call exec,cd $(dir) && $(ECHO) git pull $(QUIET))
-	[ -d $(dir) ] || $(call install-app,$(url),$(dir))
+	[ -d $(dir)/.git ] && $(call exec,cd $(dir) && $(ECHO) git pull $(QUIET))
+	[ -d $(dir)/.git ] || $(call install-app,$(url),$(dir))
 endef
 
 # function TARGET:ENV: Create a new target ending with :env

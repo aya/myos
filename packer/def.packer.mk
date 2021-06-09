@@ -1,4 +1,5 @@
 CMDS                            += packer
+DOCKER_RUN_OPTIONS_PACKER       ?= -p $(PACKER_SSH_PORT):$(PACKER_SSH_PORT) -p $(PACKER_VNC_PORT):$(PACKER_VNC_PORT)
 ENV_VARS                        += PACKER_CACHE_DIR PACKER_KEY_INTERVAL PACKER_LOG
 KVM_GID                         ?= $(call gid,kvm)
 PACKER_ARCH                     ?= $(PACKER_ALPINE_ARCH)
@@ -65,7 +66,7 @@ PACKER_QEMU_ACCELERATOR         := tcg
 PACKER_QEMU_ARGS                += -cpu max,vendor=GenuineIntel,vmware-cpuid-freq=on,+invtsc,+aes,+vmx
 endif
 else ifeq ($(HOST_SYSTEM),LINUX)
-DOCKER_RUN_OPTIONS_PACKER       := $(if $(KVM_GID),--group-add $(KVM_GID)) --device /dev/kvm
+DOCKER_RUN_OPTIONS_PACKER       += $(if $(KVM_GID),--group-add $(KVM_GID)) --device /dev/kvm
 else ifeq ($(HOST_SYSTEM),WINDOWS)
 PACKER_QEMU_ACCELERATOR         := hax
 endif
@@ -77,11 +78,11 @@ ifeq ($(DOCKER), true)
 ## ANSIBLE_SSH_PRIVATE_KEYS set to a key giving access to ANSIBLE_GIT_REPOSITORY without password
 ## ANSIBLE_AWS_ACCESS_KEY_ID and ANSIBLE_AWS_SECRET_ACCESS_KEY
 define packer
-	$(call run,$(DOCKER_RUN_OPTIONS_PACKER) $(DOCKER_SSH_AUTH) -p $(PACKER_SSH_PORT):$(PACKER_SSH_PORT) -p $(PACKER_VNC_PORT):$(PACKER_VNC_PORT) $(DOCKER_REPOSITORY)/packer:$(DOCKER_IMAGE_TAG) $(1))
+	$(call run,$(DOCKER_RUN_OPTIONS_PACKER) $(DOCKER_REPOSITORY)/packer:$(DOCKER_IMAGE_TAG) $(1))
 endef
 define packer-qemu
 	echo Running $(1)
-	$(call run,$(DOCKER_RUN_OPTIONS_PACKER) -p $(PACKER_SSH_PORT):$(PACKER_SSH_PORT) -p $(PACKER_VNC_PORT):$(PACKER_VNC_PORT) --entrypoint=qemu-system-$(PACKER_QEMU_ARCH) $(DOCKER_REPOSITORY)/packer:$(DOCKER_IMAGE_TAG) $(PACKER_QEMU_ARGS) -m 512m -drive file=$(1)$(comma)format=raw -net nic$(comma)model=virtio -net user$(comma)hostfwd=tcp:$(PACKER_SSH_ADDRESS):$(PACKER_SSH_PORT)-:22 -vnc $(PACKER_VNC_ADDRESS):$(subst 590,,$(PACKER_VNC_PORT)))
+	$(call run,$(DOCKER_RUN_OPTIONS_PACKER) --entrypoint=qemu-system-$(PACKER_QEMU_ARCH) $(DOCKER_REPOSITORY)/packer:$(DOCKER_IMAGE_TAG) $(PACKER_QEMU_ARGS) -m 512m -drive file=$(1)$(comma)format=raw -net nic$(comma)model=virtio -net user$(comma)hostfwd=tcp:$(PACKER_SSH_ADDRESS):$(PACKER_SSH_PORT)-:22 -vnc $(PACKER_VNC_ADDRESS):$(subst 590,,$(PACKER_VNC_PORT)))
 endef
 
 else

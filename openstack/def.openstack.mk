@@ -9,7 +9,7 @@ endif
 
 ifeq ($(DOCKER), true)
 define openstack
-	$(call run,$(DOCKER_SSH_AUTH) $(DOCKER_REPOSITORY)/openstack:$(DOCKER_IMAGE_TAG) $(1))
+	$(call run,$(DOCKER_REPOSITORY)/openstack:$(DOCKER_IMAGE_TAG) $(1))
 endef
 else
 # function openstack: Call run openstack with arg 1
