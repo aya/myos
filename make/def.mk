@@ -2,6 +2,8 @@ comma                           ?= ,
 dollar                          ?= $
 dquote                          ?= "
 quote                           ?= '
+lbracket                        ?= (
+rbracket                        ?= )
 APP                             ?= $(if $(wildcard .git),$(notdir $(CURDIR)))
 APP_NAME                        ?= $(APP)
 APP_TYPE                        ?= $(if $(SUBREPO),subrepo) $(if $(filter .,$(MYOS)),myos)
@@ -14,7 +16,7 @@ CONFIG                          ?= $(RELATIVE)config
 CONFIG_REPOSITORY               ?= $(call pop,$(or $(APP_UPSTREAM_REPOSITORY),$(GIT_UPSTREAM_REPOSITORY)))/$(notdir $(CONFIG))
 CONTEXT                         ?= $(if $(APP),APP BRANCH VERSION) $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null)
 CONTEXT_DEBUG                   ?= MAKEFILE_LIST env env.docker APPS GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME LOG_LEVEL MAKE_DIR MAKE_SUBDIRS MAKE_CMD_ARGS MAKE_ENV_ARGS MONOREPO_DIR UID USER
-DEBUG                           ?= false
+DEBUG                           ?= 
 DOCKER                          ?= true
 DOMAIN                          ?= localhost
 DRONE                           ?= false
@@ -37,7 +39,7 @@ GIT_UPSTREAM_REPOSITORY         ?= $(if $(findstring ://,$(GIT_REPOSITORY)),$(ca
 GIT_UPSTREAM_USER               ?= $(or $(MONOREPO),$(USER))
 GIT_VERSION                     ?= $(shell git describe --tags $(BRANCH) 2>/dev/null || git rev-parse $(BRANCH) 2>/dev/null)
 HOSTNAME                        ?= $(shell hostname 2>/dev/null |sed 's/\..*//')
-LOG_LEVEL                       ?= $(if $(filter false,$(VERBOSE)),error,$(if $(filter true,$(DEBUG)),debug))
+LOG_LEVEL                       ?= $(if $(DEBUG),debug,$(if $(VERBOSE),info,error))
 MAKE_ARGS                       ?= $(foreach var,$(MAKE_VARS),$(if $($(var)),$(var)='$($(var))'))
 MAKE_SUBDIRS                    ?= $(if $(filter myos,$(MYOS)),monorepo,$(if $(APP),apps $(foreach type,$(APP_TYPE),$(if $(wildcard $(MAKE_DIR)/apps/$(type)),apps/$(type)))))
 MAKE_CMD_ARGS                   ?= $(foreach var,$(MAKE_CMD_VARS),$(var)='$($(var))')
@@ -53,7 +55,7 @@ MAKE_VARS                       ?= ENV
 MONOREPO                        ?= $(if $(filter myos,$(MYOS)),$(notdir $(CURDIR)),$(if $(APP),$(notdir $(realpath $(CURDIR)/..))))
 MONOREPO_DIR                    ?= $(if $(MONOREPO),$(if $(filter myos,$(MYOS)),$(realpath $(CURDIR)),$(if $(APP),$(realpath $(CURDIR)/..))))
 MYOS                            ?= $(if $(filter $(MAKE_DIR),$(call pop,$(MAKE_DIR))),.,$(call pop,$(MAKE_DIR)))
-QUIET                           ?= $(if $(filter false,$(VERBOSE)),--quiet)
+QUIET                           ?= $(if $(VERBOSE),,--quiet)
 RECURSIVE                       ?= true
 RELATIVE                        ?= $(if $(filter myos,$(MYOS)),./,../)
 SHARED                          ?= $(RELATIVE)shared
@@ -62,7 +64,7 @@ SUBREPO                         ?= $(if $(wildcard .gitrepo),$(notdir $(CURDIR))
 TAG                             ?= $(GIT_TAG)
 UID                             ?= $(shell id -u 2>/dev/null)
 USER                            ?= $(shell id -nu 2>/dev/null)
-VERBOSE                         ?= false
+VERBOSE                         ?= $(if $(DEBUG),true)
 VERSION                         ?= $(GIT_VERSION)
 
 ifeq ($(DOCKER), true)
@@ -71,13 +73,14 @@ else
 ENV_ARGS                         = $(env.args) $(env.dist)
 endif
 
-ifneq ($(DEBUG),true)
-.SILENT:
-else
+ifneq ($(DEBUG),)
 CONTEXT                         += $(CONTEXT_DEBUG)
+else
+.SILENT:
 endif
+
 ifeq ($(DRYRUN),true)
-ECHO                             = $(if $(filter $(DRYRUN_IGNORE),true),,printf '${COLOR_BROWN}$(APP)${COLOR_RESET}[${COLOR_GREEN}$(MAKELEVEL)${COLOR_RESET}] ${COLOR_BLUE}$@${COLOR_RESET}:${COLOR_RESET} '; echo)
+RUN                              = $(if $(filter $(DRYRUN_IGNORE),true),,echo)
 ifeq ($(RECURSIVE), true)
 DRYRUN_RECURSIVE                := true
 endif
@@ -110,6 +113,7 @@ endif
 # function conf: Extract variable=value line from configuration files
 ## it prints the line with variable 3 definition from block 2 in file 1
 define conf
+	$(call INFO,conf,$(1)$(comma) $(2)$(comma) $(3))
 	$(eval file := $(1))
 	$(eval block := $(2))
 	$(eval variable := $(3))
@@ -138,10 +142,24 @@ endef
 # macro force: Run command 1 sine die
 ## it starts command 1 if it is not already running
 ## it returns never
-force = $$(while true; do [ $$(ps x |awk 'BEGIN {nargs=split("'"$$*"'",args)} $$field == args[1] { matched=1; for (i=1;i<=NF-field;i++) { if ($$(i+field) == args[i+1]) {matched++} } if (matched == nargs) {found++} } END {print found+0}' field=4) -eq 0 ] && $(ECHO) $(1) || sleep 1; done)
+force = $$(while true; do [ $$(ps x |awk 'BEGIN {nargs=split("'"$$*"'",args)} $$field == args[1] { matched=1; for (i=1;i<=NF-field;i++) { if ($$(i+field) == args[i+1]) {matched++} } if (matched == nargs) {found++} } END {print found+0}' field=4) -eq 0 ] && $(RUN) $(1) || sleep 1; done)
 
 # macro gid: Return GID of group 1
 gid = $(shell grep '^$(1):' /etc/group 2>/dev/null |awk -F: '{print $$3}')
+
+# function INFO: customized info
+INFO = $(if $(VERBOSE),printf '${COLOR_BROWN}$(APP)${COLOR_RESET}[${COLOR_GREEN}$(MAKELEVEL)${COLOR_RESET}] ${COLOR_BLUE}$@${COLOR_RESET}:${COLOR_RESET} ${COLOR_GREEN}Called${COLOR_RESET} $(1)$(if $(2),$(lbracket)$(2)$(rbracket)) $(if $(3),${COLOR_BLUE}in folder${COLOR_RESET} $(3) )\n' >&2)
+
+# function install-app: Exec 'git clone url 1 dir 2' or Call update-app with url 1 dir 2
+define install-app
+	$(call INFO,install-app,$(1)$(comma) $(2))
+	$(eval url := $(or $(1), $(APP_REPOSITORY)))
+	$(eval dir := $(or $(2), $(RELATIVE)$(lastword $(subst /, ,$(url)))))
+	$(if $(wildcard $(dir)/.git), \
+		$(call update-app,$(url),$(dir)), \
+		$(call exec,$(RUN) git clone $(QUIET) $(url) $(dir)) \
+	)
+endef
 
 # function make: Call make with predefined options and variables
     # 1st arg: make command line (targets and arguments)
@@ -164,8 +182,8 @@ define make
 	$(if $(wildcard $(file)),$(eval MAKE_ARGS += $(shell cat $(file) |sed '/^$$/d; /^#/d; /=/!d; s/^[[\s\t]]*//; s/[[\s\t]]*=[[\s\t]]*/=/;' |awk -F '=' '{print $$1"='\''"$$2"'\''"}')))
 	$(eval MAKE_DIR := $(if $(dir),-C $(dir)))
 	$(eval MAKE_OLDFILE += $(filter-out $(MAKE_OLDFILE), $^))
-	$(if $(filter $(VERBOSE),true),printf '${COLOR_GREEN}Running${COLOR_RESET} "'"make $(MAKE_ARGS) $(cmd)"'" $(if $(dir),${COLOR_BLUE}in folder${COLOR_RESET} $(dir) )\n')
-	$(ECHO) $(MAKE) $(MAKE_DIR) $(patsubst %,-o %,$(MAKE_OLDFILE)) MAKE_OLDFILE="$(MAKE_OLDFILE)" $(MAKE_ARGS) $(cmd)
+	$(call INFO,make,$(MAKE_ARGS) $(cmd),$(dir))
+	$(RUN) $(MAKE) $(MAKE_DIR) $(patsubst %,-o %,$(MAKE_OLDFILE)) MAKE_OLDFILE="$(MAKE_OLDFILE)" $(MAKE_ARGS) $(cmd)
 	$(if $(filter $(DRYRUN_RECURSIVE),true),$(MAKE) $(MAKE_DIR) $(patsubst %,-o %,$(MAKE_OLDFILE)) MAKE_OLDFILE="$(MAKE_OLDFILE)" DRYRUN=$(DRYRUN) RECURSIVE=$(RECURSIVE) $(MAKE_ARGS) $(cmd))
 endef
 
@@ -175,22 +193,15 @@ pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
 # macro sed: Exec sed script 1 on file 2
 sed = $(call exec,sed -i $(SED_SUFFIX) '\''$(1)'\'' $(2))
 
-# function install-app: Exec 'git clone url 1 dir 2' or Call update-app
-## it installs application source files
-define install-app
-	$(eval url := $(or $(1), $(APP_REPOSITORY)))
-	$(eval dir := $(or $(2), $(RELATIVE)$(lastword $(subst /, ,$(url)))))
-	[ -d $(dir)/.git ] && $(call update-app,$(url),$(dir))
-	[ -d $(dir)/.git ] || $(call exec,$(ECHO) git clone $(QUIET) $(url) $(dir))
-endef
-
 # function update-app: Exec 'cd dir 1 && git pull' or Call install-app
-## it updates application source files
 define update-app
+	$(call INFO,update-app,$(1)$(comma) $(2))
 	$(eval url := $(or $(1), $(APP_REPOSITORY)))
 	$(eval dir := $(or $(2), $(APP_DIR)))
-	[ -d $(dir)/.git ] && $(call exec,cd $(dir) && $(ECHO) git pull $(QUIET))
-	[ -d $(dir)/.git ] || $(call install-app,$(url),$(dir))
+	$(if $(wildcard $(dir)/.git), \
+		$(call exec,cd $(dir) && $(RUN) git pull $(QUIET)), \
+		$(call install-app,$(url),$(dir)) \
+	)
 endef
 
 # function TARGET:ENV: Create a new target ending with :env

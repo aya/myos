@@ -19,7 +19,7 @@ install-app-required: myos-base
 
 # target $(SHARED): Create SHARED folder
 $(SHARED):
-	$(ECHO) mkdir -p $(SHARED)
+	$(RUN) mkdir -p $(SHARED)
 
 # target update-apps: Call update-app target for each APPS
 .PHONY: update-apps
@@ -47,7 +47,7 @@ update-config: myos-base
 .PHONY: update-hosts
 update-hosts:
 ifneq (,$(filter $(ENV),local))
-	cat */.env 2>/dev/null |grep -Eo 'urlprefix-[^/]+' |sed 's/urlprefix-//' |while read host; do grep $$host /etc/hosts >/dev/null 2>&1 || { echo "Adding $$host to /etc/hosts"; echo 127.0.0.1 $$host |$(ECHO) sudo tee -a /etc/hosts >/dev/null; }; done
+	cat */.env 2>/dev/null |grep -Eo 'urlprefix-[^/]+' |sed 's/urlprefix-//' |while read host; do grep $$host /etc/hosts >/dev/null 2>&1 || { echo "Adding $$host to /etc/hosts"; echo 127.0.0.1 $$host |$(RUN) sudo tee -a /etc/hosts >/dev/null; }; done
 endif
 
 # target update-remote-%: fetch git remote %
@@ -67,7 +67,7 @@ update-upstream: myos-base .git/refs/remotes/upstream/master
 
 # target .git/refs/remotes/upstream/master: git add upstream APP_UPSTREAM_REPOSITORY
 .git/refs/remotes/upstream/master:
-	$(ECHO) git remote add upstream $(APP_UPSTREAM_REPOSITORY) 2>/dev/null ||:
+	$(RUN) git remote add upstream $(APP_UPSTREAM_REPOSITORY) 2>/dev/null ||:
 
 # target shared: Fire SHARED
 .PHONY: update-shared

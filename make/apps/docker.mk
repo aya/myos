@@ -125,7 +125,7 @@ docker-images-rm-%:
 # target docker-login: Exec 'docker login'
 .PHONY: docker-login
 docker-login: myos-base
-	$(ECHO) docker login
+	$(RUN) docker login
 
 # target docker-network-create: Fire docker-network-create-% for DOCKER_NETWORK
 .PHONY: docker-network-create
@@ -135,7 +135,7 @@ docker-network-create: docker-network-create-$(DOCKER_NETWORK)
 .PHONY: docker-network-create-%
 docker-network-create-%:
 	[ -n "$(shell docker network ls -q --filter name='^$*$$' 2>/dev/null)" ] \
-	  || { echo -n "Creating docker network $* ... " && $(ECHO) docker network create $* >/dev/null 2>&1 && echo "done" || echo "ERROR"; }
+	  || { echo -n "Creating docker network $* ... " && $(RUN) docker network create $* >/dev/null 2>&1 && echo "done" || echo "ERROR"; }
 
 # target docker-network-rm: Fire docker-network-rm-% for DOCKER_NETWORK
 .PHONY: docker-network-rm
@@ -145,13 +145,13 @@ docker-network-rm: docker-network-rm-$(DOCKER_NETWORK)
 .PHONY: docker-network-rm-%
 docker-network-rm-%:
 	[ -z "$(shell docker network ls -q --filter name='^$*$$' 2>/dev/null)" ] \
-	  || { echo -n "Removing docker network $* ... " && $(ECHO) docker network rm $* >/dev/null 2>&1 && echo "done" || echo "ERROR"; }
+	  || { echo -n "Removing docker network $* ... " && $(RUN) docker network rm $* >/dev/null 2>&1 && echo "done" || echo "ERROR"; }
 
 # target docker-plugin-install: Exec 'docker plugin install DOCKER_PLUGIN_OPTIONS DOCKER_PLUGIN'
 .PHONY: docker-plugin-install
 docker-plugin-install:
 	$(eval docker_plugin_state := $(shell docker plugin ls | awk '$$2 == "$(DOCKER_PLUGIN)" {print $$NF}') )
-	$(if $(docker_plugin_state),$(if $(filter $(docker_plugin_state),false),echo -n "Enabling docker plugin $(DOCKER_PLUGIN) ... " && $(ECHO) docker plugin enable $(DOCKER_PLUGIN) >/dev/null 2>&1 && echo "done" || echo "ERROR"),echo -n "Installing docker plugin $(DOCKER_PLUGIN) ... " && $(ECHO) docker plugin install $(DOCKER_PLUGIN_OPTIONS) $(DOCKER_PLUGIN) $(DOCKER_PLUGIN_ARGS) >/dev/null 2>&1 && echo "done" || echo "ERROR")
+	$(if $(docker_plugin_state),$(if $(filter $(docker_plugin_state),false),echo -n "Enabling docker plugin $(DOCKER_PLUGIN) ... " && $(RUN) docker plugin enable $(DOCKER_PLUGIN) >/dev/null 2>&1 && echo "done" || echo "ERROR"),echo -n "Installing docker plugin $(DOCKER_PLUGIN) ... " && $(RUN) docker plugin install $(DOCKER_PLUGIN_OPTIONS) $(DOCKER_PLUGIN) $(DOCKER_PLUGIN_ARGS) >/dev/null 2>&1 && echo "done" || echo "ERROR")
 
 # target docker-push: Call docker-push for each SERVICES
 .PHONY: docker-push

@@ -13,11 +13,15 @@ COLOR_BLUE                      ?= \033[36m
 blank1 blank2:
 	printf "\n"
 
-# target context: Call context-% target for each CONTEXT
+# target context: Print Context and Call contexts target
 .PHONY: context
 context:
 	printf "${COLOR_BROWN}Context:${COLOR_RESET}\n"
-	$(MAKE) $(foreach var,$(CONTEXT),$(if $($(var)),context-$(var))) FORCE
+	$(MAKE) contexts
+
+# target context: Fire context-% target for each CONTEXT
+.PHONY: contexts
+contexts: $(foreach var,$(CONTEXT),$(if $($(var)),context-$(var)))
 
 # target context-%: Print % value
 .PHONY: context-%

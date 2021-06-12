@@ -37,7 +37,7 @@ build@%: myos-base
 	$(eval build_app       := $(or $(filter $(DOCKER_BUILD_CACHE),false),$(filter-out $(docker_images),$(SERVICES))))
 	$(if $(build_app), \
 		$(call make,build-init app-build), \
-		$(if $(filter $(VERBOSE),true), \
+		$(if $(VERBOSE), \
 			$(foreach service,$(SERVICES), \
 				echo "docker image $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG) has id $(shell docker images -q $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG) 2>/dev/null)" && \
 			) true \

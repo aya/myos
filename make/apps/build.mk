@@ -22,7 +22,7 @@ build-env: bootstrap
 # on local host
 .PHONY: build-init
 build-init:
-	$(ECHO) rm -rf build && $(ECHO) mkdir -p build
+	$(RUN) rm -rf build && $(RUN) mkdir -p build
 
 # target build-shared: Create SHARED folder in docker SERVICE to deploy
 # on local host

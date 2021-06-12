@@ -37,6 +37,7 @@ SHELL:=/bin/bash
 	# 2nd arg: path to .env.dist file, default to .env.dist
 	# 3rd arg: path to .env override files, default to .env.$(ENV)
 define .env
+	$(call INFO,.env,$(1)$(comma) $(2)$(comma) $(3))
 	$(eval env_file:=$(or $(1),.env))
 	$(eval env_dist:=$(or $(2),$(env_file).dist))
 	$(eval env_over:=$(or $(wildcard $(3)),$(wildcard $(env_file).$(ENV))))
@@ -70,6 +71,7 @@ endef
 	  # sort alphabetically
 	  # add variables definition to the .env file
 define .env_update
+	$(call INFO,.env_update,$(env_file) $(env_dist) $(env_over))
 	touch $(env_file)
 	printenv \
 	  |awk -F '=' 'NR == FNR { if($$1 !~ /^(#|$$)/) { A[$$1]; next } } !($$1 in A)' - $(env_dist) \

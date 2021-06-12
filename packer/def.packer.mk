@@ -30,7 +30,7 @@ PACKER_TEMPLATE                 ?= alpine
 PACKER_USERNAME                 ?= root
 PACKER_VNC_PORT                 ?= $(if $(vnc_port_max),$(vnc_port_max),5900)
 PACKER_VNC_ADDRESS              ?= $(if $(vnc_bind_address),$(vnc_bind_address),0.0.0.0)
-ifeq ($(DEBUG), true)
+ifneq ($(DEBUG),)
 PACKER_BUILD_ARGS               += -debug
 endif
 ifeq ($(FORCE), true)

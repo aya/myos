@@ -34,7 +34,7 @@ release-finish: release-check git-stash
 # target release-update: Update RELEASE with RELEASE_VERSION in .env
 .PHONY: release-update
 release-update:
-	$(ECHO) awk -v s=RELEASE=$(RELEASE_VERSION) '/^RELEASE=/{$$0=s;f=1} {a[++n]=$$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' .env
+	$(RUN) awk -v s=RELEASE=$(RELEASE_VERSION) '/^RELEASE=/{$$0=s;f=1} {a[++n]=$$0} END{if(!f)a[++n]=s;for(i=1;i<=n;i++)print a[i]>ARGV[1]}' .env
 
 # target release-upgrade: Run migration targets to upgrade specific releases
 .PHONY: release-upgrade

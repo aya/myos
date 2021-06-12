@@ -23,7 +23,7 @@ aws-ecr-get-login:
 	$(eval DRYRUN_IGNORE := true)
 	$(eval docker_login := $(shell $(call aws,ecr get-login --no-include-email --region $(AWS_DEFAULT_REGION))))
 	$(eval DRYRUN_IGNORE := FALSE)
-	$(ECHO) $(docker_login)
+	$(RUN) $(docker_login)
 
 # target aws-iam-create-role-%: Call aws iam create-role with role-name % and role-policy file aws/policies/%-trust.json
 .PHONY: aws-iam-create-role-%

@@ -10,7 +10,7 @@ DOCKER_NAME                     ?= $(DOCKER_NAME_CLI)
 DOCKER_NAME_CLI                 ?= $(COMPOSE_PROJECT_NAME_MYOS)_cli
 DOCKER_NAME_SSH                 ?= $(COMPOSE_PROJECT_NAME_MYOS)_ssh
 DOCKER_NETWORK                  ?= $(DOCKER_NETWORK_PRIVATE)
-DOCKER_NETWORK_PRIVATE          ?= $(ENV)
+DOCKER_NETWORK_PRIVATE          ?= $(USER)_$(ENV)
 DOCKER_NETWORK_PUBLIC           ?= node
 DOCKER_REPOSITORY_MYOS          ?= $(subst _,/,$(COMPOSE_PROJECT_NAME_MYOS))
 DOCKER_REPOSITORY_NODE          ?= $(subst _,/,$(COMPOSE_PROJECT_NAME_NODE))
@@ -34,10 +34,12 @@ endif
 
 # function env-run: Call env-exec with arg 1 in a subshell
 define env-run
+	$(call INFO,env-run,$(1))
 	$(call env-exec,sh -c '$(or $(1),$(SHELL))')
 endef
 # function env-exec: Exec arg 1 in a new env
 define env-exec
+	$(call INFO,env-exec,$(1))
 	IFS=$$'\n'; env $(env_reset) $(env) $(1)
 endef
 
@@ -47,22 +49,26 @@ DOCKER_SSH_AUTH                 := -e SSH_AUTH_SOCK=/tmp/ssh-agent/socket -v $(D
 
 # function docker-run: Run new DOCKER_IMAGE:DOCKER_IMAGE_TAG docker with arg 2
 define docker-run
+	$(call INFO,docker-run,$(1)$(comma) $(2))
 	$(call run,$(or $(1),$(DOCKER_IMAGE):$(DOCKER_IMAGE_TAG)) $(2))
 endef
 ifeq ($(DRONE), true)
 # function exec: Run new DOCKER_IMAGE docker with arg 1
 define exec
+	$(call INFO,exec,$(1))
 	$(call run,$(DOCKER_IMAGE) sh -c '$(or $(1),$(SHELL))')
 endef
 else
 # function exec: Exec arg 1 in docker DOCKER_NAME
 define exec
-	$(ECHO) docker exec $(DOCKER_ENV) $(DOCKER_EXEC_OPTIONS) $(DOCKER_RUN_WORKDIR) $(DOCKER_NAME) sh -c '$(or $(1),$(SHELL))'
+	$(call INFO,exec,$(1))
+	$(RUN) docker exec $(DOCKER_ENV) $(DOCKER_EXEC_OPTIONS) $(DOCKER_RUN_WORKDIR) $(DOCKER_NAME) sh -c '$(or $(1),$(SHELL))'
 endef
 endif
 # function run: Pass arg 1 to docker run
 define run
-	$(ECHO) docker run $(DOCKER_ENV) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(DOCKER_SSH_AUTH) $(1)
+	$(call INFO,run,$(1))
+	$(RUN) docker run $(DOCKER_ENV) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(DOCKER_SSH_AUTH) $(1)
 endef
 
 else
@@ -70,14 +76,17 @@ else
 SHELL                           := /bin/bash
 # function docker-run: Run new DOCKER_IMAGE:DOCKER_IMAGE_TAG docker with arg 2
 define docker-run
-	$(ECHO) docker run $(DOCKER_RUN_OPTIONS) $(DOCKER_ENV) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(or $(1),$(DOCKER_IMAGE):$(DOCKER_IMAGE_TAG)) $(2)
+	$(call INFO,docker-run,$(1)$(comma) $(2))
+	$(RUN) docker run $(DOCKER_RUN_OPTIONS) $(DOCKER_ENV) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(or $(1),$(DOCKER_IMAGE):$(DOCKER_IMAGE_TAG)) $(2)
 endef
 # function exec: Call env-exec with arg 1 or SHELL
 define exec
+	$(call INFO,exec,$(1))
 	$(call env-exec,$(or $(1),$(SHELL)))
 endef
 # function run: Call env-run with arg 1
 define run
+	$(call INFO,run,$(1))
 	$(call env-run,$(1))
 endef
 
@@ -85,9 +94,10 @@ endif
 
 # function docker-volume-copy: Copy files from a docker volume to another
 define docker-volume-copy
+	$(call INFO,docker-volume-copy,$(1)$(comma) $(2))
 	$(eval from            := $(1))
 	$(eval to              := $(2))
-	$(ECHO) docker volume inspect $(from) >/dev/null
-	$(ECHO) docker volume inspect $(to) >/dev/null 2>&1 || $(ECHO) docker volume create $(to) >/dev/null
-	$(ECHO) docker run --rm -v $(from):/from -v $(to):/to alpine ash -c "cd /from; cp -a . /to"
+	$(RUN) docker volume inspect $(from) >/dev/null
+	$(RUN) docker volume inspect $(to) >/dev/null 2>&1 || $(RUN) docker volume create $(to) >/dev/null
+	$(RUN) docker run --rm -v $(from):/from -v $(to):/to alpine ash -c "cd /from; cp -a . /to"
 endef

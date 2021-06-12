@@ -1,6 +1,6 @@
 # target base: Fire docker-network-create stack-base-up base-ssh-add
 .PHONY: base
-base: docker-network-create stack-base-up base-ssh-add
+base: docker-network-create $(if $(filter $(DOCKER),true),stack-base-up base-ssh-add)
 
 # target ssh-add: Fire base-ssh-add
 .PHONY: ssh-add

@@ -17,7 +17,7 @@ endif
 COMPOSE_IGNORE_ORPHANS          ?= false
 COMPOSE_PROJECT_NAME            ?= $(USER)_$(ENV)_$(APP)
 COMPOSE_SERVICE_NAME            ?= $(subst _,-,$(COMPOSE_PROJECT_NAME))
-CONTEXT                         += COMPOSE_FILE DOCKER_IMAGE_TAG DOCKER_REPOSITORY DOCKER_SERVICE
+CONTEXT                         += COMPOSE_FILE DOCKER_IMAGE_TAG DOCKER_REPOSITORY
 CONTEXT_DEBUG                   += DOCKER_REGISTRY
 DOCKER_BUILD_ARGS               ?= $(if $(filter $(DOCKER_BUILD_NO_CACHE),true),--pull --no-cache) $(foreach var,$(DOCKER_BUILD_VARS),$(if $($(var)),--build-arg $(var)='$($(var))'))
 DOCKER_BUILD_CACHE              ?= true
@@ -34,9 +34,9 @@ DOCKER_IMAGES                   ?= $(patsubst %/,%,$(patsubst docker/%,%,$(dir $
 DOCKER_PLUGIN                   ?= rexray/s3fs:latest
 DOCKER_PLUGIN_ARGS              ?= $(foreach var,$(DOCKER_PLUGIN_VARS),$(if $(DOCKER_PLUGIN_$(var)),$(var)='$(DOCKER_PLUGIN_$(var))'))
 DOCKER_PLUGIN_OPTIONS           ?= --grant-all-permissions
-DOCKER_PLUGIN_S3FS_ACCESSKEY    ?= $(shell $(call conf,$(HOME)/.aws/credentials,$(or $(AWS_PROFILE),default),aws_access_key_id))
+DOCKER_PLUGIN_S3FS_ACCESSKEY    ?= $(AWS_ACCESS_KEY_ID)
 DOCKER_PLUGIN_S3FS_OPTIONS      ?= allow_other,nonempty,use_path_request_style,url=https://s3-eu-west-1.amazonaws.com
-DOCKER_PLUGIN_S3FS_SECRETKEY    ?= $(shell $(call conf,$(HOME)/.aws/credentials,$(or $(AWS_PROFILE),default),aws_secret_access_key))
+DOCKER_PLUGIN_S3FS_SECRETKEY    ?= $(AWS_SECRET_ACCESS_KEY)
 DOCKER_PLUGIN_S3FS_REGION       ?= eu-west-1
 DOCKER_PLUGIN_VARS              ?= S3FS_ACCESSKEY S3FS_OPTIONS S3FS_SECRETKEY S3FS_REGION
 DOCKER_REGISTRY                 ?= registry
@@ -44,6 +44,7 @@ DOCKER_REGISTRY_USERNAME        ?= $(USER)
 DOCKER_REGISTRY_REPOSITORY      ?= $(addsuffix /,$(DOCKER_REGISTRY))$(subst $(USER),$(DOCKER_REGISTRY_USERNAME),$(DOCKER_REPOSITORY))
 DOCKER_REPOSITORY               ?= $(subst _,/,$(COMPOSE_PROJECT_NAME))
 DOCKER_SERVICE                  ?= $(shell $(call docker-compose,--log-level critical config --services) |tail -1)
+DOCKER_SERVICES                 ?= $(eval DRYRUN_IGNORE := true) $(shell $(call docker-compose,--log-level critical config --services)) $(eval DRYRUN_IGNORE := false)
 DOCKER_SHELL                    ?= $(SHELL)
 ENV_VARS                        += COMPOSE_PROJECT_NAME COMPOSE_SERVICE_NAME DOCKER_BUILD_TARGET DOCKER_GID DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_REPOSITORY DOCKER_SHELL
 
@@ -74,10 +75,12 @@ ifeq ($(DOCKER), true)
 
 # function docker-compose: Run docker-compose with arg 1
 define docker-compose
+	$(call INFO,docker-compose,$(1))
 	$(call run,docker/compose:$(COMPOSE_VERSION) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
 endef
 # function docker-compose-exec: Run docker-compose-exec with arg 2 in service 1
 define docker-compose-exec
+	$(call INFO,docker-compose-exec,$(1)$(comma) $(2))
 	$(call run,docker/compose:$(COMPOSE_VERSION) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) exec -T $(1) sh -c '$(2)')
 endef
 
@@ -85,9 +88,11 @@ else
 
 SHELL                           := /bin/bash
 define docker-compose
+	$(call INFO,docker-compose,$(1))
 	$(call run,docker-compose $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
 endef
 define docker-compose-exec
+	$(call INFO,docker-compose-exec,$(1)$(comma) $(2))
 	$(call run,docker-compose $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) exec -T $(1) sh -c '$(2)')
 endef
 
@@ -95,29 +100,30 @@ endif
 
 # function docker-build: Build docker image
 define docker-build
+	$(call INFO,docker-build,$(1)$(comma) $(2)$(comma) $(3))
 	$(eval path            := $(patsubst %/,%,$(1)))
 	$(eval tag             := $(or $(2),$(DOCKER_REPOSITORY)/$(lastword $(subst /, ,$(path))):$(DOCKER_IMAGE_TAG)))
 	$(eval target          := $(subst ",,$(subst ',,$(or $(3),$(DOCKER_BUILD_TARGET)))))
 	$(eval image_id        := $(shell docker images -q $(tag) 2>/dev/null))
 	$(eval build_image     := $(or $(filter $(DOCKER_BUILD_CACHE),false),$(if $(image_id),,true)))
-	$(if $(build_image),$(ECHO) docker build $(DOCKER_BUILD_ARGS) --build-arg DOCKER_BUILD_DIR="$(path)" --tag $(tag) $(if $(target),--target $(target)) -f $(path)/Dockerfile .,$(if $(filter $(VERBOSE),true),echo "docker image $(tag) has id $(image_id)",true))
+	$(if $(build_image),$(RUN) docker build $(DOCKER_BUILD_ARGS) --build-arg DOCKER_BUILD_DIR="$(path)" --tag $(tag) $(if $(target),--target $(target)) -f $(path)/Dockerfile .,$(if $(VERBOSE),echo "docker image $(tag) has id $(image_id)",true))
 endef
 # function docker-commit: Commit docker image
 define docker-commit
+	$(call INFO,docker-commit,$(1)$(comma) $(2)$(comma) $(3)$(comma) $(4))
 	$(eval service         := $(or $(1),$(DOCKER_SERVICE)))
 	$(eval container       := $(or $(2),$(firstword $(shell $(call docker-compose,--log-level critical ps -q $(service))))))
 	$(eval repository      := $(or $(3),$(DOCKER_REPOSITORY)/$(service)))
 	$(eval tag             := $(or $(4),$(DOCKER_IMAGE_TAG)))
-	$(if $(filter $(VERBOSE),true),echo docker commit $(container) $(repository):$(tag))
-	$(ECHO) docker commit $(container) $(repository):$(tag)
+	$(RUN) docker commit $(container) $(repository):$(tag)
 endef
 # function docker-push: Push docker image
 define docker-push
+	$(call INFO,docker-push,$(1)$(comma) $(2)$(comma) $(3))
 	$(eval service         := $(or $(1),$(DOCKER_SERVICE)))
 	$(eval name            := $(or $(2),$(DOCKER_REGISTRY_REPOSITORY)/$(service)))
 	$(eval tag             := $(or $(3),$(DOCKER_IMAGE_TAG)))
-	$(if $(filter $(VERBOSE),true),echo docker push $(name):$(tag))
-	$(ECHO) docker push $(name):$(tag)
+	$(RUN) docker push $(name):$(tag)
 endef
 # function docker-stack: Call itself recursively for each stack to expand stacks
 # docker-stack: if 1st arg is a variable and can be expand to values, it calls
@@ -125,6 +131,7 @@ endef
 	# 1st arg: stacks, extract it from stack_names:stack_versions
 	# 2nd arg: versions, extract it from stack_names:stack_versions or 2nd arg
 define docker-stack
+	$(call INFO,docker-stack,$(1)$(comma) $(2))
 	$(eval stacks          := $(firstword $(subst :, ,$(1))))
 	$(eval versions        := $(or $(if $(findstring :,$(1)),$(lastword $(subst :, ,$(1)))),$(2)))
 	$(if $($(stacks)),$(foreach substack,$($(stacks)),$(call docker-stack,$(substack),$(if $(findstring :,$(1)),$(versions)))),$(call docker-stack-update,$(stacks),$(versions)))
@@ -140,6 +147,7 @@ endef
 	# add $(path)/$(name).yml, $(path)/$(name).$(ENV).yml and $(path)/$(name).$(version).yml to COMPOSE_FILE variable
 	# if $(path)/.env.dist file exists, update .env file
 define docker-stack-update
+	$(call INFO,docker-stack-update,$(1)$(comma) $(2)$(comma) $(3))
 	$(eval stack           := $(patsubst %.yml,%,$(notdir $(1))))
 	$(eval name            := $(firstword $(subst :, ,$(stack))))
 	$(eval version         := $(or $(2),$(if $(findstring :,$(stack)),$(lastword $(subst :, ,$(stack))),latest)))
@@ -149,11 +157,11 @@ define docker-stack-update
 endef
 # function docker-tag: Tag docker image
 define docker-tag
+	$(call INFO,docker-tag,$(1)$(comma) $(2)$(comma) $(3)$(comma) $(4)$(comma) $(5))
 	$(eval service         := $(or $(1),$(DOCKER_SERVICE)))
 	$(eval source          := $(or $(2),$(DOCKER_REPOSITORY)/$(service)))
 	$(eval source_tag      := $(or $(3),$(DOCKER_IMAGE_TAG)))
 	$(eval target          := $(or $(4),$(DOCKER_REGISTRY_REPOSITORY)/$(service)))
 	$(eval target_tag      := $(or $(5),$(source_tag)))
-	$(if $(filter $(VERBOSE),true),echo docker tag $(source):$(source_tag) $(target):$(target_tag))
-	$(ECHO) docker tag $(source):$(source_tag) $(target):$(target_tag)
+	$(RUN) docker tag $(source):$(source_tag) $(target):$(target_tag)
 endef

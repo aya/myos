@@ -16,6 +16,7 @@ endif
 endif
 
 define setup-nfsd-osx
+	$(call INFO,setup-nfsd-osx,$(1)$(comma) $(2)$(comma) $(3))
 	$(eval dir:=$(or $(1),$(MONOREPO_DIR)))
 	$(eval uid:=$(or $(2),$(UID)))
 	$(eval gid:=$(or $(3),$(GID)))
