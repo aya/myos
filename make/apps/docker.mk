@@ -120,7 +120,7 @@ docker-images-rm:
 # target docker-images-rm-%: Remove docker images matching %
 .PHONY: docker-images-rm-%
 docker-images-rm-%:
-	docker images |awk '$$1 ~ /^$(subst /,\/,$*)/ {print $$3}' |sort -u |while read image; do docker rmi -f $$image; done
+	docker images |awk '$$1 ~ /^$(subst /,\/,$*)/ {print $$3}' |sort -u |while read image; do $(RUN) docker rmi -f $$image; done
 
 # target docker-login: Exec 'docker login'
 .PHONY: docker-login
@@ -188,7 +188,7 @@ docker-rm: docker-rm-$(COMPOSE_PROJECT_NAME)
 # target docker-rm-%: Remove dockers matching %
 .PHONY: docker-rm-%
 docker-rm-%:
-	docker ps -a |awk '$$NF ~ /^$*/ {print $$NF}' |while read docker; do docker rm -f $$docker; done
+	docker ps -a |awk '$$NF ~ /^$*/ {print $$NF}' |while read docker; do $(RUN) docker rm -f $$docker; done
 
 # target docker-run: Call docker-run-% target with ARGS for SERVICE
 .PHONY: docker-run
@@ -230,4 +230,4 @@ docker-volume-rm: docker-volume-rm-$(COMPOSE_PROJECT_NAME)
 # target docker-volume-rm-%: Remove docker volumes matching %
 .PHONY: docker-volume-rm-%
 docker-volume-rm-%:
-	docker volume ls |awk '$$2 ~ /^$*/ {print $$2}' |sort -u |while read volume; do docker volume rm $$volume; done
+	docker volume ls |awk '$$2 ~ /^$*/ {print $$2}' |sort -u |while read volume; do $(RUN) docker volume rm $$volume; done

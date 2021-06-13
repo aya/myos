@@ -14,31 +14,33 @@ CMDS                            ?= exec exec:% exec@% install-app install-apps r
 COMMIT                          ?= $(or $(SUBREPO_COMMIT),$(GIT_COMMIT))
 CONFIG                          ?= $(RELATIVE)config
 CONFIG_REPOSITORY               ?= $(call pop,$(or $(APP_UPSTREAM_REPOSITORY),$(GIT_UPSTREAM_REPOSITORY)))/$(notdir $(CONFIG))
-CONTEXT                         ?= $(if $(APP),APP BRANCH VERSION) $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null)
+CONTEXT                         ?= $(if $(APP),APP BRANCH DOMAIN VERSION) $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null)
 CONTEXT_DEBUG                   ?= MAKEFILE_LIST env env.docker APPS GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME LOG_LEVEL MAKE_DIR MAKE_SUBDIRS MAKE_CMD_ARGS MAKE_ENV_ARGS MONOREPO_DIR UID USER
 DEBUG                           ?= 
-DOCKER                          ?= true
+DOCKER                          ?= $(if $(BUILD),false,true)
 DOMAIN                          ?= localhost
 DRONE                           ?= false
 DRYRUN                          ?= false
-DRYRUN_IGNORE                   ?= false
 DRYRUN_RECURSIVE                ?= false
-ENV                             ?= dist
+ELAPSED_TIME                     = $(shell $(call TIME))
+ENV                             ?= local
 ENV_FILE                        ?= $(wildcard $(CONFIG)/$(ENV)/$(APP)/.env .env)
-ENV_LIST                        ?= debug local tests release master #TODO: staging develop
+ENV_LIST                        ?= $(shell ls .git/refs/heads/ 2>/dev/null)
 ENV_RESET                       ?= false
-ENV_VARS                        ?= APP BRANCH ENV HOSTNAME GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME MONOREPO MONOREPO_DIR TAG UID USER VERSION
+ENV_VARS                        ?= APP BRANCH DOMAIN ENV HOSTNAME GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME MONOREPO MONOREPO_DIR TAG UID USER VERSION
 GID                             ?= $(shell id -g 2>/dev/null)
-GIT_AUTHOR_EMAIL                ?= $(shell git config user.email 2>/dev/null)
-GIT_AUTHOR_NAME                 ?= $(shell git config user.name 2>/dev/null)
+GIT_AUTHOR_EMAIL                ?= $(or $(shell git config user.email 2>/dev/null),$(USER)@my.os)
+GIT_AUTHOR_NAME                 ?= $(or $(shell git config user.name 2>/dev/null),$(USER))
 GIT_BRANCH                      ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
 GIT_COMMIT                      ?= $(shell git rev-parse $(BRANCH) 2>/dev/null)
 GIT_REPOSITORY                  ?= $(if $(SUBREPO),$(shell awk -F ' = ' '$$1 ~ /^[[\s\t]]*remote$$/ {print $$2}' .gitrepo 2>/dev/null),$(shell git config --get remote.origin.url 2>/dev/null))
 GIT_TAG                         ?= $(shell git tag -l --points-at $(BRANCH) 2>/dev/null)
 GIT_UPSTREAM_REPOSITORY         ?= $(if $(findstring ://,$(GIT_REPOSITORY)),$(call pop,$(call pop,$(GIT_REPOSITORY)))/,$(call pop,$(GIT_REPOSITORY),:):)$(GIT_UPSTREAM_USER)/$(lastword $(subst /, ,$(GIT_REPOSITORY)))
-GIT_UPSTREAM_USER               ?= $(or $(MONOREPO),$(USER))
+GIT_UPSTREAM_USER               ?= $(lastword $(subst /, ,$(call pop,$(MYOS_REPOSITORY))))
 GIT_VERSION                     ?= $(shell git describe --tags $(BRANCH) 2>/dev/null || git rev-parse $(BRANCH) 2>/dev/null)
 HOSTNAME                        ?= $(shell hostname 2>/dev/null |sed 's/\..*//')
+IGNORE_DRYRUN                   ?= false
+IGNORE_VERBOSE                  ?= $(IGNORE_DRYRUN)
 LOG_LEVEL                       ?= $(if $(DEBUG),debug,$(if $(VERBOSE),info,error))
 MAKE_ARGS                       ?= $(foreach var,$(MAKE_VARS),$(if $($(var)),$(var)='$($(var))'))
 MAKE_SUBDIRS                    ?= $(if $(filter myos,$(MYOS)),monorepo,$(if $(APP),apps $(foreach type,$(APP_TYPE),$(if $(wildcard $(MAKE_DIR)/apps/$(type)),apps/$(type)))))
@@ -50,11 +52,14 @@ MAKE_FILE_ARGS                  ?= $(foreach var,$(filter $(ENV_VARS),$(MAKE_FIL
 MAKE_FILE_VARS                  ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter file,$(origin $(var))),$(var))))
 MAKE_OLDFILE                    ?= $@
 MAKE_TARGETS                    ?= $(filter-out $(.VARIABLES),$(shell $(MAKE) -qp 2>/dev/null |awk -F':' '/^[a-zA-Z0-9][^$$\#\/\t=]*:([^=]|$$)/ {print $$1}' |sort -u))
-MAKE_UNIXTIME                   ?= $(shell date +%s 2>/dev/null)
+MAKE_UNIXTIME_START             := $(shell date -u +'%s' 2>/dev/null)
+MAKE_UNIXTIME_CURRENT            = $(shell date -u "+%s" 2>/dev/null)
 MAKE_VARS                       ?= ENV
 MONOREPO                        ?= $(if $(filter myos,$(MYOS)),$(notdir $(CURDIR)),$(if $(APP),$(notdir $(realpath $(CURDIR)/..))))
 MONOREPO_DIR                    ?= $(if $(MONOREPO),$(if $(filter myos,$(MYOS)),$(realpath $(CURDIR)),$(if $(APP),$(realpath $(CURDIR)/..))))
 MYOS                            ?= $(if $(filter $(MAKE_DIR),$(call pop,$(MAKE_DIR))),.,$(call pop,$(MAKE_DIR)))
+MYOS_COMMIT                     ?= $(shell GIT_DIR=$(MYOS)/.git git rev-parse head 2>/dev/null)
+MYOS_REPOSITORY                 ?= $(shell GIT_DIR=$(MYOS)/.git git config --get remote.origin.url 2>/dev/null)
 QUIET                           ?= $(if $(VERBOSE),,--quiet)
 RECURSIVE                       ?= true
 RELATIVE                        ?= $(if $(filter myos,$(MYOS)),./,../)
@@ -80,7 +85,7 @@ else
 endif
 
 ifeq ($(DRYRUN),true)
-RUN                              = $(if $(filter $(DRYRUN_IGNORE),true),,echo)
+RUN                              = $(if $(filter-out true,$(IGNORE_DRYRUN)),echo)
 ifeq ($(RECURSIVE), true)
 DRYRUN_RECURSIVE                := true
 endif
@@ -147,8 +152,8 @@ force = $$(while true; do [ $$(ps x |awk 'BEGIN {nargs=split("'"$$*"'",args)} $$
 # macro gid: Return GID of group 1
 gid = $(shell grep '^$(1):' /etc/group 2>/dev/null |awk -F: '{print $$3}')
 
-# function INFO: customized info
-INFO = $(if $(VERBOSE),printf '${COLOR_BROWN}$(APP)${COLOR_RESET}[${COLOR_GREEN}$(MAKELEVEL)${COLOR_RESET}] ${COLOR_BLUE}$@${COLOR_RESET}:${COLOR_RESET} ${COLOR_GREEN}Called${COLOR_RESET} $(1)$(if $(2),$(lbracket)$(2)$(rbracket)) $(if $(3),${COLOR_BLUE}in folder${COLOR_RESET} $(3) )\n' >&2)
+# macro INFO: customized info
+INFO = $(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)),printf '${COLOR_BROWN}$(APP)${COLOR_RESET}[${COLOR_GREEN}$(MAKELEVEL)${COLOR_RESET}] ${COLOR_BLUE}$@${COLOR_RESET}:${COLOR_RESET} ${COLOR_GREEN}Calling${COLOR_RESET} $(1)$(if $(2),$(lbracket)$(2)$(rbracket)) $(if $(3),${COLOR_BLUE}in folder${COLOR_RESET} $(3) )\n' >&2))
 
 # function install-app: Exec 'git clone url 1 dir 2' or Call update-app with url 1 dir 2
 define install-app
@@ -184,7 +189,7 @@ define make
 	$(eval MAKE_OLDFILE += $(filter-out $(MAKE_OLDFILE), $^))
 	$(call INFO,make,$(MAKE_ARGS) $(cmd),$(dir))
 	$(RUN) $(MAKE) $(MAKE_DIR) $(patsubst %,-o %,$(MAKE_OLDFILE)) MAKE_OLDFILE="$(MAKE_OLDFILE)" $(MAKE_ARGS) $(cmd)
-	$(if $(filter $(DRYRUN_RECURSIVE),true),$(MAKE) $(MAKE_DIR) $(patsubst %,-o %,$(MAKE_OLDFILE)) MAKE_OLDFILE="$(MAKE_OLDFILE)" DRYRUN=$(DRYRUN) RECURSIVE=$(RECURSIVE) $(MAKE_ARGS) $(cmd))
+	$(if $(filter true,$(DRYRUN_RECURSIVE)),$(MAKE) $(MAKE_DIR) $(patsubst %,-o %,$(MAKE_OLDFILE)) MAKE_OLDFILE="$(MAKE_OLDFILE)" DRYRUN=$(DRYRUN) RECURSIVE=$(RECURSIVE) $(MAKE_ARGS) $(cmd))
 endef
 
 # macro pop: Return last word of string 1 according to separator 2
@@ -192,6 +197,10 @@ pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
 
 # macro sed: Exec sed script 1 on file 2
 sed = $(call exec,sed -i $(SED_SUFFIX) '\''$(1)'\'' $(2))
+
+# macro TIME: Print time elapsed since unixtime 1
+TIME = awk '{printf "%02d:%02d:%02d\n",int($$1/3600),int(($$1%3600)/60),int($$1%60)}' \
+	   <<< $(shell bc <<< "$(or $(2),$(MAKE_UNIXTIME_CURRENT))-$(or $(1),$(MAKE_UNIXTIME_START))" 2>/dev/null)
 
 # function update-app: Exec 'cd dir 1 && git pull' or Call install-app
 define update-app

@@ -1,9 +1,10 @@
 FROM alpine:3.11 as dist
-LABEL maintainer "yann.autissier@gmail.com"
 ARG DOCKER_BUILD_DIR
 ARG VERSION_PDNS_REC=4.2.1
 ARG VERSION_PDNS_AUTH=4.2.1
 ARG VERSION_PDNS_DNSDIST=1.4.0
+
+LABEL maintainer aynic.os <support+docker@asycn.io>
 
 RUN apk upgrade --no-cache \
  && apk add --no-cache --virtual .build-deps \
@@ -63,17 +64,5 @@ ENTRYPOINT ["/docker-entrypoint.sh"]
 
 EXPOSE 53/udp 53/tcp
 
-FROM dist as local
-ARG DOCKER_BUILD_DIR
-
-FROM local as debug
-ARG DOCKER_BUILD_DIR
-
-FROM local as tests
-ARG DOCKER_BUILD_DIR
-
-FROM tests as preprod
-ARG DOCKER_BUILD_DIR
-
-FROM preprod as prod
+FROM dist as master
 ARG DOCKER_BUILD_DIR

@@ -46,7 +46,7 @@ update-config: myos-base
 ## it reads .env files to extract applications hostnames and add it to /etc/hosts
 .PHONY: update-hosts
 update-hosts:
-ifneq (,$(filter $(ENV),local))
+ifneq (,$(filter $(ENV),master))
 	cat */.env 2>/dev/null |grep -Eo 'urlprefix-[^/]+' |sed 's/urlprefix-//' |while read host; do grep $$host /etc/hosts >/dev/null 2>&1 || { echo "Adding $$host to /etc/hosts"; echo 127.0.0.1 $$host |$(RUN) sudo tee -a /etc/hosts >/dev/null; }; done
 endif
 

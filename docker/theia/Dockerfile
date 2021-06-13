@@ -1,7 +1,8 @@
 FROM ubuntu:18.04 as dist
-LABEL maintainer 1001Pharmacies <technique+docker@1001pharmacies.com>
 ARG DOCKER_BUILD_DIR
 # https://github.com/theia-ide/theia-apps/blob/master/theia-full-docker/Dockerfile
+
+LABEL maintainer aynic.os <support+docker@asycn.io>
 
 ENV DEBIAN_FRONTEND noninteractive
 
@@ -157,7 +158,7 @@ RUN apt-get install -y \
 ## Common tools
 RUN apt-get -y install nano screen tig tmux vim-nox zsh
 
-FROM dist as local
+FROM dist as master
 ARG DOCKER_BUILD_DIR
 ARG DOCKER_GID
 ARG SHELL=/bin/bash
@@ -171,9 +172,6 @@ ARG USER
 ENV UID=${UID}
 ENV GID=${GID:-${UID}}
 ENV USER=${USER:-root}
-LABEL com.1001pharmacies.uid=${UID}
-LABEL com.1001pharmacies.gid=${GID}
-LABEL com.1001pharmacies.user=${USER}
 
 # If we provide a numeric UID
 RUN [ "$UID" -eq "$UID" ] 2>/dev/null \
@@ -258,8 +256,8 @@ COPY ${DOCKER_BUILD_DIR}/.tmux /home/$USER/.tmux/
 ARG GIT_AUTHOR_NAME
 ARG GIT_AUTHOR_EMAIL
 
-ENV GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME:-1001Pharmacies}
-ENV GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL:-technique+docker@1001pharmacies.com}
+ENV GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME}
+ENV GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}
 ENV GIT_COMMITTER_NAME=${GIT_AUTHOR_NAME}
 ENV GIT_COMMITTER_EMAIL=${GIT_AUTHOR_EMAIL}
 
@@ -268,15 +266,3 @@ ENV WORKSPACE_DIR=/Sources
 
 ENTRYPOINT yarn theia start $WORKSPACE_DIR --hostname=0.0.0.0
 EXPOSE 3000
-
-FROM local as debug
-ARG DOCKER_BUILD_DIR
-
-FROM local as tests
-ARG DOCKER_BUILD_DIR
-
-FROM tests as preprod
-ARG DOCKER_BUILD_DIR
-
-FROM preprod as prod
-ARG DOCKER_BUILD_DIR

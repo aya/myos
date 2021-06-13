@@ -4,7 +4,7 @@
 ; git-subrepo command. See https://github.com/git-commands/git-subrepo#readme
 ;
 [subrepo]
-	remote = ssh://git@github.com/1001Pharmacies/ansible-hosts
+	remote = ssh://git@github.com/aynicos/ansible-hosts
 	branch = master
 	commit = a495a6dbfae1f3c32f8e968c1ff2b3596ab42f27
 	parent = 85a259e1f4db43a63c58b4c8fe39b5d5e3b54053

@@ -37,9 +37,9 @@ git-stash: myos-base git-status
 # target git-status: Define STATUS with number of lines of git status
 .PHONY: git-status
 git-status: myos-base
-	$(eval DRYRUN_IGNORE := true)
+	$(eval IGNORE_DRYRUN := true)
 	$(eval STATUS := $(shell $(call exec,git status -uno --porcelain 2>/dev/null |wc -l)))
-	$(eval DRYRUN_IGNORE := false)
+	$(eval IGNORE_DRYRUN := false)
 
 # target git-tag-create-upstream-%: Create git TAG to reference upstream/% branch
 .PHONY: git-tag-create-upstream-%

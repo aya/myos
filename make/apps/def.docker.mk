@@ -1,7 +1,7 @@
 CMDS                            += docker-compose-exec docker-run docker-run-%
 COMPOSE_FILE                    ?= $(wildcard docker/docker-compose.yml $(foreach file,$(patsubst docker/docker-compose.%,%,$(basename $(wildcard docker/docker-compose.*.yml))),$(if $(filter true,$(COMPOSE_FILE_$(file)) $(COMPOSE_FILE_$(call UPPERCASE,$(file)))),docker/docker-compose.$(file).yml)))
 COMPOSE_FILE_$(ENV)             ?= true
-COMPOSE_FILE_DEBUG              ?= $(DEBUG)
+COMPOSE_FILE_DEBUG              ?= $(if $(DEBUG),true)
 COMPOSE_FILE_NFS                ?= $(MOUNT_NFS)
 COMPOSE_FILE_SSH                ?= true
 ifneq ($(SUBREPO),)
@@ -17,15 +17,19 @@ endif
 COMPOSE_IGNORE_ORPHANS          ?= false
 COMPOSE_PROJECT_NAME            ?= $(USER)_$(ENV)_$(APP)
 COMPOSE_SERVICE_NAME            ?= $(subst _,-,$(COMPOSE_PROJECT_NAME))
-CONTEXT                         += COMPOSE_FILE DOCKER_IMAGE_TAG DOCKER_REPOSITORY
-CONTEXT_DEBUG                   += DOCKER_REGISTRY
-DOCKER_BUILD_ARGS               ?= $(if $(filter $(DOCKER_BUILD_NO_CACHE),true),--pull --no-cache) $(foreach var,$(DOCKER_BUILD_VARS),$(if $($(var)),--build-arg $(var)='$($(var))'))
+CONTEXT                         += COMPOSE_FILE DOCKER_REPOSITORY
+CONTEXT_DEBUG                   += DOCKER_BUILD_TARGET DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_SERVICE DOCKER_SERVICES
+DOCKER_AUTHOR                   ?= $(DOCKER_AUTHOR_NAME) <$(DOCKER_AUTHOR_EMAIL)>
+DOCKER_AUTHOR_EMAIL             ?= $(subst +git,+docker,$(GIT_AUTHOR_EMAIL))
+DOCKER_AUTHOR_NAME              ?= $(GIT_AUTHOR_NAME)
+DOCKER_BUILD_ARGS               ?= $(if $(filter true,$(DOCKER_BUILD_NO_CACHE)),--pull --no-cache) $(foreach var,$(DOCKER_BUILD_VARS),$(if $($(var)),--build-arg $(var)='$($(var))'))
 DOCKER_BUILD_CACHE              ?= true
+DOCKER_BUILD_LABEL              ?= $(foreach var,$(filter $(BUILD_LABEL_VARS),$(MAKE_FILE_VARS)),$(if $($(var)),--label $(var)='$($(var))'))
 DOCKER_BUILD_NO_CACHE           ?= false
 DOCKER_BUILD_TARGET             ?= $(if $(filter $(ENV),$(DOCKER_BUILD_TARGETS)),$(ENV),$(DOCKER_BUILD_TARGET_DEFAULT))
-DOCKER_BUILD_TARGET_DEFAULT     ?= local
-DOCKER_BUILD_TARGETS            ?= local debug tests preprod prod
-DOCKER_BUILD_VARS               ?= APP BRANCH DOCKER_GID DOCKER_REPOSITORY GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME TARGET UID USER VERSION
+DOCKER_BUILD_TARGET_DEFAULT     ?= master
+DOCKER_BUILD_TARGETS            ?= $(ENV_DEPLOY)
+DOCKER_BUILD_VARS               ?= APP BRANCH DOCKER_GID DOCKER_REPOSITORY GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME SSH_REMOTE_HOSTS TARGET UID USER VERSION
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
 DOCKER_COMPOSE_UP_OPTIONS       ?= -d
 DOCKER_GID                      ?= $(call gid,docker)
@@ -43,8 +47,8 @@ DOCKER_REGISTRY                 ?= registry
 DOCKER_REGISTRY_USERNAME        ?= $(USER)
 DOCKER_REGISTRY_REPOSITORY      ?= $(addsuffix /,$(DOCKER_REGISTRY))$(subst $(USER),$(DOCKER_REGISTRY_USERNAME),$(DOCKER_REPOSITORY))
 DOCKER_REPOSITORY               ?= $(subst _,/,$(COMPOSE_PROJECT_NAME))
-DOCKER_SERVICE                  ?= $(shell $(call docker-compose,--log-level critical config --services) |tail -1)
-DOCKER_SERVICES                 ?= $(eval DRYRUN_IGNORE := true) $(shell $(call docker-compose,--log-level critical config --services)) $(eval DRYRUN_IGNORE := false)
+DOCKER_SERVICE                  ?= $(lastword $(DOCKER_SERVICES))
+DOCKER_SERVICES                 ?= $(eval IGNORE_DRYRUN := true)$(eval IGNORE_VERBOSE := true)$(shell $(call docker-compose,--log-level critical config --services))$(eval IGNORE_DRYRUN := false)$(eval IGNORE_VERBOSE := false)
 DOCKER_SHELL                    ?= $(SHELL)
 ENV_VARS                        += COMPOSE_PROJECT_NAME COMPOSE_SERVICE_NAME DOCKER_BUILD_TARGET DOCKER_GID DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_REPOSITORY DOCKER_SHELL
 
@@ -105,8 +109,8 @@ define docker-build
 	$(eval tag             := $(or $(2),$(DOCKER_REPOSITORY)/$(lastword $(subst /, ,$(path))):$(DOCKER_IMAGE_TAG)))
 	$(eval target          := $(subst ",,$(subst ',,$(or $(3),$(DOCKER_BUILD_TARGET)))))
 	$(eval image_id        := $(shell docker images -q $(tag) 2>/dev/null))
-	$(eval build_image     := $(or $(filter $(DOCKER_BUILD_CACHE),false),$(if $(image_id),,true)))
-	$(if $(build_image),$(RUN) docker build $(DOCKER_BUILD_ARGS) --build-arg DOCKER_BUILD_DIR="$(path)" --tag $(tag) $(if $(target),--target $(target)) -f $(path)/Dockerfile .,$(if $(VERBOSE),echo "docker image $(tag) has id $(image_id)",true))
+	$(eval build_image     := $(or $(filter false,$(DOCKER_BUILD_CACHE)),$(if $(image_id),,true)))
+	$(if $(build_image),$(RUN) docker build $(DOCKER_BUILD_ARGS) --build-arg DOCKER_BUILD_DIR="$(path)" $(DOCKER_BUILD_LABEL) --tag $(tag) $(if $(target),--target $(target)) -f $(path)/Dockerfile .,$(if $(VERBOSE),echo "docker image $(tag) has id $(image_id)",true))
 endef
 # function docker-commit: Commit docker image
 define docker-commit
@@ -153,6 +157,7 @@ define docker-stack-update
 	$(eval version         := $(or $(2),$(if $(findstring :,$(stack)),$(lastword $(subst :, ,$(stack))),latest)))
 	$(eval path            := $(patsubst %/,%,$(or $(3),$(if $(findstring /,$(1)),$(if $(wildcard stack/$(1) stack/$(1).yml),stack/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard stack/$(1).yml),$(dir $(1)),$(1))),$(dir $(1)))),stack/$(name))))
 	$(eval COMPOSE_FILE    += $(wildcard $(path)/$(name).yml $(path)/$(name).$(ENV).yml $(path)/$(name).$(ENV).$(version).yml $(path)/$(name).$(version).yml))
+	$(eval COMPOSE_FILE    := $(strip $(COMPOSE_FILE)))
 	$(if $(wildcard $(path)/.env.dist),$(call .env,,$(path)/.env.dist,$(wildcard $(CONFIG)/$(ENV)/$(APP)/.env $(path)/.env.$(ENV) .env)))
 endef
 # function docker-tag: Tag docker image

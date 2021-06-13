@@ -1,7 +1,7 @@
 FROM consul:1.6.1 as dist
 ARG DOCKER_BUILD_DIR
 
-LABEL maintainer 1001Pharmacies <technique+docker@1001pharmacies.com>
+LABEL maintainer aynic.os <support+docker@asycn.io>
 
 # install docker
 RUN apk add --no-cache bash docker gawk sudo \
@@ -17,17 +17,5 @@ RUN chmod +rx /usr/local/bin/container-check-status /usr/local/bin/container-lis
 
 HEALTHCHECK CMD goss -g /tests/goss.yml validate --format tap
 
-FROM dist as local
-ARG DOCKER_BUILD_DIR
-
-FROM local as debug
-ARG DOCKER_BUILD_DIR
-
-FROM local as tests
-ARG DOCKER_BUILD_DIR
-
-FROM tests as preprod
-ARG DOCKER_BUILD_DIR
-
-FROM preprod as prod
+FROM dist as master
 ARG DOCKER_BUILD_DIR

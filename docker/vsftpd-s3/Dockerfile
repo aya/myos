@@ -1,8 +1,8 @@
 FROM alpine:3.11 as dist
-LABEL maintainer "yann.autissier@gmail.com"
 ARG DOCKER_BUILD_DIR
-
 ARG S3FS_VERSION=v1.85
+
+LABEL maintainer aynic.os <support+docker@asycn.io>
 
 # Install s3fs-fuse and sftpserver
 RUN apk --no-cache upgrade \
@@ -53,17 +53,5 @@ EXPOSE 1022/tcp
 EXPOSE 65000/tcp
 VOLUME ["/var/log"]
 
-FROM dist as local
-ARG DOCKER_BUILD_DIR
-
-FROM local as debug
-ARG DOCKER_BUILD_DIR
-
-FROM local as tests
-ARG DOCKER_BUILD_DIR
-
-FROM tests as preprod
-ARG DOCKER_BUILD_DIR
-
-FROM preprod as prod
+FROM dist as master
 ARG DOCKER_BUILD_DIR

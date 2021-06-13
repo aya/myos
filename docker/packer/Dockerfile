@@ -1,6 +1,7 @@
 FROM alpine:latest as dist
-LABEL maintainer 1001Pharmacies <technique+docker@1001pharmacies.com>
 ARG DOCKER_BUILD_DIR
+
+LABEL maintainer aynic.os <support+docker@asycn.io>
 
 ENV PACKER_VERSION=1.6.6
 
@@ -25,15 +26,13 @@ RUN rm -f packer_${PACKER_VERSION}_linux_amd64.zip
 
 ENTRYPOINT ["/bin/packer"]
 
-FROM dist as local
+FROM dist as master
 ARG DOCKER_BUILD_DIR
 ARG UID
 ARG USER
 ENV UID=${UID}
 ENV GID=${UID}
 ENV USER=${USER}
-LABEL com.1001pharmacies.uid=${UID}
-LABEL com.1001pharmacies.user=${USER}
 
 # If we provide a specific UID
 RUN let $UID >/dev/null 2>&1 \
@@ -56,15 +55,3 @@ RUN let $UID >/dev/null 2>&1 \
  || true
 
 USER $USER
-
-FROM local as debug
-ARG DOCKER_BUILD_DIR
-
-FROM local as tests
-ARG DOCKER_BUILD_DIR
-
-FROM tests as preprod
-ARG DOCKER_BUILD_DIR
-
-FROM preprod as prod
-ARG DOCKER_BUILD_DIR

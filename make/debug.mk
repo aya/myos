@@ -4,8 +4,13 @@
 # target debug: Print more informations
 .PHONY: debug
 debug:
-	$(MAKE) doc help DEBUG=true
+	$(MAKE) doc help profile DEBUG=true
 
 # target debug-%: Print value of %
 .PHONY: debug-%
 debug-%: context-% ;
+
+# target profile: Print timing informations
+.PHONY: profile
+profile: context-ELAPSED_TIME
+

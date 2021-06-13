@@ -1,7 +1,7 @@
 FROM mysql:5.6.44 as dist
 ARG DOCKER_BUILD_DIR
 
-LABEL maintainer 1001Pharmacies <technique+docker@1001pharmacies.com>
+LABEL maintainer aynic.os <support+docker@asycn.io>
 
 # config
 COPY ${DOCKER_BUILD_DIR}/conf.d/all.cnf /etc/mysql/conf.d/
@@ -13,20 +13,8 @@ COPY ${DOCKER_BUILD_DIR}/goss.yml /tests/goss.yml
 
 HEALTHCHECK CMD goss -g /tests/goss.yml validate --format tap
 
-FROM dist as local
+FROM dist as master
 ARG DOCKER_BUILD_DIR
 
 # config
-COPY ${DOCKER_BUILD_DIR}/conf.d/local.cnf /etc/mysql/conf.d/
-
-FROM local as debug
-ARG DOCKER_BUILD_DIR
-
-FROM local as tests
-ARG DOCKER_BUILD_DIR
-
-FROM tests as preprod
-ARG DOCKER_BUILD_DIR
-
-FROM preprod as prod
-ARG DOCKER_BUILD_DIR
+COPY ${DOCKER_BUILD_DIR}/conf.d/master.cnf /etc/mysql/conf.d/

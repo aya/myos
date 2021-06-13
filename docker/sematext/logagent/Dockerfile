@@ -1,15 +1,14 @@
 FROM sematext/logagent:latest as dist
 ARG DOCKER_BUILD_DIR
+ARG GIT_AUTHOR_NAME
+ARG GIT_AUTHOR_EMAIL
 
-LABEL maintainer 1001Pharmacies <technique+docker@1001pharmacies.com>
+LABEL maintainer aynic.os <support+docker@asycn.io>
 
-arg GIT_AUTHOR_NAME
-arg GIT_AUTHOR_EMAIL
-
-env GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME:-1001Pharmacies}
-env GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL:-technique+docker@1001pharmacies.com}
-env GIT_COMMITTER_NAME=${GIT_AUTHOR_NAME}
-env GIT_COMMITTER_EMAIL=${GIT_AUTHOR_EMAIL}
+ENV GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME}
+ENV GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}
+ENV GIT_COMMITTER_NAME=${GIT_AUTHOR_NAME}
+ENV GIT_COMMITTER_EMAIL=${GIT_AUTHOR_EMAIL}
 
 RUN apk add --no-cache \
         git
@@ -21,17 +20,5 @@ RUN cd / \
  && git rebase d168bd0e8745a077e962248741f6be9fbeb7a8b5 \
  && git stash pop
 
-FROM dist as local
-ARG DOCKER_BUILD_DIR
-
-FROM local as debug
-ARG DOCKER_BUILD_DIR
-
-FROM local as tests
-ARG DOCKER_BUILD_DIR
-
-FROM tests as preprod
-ARG DOCKER_BUILD_DIR
-
-FROM preprod as prod
+FROM dist as master
 ARG DOCKER_BUILD_DIR

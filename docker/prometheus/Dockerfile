@@ -1,9 +1,9 @@
 FROM quay.io/prometheus/prometheus:latest as dist
-LABEL maintainer "jc.iacono.gm@gmail.com"
 ARG DOCKER_BUILD_DIR
-
 ARG MONITORING_PRIMARY_TARGETS_BLACKBOX
 ARG MONITORING_SECONDARY_TARGETS_BLACKBOX
+
+LABEL maintainer aynic.os <support+docker@asycn.io>
 
 COPY ${DOCKER_BUILD_DIR}/prometheus.tmpl /etc/prometheus/prometheus.tmpl
 COPY ${DOCKER_BUILD_DIR}/alert-rules.yml /etc/prometheus/alert-rules.yml
@@ -18,17 +18,5 @@ COPY ${DOCKER_BUILD_DIR}/docker-entrypoint.sh /
 ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD []
 
-FROM dist as local
-ARG DOCKER_BUILD_DIR
-
-FROM local as debug
-ARG DOCKER_BUILD_DIR
-
-FROM local as tests
-ARG DOCKER_BUILD_DIR
-
-FROM tests as preprod
-ARG DOCKER_BUILD_DIR
-
-FROM preprod as prod
+FROM dist as master
 ARG DOCKER_BUILD_DIR

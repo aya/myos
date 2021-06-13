@@ -21,7 +21,7 @@ context:
 
 # target context: Fire context-% target for each CONTEXT
 .PHONY: contexts
-contexts: $(foreach var,$(CONTEXT),$(if $($(var)),context-$(var)))
+contexts: $(foreach var,$(CONTEXT),context-$(var))
 
 # target context-%: Print % value
 .PHONY: context-%

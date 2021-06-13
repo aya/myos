@@ -1,7 +1,5 @@
 FROM php:5.6-fpm-alpine as dist
-LABEL maintainer 1001Pharmacies <technique+docker@1001pharmacies.com>
 ARG DOCKER_BUILD_DIR
-
 ARG AMQP_VERSION=stable
 ARG APCU_VERSION=4.0.11
 ARG BLACKFIRE_VERSION=1.31.0
@@ -19,6 +17,8 @@ ARG SUHOSIN_VERSION=0.9.38
 ARG TWIG_VERSION=1.35.3
 ARG XCACHE_VERSION=3.2.0
 ARG XDEBUG_VERSION=2.5.5
+
+LABEL maintainer aynic.os <support+docker@asycn.io>
 
 RUN apk --no-cache upgrade \
  && apk add --no-cache --virtual .build-deps \
@@ -203,14 +203,12 @@ WORKDIR /var/www
 # redirect LOG_STREAM to stdout and start php-fpm with environment variables from .env
 CMD [ "sh", "-c", "(exec 3<>$LOG_STREAM; cat <&3 >&1 & IFS=$'\n'; exec env $(cat .env 2>/dev/null) php-fpm)" ]
 
-FROM dist as local
+FROM dist as master
 ARG UID
 ARG USER
 ENV UID=${UID}
 ENV GID=${UID}
 ENV USER=${USER}
-LABEL com.1001pharmacies.uid=${UID}
-LABEL com.1001pharmacies.user=${USER}
 
 # If we provide a specific UID
 RUN let $UID >/dev/null 2>&1 \
@@ -236,17 +234,7 @@ RUN chown -R $USER /usr/local/etc/php/conf.d/
 
 USER $USER
 
+ARG SSH_REMOTE_HOSTS
+
 RUN mkdir -p ~/.ssh \
- && ssh-keyscan -t rsa -H github.com >> ~/.ssh/known_hosts
-
-FROM local as debug
-ARG DOCKER_BUILD_DIR
-
-FROM local as tests
-ARG DOCKER_BUILD_DIR
-
-FROM tests as preprod
-ARG DOCKER_BUILD_DIR
-
-FROM preprod as prod
-ARG DOCKER_BUILD_DIR
+ && ssh-keyscan -t rsa -H $SSH_REMOTE_HOSTS >> ~/.ssh/known_hosts

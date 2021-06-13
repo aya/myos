@@ -1,12 +1,12 @@
 FROM grafana/grafana:latest as dist
-LABEL maintainer "jc.iacono.gm@gmail.com"
 ARG DOCKER_BUILD_DIR
-
 ARG AWS_ACCESS_KEY
 ARG AWS_SECRET_KEY
 ARG MYSQL_GRAFANA_USER
 ARG MYSQL_GRAFANA_PASSWORD
 ARG MYSQL_GRAFANA_DB
+
+LABEL maintainer aynic.os <support+docker@asycn.io>
 
 COPY ${DOCKER_BUILD_DIR}/config.ini /etc/grafana/config.ini
 COPY ${DOCKER_BUILD_DIR}/dashboards /etc/grafana/dashboards
@@ -23,17 +23,5 @@ USER grafana
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-FROM dist as local
-ARG DOCKER_BUILD_DIR
-
-FROM local as debug
-ARG DOCKER_BUILD_DIR
-
-FROM local as tests
-ARG DOCKER_BUILD_DIR
-
-FROM tests as preprod
-ARG DOCKER_BUILD_DIR
-
-FROM preprod as prod
+FROM dist as master
 ARG DOCKER_BUILD_DIR

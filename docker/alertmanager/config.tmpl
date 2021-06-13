@@ -5,14 +5,14 @@ global:
   slack_api_url: SLACK_WEBHOOK_ID
   # The smarthost and SMTP sender used for mail notifications.
   # smtp_smarthost: 'localhost:25'
-  # smtp_from: 'alertmanager@1001pharmacies.com'
+  # smtp_from: 'alertmanager@domain.com'
 
 # The root route on which each incoming alert enters.
 route:
   # The root route must not have any matchers as it is the entry point for
   # all alerts. It needs to have a receiver configured so alerts that do not
   # match any of the sub-routes are sent to someone.
-  receiver: '1001-slack-default'
+  receiver: 'slack-default'
 
   # The labels by which incoming alerts are grouped together. For example,
   # multiple alerts coming in for cluster=A and alertname=LatencyHigh would
@@ -52,43 +52,43 @@ route:
       severity: "low"
       instance: "Hourly GMV"
       type: "lower than static threshold"
-    receiver: 1001-slack-gmv-static-low
+    receiver: slack-gmv-static-low
 
   - match:
       severity: "high"
       instance: "Hourly GMV"
       type: "lower than static threshold"
-    receiver: 1001-slack-gmv-static-high
+    receiver: slack-gmv-static-high
 
   - match:
       severity: "low"
       instance: "Hourly GMV"
-    receiver: 1001-slack-gmv-low
+    receiver: slack-gmv-low
 
   - match:
       severity: "high"
       instance: "Hourly GMV"
-    receiver: 1001-slack-gmv-high
+    receiver: slack-gmv-high
 
   - match:
       instance: "Hourly GMV test"
-    receiver: 1001-slack-gmv-low
+    receiver: slack-gmv-low
 
   - match:
       severity: "low"
-    receiver: 1001-slack-generic-low
+    receiver: slack-generic-low
 
   - match:
       severity: "medium"
-    receiver: 1001-slack-generic-medium
+    receiver: slack-generic-medium
 
   - match:
       severity: "high"
-    receiver: 1001-slack-generic-high
+    receiver: slack-generic-high
 
   - match:
       severity: "critical"
-    receiver: 1001-slack-generic-critical
+    receiver: slack-generic-critical
 
 
     # The service has a sub-route for critical alerts, any alerts
@@ -140,7 +140,7 @@ inhibit_rules:
 
 
 receivers:
-- name: '1001-slack-gmv-static-low'
+- name: 'slack-gmv-static-low'
   slack_configs:
   - api_url: SLACK_WEBHOOK_ID
     send_resolved: true
@@ -149,7 +149,7 @@ receivers:
     title: ':mostly_sunny: {{ .Status|toUpper }} issue on [ {{ .CommonLabels.instance }} ]'
     text: "{{ .CommonAnnotations.description }}"
 
-- name: '1001-slack-gmv-static-high'
+- name: 'slack-gmv-static-high'
   slack_configs:
   - api_url: SLACK_WEBHOOK_ID
     send_resolved: true
@@ -158,7 +158,7 @@ receivers:
     title: ':tornado: {{ .Status|toUpper }} issue on [ {{ .CommonLabels.instance }} ]'
     text: "{{ .CommonAnnotations.description }}"
 
-- name: '1001-slack-gmv-low'
+- name: 'slack-gmv-low'
   slack_configs:
   - api_url: SLACK_WEBHOOK_ID
     send_resolved: true
@@ -169,7 +169,7 @@ receivers:
       \n
       \n{{ .CommonAnnotations.query }}"
 
-- name: '1001-slack-gmv-high'
+- name: 'slack-gmv-high'
   slack_configs:
   - api_url: SLACK_WEBHOOK_ID
     send_resolved: true
@@ -180,7 +180,7 @@ receivers:
       \n
       \n{{ .CommonAnnotations.query }}"
       
-- name: '1001-slack-generic-low'
+- name: 'slack-generic-low'
   slack_configs:
   - api_url: SLACK_WEBHOOK_ID
     send_resolved: true
@@ -189,7 +189,7 @@ receivers:
     title: ':mostly_sunny: {{ .Status|toUpper }} issue on [ {{ .CommonLabels.instance }} ]'
     text: "*{{ .CommonLabels.instance }}* had a *{{ .CommonLabels.type }}* issue for a few seconds."
 
-- name: '1001-slack-generic-medium'
+- name: 'slack-generic-medium'
   slack_configs:
   - api_url: SLACK_WEBHOOK_ID
     send_resolved: true
@@ -198,7 +198,7 @@ receivers:
     title: ':sun_behind_rain_cloud: {{ .Status|toUpper }} issue on [ {{ .CommonLabels.instance }} ]'
     text: "*{{ .CommonLabels.instance }}* had a *{{ .CommonLabels.type }}* issue for more than 5 minutes."
 
-- name: '1001-slack-generic-high'
+- name: 'slack-generic-high'
   slack_configs:
   - api_url: SLACK_WEBHOOK_ID
     send_resolved: true
@@ -207,7 +207,7 @@ receivers:
     title: ':tornado: {{ .Status|toUpper }} issue on {{ .CommonLabels.instance }}'
     text: "*{{ .CommonLabels.instance }}* had a *{{ .CommonLabels.type }}* issue for an hour"
 
-- name: '1001-slack-generic-critical'
+- name: 'slack-generic-critical'
   slack_configs:
   - api_url: SLACK_WEBHOOK_ID
     send_resolved: true
@@ -216,10 +216,9 @@ receivers:
     title: ':boom: {{ .Status|toUpper }} issue on {{ .CommonLabels.instance }}'
     text: "*{{ .CommonLabels.instance }}* had a *{{ .CommonLabels.type }}* issue for more than 12 hours"
 
-- name: '1001-slack-default'
+- name: 'slack-default'
   slack_configs:
   - api_url: SLACK_WEBHOOK_ID
     send_resolved: true
     username: 'Chouette Vigilante [default]'
     icon_emoji: ':owl:'
-

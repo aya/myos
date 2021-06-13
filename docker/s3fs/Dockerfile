@@ -1,8 +1,8 @@
 FROM alpine:latest as dist
-LABEL maintainer 1001Pharmacies <technique+docker@1001pharmacies.com>
 ARG DOCKER_BUILD_DIR
-
 ARG S3FS_VERSION=v1.85
+
+LABEL maintainer aynic.os <support+docker@asycn.io>
 
 # Install s3fs-fuse
 RUN apk --no-cache upgrade \
@@ -40,15 +40,13 @@ VOLUME ${S3FS_DIR}
 COPY ${DOCKER_BUILD_DIR}/docker-entrypoint.sh /
 ENTRYPOINT /docker-entrypoint.sh
 
-FROM dist as local
+FROM dist as master
 ARG DOCKER_BUILD_DIR
 ARG UID=0
 ARG USER=root
 ENV UID=${UID}
 ENV GID=${UID}
 ENV USER=${USER}
-LABEL com.1001pharmacies.uid=${UID}
-LABEL com.1001pharmacies.user=${USER}
 
 # If we provide a specific UID
 RUN let $UID >/dev/null 2>&1 \
@@ -69,15 +67,3 @@ RUN let $UID >/dev/null 2>&1 \
  && mkdir -p /home/$USER \
  && chown $UID:$GID /home/$USER \
  || true
-
-FROM local as debug
-ARG DOCKER_BUILD_DIR
-
-FROM local as tests
-ARG DOCKER_BUILD_DIR
-
-FROM tests as preprod
-ARG DOCKER_BUILD_DIR
-
-FROM preprod as prod
-ARG DOCKER_BUILD_DIR

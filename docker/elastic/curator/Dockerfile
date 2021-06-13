@@ -1,8 +1,8 @@
 FROM alpine:latest as dist
-LABEL maintainer 1001Pharmacies <technique+docker@1001pharmacies.com>
 ARG DOCKER_BUILD_DIR
-
 ARG CURATOR_VERSION=5.8.3
+
+LABEL maintainer aynic.os <support+docker@asycn.io>
 
 RUN apk --no-cache add \
     bash \
@@ -15,7 +15,7 @@ COPY ${DOCKER_BUILD_DIR}/action.yml /etc/curator/
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
 
-FROM dist as local
+FROM dist as master
 ARG DOCKER_BUILD_DIR
 
 # install cronlock
@@ -25,18 +25,3 @@ RUN chmod +rx /usr/bin/cronlock
 # install ssmtp
 RUN apk --no-cache add ssmtp && \
     echo "FromLineOverride=YES" >> /etc/ssmtp/ssmtp.conf
-
-FROM local as debug
-ARG DOCKER_BUILD_DIR
-
-FROM local as tests
-ARG DOCKER_BUILD_DIR
-
-FROM tests as preprod
-ARG DOCKER_BUILD_DIR
-
-COPY build/curator/cronlock.conf /etc/cronlock.conf
-COPY build/curator/ssmtp.conf /etc/ssmtp/ssmtp.conf
-
-FROM preprod as prod
-ARG DOCKER_BUILD_DIR

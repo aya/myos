@@ -1,6 +1,7 @@
 FROM alpine:latest as dist
-LABEL maintainer 1001Pharmacies <technique+docker@1001pharmacies.com>
 ARG DOCKER_BUILD_DIR
+
+LABEL maintainer aynic.os <support+docker@asycn.io>
 
 WORKDIR /usr/src
 
@@ -40,17 +41,5 @@ RUN apk upgrade --no-cache \
 
 ENTRYPOINT /usr/local/bin/riofs
 
-FROM dist as local
-ARG DOCKER_BUILD_DIR
-
-FROM local as debug
-ARG DOCKER_BUILD_DIR
-
-FROM local as tests
-ARG DOCKER_BUILD_DIR
-
-FROM tests as preprod
-ARG DOCKER_BUILD_DIR
-
-FROM preprod as prod
+FROM dist as master
 ARG DOCKER_BUILD_DIR

@@ -29,7 +29,7 @@ bootstrap-git-%:
 .PHONY: build
 build: docker-compose-build ## Build application docker images
 
-# target build@%: Build application docker images to deploy of % ENV
+# target build@%: Build application docker images of % ENV
 # on local host
 .PHONY: build@% app-build
 build@%: myos-base
@@ -47,13 +47,12 @@ build@%: myos-base
 # target clean: Clean application and docker images
 # on local host
 .PHONY: clean app-clean
-clean: app-clean docker-compose-down .env-clean ## Clean application and docker images
+clean: app-clean docker-rm docker-image-rm docker-volume-rm .env-clean ## Clean application and docker stuffs
 
 # target clean@%: Clean deployed application and docker images of % ENV
 # on local host
 .PHONY: clean@%
-clean@%:
-	$(call make,docker-compose-down DOCKER_COMPOSE_DOWN_OPTIONS='--rmi all -v')
+clean@%: docker-rm docker-image-rm docker-volume-rm;
 
 # target config: View application docker compose file
 # on local host

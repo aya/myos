@@ -10,7 +10,7 @@ PASV_MIN_PORT=${PASV_MIN_PORT:-65000}
 PASV_MAX_PORT=${PASV_MAX_PORT:-65535}
 
 # VSFTPD Banner
-FTPD_BANNER=${FTPD_BANNER:-1001Pharmacies FTP Server}
+FTPD_BANNER=${FTPD_BANNER:-FTP Server}
 
 # FTP allowed commands
 # full command list : https://blog.vigilcode.com/2011/08/configure-secure-ftp-with-vsftpd/
@@ -39,11 +39,11 @@ pasv_max_port=$PASV_MAX_PORT" > /etc/vsftpd.conf
 
 # SSL certificate
 SSL_CERT_C=${SSL_CERT_C:-FR}
-SSL_CERT_ST=${SSL_CERT_ST:-Herault}
-SSL_CERT_L=${SSL_CERT_L:-Montpellier}
-SSL_CERT_O=${SSL_CERT_O:-1001Pharmacies}
+SSL_CERT_ST=${SSL_CERT_ST:-LaGaule}
+SSL_CERT_L=${SSL_CERT_L:-Mars}
+SSL_CERT_O=${SSL_CERT_O:-1nation}
 SSL_CERT_OU=${SSL_CERT_OU:-Hosting}
-SSL_CERT_CN=${SSL_CERT_CN:-ftp.1001pharmacies.com}
+SSL_CERT_CN=${SSL_CERT_CN:-ftp}
 
 # Create SSL certificate
 openssl req -x509 -nodes -days 365 -newkey rsa:2048 -addext extendedKeyUsage=serverAuth -addext subjectAltName=DNS:${SSL_CERT_CN} -subj "/C=${SSL_CERT_C}/ST=${SSL_CERT_ST}/L=${SSL_CERT_L}/O=${SSL_CERT_O}/OU=${SSL_CERT_OU}/CN=${SSL_CERT_CN}" -keyout /etc/ssl/private/vsftpd.pem -out /etc/ssl/private/vsftpd.pem 2>/dev/null && echo "

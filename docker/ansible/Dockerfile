@@ -1,6 +1,8 @@
 FROM alpine:latest as dist
 ARG DOCKER_BUILD_DIR
 
+LABEL maintainer aynic.os <support+docker@asycn.io>
+
 RUN apk --no-cache add \
         ansible \
         py3-pip
@@ -10,15 +12,13 @@ RUN pip3 install boto
 ENTRYPOINT ["/usr/bin/ansible"]
 CMD ["--help"]
 
-FROM dist as local
+FROM dist as master
 ARG DOCKER_BUILD_DIR
 ARG UID
 ARG USER
 ENV UID=${UID}
 ENV GID=${UID}
 ENV USER=${USER}
-LABEL com.1001pharmacies.uid=${UID}
-LABEL com.1001pharmacies.user=${USER}
 
 # If we provide a numeric UID
 RUN [ "$UID" -eq "$UID" ] 2>/dev/null \
@@ -41,15 +41,3 @@ RUN [ "$UID" -eq "$UID" ] 2>/dev/null \
  || true
 
 USER $USER
-
-FROM local as debug
-ARG DOCKER_BUILD_DIR
-
-FROM local as tests
-ARG DOCKER_BUILD_DIR
-
-FROM tests as preprod
-ARG DOCKER_BUILD_DIR
-
-FROM preprod as prod
-ARG DOCKER_BUILD_DIR

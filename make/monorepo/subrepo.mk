@@ -26,9 +26,9 @@ endif
 ## it compares child commit with our tree : git diff --quiet child -- subrepo
 .PHONY: subrepo-git-diff
 subrepo-git-diff: myos-base subrepo-check
-	$(eval DRYRUN_IGNORE := true)
+	$(eval IGNORE_DRYRUN := true)
 	$(eval DIFF = $(shell $(call exec,git diff --quiet $(shell $(call exec,git rev-list --ancestry-path $(shell awk '$$1 == "parent" {print $$3}' $(SUBREPO)/.gitrepo)..HEAD |tail -n 1)) -- $(SUBREPO); echo $$?)) )
-	$(eval DRYRUN_IGNORE := false)
+	$(eval IGNORE_DRYRUN := false)
 
 # target subrepo-git-fetch: Fetch git remote
 .PHONY: subrepo-git-fetch
@@ -52,9 +52,9 @@ ifeq ($(BRANCH),master)
 endif
 # if release|story|hotfix branch, delete remote branch before push and recreate it from master
 ifneq ($(findstring $(firstword $(subst /, ,$(BRANCH))),release story hotfix),)
-	$(eval DRYRUN_IGNORE := true)
+	$(eval IGNORE_DRYRUN := true)
 	$(eval DELETE = $(shell $(call exec,git ls-remote --heads $(REMOTE) $(BRANCH) |wc -l)) )
-	$(eval DRYRUN_IGNORE := false)
+	$(eval IGNORE_DRYRUN := false)
 else
 	$(eval DELETE = 0)
 endif
