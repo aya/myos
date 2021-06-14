@@ -46,24 +46,24 @@ update-config: myos-base
 ## it reads .env files to extract applications hostnames and add it to /etc/hosts
 .PHONY: update-hosts
 update-hosts:
-ifneq (,$(filter $(ENV),master))
-	cat */.env 2>/dev/null |grep -Eo 'urlprefix-[^/]+' |sed 's/urlprefix-//' |while read host; do grep $$host /etc/hosts >/dev/null 2>&1 || { echo "Adding $$host to /etc/hosts"; echo 127.0.0.1 $$host |$(RUN) sudo tee -a /etc/hosts >/dev/null; }; done
+ifneq (,$(filter $(ENV),local))
+	cat .env */.env 2>/dev/null |grep -Eo 'urlprefix-[^/]+' |sed 's/urlprefix-//' |while read host; do grep $$host /etc/hosts >/dev/null 2>&1 || { printf "Adding $$host to /etc/hosts\n"; printf "127.0.0.1 $$host\n" |$(RUN) sudo tee -a /etc/hosts >/dev/null; }; done
 endif
 
 # target update-remote-%: fetch git remote %
 .PHONY: update-remote-%
 update-remote-%: myos-base
-	$(call exec,git fetch --prune --tags $*)
+	$(RUN) $(call exec,git fetch --prune --tags $*)
 
 # target update-remotes: fetch all git remotes
 .PHONY: update-remotes
 update-remotes: myos-base
-	$(call exec,git fetch --all --prune --tags)
+	$(RUN) $(call exec,git fetch --all --prune --tags)
 
 # target update-upstream: fetch git remote upstream
 .PHONY: update-upstream
 update-upstream: myos-base .git/refs/remotes/upstream/master
-	$(call exec,git fetch --prune --tags upstream)
+	$(RUN) $(call exec,git fetch --prune --tags upstream)
 
 # target .git/refs/remotes/upstream/master: git add upstream APP_UPSTREAM_REPOSITORY
 .git/refs/remotes/upstream/master:

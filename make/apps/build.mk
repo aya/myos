@@ -9,9 +9,9 @@ build-env: bootstrap
 	$(call docker-compose-exec,$(SERVICE), \
 		rm -f .env \
 		&& make .env ENV=$(ENV) \
-		&& echo BUILD=true >> .env \
+		&& printf 'BUILD=true\n' >> .env \
 		&& $(foreach var,$(BUILD_ENV_VARS), \
-			$(if $($(var)),sed -i '/^$(var)=/d' .env && echo $(var)='$($(var))' >> .env &&) \
+			$(if $($(var)),sed -i '/^$(var)=/d' .env && printf "$(var)='$($(var))'\n" >> .env &&) \
 		) true \
 	)
 

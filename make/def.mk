@@ -1,3 +1,5 @@
+.DEFAULT_GOAL                   := help
+.PHONY: FORCE
 comma                           ?= ,
 dollar                          ?= $
 dquote                          ?= "
@@ -11,11 +13,24 @@ APPS                            ?= $(if $(MONOREPO),$(sort $(patsubst $(MONOREPO
 APPS_NAME                       ?= $(foreach app,$(APPS),$(or $(shell awk -F '=' '$$1 == "APP" {print $$2}' $(or $(wildcard $(MONOREPO_DIR)/$(app)/.env),$(wildcard $(MONOREPO_DIR)/$(app)/.env.$(ENV)),$(MONOREPO_DIR)/$(app)/.env.dist) 2>/dev/null),$(app)))
 BRANCH                          ?= $(GIT_BRANCH)
 CMDS                            ?= exec exec:% exec@% install-app install-apps run run:% run@%
+COLOR_INFO                      ?= $(COLOR_BROWN)
+COLOR_HIGHLIGHT                 ?= $(COLOR_GREEN)
+COLOR_VALUE                     ?= $(COLOR_CYAN)
+COLOR_WARNING                   ?= $(COLOR_YELLOW)
+COLOR_RESET                     ?= \033[0m
+COLOR_DGRAY                     ?= \033[30m
+COLOR_RED                       ?= \033[31m
+COLOR_GREEN                     ?= \033[32m
+COLOR_BROWN                     ?= \033[33m
+COLOR_YELLOW                    ?= \033[01;33m
+COLOR_BLUE                      ?= \033[01;34m
+COLOR_CYAN                      ?= \033[36m
+COLOR_GRAY                      ?= \033[37m
 COMMIT                          ?= $(or $(SUBREPO_COMMIT),$(GIT_COMMIT))
 CONFIG                          ?= $(RELATIVE)config
 CONFIG_REPOSITORY               ?= $(call pop,$(or $(APP_UPSTREAM_REPOSITORY),$(GIT_UPSTREAM_REPOSITORY)))/$(notdir $(CONFIG))
 CONTEXT                         ?= $(if $(APP),APP BRANCH DOMAIN VERSION) $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null)
-CONTEXT_DEBUG                   ?= MAKEFILE_LIST env env.docker APPS GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME LOG_LEVEL MAKE_DIR MAKE_SUBDIRS MAKE_CMD_ARGS MAKE_ENV_ARGS MONOREPO_DIR UID USER
+CONTEXT_DEBUG                   ?= MAKEFILE_LIST env env.docker APPS GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME MAKE_DIR MAKE_SUBDIRS MAKE_CMD_ARGS MAKE_ENV_ARGS UID USER
 DEBUG                           ?= 
 DOCKER                          ?= $(if $(BUILD),false,true)
 DOMAIN                          ?= localhost
@@ -40,7 +55,7 @@ GIT_UPSTREAM_USER               ?= $(lastword $(subst /, ,$(call pop,$(MYOS_REPO
 GIT_VERSION                     ?= $(shell git describe --tags $(BRANCH) 2>/dev/null || git rev-parse $(BRANCH) 2>/dev/null)
 HOSTNAME                        ?= $(shell hostname 2>/dev/null |sed 's/\..*//')
 IGNORE_DRYRUN                   ?= false
-IGNORE_VERBOSE                  ?= $(IGNORE_DRYRUN)
+IGNORE_VERBOSE                  ?= false
 LOG_LEVEL                       ?= $(if $(DEBUG),debug,$(if $(VERBOSE),info,error))
 MAKE_ARGS                       ?= $(foreach var,$(MAKE_VARS),$(if $($(var)),$(var)='$($(var))'))
 MAKE_SUBDIRS                    ?= $(if $(filter myos,$(MYOS)),monorepo,$(if $(APP),apps $(foreach type,$(APP_TYPE),$(if $(wildcard $(MAKE_DIR)/apps/$(type)),apps/$(type)))))
@@ -69,6 +84,7 @@ SUBREPO                         ?= $(if $(wildcard .gitrepo),$(notdir $(CURDIR))
 TAG                             ?= $(GIT_TAG)
 UID                             ?= $(shell id -u 2>/dev/null)
 USER                            ?= $(shell id -nu 2>/dev/null)
+USER_ENV                        ?= $(USER)_$(ENV)
 VERBOSE                         ?= $(if $(DEBUG),true)
 VERSION                         ?= $(GIT_VERSION)
 
@@ -152,8 +168,23 @@ force = $$(while true; do [ $$(ps x |awk 'BEGIN {nargs=split("'"$$*"'",args)} $$
 # macro gid: Return GID of group 1
 gid = $(shell grep '^$(1):' /etc/group 2>/dev/null |awk -F: '{print $$3}')
 
+INFO_FD := 2
 # macro INFO: customized info
-INFO = $(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)),printf '${COLOR_BROWN}$(APP)${COLOR_RESET}[${COLOR_GREEN}$(MAKELEVEL)${COLOR_RESET}] ${COLOR_BLUE}$@${COLOR_RESET}:${COLOR_RESET} ${COLOR_GREEN}Calling${COLOR_RESET} $(1)$(if $(2),$(lbracket)$(2)$(rbracket)) $(if $(3),${COLOR_BLUE}in folder${COLOR_RESET} $(3) )\n' >&2))
+INFO = \
+$(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)), \
+  printf '${COLOR_INFO}$(APP)${COLOR_RESET}\
+[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}] \
+${COLOR_HIGHLIGHT}$@${COLOR_RESET}:${COLOR_RESET} ' >&$(INFO_FD) \
+  $(if $(2), \
+    && printf 'Call ${COLOR_HIGHLIGHT}$(1)${COLOR_RESET}$(lbracket)' >&$(INFO_FD) \
+    && $(or $(strip $(call PRINTF,$(2))),printf '$(2)') >&$(INFO_FD) \
+    && printf '$(rbracket)' >&$(INFO_FD) \
+    $(if $(3),&& printf ' ${COLOR_VALUE}in${COLOR_RESET} $(3)' >&$(INFO_FD)) \
+  , \
+    && $(strip $(call PRINTF,$(1)) >&$(INFO_FD)) \
+  ) \
+  && printf '\n' >&$(INFO_FD) \
+))
 
 # function install-app: Exec 'git clone url 1 dir 2' or Call update-app with url 1 dir 2
 define install-app
@@ -162,7 +193,7 @@ define install-app
 	$(eval dir := $(or $(2), $(RELATIVE)$(lastword $(subst /, ,$(url)))))
 	$(if $(wildcard $(dir)/.git), \
 		$(call update-app,$(url),$(dir)), \
-		$(call exec,$(RUN) git clone $(QUIET) $(url) $(dir)) \
+		$(RUN) $(call exec,git clone $(QUIET) $(url) $(dir)) \
 	)
 endef
 
@@ -196,7 +227,7 @@ endef
 pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
 
 # macro sed: Exec sed script 1 on file 2
-sed = $(call exec,sed -i $(SED_SUFFIX) '\''$(1)'\'' $(2))
+sed = $(RUN) $(call exec,sed -i $(SED_SUFFIX) '$(1)' $(2))
 
 # macro TIME: Print time elapsed since unixtime 1
 TIME = awk '{printf "%02d:%02d:%02d\n",int($$1/3600),int(($$1%3600)/60),int($$1%60)}' \
@@ -208,7 +239,7 @@ define update-app
 	$(eval url := $(or $(1), $(APP_REPOSITORY)))
 	$(eval dir := $(or $(2), $(APP_DIR)))
 	$(if $(wildcard $(dir)/.git), \
-		$(call exec,cd $(dir) && $(RUN) git pull $(QUIET)), \
+		$(RUN) $(call exec,sh -c 'cd $(dir) && git pull $(QUIET)'), \
 		$(call install-app,$(url),$(dir)) \
 	)
 endef
@@ -222,6 +253,20 @@ $(TARGET): $(ASSIGN_ENV_FILE)
 $(TARGET):
 	$$(call make,$$*,,ENV_FILE)
 endef
+
+WARNING_FD := 2
+# macro WARNING: customized warning
+WARNING = printf '${COLOR_WARNING}WARNING:${COLOR_RESET} ${COLOR_INFO}$(APP)${COLOR_RESET}\
+[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}] \
+${COLOR_HIGHLIGHT}$@${COLOR_RESET}:${COLOR_RESET} ' >&$(WARNING_FD) \
+  $(if $(2), \
+    && printf '$(1) ' >&$(WARNING_FD) \
+    && printf '${COLOR_HIGHLIGHT}$(2)${COLOR_RESET}' >&$(WARNING_FD) \
+    $(if $(3),&& printf ' in ${COLOR_VALUE}$(3)${COLOR_RESET}' >&$(WARNING_FD)) \
+  , \
+    && $(strip $(call PRINTF,$(1)) >&$(WARNING_FD)) \
+  ) \
+  && printf '\n' >&$(WARNING_FD)
 
 # set ENV=env for targets ending with :env
 ## for each env in ENV_LIST

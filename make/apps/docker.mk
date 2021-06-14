@@ -27,7 +27,7 @@ docker-commit-%:
 # target docker-compose-build: Fire docker-images-myos, Call docker-compose build SERVICE
 .PHONY: docker-compose-build
 docker-compose-build: docker-images-myos
-	$(call docker-compose,build $(if $(filter $(DOCKER_BUILD_NO_CACHE),true),--pull --no-cache) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
+	$(call docker-compose,build $(DOCKER_BUILD_ARGS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-config: Call docker-compose config
 .PHONY: docker-compose-config
@@ -134,8 +134,9 @@ docker-network-create: docker-network-create-$(DOCKER_NETWORK)
 # target docker-network-create-%: Exec 'docker network create %'
 .PHONY: docker-network-create-%
 docker-network-create-%:
-	[ -n "$(shell docker network ls -q --filter name='^$*$$' 2>/dev/null)" ] \
-	  || { echo -n "Creating docker network $* ... " && $(RUN) docker network create $* >/dev/null 2>&1 && echo "done" || echo "ERROR"; }
+	if [ -z "$(shell docker network ls -q --filter name='^$*$$' 2>/dev/null)" ]; then \
+	  $(RUN) docker network create $* >/dev/null \
+	   && $(call INFO,docker network $* created); fi \
 
 # target docker-network-rm: Fire docker-network-rm-% for DOCKER_NETWORK
 .PHONY: docker-network-rm
@@ -144,14 +145,15 @@ docker-network-rm: docker-network-rm-$(DOCKER_NETWORK)
 # target docker-network-rm-%: Remove docker network %
 .PHONY: docker-network-rm-%
 docker-network-rm-%:
-	[ -z "$(shell docker network ls -q --filter name='^$*$$' 2>/dev/null)" ] \
-	  || { echo -n "Removing docker network $* ... " && $(RUN) docker network rm $* >/dev/null 2>&1 && echo "done" || echo "ERROR"; }
+	if [ -n "$(shell docker network ls -q --filter name='^$*$$' 2>/dev/null)" ]; then \
+	  $(RUN) docker network rm $* >/dev/null \
+	   && $(call INFO,docker network $* removed); fi \
 
 # target docker-plugin-install: Exec 'docker plugin install DOCKER_PLUGIN_OPTIONS DOCKER_PLUGIN'
 .PHONY: docker-plugin-install
 docker-plugin-install:
 	$(eval docker_plugin_state := $(shell docker plugin ls | awk '$$2 == "$(DOCKER_PLUGIN)" {print $$NF}') )
-	$(if $(docker_plugin_state),$(if $(filter $(docker_plugin_state),false),echo -n "Enabling docker plugin $(DOCKER_PLUGIN) ... " && $(RUN) docker plugin enable $(DOCKER_PLUGIN) >/dev/null 2>&1 && echo "done" || echo "ERROR"),echo -n "Installing docker plugin $(DOCKER_PLUGIN) ... " && $(RUN) docker plugin install $(DOCKER_PLUGIN_OPTIONS) $(DOCKER_PLUGIN) $(DOCKER_PLUGIN_ARGS) >/dev/null 2>&1 && echo "done" || echo "ERROR")
+	$(if $(docker_plugin_state),$(if $(filter $(docker_plugin_state),false),printf "Enabling docker plugin $(DOCKER_PLUGIN) ... " && $(RUN) docker plugin enable $(DOCKER_PLUGIN) >/dev/null 2>&1 && printf "done\n" || printf "ERROR\n"),printf "Installing docker plugin $(DOCKER_PLUGIN) ... " && $(RUN) docker plugin install $(DOCKER_PLUGIN_OPTIONS) $(DOCKER_PLUGIN) $(DOCKER_PLUGIN_ARGS) >/dev/null 2>&1 && printf "done\n" || printf "ERROR\n")
 
 # target docker-push: Call docker-push for each SERVICES
 .PHONY: docker-push
@@ -159,7 +161,7 @@ docker-push:
 ifneq ($(filter $(DEPLOY),true),)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-push,$(service)))
 else
-	printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}target${COLOR_RESET} $@ ${COLOR_GREEN}not enabled in${COLOR_RESET} $(APP).\n" >&2
+	$(call WARNING,disabled target,$@,$(APP))
 endif
 
 # target docker-push-%: Call docker-push with tag % for each SERVICES
@@ -168,7 +170,7 @@ docker-push-%:
 ifneq ($(filter $(DEPLOY),true),)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-push,$(service),,$*))
 else
-	printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}target${COLOR_RESET} $@ ${COLOR_GREEN}not enabled in${COLOR_RESET} $(APP).\n" >&2
+	$(call WARNING,disabled target,$@,$(APP))
 endif
 
 # target docker-rebuild: Call docker-build target with DOCKER_BUILD_CAHE=false
@@ -203,7 +205,7 @@ docker-run-%: docker-build-%
 	$(eval path            := $(patsubst %/,%,$*))
 	$(eval image           := $(DOCKER_REPOSITORY)/$(lastword $(subst /, ,$(path)))$(if $(findstring :,$*),,:$(DOCKER_IMAGE_TAG)))
 	$(eval image_id        := $(shell docker images -q $(image) 2>/dev/null))
-	$(call docker-run,$(if $(image_id),$(image),$(path)),$(command))
+	$(call docker-run,$(command),$(if $(image_id),$(image),$(path)))
 
 # target docker-tag: Call docker-tag for each SERVICES
 .PHONY: docker-tag
@@ -211,7 +213,7 @@ docker-tag:
 ifneq ($(filter $(DEPLOY),true),)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-tag,$(service)))
 else
-	printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}target${COLOR_RESET} $@ ${COLOR_GREEN}not enabled in${COLOR_RESET} $(APP).\n" >&2
+	$(call WARNING,disabled target,$@,$(APP))
 endif
 
 # target docker-tag-%: Call docker-tag with target tag % for each SERVICES
@@ -220,7 +222,7 @@ docker-tag-%:
 ifneq ($(filter $(DEPLOY),true),)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-tag,$(service),,,,$*))
 else
-	printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}target${COLOR_RESET} $@ ${COLOR_GREEN}not enabled in${COLOR_RESET} $(APP).\n" >&2
+	$(call WARNING,disabled target,$@,$(APP))
 endif
 
 # target docker-volume-rm: Fire docker-volume-rm-% for COMPOSE_PROJECT_NAME

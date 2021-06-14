@@ -5,14 +5,6 @@ services:
     build:
       args:
       - DOCKER_BUILD_DIR=docker/cli
-      - GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME}
-      - GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}
-      - SSH_BASTION_USERNAME=${SSH_BASTION_USERNAME}
-      - SSH_BASTION_HOSTNAME=${SSH_BASTION_HOSTNAME}
-      - SSH_PUBLIC_HOST_KEYS=${SSH_PUBLIC_HOST_KEYS}
-      - SSH_PRIVATE_IP_RANGE=${SSH_PRIVATE_IP_RANGE}
-      - UID=${UID}
-      - USER=${USER}
       context: ../..
       dockerfile: docker/cli/Dockerfile
       target: ${DOCKER_BUILD_TARGET}
@@ -34,8 +26,6 @@ services:
     build:
       args:
       - DOCKER_BUILD_DIR=docker/ssh
-      - UID=${UID}
-      - USER=${USER}
       context: ../..
       dockerfile: docker/ssh/Dockerfile
       target: ${DOCKER_BUILD_TARGET}
@@ -49,11 +39,6 @@ services:
 
 volumes:
   ssh:
-    driver: local
-    driver_opts:
-      type: tmpfs
-      device: tmpfs
-      o: uid=${UID}
 
 networks:
   private:

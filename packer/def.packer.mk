@@ -71,33 +71,18 @@ else ifeq ($(HOST_SYSTEM),WINDOWS)
 PACKER_QEMU_ACCELERATOR         := hax
 endif
 
-ifeq ($(DOCKER), true)
-
-# packer ansible provisionner needs:
-## empty local ssh agent (ssh-add -D)
-## ANSIBLE_SSH_PRIVATE_KEYS set to a key giving access to ANSIBLE_GIT_REPOSITORY without password
-## ANSIBLE_AWS_ACCESS_KEY_ID and ANSIBLE_AWS_SECRET_ACCESS_KEY
-define packer
-	$(call run,$(DOCKER_RUN_OPTIONS_PACKER) $(DOCKER_REPOSITORY)/packer:$(DOCKER_IMAGE_TAG) $(1))
-endef
-define packer-qemu
-	echo Running $(1)
-	$(call run,$(DOCKER_RUN_OPTIONS_PACKER) --entrypoint=qemu-system-$(PACKER_QEMU_ARCH) $(DOCKER_REPOSITORY)/packer:$(DOCKER_IMAGE_TAG) $(PACKER_QEMU_ARGS) -m 512m -drive file=$(1)$(comma)format=raw -net nic$(comma)model=virtio -net user$(comma)hostfwd=tcp:$(PACKER_SSH_ADDRESS):$(PACKER_SSH_PORT)-:22 -vnc $(PACKER_VNC_ADDRESS):$(subst 590,,$(PACKER_VNC_PORT)))
-endef
-
-else
-
 # function packer: Call run packer with arg 1
+## it needs an empty local ssh agent (ssh-add -D)
+## it needs ANSIBLE_SSH_PRIVATE_KEYS set to a key giving access to ANSIBLE_GIT_REPOSITORY without password
+## it needs ANSIBLE_AWS_ACCESS_KEY_ID and ANSIBLE_AWS_SECRET_ACCESS_KEY
 define packer
-	$(call run,packer $(1))
+	$(RUN) $(call run,packer $(1),$(DOCKER_RUN_OPTIONS_PACKER) $(DOCKER_REPOSITORY)/)
 endef
 # function packer-qemu: Call run qemu-system-% for PACKER_QEMU_ARCH
 define packer-qemu
 	echo Running $(1)
-	$(call run,qemu-system-$(PACKER_QEMU_ARCH) $(PACKER_QEMU_ARGS) -m 512m -drive file=$(1)$(comma)format=raw -net nic$(comma)model=virtio -net user$(comma)hostfwd=tcp:$(PACKER_SSH_ADDRESS):$(PACKER_SSH_PORT)-:22 -vnc $(PACKER_VNC_ADDRESS):$(subst 590,,$(PACKER_VNC_PORT)))
+	$(RUN) $(call run,$(if $(DOCKER_RUN),packer,qemu-system-$(PACKER_QEMU_ARCH)) $(PACKER_QEMU_ARGS) -m 512m -drive file=$(1)$(comma)format=raw -net nic$(comma)model=virtio -net user$(comma)hostfwd=tcp:$(PACKER_SSH_ADDRESS):$(PACKER_SSH_PORT)-:22 -vnc $(PACKER_VNC_ADDRESS):$(subst 590,,$(PACKER_VNC_PORT)),$(DOCKER_RUN_OPTIONS_PACKER) --entrypoint=qemu-system-$(PACKER_QEMU_ARCH) $(DOCKER_REPOSITORY)/)
 endef
-
-endif
 
 # function packer-build: Call packer build with arg 1, Add build infos to file PACKER_ISO_INFO
 define packer-build
@@ -125,6 +110,4 @@ define packer-build
 	echo 'user: $(username)'                                    >> $(PACKER_ISO_INFO)
 endef
 
-define arrays_of_dquoted_args
-[ $(subst $(dquote) $(dquote),$(dquote)$(comma) $(dquote),$(subst $(dquote) $(dquote)-,$(dquote) ]$(comma) [ $(dquote)-,$(patsubst %,$(dquote)%$(dquote),$1))) ]
-endef
+arrays_of_dquoted_args = [ $(subst $(dquote) $(dquote),$(dquote)$(comma) $(dquote),$(subst $(dquote) $(dquote)-,$(dquote) ]$(comma) [ $(dquote)-,$(patsubst %,$(dquote)%$(dquote),$1))) ]

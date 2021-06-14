@@ -9,13 +9,8 @@ COMPOSE_FILE_SUBREPO            ?= true
 else
 COMPOSE_FILE_APP                ?= true
 endif
-ifneq (,$(filter $(ENV),$(ENV_DEPLOY)))
-COMPOSE_FILE_TMPFS              ?= false
-else
-COMPOSE_FILE_TMPFS              ?= true
-endif
 COMPOSE_IGNORE_ORPHANS          ?= false
-COMPOSE_PROJECT_NAME            ?= $(USER)_$(ENV)_$(APP)
+COMPOSE_PROJECT_NAME            ?= $(APP_ENV)$(subst /,,$(subst -,,$(APP_PATH)))
 COMPOSE_SERVICE_NAME            ?= $(subst _,-,$(COMPOSE_PROJECT_NAME))
 CONTEXT                         += COMPOSE_FILE DOCKER_REPOSITORY
 CONTEXT_DEBUG                   += DOCKER_BUILD_TARGET DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_SERVICE DOCKER_SERVICES
@@ -29,7 +24,7 @@ DOCKER_BUILD_NO_CACHE           ?= false
 DOCKER_BUILD_TARGET             ?= $(if $(filter $(ENV),$(DOCKER_BUILD_TARGETS)),$(ENV),$(DOCKER_BUILD_TARGET_DEFAULT))
 DOCKER_BUILD_TARGET_DEFAULT     ?= master
 DOCKER_BUILD_TARGETS            ?= $(ENV_DEPLOY)
-DOCKER_BUILD_VARS               ?= APP BRANCH DOCKER_GID DOCKER_REPOSITORY GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME SSH_REMOTE_HOSTS TARGET UID USER VERSION
+DOCKER_BUILD_VARS               ?= APP BRANCH DOCKER_GID DOCKER_REPOSITORY GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME SSH_BASTION_HOSTNAME SSH_BASTION_USERNAME SSH_PRIVATE_IP_RANGE SSH_PUBLIC_HOST_KEYS SSH_REMOTE_HOSTS UID USER VERSION
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
 DOCKER_COMPOSE_UP_OPTIONS       ?= -d
 DOCKER_GID                      ?= $(call gid,docker)
@@ -43,14 +38,27 @@ DOCKER_PLUGIN_S3FS_OPTIONS      ?= allow_other,nonempty,use_path_request_style,u
 DOCKER_PLUGIN_S3FS_SECRETKEY    ?= $(AWS_SECRET_ACCESS_KEY)
 DOCKER_PLUGIN_S3FS_REGION       ?= eu-west-1
 DOCKER_PLUGIN_VARS              ?= S3FS_ACCESSKEY S3FS_OPTIONS S3FS_SECRETKEY S3FS_REGION
-DOCKER_REGISTRY                 ?= registry
+DOCKER_REGISTRY                 ?= docker.io
 DOCKER_REGISTRY_USERNAME        ?= $(USER)
 DOCKER_REGISTRY_REPOSITORY      ?= $(addsuffix /,$(DOCKER_REGISTRY))$(subst $(USER),$(DOCKER_REGISTRY_USERNAME),$(DOCKER_REPOSITORY))
 DOCKER_REPOSITORY               ?= $(subst _,/,$(COMPOSE_PROJECT_NAME))
 DOCKER_SERVICE                  ?= $(lastword $(DOCKER_SERVICES))
-DOCKER_SERVICES                 ?= $(eval IGNORE_DRYRUN := true)$(eval IGNORE_VERBOSE := true)$(shell $(call docker-compose,--log-level critical config --services))$(eval IGNORE_DRYRUN := false)$(eval IGNORE_VERBOSE := false)
+DOCKER_SERVICES                 ?= $(eval IGNORE_DRYRUN := true)$(shell $(call docker-compose,--log-level critical config --services))$(eval IGNORE_DRYRUN := false)
 DOCKER_SHELL                    ?= $(SHELL)
 ENV_VARS                        += COMPOSE_PROJECT_NAME COMPOSE_SERVICE_NAME DOCKER_BUILD_TARGET DOCKER_GID DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_REPOSITORY DOCKER_SHELL
+
+ifeq ($(DOCKER), true)
+DOCKER_COMPOSE                  ?= docker/compose:$(COMPOSE_VERSION)
+else
+DOCKER_COMPOSE                  ?= $(or $(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'),docker-compose)
+endif
+
+ifeq ($(DRONE), true)
+APP_PATH_PREFIX                 := $(DRONE_BUILD_NUMBER)
+DOCKER_BUILD_CACHE              := false
+DOCKER_COMPOSE_DOWN_OPTIONS     := --rmi all -v
+DOCKER_COMPOSE_UP_OPTIONS       := -d --build
+endif
 
 # https://github.com/docker/libnetwork/pull/2348
 ifeq ($(HOST_SYSTEM), DARWIN)
@@ -65,42 +73,16 @@ DOCKER_INTERNAL_DOCKER_GATEWAY  ?= $(shell /sbin/ip -4 route list match 0/0 2>/d
 DOCKER_INTERNAL_DOCKER_HOST     ?= $(shell /sbin/ip addr show docker0 2>/dev/null |awk '$$1 == "inet" {sub(/\/.*/,"",$$2); print $$2}')
 endif
 
-ifeq ($(DRONE), true)
-APP_PATH_PREFIX                 := $(DRONE_BUILD_NUMBER)
-COMPOSE_PROJECT_NAME            := $(USER)_$(ENV)$(APP_PATH_PREFIX)_$(APP)
-COMPOSE_SERVICE_NAME            := $(subst _,-,$(COMPOSE_PROJECT_NAME))
-DOCKER_BUILD_CACHE              := false
-DOCKER_COMPOSE_DOWN_OPTIONS     := --rmi all -v
-DOCKER_COMPOSE_UP_OPTIONS       := -d --build
-DOCKER_REPOSITORY               := $(USER)/$(ENV)/$(APP)
-endif
-
-ifeq ($(DOCKER), true)
-
 # function docker-compose: Run docker-compose with arg 1
 define docker-compose
 	$(call INFO,docker-compose,$(1))
-	$(call run,docker/compose:$(COMPOSE_VERSION) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
+	$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
 endef
 # function docker-compose-exec: Run docker-compose-exec with arg 2 in service 1
 define docker-compose-exec
 	$(call INFO,docker-compose-exec,$(1)$(comma) $(2))
-	$(call run,docker/compose:$(COMPOSE_VERSION) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) exec -T $(1) sh -c '$(2)')
+	$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) exec -T $(1) sh -c '$(2)')
 endef
-
-else
-
-SHELL                           := /bin/bash
-define docker-compose
-	$(call INFO,docker-compose,$(1))
-	$(call run,docker-compose $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
-endef
-define docker-compose-exec
-	$(call INFO,docker-compose-exec,$(1)$(comma) $(2))
-	$(call run,docker-compose $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) exec -T $(1) sh -c '$(2)')
-endef
-
-endif
 
 # function docker-build: Build docker image
 define docker-build
@@ -110,7 +92,7 @@ define docker-build
 	$(eval target          := $(subst ",,$(subst ',,$(or $(3),$(DOCKER_BUILD_TARGET)))))
 	$(eval image_id        := $(shell docker images -q $(tag) 2>/dev/null))
 	$(eval build_image     := $(or $(filter false,$(DOCKER_BUILD_CACHE)),$(if $(image_id),,true)))
-	$(if $(build_image),$(RUN) docker build $(DOCKER_BUILD_ARGS) --build-arg DOCKER_BUILD_DIR="$(path)" $(DOCKER_BUILD_LABEL) --tag $(tag) $(if $(target),--target $(target)) -f $(path)/Dockerfile .,$(if $(VERBOSE),echo "docker image $(tag) has id $(image_id)",true))
+	$(if $(build_image),$(RUN) docker build $(DOCKER_BUILD_ARGS) --build-arg DOCKER_BUILD_DIR="$(path)" $(DOCKER_BUILD_LABEL) --tag $(tag) $(if $(target),--target $(target)) -f $(path)/Dockerfile .,$(call INFO,docker image $(tag) has id $(image_id)))
 endef
 # function docker-commit: Commit docker image
 define docker-commit

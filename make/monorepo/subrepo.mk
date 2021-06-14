@@ -3,9 +3,10 @@
 
 # target subrepo-branch-delete: Delete branch $(BRANCH) on remote $(SUBREPO)
 .PHONY: subrepo-branch-delete
-subrepo-branch-delete: myos-base subrepo-check
+subrepo-branch-delete: $(if $(DOCKER_RUN),myos-base) subrepo-check
 ifneq ($(words $(BRANCH)),0)
-	$(call exec,[ $$(git ls-remote --heads $(REMOTE) $(BRANCH) |wc -l) -eq 1 ] && git push $(REMOTE) :$(BRANCH) || echo Unable to delete branch $(BRANCH) on remote $(REMOTE).)
+	$(call exec,[ $$(git ls-remote --heads $(REMOTE) $(BRANCH) 2>/dev/null |wc -l) -eq 1 ]) \
+		&& $(RUN) $(call exec,git push $(REMOTE) :$(BRANCH))
 endif
 
 # target subrepo-check: Define SUBREPO and REMOTE
@@ -27,20 +28,21 @@ endif
 .PHONY: subrepo-git-diff
 subrepo-git-diff: myos-base subrepo-check
 	$(eval IGNORE_DRYRUN := true)
-	$(eval DIFF = $(shell $(call exec,git diff --quiet $(shell $(call exec,git rev-list --ancestry-path $(shell awk '$$1 == "parent" {print $$3}' $(SUBREPO)/.gitrepo)..HEAD |tail -n 1)) -- $(SUBREPO); echo $$?)) )
+	$(eval DIFF = $(shell $(call exec,git diff --quiet $(shell $(call exec,git rev-list --ancestry-path $(shell awk '$$1 == "parent" {print $$3}' $(SUBREPO)/.gitrepo)..HEAD |tail -n 1)) -- $(SUBREPO); printf '$$?\n')) )
 	$(eval IGNORE_DRYRUN := false)
 
 # target subrepo-git-fetch: Fetch git remote
 .PHONY: subrepo-git-fetch
 subrepo-git-fetch: myos-base subrepo-check
-	$(call exec,git fetch --prune $(REMOTE))
+	$(RUN) $(call exec,git fetch --prune $(REMOTE))
 
 # target subrepo-tag-create-%: Create tag TAG to reference branch REMOTE/%
 .PHONY: subrepo-tag-create-%
 subrepo-tag-create-%: myos-base subrepo-check subrepo-git-fetch
 ifneq ($(words $(TAG)),0)
-	$(call exec,[ $$(git ls-remote --tags $(REMOTE) $(TAG) |wc -l) -eq 0 ] || git push $(REMOTE) :refs/tags/$(TAG))
-	$(call exec,git push $(REMOTE) refs/remotes/subrepo/$(SUBREPO)/$*:refs/tags/$(TAG))
+	$(call exec,[ $$(git ls-remote --tags $(REMOTE) $(TAG) |wc -l) -eq 0 ]) \
+		|| $(RUN) $(call exec,git push $(REMOTE) :refs/tags/$(TAG))
+	$(RUN) $(call exec,git push $(REMOTE) refs/remotes/subrepo/$(SUBREPO)/$*:refs/tags/$(TAG))
 endif
 
 # target subrepo-push: Push to subrepo
@@ -50,24 +52,24 @@ subrepo-push: myos-base subrepo-check subrepo-git-fetch subrepo-git-diff
 ifeq ($(BRANCH),master)
 	$(eval UPDATE_SUBREPO_OPTIONS += -u)
 endif
-# if release|story|hotfix branch, delete remote branch before push and recreate it from master
-ifneq ($(findstring $(firstword $(subst /, ,$(BRANCH))),release story hotfix),)
+# if specific branch name, delete remote branch before push and recreate it from master
+ifneq ($(findstring $(firstword $(subst /, ,$(BRANCH))),feature hotfix release story),)
 	$(eval IGNORE_DRYRUN := true)
-	$(eval DELETE = $(shell $(call exec,git ls-remote --heads $(REMOTE) $(BRANCH) |wc -l)) )
+	$(eval DELETE = $(shell $(call exec,sh -c 'git ls-remote --heads $(REMOTE) $(BRANCH) |wc -l')) )
 	$(eval IGNORE_DRYRUN := false)
 else
 	$(eval DELETE = 0)
 endif
 	if [ $(DIFF) -eq 0 ]; then \
-		echo subrepo $(SUBREPO) already up to date.; \
+		$(call INFO,subrepo $(SUBREPO) already up to date); \
 	else \
 		if [ $(DELETE) -eq 1 ]; then \
-			$(call exec,git push $(REMOTE) :$(BRANCH)); \
-			$(call exec,git push $(REMOTE) refs/remotes/$(REMOTE)/master:refs/heads/$(BRANCH)); \
+			$(RUN) $(call exec,git push $(REMOTE) :$(BRANCH)); \
+			$(RUN) $(call exec,git push $(REMOTE) refs/remotes/$(REMOTE)/master:refs/heads/$(BRANCH)); \
 		fi; \
-		$(call exec,git subrepo fetch $(SUBREPO) -b $(BRANCH)); \
-		$(call exec,git subrepo push $(SUBREPO) -b $(BRANCH) $(UPDATE_SUBREPO_OPTIONS)); \
-		$(call exec,git subrepo clean $(SUBREPO)); \
+		$(RUN) $(call exec,git subrepo fetch $(SUBREPO) -b $(BRANCH)); \
+		$(RUN) $(call exec,git subrepo push $(SUBREPO) -b $(BRANCH) $(UPDATE_SUBREPO_OPTIONS)); \
+		$(RUN) $(call exec,git subrepo clean $(SUBREPO)); \
 	fi
 
 # target subrepos-branch-delete: Fire APPS target
@@ -81,7 +83,7 @@ subrepos-tag-create-%: $(APPS) ;
 # target subrepos-update: Fire APPS target and push updates to upstream
 .PHONY: subrepos-update
 subrepos-update: myos-base git-stash $(APPS) git-unstash ## Update subrepos
-	$(call exec,git push upstream $(BRANCH))
+	$(RUN) $(call exec,git push upstream $(BRANCH))
 
 # target subrepo-update-%: Call subrepo-update target in folder %
 .PHONY: subrepo-update-%

@@ -95,7 +95,8 @@ upgrade: upgrade-apps release-upgrade ## Upgrade applications
 $(APPS):
 	$(if $(wildcard $@/Makefile), \
       $(call make,$(patsubst apps-%,%,$(MAKECMDGOALS)) STATUS=0,$(patsubst %/,%,$@),APP_PATH_PREFIX), \
-      printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}no app available in folder${COLOR_RESET} $@.\n" >&2)
+      $(call WARNING,no Makefile in,$@) \
+	)
 
 # target apps-%: Fire $(APPS) target to call target % in $(APPS)
 .PHONY: apps-%

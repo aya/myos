@@ -5,10 +5,6 @@ services:
     build:
       args:
       - DOCKER_BUILD_DIR=docker/sematext/logagent
-      - GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME}
-      - GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}
-      - UID=${UID}
-      - USER=${USER}
       context: ../..
       dockerfile: docker/sematext/logagent/Dockerfile
       target: ${DOCKER_BUILD_TARGET}

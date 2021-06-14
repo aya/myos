@@ -37,11 +37,9 @@ build@%: myos-base
 	$(eval build_app       := $(or $(filter $(DOCKER_BUILD_CACHE),false),$(filter-out $(docker_images),$(SERVICES))))
 	$(if $(build_app), \
 		$(call make,build-init app-build), \
-		$(if $(VERBOSE), \
-			$(foreach service,$(SERVICES), \
-				echo "docker image $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG) has id $(shell docker images -q $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG) 2>/dev/null)" && \
-			) true \
-		) \
+		$(foreach service,$(SERVICES), \
+			$(call INFO,docker image $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG) has id $(shell docker images -q $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG) 2>/dev/null)) && \
+		) true \
 	)
 
 # target clean: Clean application and docker images
@@ -85,7 +83,7 @@ down: docker-compose-down ## Remove application dockers
 .PHONY: exec
 exec: ## Exec command in docker SERVICE
 ifneq (,$(filter $(ENV),$(ENV_DEPLOY)))
-	$(call exec,$(ARGS))
+	$(RUN) $(call exec,$(ARGS))
 else
 	$(call make,docker-compose-exec,,ARGS)
 endif
@@ -226,4 +224,4 @@ upgrade: update app-upgrade release-upgrade ## Upgrade application
 
 # target %-rule-exists: Print a warning message if % target does not exists
 %-rule-exists:
-	$(if $(filter $*,$(MAKECMDGOALS)),$(if $(filter-out $*,$(MAKE_TARGETS)),printf "${COLOR_BROWN}WARNING${COLOR_RESET}: ${COLOR_GREEN}target${COLOR_RESET} $* ${COLOR_GREEN}not available in app${COLOR_RESET} $(APP).\n" >&2))
+	$(if $(filter $*,$(MAKECMDGOALS)),$(if $(filter-out $*,$(MAKE_TARGETS)),$(call WARNING,no target,$*,$(APP))))

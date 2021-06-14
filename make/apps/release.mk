@@ -43,4 +43,4 @@ release-upgrade: $(patsubst %,release-upgrade-from-%,$(RELEASE_UPGRADE)) release
 # target release-upgrade-from-%: Sample of catch-all release migration target
 .PHONY: release-upgrade-from-%
 release-upgrade-from-%:
-	echo "Upgrading from release: $*"
+	printf "Upgrading from release: $*\n"

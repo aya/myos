@@ -13,8 +13,6 @@ ENV SOCKET_DIR /tmp/ssh-agent
 ENV SSH_AUTH_SOCK ${SOCKET_DIR}/socket
 ENV SSH_AUTH_PROXY_SOCK ${SOCKET_DIR}/proxy-socket
 
-VOLUME ${SOCKET_DIR}
-
 # Copy entrypoint script to container
 COPY ${DOCKER_BUILD_DIR}/docker-entrypoint.sh /docker-entrypoint.sh
 
@@ -51,4 +49,7 @@ RUN let $UID >/dev/null 2>&1 \
  && chown $UID:$GID /home/$USER \
  || true
 
+RUN mkdir -p  $SOCKET_DIR && chown $USER $SOCKET_DIR
+
+VOLUME ${SOCKET_DIR}
 USER $USER

@@ -1,5 +1,5 @@
 BUILD_AUTHOR                    ?= $(DOCKER_AUTHOR)
-BUILD_DATE                      ?= $(shell TZ=UTC date "+%d/%m/%YT%H:%M:%SZ" 2>/dev/null)
+BUILD_DATE                      ?= $(shell TZ=UTC date "+%Y%m%dT%H%M%SZ" 2>/dev/null)
 BUILD_DESCRIPTION               ?= Lot of Love
 BUILD_DOCUMENTATION             ?= $(if $(wildcard README.md),$(APP_REPOSITORY)/blob/$(COMMIT)/README.md)
 BUILD_ENV_VARS                  ?= APP BRANCH BUILD_DATE BUILD_STATUS COMMIT DEPLOY_HOOK_URL ENV VERSION
@@ -42,6 +42,7 @@ org.opencontainers.image.authors        ?= $(BUILD_AUTHOR)
 org.opencontainers.image.licenses       ?= $(BUILD_LICENSE)
 os.my.author                            ?= $(BUILD_AUTHOR)
 os.my.date                              ?= $(BUILD_DATE)
+os.my.license                           ?= $(BUILD_LICENSE)
 os.my.name                              ?= $(BUILD_NAME)
 os.my.status                            ?= $(BUILD_STATUS)
 os.my.user                              ?= $(USER)

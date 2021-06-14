@@ -7,16 +7,8 @@ ifneq ($(VERBOSE),)
 OPENSTACK_ARGS                  += -v
 endif
 
-ifeq ($(DOCKER), true)
-	# function openstack: Call run DOCKER_REPOSITORY/openstack:DOCKER_IMAGE_TAG with arg 1
-define openstack
-	$(call INFO,openstack,$(1))
-	$(call run,$(DOCKER_REPOSITORY)/openstack:$(DOCKER_IMAGE_TAG) $(1))
-endef
-else
 # function openstack: Call run openstack with arg 1
 define openstack
 	$(call INFO,openstack,$(1))
-	$(call run,openstack $(1))
+	$(RUN) $(call run,openstack $(1),$(DOCKER_REPOSITORY)/)
 endef
-endif

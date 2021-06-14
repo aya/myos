@@ -1,6 +1,6 @@
 # target aws: Fire docker-build-aws, Call aws ARGS
 .PHONY: aws
-aws: docker-build-aws
+aws: $(if $(DOCKER_RUN),docker-build-aws)
 	$(call aws,$(ARGS))
 
 # target aws-deploy: Call aws deploy create-deployment with application-name CODEDEPLOY_APP_NAME
@@ -29,7 +29,7 @@ aws-ecr-get-login:
 .PHONY: aws-iam-create-role-%
 aws-iam-create-role-%: base docker-build-aws
 	$(eval IGNORE_DRYRUN := true)
-	$(eval json := $(shell $(call exec,envsubst < aws/policies/$*-trust.json)))
+	$(eval json := $(shell $(call exec,sh -c 'envsubst < aws/policies/$*-trust.json')))
 	$(eval IGNORE_DRYRUN := false)
 	$(call aws,iam create-role --role-name $* --assume-role-policy-document '$(json)')
 
@@ -37,7 +37,7 @@ aws-iam-create-role-%: base docker-build-aws
 .PHONY: aws-iam-put-role-policy-%
 aws-iam-put-role-policy-%: base docker-build-aws
 	$(eval IGNORE_DRYRUN := true)
-	$(eval json := $(shell $(call exec,envsubst < aws/policies/$*.json)))
+	$(eval json := $(shell $(call exec,sh -c 'envsubst < aws/policies/$*.json')))
 	$(eval IGNORE_DRYRUN := false)
 	$(call aws,iam put-role-policy --role-name $* --policy-name $* --policy-document '$(json)')
 
@@ -83,7 +83,7 @@ aws-s3api-get-head-object-lastmodified: docker-build-aws
 .PHONY: aws-ec2-import-snapshot
 aws-ec2-import-snapshot: base docker-build-aws aws-s3api-get-head-object-etag aws-s3api-get-head-object-lastmodified
 	$(eval IGNORE_DRYRUN := true)
-	$(eval json := $(shell $(call exec,envsubst < aws/import-snapshot.json)))
+	$(eval json := $(shell $(call exec,sh -c 'envsubst < aws/import-snapshot.json')))
 	$(eval IGNORE_DRYRUN := false)
 	$(eval AWS_TASK_ID := $(shell $(call aws,ec2 import-snapshot --description '$(AWS_SNAP_DESCRIPTION)' --output text --query ImportTaskId --disk-container '$(json)')))
 	echo ImportTaskId: $(AWS_TASK_ID)
@@ -191,7 +191,7 @@ aws-ec2-wait-snapshot-completed-%: docker-build-aws
 .PHONY: aws-ec2-register-image
 aws-ec2-register-image: base docker-build-aws aws-ec2-get-import-snapshot-tasks-id
 	$(eval IGNORE_DRYRUN := true)
-	$(eval json := $(shell $(call exec,envsubst < aws/register-image-device-mappings.json)))
+	$(eval json := $(shell $(call exec,sh -c 'envsubst < aws/register-image-device-mappings.json')))
 	$(eval IGNORE_DRYRUN := false)
 	$(eval AWS_AMI_ID := $(shell $(call aws,ec2 register-image --name '$(AWS_AMI_NAME)' --description '$(AWS_AMI_DESCRIPTION)' --architecture x86_64 --root-device-name /dev/sda1 --virtualization-type hvm --block-device-mappings '$(json)') 2>/dev/null))
 	echo ImageId: $(AWS_AMI_ID)

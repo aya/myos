@@ -12,4 +12,4 @@ app-build: base install-build-config
 
 app-install: base node
 
-app-start: base-ssh-add
+app-start: ssh-add

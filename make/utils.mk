@@ -123,6 +123,7 @@ QUOTE = '
 # (that's why the single-quotes are escaped they way they are, above,
 # and why the dollar sign is not escaped) to printf(1). A trailing
 # newline is apended, too.
+# Note: Removing the apended trailing newline for custom needs
 #
 # Note: leading or trailing spaces are *not* stripped.
 #
@@ -130,5 +131,5 @@ define PRINTF
 	printf '$(subst $(sep),\n,\
 		$(subst $(PERCENT),$(PERCENT)$(PERCENT),\
 			$(subst $(QUOTE),$(QUOTE)\$(QUOTE)$(QUOTE),\
-				$(subst \,\\,$(1)))))\n'
+				$(subst \,\\,$(1)))))'
 endef

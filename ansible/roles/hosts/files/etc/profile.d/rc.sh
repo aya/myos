@@ -1,9 +1,13 @@
 # shellcheck shell=sh
-# test current shell flags
+## rc.sh calls user defined functions
+# author: Yann "aya" Autissier
+# license: MIT
+# updated: 2021/03/04
+
 case $- in
   # if we are in an interactive shell
   *i*)
-    # load user stuff from files ~/.rc.d/*
+    # load user stuff from ~/.rc.d/* files
     for file in "${HOME}"/.rc.d/*; do
         # read files only
         if [ -f "${file}" ]; then
@@ -19,7 +23,7 @@ case $- in
             command -v "${func_name}" >/dev/null 2>&1 && "${func_name}" "${func_args}"
         fi
     done
-    # load user stuff from env vars RC_*
+    # load user stuff from RC_* env vars
     IFS="$(printf '%b_' '\n')"; IFS="${IFS%_}"; for line in $(printenv 2>/dev/null |awk '$0 ~ /^RC_[1-9A-Z_]*=/'); do
         func_name=$(printf '%s\n' "${line%%=*}" |awk '{print tolower(substr($0,4))}')
         eval func_args=\$"${line%%=*}"
