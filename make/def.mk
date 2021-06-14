@@ -49,6 +49,7 @@ GIT_AUTHOR_NAME                 ?= $(or $(shell git config user.name 2>/dev/null
 GIT_BRANCH                      ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
 GIT_COMMIT                      ?= $(shell git rev-parse $(BRANCH) 2>/dev/null)
 GIT_REPOSITORY                  ?= $(if $(SUBREPO),$(shell awk -F ' = ' '$$1 ~ /^[[\s\t]]*remote$$/ {print $$2}' .gitrepo 2>/dev/null),$(shell git config --get remote.origin.url 2>/dev/null))
+GIT_STATUS                      ?= $(shell git status -uno --porcelain 2>/dev/null |wc -l)
 GIT_TAG                         ?= $(shell git tag -l --points-at $(BRANCH) 2>/dev/null)
 GIT_UPSTREAM_REPOSITORY         ?= $(if $(findstring ://,$(GIT_REPOSITORY)),$(call pop,$(call pop,$(GIT_REPOSITORY)))/,$(call pop,$(GIT_REPOSITORY),:):)$(GIT_UPSTREAM_USER)/$(lastword $(subst /, ,$(GIT_REPOSITORY)))
 GIT_UPSTREAM_USER               ?= $(lastword $(subst /, ,$(call pop,$(MYOS_REPOSITORY))))
@@ -80,6 +81,7 @@ RECURSIVE                       ?= true
 RELATIVE                        ?= $(if $(filter myos,$(MYOS)),./,../)
 SHARED                          ?= $(RELATIVE)shared
 SSH_DIR                         ?= ${HOME}/.ssh
+STATUS                          ?= $(GIT_STATUS)
 SUBREPO                         ?= $(if $(wildcard .gitrepo),$(notdir $(CURDIR)))
 TAG                             ?= $(GIT_TAG)
 UID                             ?= $(shell id -u 2>/dev/null)
@@ -127,7 +129,7 @@ include $(wildcard $(ENV_FILE))
 
 ifeq ($(HOST_SYSTEM),DARWIN)
 ifneq ($(DOCKER),true)
-SED_SUFFIX                      := '\'\''
+SED_SUFFIX                      := ''
 endif
 endif
 
@@ -227,7 +229,7 @@ endef
 pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
 
 # macro sed: Exec sed script 1 on file 2
-sed = $(RUN) $(call exec,sed -i $(SED_SUFFIX) '$(1)' $(2))
+sed = $(call env-exec,$(RUN) sed -i $(SED_SUFFIX) '$(1)' $(2))
 
 # macro TIME: Print time elapsed since unixtime 1
 TIME = awk '{printf "%02d:%02d:%02d\n",int($$1/3600),int(($$1%3600)/60),int($$1%60)}' \

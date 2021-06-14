@@ -3,84 +3,72 @@
 
 # target git-branch-create-upstream-%: Create git BRANCH from upstream/% branch
 .PHONY: git-branch-create-upstream-%
-git-branch-create-upstream-%: myos-base update-upstream
-	$(RUN) $(call exec,git fetch --prune upstream)
-	$(call exec,git rev-parse --verify $(BRANCH) >/dev/null 2>&1) \
-		&& $(call WARNING,present branch,$(BRANCH)) \
-		|| $(RUN) $(call exec,git branch $(BRANCH) upstream/$*)
-	$(call exec,[ $$(git ls-remote --heads upstream $(BRANCH) |wc -l) -eq 0 ]) \
-		&& $(RUN) $(call exec,git push upstream $(BRANCH)) \
-		|| $(call WARNING,present branch,$(BRANCH),upstream)
-	$(RUN) $(call exec,git checkout $(BRANCH))
+git-branch-create-upstream-%: $(if $(DOCKER_RUN),myos-base) update-upstream
+	$(RUN) git fetch --prune upstream
+	git rev-parse --verify $(BRANCH) >/dev/null 2>&1 \
+		&& $(or $(call WARNING,present branch,$(BRANCH)), true) \
+		|| $(RUN) git branch $(BRANCH) upstream/$*
+	[ $$(git ls-remote --heads upstream $(BRANCH) |wc -l) -eq 0 ] \
+		&& $(RUN) git push upstream $(BRANCH) \
+		|| $(or $(call WARNING,present branch,$(BRANCH),upstream), true)
+	$(RUN) git checkout $(BRANCH)
 
 # target git-branch-delete: Delete git BRANCH
 .PHONY: git-branch-delete
-git-branch-delete: myos-base update-upstream
-	$(call exec,git rev-parse --verify $(BRANCH) >/dev/null 2>&1) \
-		&& $(RUN) $(call exec,git branch -d $(BRANCH)) \
-		|| $(call WARNING,no branch,$(BRANCH))
-	$(foreach remote,upstream,$(call exec,[ $$(git ls-remote --heads $(remote) $(BRANCH) |wc -l) -eq 1 ]) \
-		&& $(RUN) $(call exec,git push $(remote) :$(BRANCH)) \
-		|| $(call WARNING,no branch,$(BRANCH),$(remote)) \
+git-branch-delete: $(if $(DOCKER_RUN),myos-base) update-upstream
+	git rev-parse --verify $(BRANCH) >/dev/null 2>&1 \
+		&& $(RUN) git branch -d $(BRANCH) \
+		|| $(or $(call WARNING,no branch,$(BRANCH)), true)
+	$(foreach remote,upstream,[ $$(git ls-remote --heads $(remote) $(BRANCH) |wc -l) -eq 1 ] \
+		&& $(RUN) git push $(remote) :$(BRANCH) \
+		|| $(or $(call WARNING,no branch,$(BRANCH),$(remote)), true) \
 		&&) true
 
 # target git-branch-merge-upstream-%: Merge git BRANCH into upstream/% branch
 .PHONY: git-branch-merge-upstream-%
-git-branch-merge-upstream-%: myos-base update-upstream
-	$(RUN) $(call exec,git rev-parse --verify $(BRANCH) >/dev/null 2>&1)
-	$(RUN) $(call exec,git checkout $(BRANCH))
-	$(RUN) $(call exec,git pull --ff-only upstream $(BRANCH))
-	$(RUN) $(call exec,git push upstream $(BRANCH))
-	$(RUN) $(call exec,git checkout $*)
-	$(RUN) $(call exec,git pull --ff-only upstream $*)
-	$(RUN) $(call exec,git merge --no-ff --no-edit $(BRANCH))
-	$(RUN) $(call exec,git push upstream $*)
+git-branch-merge-upstream-%: $(if $(DOCKER_RUN),myos-base) update-upstream
+	git rev-parse --verify $(BRANCH) >/dev/null 2>&1
+	$(RUN) git checkout $(BRANCH)
+	$(RUN) git pull --ff-only upstream $(BRANCH)
+	$(RUN) git push upstream $(BRANCH)
+	$(RUN) git checkout $*
+	$(RUN) git pull --ff-only upstream $*
+	$(RUN) git merge --no-ff --no-edit $(BRANCH)
+	$(RUN) git push upstream $*
 
 # target git-stash: git stash
 .PHONY: git-stash
-git-stash: myos-base git-status
-	if [ ! $(STATUS) -eq 0 ]; then \
-		$(RUN) $(call exec,git stash); \
-	fi
-
-# target git-status: Define STATUS with number of lines of git status
-.PHONY: git-status
-git-status: myos-base
-	$(eval IGNORE_DRYRUN := true)
-	$(eval STATUS := $(shell $(call exec,sh -c 'git status -uno --porcelain 2>/dev/null |wc -l')))
-	$(eval IGNORE_DRYRUN := false)
+git-stash: $(if $(DOCKER_RUN),myos-base)
+	$(if $(filter-out 0,$(STATUS)),$(RUN) git stash)
 
 # target git-tag-create-upstream-%: Create git TAG to reference upstream/% branch
 .PHONY: git-tag-create-upstream-%
-git-tag-create-upstream-%: myos-base update-upstream
+git-tag-create-upstream-%: $(if $(DOCKER_RUN),myos-base) update-upstream
 ifneq ($(words $(TAG)),0)
-	$(RUN) $(call exec,git checkout $*)
-	$(RUN) $(call exec,git pull --tags --prune upstream $*)
-	$(RUN) $(call sed,s/^##\? $(TAG).*/## $(TAG) - $(shell date +%Y-%m-%d)/,CHANGELOG.md)
-	$(call exec,[ $$(git diff CHANGELOG.md 2>/dev/null |wc -l) -eq 0 ]) \
-		|| $(RUN) $(call exec,git commit -m "$$(cat CHANGELOG.md |sed -n '/$(TAG)/,/^$$/{s/##\(.*\)/release\1\n/;p;}')" CHANGELOG.md)
-	$(call exec,[ $$(git tag -l $(TAG) |wc -l) -eq 0 ]) \
-		|| $(RUN) $(call exec,git tag -d $(TAG))
-	$(RUN) $(call exec,git tag $(TAG))
-	$(call exec,[ $$(git ls-remote --tags upstream $(TAG) |wc -l) -eq 0 ]) \
-		|| $(RUN) $(call exec,git push upstream :refs/tags/$(TAG))
-	$(RUN) $(call exec,git push --tags upstream $*)
+	$(RUN) git checkout $*
+	$(RUN) git pull --tags --prune upstream $*
+	$(call sed,s/^##\? $(TAG).*/## $(TAG) - $(shell date +%Y-%m-%d)/,CHANGELOG.md)
+	[ $$(git diff CHANGELOG.md 2>/dev/null |wc -l) -eq 0 ] \
+		|| $(RUN) git commit -m "$$(cat CHANGELOG.md |sed -n '/$(TAG)/,/^$$/{s/##\(.*\)/release\1\n/;p;}')" CHANGELOG.md
+	[ $$(git tag -l $(TAG) |wc -l) -eq 0 ] \
+		|| $(RUN) git tag -d $(TAG)
+	$(RUN) git tag $(TAG)
+	[ $$(git ls-remote --tags upstream $(TAG) |wc -l) -eq 0 ] \
+		|| $(RUN) git push upstream :refs/tags/$(TAG)
+	$(RUN) git push --tags upstream $*
 endif
 
 # target git-tag-merge-upstream-%: Merge git TAG into upstream/% branch
 .PHONY: git-tag-merge-upstream-%
-git-tag-merge-upstream-%: myos-base update-upstream
+git-tag-merge-upstream-%: $(if $(DOCKER_RUN),myos-base) update-upstream
 ifneq ($(words $(TAG)),0)
-	$(RUN) $(call exec,git fetch --tags -u --prune upstream $*:$*)
-	$(RUN) $(call exec,git checkout $*)
-	$(RUN) $(call exec,git merge --ff --no-edit $(TAG))
-	$(RUN) $(call exec,git push upstream $*)
+	$(RUN) git fetch --tags -u --prune upstream $*:$*
+	$(RUN) git checkout $*
+	$(RUN) git merge --ff --no-edit $(TAG)
+	$(RUN) git push upstream $*
 endif
 
 # target git-unstash: git stash pop
 .PHONY: git-unstash
-git-unstash: myos-base
-	$(eval STATUS ?= 0)
-	if [ ! $(STATUS) -eq 0 ]; then \
-		$(RUN) $(call exec,git stash pop); \
-	fi
+git-unstash: $(if $(DOCKER_RUN),myos-base)
+	$(if $(filter-out 0,$(STATUS)),$(RUN) git stash pop)

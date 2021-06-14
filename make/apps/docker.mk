@@ -135,8 +135,8 @@ docker-network-create: docker-network-create-$(DOCKER_NETWORK)
 .PHONY: docker-network-create-%
 docker-network-create-%:
 	if [ -z "$(shell docker network ls -q --filter name='^$*$$' 2>/dev/null)" ]; then \
-	  $(RUN) docker network create $* >/dev/null \
-	   && $(call INFO,docker network $* created); fi \
+	  $(RUN) sh -c 'docker network create $* >/dev/null' \
+	   && $(or $(call INFO,docker network $* created), true); fi \
 
 # target docker-network-rm: Fire docker-network-rm-% for DOCKER_NETWORK
 .PHONY: docker-network-rm
@@ -147,7 +147,7 @@ docker-network-rm: docker-network-rm-$(DOCKER_NETWORK)
 docker-network-rm-%:
 	if [ -n "$(shell docker network ls -q --filter name='^$*$$' 2>/dev/null)" ]; then \
 	  $(RUN) docker network rm $* >/dev/null \
-	   && $(call INFO,docker network $* removed); fi \
+	   && $(or $(call INFO,docker network $* removed), true); fi \
 
 # target docker-plugin-install: Exec 'docker plugin install DOCKER_PLUGIN_OPTIONS DOCKER_PLUGIN'
 .PHONY: docker-plugin-install

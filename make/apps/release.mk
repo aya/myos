@@ -1,6 +1,9 @@
 ##
 # RELEASE
 
+RELEASE_BRANCH ?= $(BRANCH)
+RELEASE_VERSION ?= $(VERSION)
+
 # target release-check: Define RELEASE_BRANCH and RELEASE_VERSION
 .PHONY: release-check
 release-check:
@@ -13,8 +16,6 @@ ifneq ($(findstring $(firstword $(subst /, ,$(BRANCH))),release),)
 	$(eval RELEASE_VERSION := $(word 2, $(subst /, ,$(BRANCH))))
 endif
 endif
-	$(if $(filter VERSION=%,$(MAKEFLAGS)), $(eval RELEASE_VERSION:=$(VERSION)) $(eval RELEASE_BRANCH := release/$(RELEASE_VERSION)))
-	$(if $(findstring $(firstword $(subst /, ,$(RELEASE_BRANCH))),release),,$(error Please provide a VERSION or a release BRANCH))
 
 # target release-create: Create release VERSION from upstream/wip branch
 .PHONY: release-create
