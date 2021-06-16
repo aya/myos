@@ -10,21 +10,24 @@
 - import_tasks: cloudinit.yml
   tags:
     - cloudinit
-- import_tasks: packages.yml
+- import_tasks: dir.yml
   tags:
-    - packages
-- import_tasks: ssh.yml
-  tags:
-    - ssh
+    - dir
 - import_tasks: files.yml
   tags:
     - files
 - import_tasks: git.yml
   tags:
     - git
+- import_tasks: packages.yml
+  tags:
+    - packages
 - import_tasks: service.yml
   tags:
     - service
+- import_tasks: ssh.yml
+  tags:
+    - ssh
 - import_tasks: user.yml
   tags:
     - user

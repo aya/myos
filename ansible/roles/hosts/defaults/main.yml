@@ -1,72 +1,7 @@
 ---
 # file: defaults/main.yml
 
-# enable cloud-init
-hosts_enable_cloudinit: false
-
-# enable rc.local script
-hosts_enable_local: false
-
-# run user specific rc functions on ssh connection
-hosts_enable_rc: false
-
-# Activate zram swap devices on host
-hosts_enable_zram: false
-
-# git repositories to clone
-hosts_git_repositories: []
-#  - { "repo": "ssh://git@github.com/aya/infra", "dest": "/src" }
-
-# list of rc functions to call at user connection
-hosts_rc_functions:
-    # customize PS1 variable
-    - 01_custom_ps1
-    # customize PROMPT variable
-    - 02_custom_prompt
-    # launch a ssh agent and load all private keys located in ~/.ssh
-    - 03_ssh_agent
-    # create and/or attach a tmux session
-    # - 04_attach_tmux
-    # create and/or attach a screen session
-    - 05_attach_screen
-    # display system information
-    - 06_pfetch
-
-# list of rc functions to cleanup (remove files)
-# hosts_rc_cleanup:
-#     - 03_ssh_agent
-#     - 04_attach_tmux
-
-# packages to install
-hosts_packages: []
-
-# packages specific to a distribution
-hosts_packages_distro: []
-
-# packages common to all distributions
-hosts_packages_common:
-  - { "name": "bash", "state": "present" }
-  - { "name": "ca-certificates", "state": "present" }
-  - { "name": "rsync", "state": "present" }
-  - { "name": "screen", "state": "present" }
-  - { "name": "tzdata", "state": "present" }
-
-# a list of SSH private keys to copy
-hosts_ssh_private_keys: []
-# - ~/.ssh/id_rsa
-
-# a list of public hosts keys to add to known_hosts
-hosts_ssh_public_hosts_keys:
-  - { "name": "github.com", "key": "files/etc/ssh/github.com.pub" }
-
-# a list of github usernames to get public keys
-hosts_ssh_users: []
-# - aya
-
-# a list of environment variables to write to user ~/.env
-hosts_user_env: []
-# - SHELL
-
+# cloud-init config
 hosts_cloudinit_config:
     users:
     - default
@@ -140,3 +75,72 @@ hosts_cloudinit_config:
         templates_dir: /etc/cloud/templates/
       ssh_svcname: sshd
 
+# enable cloud-init
+hosts_enable_cloudinit: false
+
+# enable rc.local script
+hosts_enable_local: false
+
+# run user specific rc functions on ssh connection
+hosts_enable_rc: false
+
+# Activate zram swap devices on host
+hosts_enable_zram: false
+
+# git repositories to clone
+hosts_git_repositories: []
+
+# packages to install
+hosts_packages: []
+
+# packages common to all distributions
+hosts_packages_common:
+  - { "name": "bash", "state": "present" }
+  - { "name": "ca-certificates", "state": "present" }
+  - { "name": "curl", "state": "present" }
+  - { "name": "git", "state": "present" }
+  - { "name": "htop", "state": "present" }
+  - { "name": "less", "state": "present" }
+  - { "name": "lsof", "state": "present" }
+  - { "name": "make", "state": "present" }
+  - { "name": "rsync", "state": "present" }
+  - { "name": "screen", "state": "present" }
+  - { "name": "tmux", "state": "present" }
+  - { "name": "tzdata", "state": "present" }
+
+# packages specific to a distribution
+hosts_packages_distro: []
+
+# list of rc functions to cleanup (remove files)
+hosts_rc_cleanup: []
+
+# list of rc functions to call at user connection
+hosts_rc_functions:
+    - 10_prompt_set
+    - 10_ps1_set
+    - 30_pfetch
+    - 40_ssh_add
+
+# a list of urls to get public keys to add to ~/.ssh/authorized_keys
+hosts_ssh_authorized_keys: "{{ lookup('env','ANSIBLE_SSH_AUTHORIZED_KEYS').split(' ') }}"
+
+# hostname of myos-bastion to add in ~/.ssh/myos/config
+hosts_ssh_bastion_hostname: "{{ lookup('env','ANSIBLE_SSH_BASTION_HOSTNAME') }}"
+
+# username of myos-bastion to add in ~/.ssh/myos/config
+hosts_ssh_bastion_username: "{{ lookup('env','ANSIBLE_SSH_BASTION_USERNAME') or ansible_user }}"
+
+# ip range proxyfied through myos-bastion to add in ~/.ssh/myos/config
+hosts_ssh_private_ip_range: "{{ lookup('env','ANSIBLE_SSH_PRIVATE_IP_RANGE') }}"
+
+# a list of SSH private keys to copy
+hosts_ssh_private_keys: "{{ lookup('env','ANSIBLE_SSH_PRIVATE_KEYS').split(' ') }}"
+
+# a list of public hosts to add to known_hosts
+hosts_ssh_public_hosts: "{{ lookup('env','ANSIBLE_SSH_PUBLIC_HOSTS').split(' ') }}"
+
+# remote ssh user
+hosts_ssh_username: "{{ lookup('env','ANSIBLE_SSH_USERNAME') or ansible_user }}"
+
+# a list of environment variables to write to user ~/.env
+hosts_user_env: []

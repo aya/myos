@@ -166,7 +166,7 @@ ARG UID
 ARG GID
 ARG SSH_BASTION_HOSTNAME
 ARG SSH_BASTION_USERNAME
-ARG SSH_PUBLIC_HOST_KEYS
+ARG SSH_PUBLIC_HOSTS
 ARG SSH_PRIVATE_IP_RANGE
 ARG USER
 ENV UID=${UID}
@@ -237,7 +237,7 @@ RUN yarn --cache-folder ./ycache && rm -rf ./ycache \
 
 # git config
 RUN mkdir -p ~/.ssh ~/.config/git \
- && ssh-keyscan -t rsa -H ${SSH_PUBLIC_HOST_KEYS} >> ~/.ssh/known_hosts \
+ && ssh-keyscan -t rsa -H ${SSH_PUBLIC_HOSTS} >> ~/.ssh/known_hosts \
  && echo -e "\
 .DS_Store\n\
 .idea/\n\

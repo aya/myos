@@ -1,10 +1,10 @@
 ---
-# file vars/debian.yml
+# file vars/alpine.yml
 
 hosts_packages_distro:
   - { "name": "coreutils", "state": "present" }
   - { "name": "groff", "state": "present" }
   - { "name": "openssh-client", "state": "present" }
   - { "name": "util-linux", "state": "present" }
-  - { "name": "vim-nox", "state": "present" }
+  - { "name": "vim", "state": "present" }
 

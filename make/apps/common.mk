@@ -9,20 +9,11 @@ bootstrap: bootstrap-git bootstrap-docker app-bootstrap ## Update application fi
 # target bootstrap-docker: Build and start application dockers
 # on local host
 .PHONY: boostrap-docker
-bootstrap-docker: docker-network-create
-	$(call make,docker-compose-up)
+bootstrap-docker: install-bin-docker docker-network-create
 
 # target bootstrap-git: Fire update-app
 .PHONY: bootstrap-git
-bootstrap-git: update-app
-
-# target bootstrap-git-%: Clone GIT_REPOSITORY in folder %
-# on local host
-.PHONY: bootstrap-git-%
-bootstrap-git-%:
-	if ! git config remote.origin.url > /dev/null ; \
-		then git clone $(QUIET) $(GIT_REPOSITORY) $*; \
-	fi
+bootstrap-git: install-bin-git
 
 # target build: Build application docker images to run
 # on local host
@@ -45,7 +36,7 @@ build@%: myos-base
 # target clean: Clean application and docker images
 # on local host
 .PHONY: clean app-clean
-clean: app-clean docker-rm docker-image-rm docker-volume-rm .env-clean ## Clean application and docker stuffs
+clean: app-clean docker-rm docker-images-rm docker-volume-rm .env-clean ## Clean application and docker stuffs
 
 # target clean@%: Clean deployed application and docker images of % ENV
 # on local host
@@ -98,7 +89,7 @@ exec@%:
 # target install app-install: Install application
 # on local host
 .PHONY: install app-install
-install: update-app app-install ## Install application
+install: bootstrap app-install ## Install application
 
 # target logs: Display application dockers logs
 # on local host

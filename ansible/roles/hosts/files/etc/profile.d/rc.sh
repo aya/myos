@@ -1,11 +1,11 @@
 # shellcheck shell=sh
-## rc.sh calls user defined functions
-# author: Yann "aya" Autissier
-# license: MIT
-# updated: 2021/03/04
+# file rc.sh: Call user defined functions
+## author: Yann "aya" Autissier
+## license: MIT
+## version: 20210620
 
 case $- in
-  # if we are in an interactive shell
+  # if this is an interactive shell
   *i*)
     # load user stuff from ~/.rc.d/* files
     for file in "${HOME}"/.rc.d/*; do
@@ -41,3 +41,5 @@ case $- in
     unset IFS
   ;;
 esac
+
+# vim:ts=2:sw=2:sts=2:et

@@ -1,0 +1,15 @@
+---
+# file: tasks/dir.yml
+
+- name: dir - create directories
+  with_items:
+  - ~/.config
+  - ~/.config/git
+  - ~/.ssh
+  - ~/.ssh/myos
+  - ~/.tmux
+  - ~/.tmux/myos
+  file:
+    path: "{{item}}"
+    state: directory
+

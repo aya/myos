@@ -4,9 +4,6 @@
 # minimum kernel version
 docker_check_kernel: '3.10'
 
-# architecture
-docker_check_machine: 'x86_64'
-
 # The docker package name
 docker_package: docker
 

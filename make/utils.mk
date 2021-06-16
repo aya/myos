@@ -69,6 +69,7 @@ reverse = $(if $(1),$(call reverse,$(wordlist 2,$(words $(1)),$(1))) $(firstword
 # and in rules. Particularly useful for VCS version strings, that can contain
 # slashes, colons (OK in filenames but not in rules), and spaces.
 sanitize = $(subst $(space),_,$(subst :,_,$(subst /,_,$(strip $(1)))))
+slugify = $(subst $(space),,$(subst :,,$(subst /,,$(subst .,,$(1)))))
 
 # MESSAGE Macro -- display a message in bold type
 MESSAGE = echo "$(TERM_BOLD)>>> $($(PKG)_NAME) $($(PKG)_VERSION) $(call qstrip,$(1))$(TERM_RESET)"

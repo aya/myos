@@ -47,7 +47,7 @@ DOCKER_SERVICES                 ?= $(eval IGNORE_DRYRUN := true)$(shell $(call d
 DOCKER_SHELL                    ?= $(SHELL)
 ENV_VARS                        += COMPOSE_PROJECT_NAME COMPOSE_SERVICE_NAME DOCKER_BUILD_TARGET DOCKER_GID DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_REPOSITORY DOCKER_SHELL
 
-ifeq ($(DOCKER), true)
+ifneq ($(DOCKER_RUN),)
 DOCKER_COMPOSE                  ?= docker/compose:$(COMPOSE_VERSION)
 else
 DOCKER_COMPOSE                  ?= $(or $(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'),docker-compose)

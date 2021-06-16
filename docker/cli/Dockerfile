@@ -43,7 +43,7 @@ ARG SHELL=/bin/bash
 ARG SSH_BASTION_HOSTNAME
 ARG SSH_BASTION_USERNAME
 ARG SSH_PRIVATE_IP_RANGE
-ARG SSH_PUBLIC_HOST_KEYS
+ARG SSH_PUBLIC_HOSTS
 ARG UID
 ARG USER
 ENV UID=${UID}
@@ -110,7 +110,7 @@ WORKDIR /home/$USER
 
 # git config
 RUN mkdir -p ~/.ssh ~/.config/git \
- && ssh-keyscan -t rsa -H ${SSH_PUBLIC_HOST_KEYS} >> ~/.ssh/known_hosts \
+ && ssh-keyscan -t rsa -H ${SSH_PUBLIC_HOSTS} >> ~/.ssh/known_hosts \
  && echo -e "\
 .DS_Store\n\
 .idea/\n\

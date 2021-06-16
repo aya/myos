@@ -6,6 +6,7 @@ PACKER_ARCH                     ?= $(PACKER_ALPINE_ARCH)
 PACKER_BOOT_WAIT                ?= 11s
 PACKER_BUILD_ARGS               ?= -on-error=cleanup $(foreach var,$(PACKER_BUILD_VARS),$(if $($(var)),-var $(var)='$($(var))'))
 PACKER_BUILD_VARS               += accelerator boot_wait hostname iso_name iso_size output password qemuargs ssh_wait_timeout template username
+PACKER_BUILD_VARS               += ansible_extra_vars ansible_user ansible_verbose
 PACKER_CACHE_DIR                ?= build/cache
 PACKER_HOSTNAME                 ?= $(PACKER_TEMPLATE)
 PACKER_ISO_DATE                 ?= $(shell stat -c %y $(PACKER_ISO_FILE) 2>/dev/null)
@@ -41,6 +42,9 @@ PACKER_BUILD_ARGS               += -var ssh_port_max=$(PACKER_SSH_PORT) -var vnc
 endif
 
 accelerator                     ?= $(PACKER_QEMU_ACCELERATOR)
+ansible_extra_vars              ?= $(patsubst target=%,target=default,$(ANSIBLE_EXTRA_VARS))
+ansible_user                    ?= $(PACKER_USERNAME)
+ansible_verbose                 ?= $(ANSIBLE_VERBOSE)
 boot_wait                       ?= $(PACKER_BOOT_WAIT)
 hostname                        ?= $(PACKER_HOSTNAME)
 iso_name                        ?= $(PACKER_ISO_NAME)
@@ -73,8 +77,8 @@ endif
 
 # function packer: Call run packer with arg 1
 ## it needs an empty local ssh agent (ssh-add -D)
-## it needs ANSIBLE_SSH_PRIVATE_KEYS set to a key giving access to ANSIBLE_GIT_REPOSITORY without password
-## it needs ANSIBLE_AWS_ACCESS_KEY_ID and ANSIBLE_AWS_SECRET_ACCESS_KEY
+## it needs SSH_PRIVATE_KEYS to get access without password to GIT_REPOSITORY
+## it needs AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY when deploying to AWS
 define packer
 	$(RUN) $(call run,packer $(1),$(DOCKER_RUN_OPTIONS_PACKER) $(DOCKER_REPOSITORY)/)
 endef
@@ -110,4 +114,4 @@ define packer-build
 	echo 'user: $(username)'                                    >> $(PACKER_ISO_INFO)
 endef
 
-arrays_of_dquoted_args = [ $(subst $(dquote) $(dquote),$(dquote)$(comma) $(dquote),$(subst $(dquote) $(dquote)-,$(dquote) ]$(comma) [ $(dquote)-,$(patsubst %,$(dquote)%$(dquote),$1))) ]
+arrays_of_dquoted_args = $(subst $(dquote) $(dquote),$(dquote)$(comma) $(dquote),$(subst $(dquote) $(dquote)-,$(dquote) ]$(comma) [ $(dquote)-,$(patsubst %,$(dquote)%$(dquote),$1)))

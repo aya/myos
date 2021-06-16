@@ -9,11 +9,17 @@
 - name: package - add docker GPG key
   apt_key: url=https://download.docker.com/linux/debian/gpg
   when: ansible_os_family|lower == "debian"
+  become: yes
+
+- name: package - define arch
+  set_fact:
+    docker_apt_arch: "{% if ansible_machine == 'aarch64' %}arm64{% endif %}{% if ansible_machine == 'x86_64' %}amd64{% endif %}"
 
 - name: add docker APT repository
   apt_repository:
-    repo: deb [arch=amd64] https://download.docker.com/linux/{{ansible_distribution|lower}} {{ansible_distribution_release}} stable
+    repo: deb [arch={{docker_apt_arch}}] https://download.docker.com/linux/{{ansible_distribution|lower}} {{ansible_distribution_release}} stable
   when: ansible_os_family|lower == "debian"
+  become: yes
 
 - name: package - add docker package
   package: name="{{docker_package}}" state=present

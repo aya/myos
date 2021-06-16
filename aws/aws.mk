@@ -17,7 +17,7 @@ aws-deploy:
 .PHONY: aws-docker-login
 aws-docker-login: aws-ecr-get-login
 
-# target aws-ecr-get-login: Exec 'Call aws ecr get-login'
+# target aws-ecr-get-login: Call aws ecr get-login
 .PHONY: aws-ecr-get-login
 aws-ecr-get-login:
 	$(eval IGNORE_DRYRUN := true)

@@ -101,16 +101,17 @@
   tags: 'aws'
   when: ec2_tags.tags is defined
 
-- name: aws - prune docker objects (including non-dangling images)
-  docker_prune:
-    containers: yes
-    images: yes
-    images_filters:
-      dangling: false
-    networks: yes
-    volumes: yes
-    builder_cache: yes
-  tags: 'aws'
+# ansible v2.8
+# - name: aws - prune docker objects
+#   docker_prune:
+#     containers: yes
+#     images: yes
+#     images_filters:
+#       dangling: false
+#     networks: yes
+#     volumes: yes
+#     builder_cache: yes
+#   tags: 'aws'
 
 - name: aws - launch docker containers
   docker_container:

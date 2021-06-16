@@ -5,6 +5,13 @@ services:
     build:
       args:
       - DOCKER_BUILD_DIR=docker/cli
+      - GID=${GID}
+      - UID=${UID}
+      - USER=${USER}
+      - SSH_BASTION_HOSTNAME=${SSH_BASTION_HOSTNAME}
+      - SSH_BASTION_USERNAME=${SSH_BASTION_USERNAME}
+      - SSH_PUBLIC_HOSTS=${SSH_PUBLIC_HOSTS}
+      - SSH_PRIVATE_IP_RANGE=${SSH_RIVATE_IP_RANGE}
       context: ../..
       dockerfile: docker/cli/Dockerfile
       target: ${DOCKER_BUILD_TARGET}
@@ -26,6 +33,9 @@ services:
     build:
       args:
       - DOCKER_BUILD_DIR=docker/ssh
+      - GID=${GID}
+      - UID=${UID}
+      - USER=${USER}
       context: ../..
       dockerfile: docker/ssh/Dockerfile
       target: ${DOCKER_BUILD_TARGET}

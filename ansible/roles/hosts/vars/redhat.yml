@@ -2,6 +2,8 @@
 # file vars/redhat.yml
 
 hosts_packages_distro:
-  - { "name": "vim", "state": "present" }
+  - { "name": "groff-base", "state": "present" }
   - { "name": "libselinux-python", "state": "present" }
+  - { "name": "openssh-clients", "state": "present" }
+  - { "name": "vim-minimal", "state": "present" }
 

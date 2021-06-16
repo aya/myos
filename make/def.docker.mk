@@ -14,7 +14,6 @@ DOCKER_NETWORK_PRIVATE          ?= $(USER_ENV)
 DOCKER_NETWORK_PUBLIC           ?= node
 DOCKER_REPOSITORY_MYOS          ?= $(subst _,/,$(COMPOSE_PROJECT_NAME_MYOS))
 DOCKER_REPOSITORY_NODE          ?= $(subst _,/,$(COMPOSE_PROJECT_NAME_NODE))
-DOCKER_RUN                      ?= $(filter true,$(DOCKER))
 # DOCKER_RUN_OPTIONS: default options of `docker run` command
 DOCKER_RUN_OPTIONS              += --rm -it
 # DOCKER_RUN_VOLUME: options -v of `docker run` command to mount additionnal volumes
@@ -33,7 +32,7 @@ else
 DOCKER_RUN_VOLUME               += -v $(or $(APP_PARENT_DIR),$(APP_DIR),$(PWD)):$(or $(WORKSPACE_DIR),$(APP_PARENT_DIR),$(APP_DIR),$(PWD))
 endif
 
-ifeq ($(DOCKER), true)
+ifneq ($(DOCKER_RUN),)
 
 DOCKER_SSH_AUTH                 := -e SSH_AUTH_SOCK=/tmp/ssh-agent/socket -v $(DOCKER_VOLUME_SSH):/tmp/ssh-agent
 

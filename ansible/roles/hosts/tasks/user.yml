@@ -3,7 +3,7 @@
 
 - name: user - create ~/.env
   template:
-    src: .env.j2
+    src: env.j2
     dest: ~/.env
     force: no
     mode: 0400
@@ -11,39 +11,48 @@
 - name: user - create ~/.rc.d
   file: path=~/.rc.d/ state={{hosts_enable_rc|default(false)|ternary('directory', 'absent')}} mode="0700"
 
-- name: user - activate rc functions
+- name: user - source /etc/profile.d/rc_functions.sh
+  with_items:
+  - /etc/profile.d/rc_functions.sh
+  lineinfile: dest=~/.rc.d/00_source create=yes line="{{ item }}" mode="0600"
+  when: hosts_enable_rc|default(false)
+
+- name: user - enable rc functions
   with_items: "{{hosts_rc_functions|default([])}}"
   file: path="~/.rc.d/{{item}}" state="touch" mode="0600"
   when: hosts_enable_rc|default(false)
 
 - name: user - disable rc functions
   with_items: "{{hosts_rc_cleanup|default([])}}"
-  file: path="~/.rc.d/{{item}}" state="absent" mode="0600"
+  file: path="~/.rc.d/{{item}}" state="absent"
   when: hosts_enable_rc|default(false)
 
-- name: user - create directories
+- name: user - copy ~/.*aliases ~/.*functions ~/.*profile ~/.shrc
   with_items:
-  - ~/.config
-  - ~/.config/git
-  file:
-    path: "{{item}}"
-    state: directory
+    - ".dircolors_aliases"
+    - ".docker_aliases"
+    - ".resty_aliases"
+    - ".vim_aliases"
+    - ".sh_functions"
+    - ".bash_profile"
+    - ".profile"
+    - ".shrc"
+  copy: src=../files/{{item}} dest=~/{{item}} mode="0640" backup="yes"
+
+- name: user - update ~/.bashrc
+  with_items:
+  - PS1="╭∩╮$PS1"
+  - unset user_count process_count
+  lineinfile: dest=~/.bashrc create=yes line='{{item}}'
 
 - name: user - update ~/.config/git/ignore
   with_items:
   - '.nfs*'
   - '*~'
   - '*.log'
+  - '*.pyc'
   - '*.swp'
   lineinfile: dest=~/.config/git/ignore create=yes line='{{item}}'
-
-- name: user - update ~/.profile
-  with_items:
-  - alias ctop='docker run --rm -ti --volume /var/run/docker.sock:/var/run/docker.sock:ro quay.io/vektorlab/ctop:latest'
-  - alias vi='vim'
-  - export EDITOR='vim'
-  - export PAGER='less'
-  lineinfile: dest=~/.profile create=yes line='{{item}}'
 
 - name: user - update ~/.screenrc
   with_items:
@@ -52,9 +61,31 @@
   - shell -$SHELL
   lineinfile: dest=~/.screenrc create=yes line='{{item}}'
 
+- name: user - update ~/.ssh/config
+  with_items:
+  - include myos/config
+  lineinfile: dest=~/.ssh/config create=yes line='{{item}}'
+
+- name: user - update ~/.tmux.conf
+  with_items:
+  - source-file ~/.tmux/myos/config
+  lineinfile: dest=~/.tmux.conf create=yes line='{{item}}'
+
+- name: user - update ~/.tmux/myos/config
+  template:
+    src: tmux_config.j2
+    dest: ~/.tmux/myos/config
+    mode: 0400
+
+- name: user - update ~/.tmux/myos/session
+  template:
+    src: tmux_session.j2
+    dest: ~/.tmux/myos/session
+    mode: 0400
+
 - name: user - update ~/.vimrc
   with_items:
-  - :set et ai bg=dark sw=4 ts=4 encoding=utf-8 mouse=""
+  - :set et ai bg=dark sw=2 ts=2 encoding=utf-8 mouse=""
   - :syn on
   - :filetype plugin indent on
   lineinfile: dest=~/.vimrc create=yes line='{{item}}'

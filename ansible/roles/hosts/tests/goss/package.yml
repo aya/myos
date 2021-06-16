@@ -1,5 +1,25 @@
-gossfile:
-  package_common.yml: {}
 package:
-  vim:
+  bash:
+    installed: true
+  ca-certificates:
+    installed: true
+  curl:
+    installed: true
+  git:
+    installed: true
+  htop:
+    installed: true
+  less:
+    installed: true
+  lsof:
+    installed: true
+  make:
+    installed: true
+  rsync:
+    installed: true
+  screen:
+    installed: true
+  tmux:
+    installed: true
+  tzdata:
     installed: true

@@ -90,5 +90,5 @@ define .env_update
 	      awk '{while(match($$0,"[$$]{[^}]*}")) {var=substr($$0,RSTART+2,RLENGTH-3);gsub("[$$]{"var"}",ENVIRON[var])} print}') \
 	  |sed -e /^$$/d -e /^#/d \
 	  |sort \
-	  >> $(env_file)
+	  >> $(env_file);
 endef

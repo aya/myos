@@ -17,6 +17,11 @@ install-app install-apps: myos-base install-app-required
 install-app-required: myos-base
 	$(foreach url,$(APP_REQUIRED),$(call install-app,$(url)))
 
+# target install-bin-%; Call ansible-run-localhost when bin % is not available
+.PHONY: install-bin-%
+install-bin-%:;
+	$(if $(shell type $* 2>/dev/null),,$(call make,ansible-run-localhost))
+
 # target $(SHARED): Create SHARED folder
 $(SHARED):
 	$(RUN) mkdir -p $(SHARED)
@@ -36,8 +41,6 @@ update-app-%: % ;
 
 # target update-config: Update config files
 .PHONY: update-config
-update-config: SSH_PUBLIC_HOST_KEYS := $(CONFIG_REMOTE_HOST) $(SSH_BASTION_HOSTNAME) $(SSH_REMOTE_HOSTS)
-update-config: MAKE_VARS += SSH_BASTION_HOSTNAME SSH_BASTION_USERNAME SSH_PRIVATE_IP_RANGE SSH_PUBLIC_HOST_KEYS
 update-config: myos-base
 	$(call update-app,$(CONFIG_REPOSITORY),$(CONFIG))
 
@@ -47,27 +50,32 @@ update-config: myos-base
 .PHONY: update-hosts
 update-hosts:
 ifneq (,$(filter $(ENV),local))
-	cat .env */.env 2>/dev/null |grep -Eo 'urlprefix-[^/]+' |sed 's/urlprefix-//' |while read host; do grep $$host /etc/hosts >/dev/null 2>&1 || { printf "Adding $$host to /etc/hosts\n"; printf "127.0.0.1 $$host\n" |$(RUN) sudo tee -a /etc/hosts >/dev/null; }; done
+	cat .env */.env 2>/dev/null |grep -Eo 'urlprefix-[^/]+' |sed 's/urlprefix-//' |while read host; do \
+	 grep $$host /etc/hosts >/dev/null 2>&1 || { \
+	  printf "Adding $$host to /etc/hosts\n"; \
+	  printf "127.0.0.1 $$host\n" |$(RUN) sudo tee -a /etc/hosts >/dev/null; \
+	 }; \
+	done
 endif
 
 # target update-remote-%: fetch git remote %
 .PHONY: update-remote-%
 update-remote-%: myos-base
-	$(RUN) $(call exec,git fetch --prune --tags $*)
+	$(RUN) git fetch --prune --tags $*
 
 # target update-remotes: fetch all git remotes
 .PHONY: update-remotes
 update-remotes: myos-base
-	$(RUN) $(call exec,git fetch --all --prune --tags)
+	$(RUN) git fetch --all --prune --tags
 
 # target update-upstream: fetch git remote upstream
 .PHONY: update-upstream
 update-upstream: myos-base .git/refs/remotes/upstream/master
-	$(RUN) $(call exec,git fetch --prune --tags upstream)
+	$(RUN) git fetch --prune --tags upstream
 
-# target .git/refs/remotes/upstream/master: git add upstream APP_UPSTREAM_REPOSITORY
+# target .git/refs/remotes/upstream/master: add git upstream APP_UPSTREAM_REPOSITORY
 .git/refs/remotes/upstream/master:
-	$(RUN) git remote add upstream $(APP_UPSTREAM_REPOSITORY) 2>/dev/null ||:
+	$(RUN) git remote add upstream $(APP_UPSTREAM_REPOSITORY)
 
 # target shared: Fire SHARED
 .PHONY: update-shared

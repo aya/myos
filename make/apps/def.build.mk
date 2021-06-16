@@ -1,8 +1,8 @@
 BUILD_AUTHOR                    ?= $(DOCKER_AUTHOR)
 BUILD_DATE                      ?= $(shell TZ=UTC date "+%Y%m%dT%H%M%SZ" 2>/dev/null)
 BUILD_DESCRIPTION               ?= Lot of Love
-BUILD_DOCUMENTATION             ?= $(if $(wildcard README.md),$(APP_REPOSITORY)/blob/$(COMMIT)/README.md)
-BUILD_ENV_VARS                  ?= APP BRANCH BUILD_DATE BUILD_STATUS COMMIT DEPLOY_HOOK_URL ENV VERSION
+BUILD_DOCUMENTATION             ?= $(if $(wildcard README.md),$(APP_REPOSITORY_URL)/blob/$(COMMIT)/README.md)
+BUILD_ENV_VARS                  ?= APP BRANCH BUILD_DATE BUILD_STATUS COMMIT DEPLOY_HOOK_URL ENV UID USER VERSION
 BUILD_LABEL_VARS                ?= org.label-schema.% org.opencontainers.% os.my.%
 BUILD_LABEL_ARGS                ?= $(foreach var,$(filter $(BUILD_LABEL_VARS),$(MAKE_FILE_VARS)),$(if $($(var)),$(var)='$($(var))'))
 BUILD_LICENSE                   ?= GPL-3.0
@@ -19,17 +19,17 @@ org.label-schema.schema-version         ?= 1.0
 org.label-schema.url                    ?= $(APP_URL)
 org.label-schema.usage                  ?= $(BUILD_DOCUMENTATION)
 org.label-schema.vcs-ref                ?= $(COMMIT)
-org.label-schema.vcs-url                ?= $(APP_REPOSITORY)
+org.label-schema.vcs-url                ?= $(APP_REPOSITORY_URL)
 org.label-schema.vendor                 ?= $(BUILD_AUTHOR)
 org.label-schema.version                ?= $(VERSION)
 org.opencontainers.image.created        ?= $(BUILD_DATE)
 org.opencontainers.image.revision       ?= $(COMMIT)
-org.opencontainers.image.source         ?= $(APP_REPOSITORY)
+org.opencontainers.image.source         ?= $(APP_REPOSITORY_URL)
 org.opencontainers.image.url            ?= $(APP_URL)
 org.opencontainers.image.vendor         ?= $(BUILD_AUTHOR)
 org.opencontainers.image.version        ?= $(VERSION)
 org.opencontainers.image.url            ?= $(APP_URL)
-org.opencontainers.image.source         ?= $(APP_REPOSITORY)
+org.opencontainers.image.source         ?= $(APP_REPOSITORY_URL)
 org.opencontainers.image.version        ?= $(VERSION)
 org.opencontainers.image.revision       ?= $(COMMIT)
 org.opencontainers.image.vendor         ?= $(BUILD_AUTHOR)

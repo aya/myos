@@ -1,3 +1,3 @@
-# target base: Fire docker-network-create stack-base-up base-ssh-add
+# target base: Fire ssh-add
 .PHONY: base
-base: docker-network-create $(if $(DOCKER_RUN),stack-base-up) ssh-add
+base: $(if $(DOCKER_RUN),install-bin-docker docker-network-create stack-base-up) ssh-add

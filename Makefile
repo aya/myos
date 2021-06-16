@@ -10,6 +10,6 @@ app-build: base install-build-config
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call make,app-build-$(service)))
 	$(call make,docker-commit)
 
-app-install: base node
+app-install: ansible-run base node
 
 app-start: ssh-add

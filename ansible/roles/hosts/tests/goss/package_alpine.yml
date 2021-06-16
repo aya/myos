@@ -1,11 +1,13 @@
+gossfile:
+  package.yml: {}
 package:
-  bash:
+  coreutils:
     installed: true
-  ca-certificates:
+  groff:
     installed: true
-  screen:
+  openssh-client:
     installed: true
-  rsync:
+  util-linux:
     installed: true
-  tzdata:
+  vim:
     installed: true

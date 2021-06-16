@@ -7,10 +7,9 @@
   when: hosts_enable_cloudinit|default(false) and ansible_os_family|lower != "alpine"
 
 - name: cloudinit - install cloud-init packages
-  apk: name="{{item.name}}" state="{{item.state}}"
   apk:
-    name: cloud-init
-    state: present
+    name: "{{ item.name}}"
+    state: "{{ item.state }}"
     repository:
     - http://dl-cdn.alpinelinux.org/alpine/edge/main
     - http://dl-cdn.alpinelinux.org/alpine/edge/testing
@@ -25,7 +24,7 @@
 
 - name: cloudinit - update /etc/cloud/cloud.cfg
   template:
-    src: etc/cloud/cloud.cfg.j2
+    src: cloud.cfg.j2
     dest: /etc/cloud/cloud.cfg
     force: yes
   when: hosts_enable_cloudinit|default(false)

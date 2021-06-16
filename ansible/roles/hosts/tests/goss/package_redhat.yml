@@ -1,5 +1,11 @@
 gossfile:
-  package_common.yml: {}
+  package.yml: {}
 package:
+  groff-base:
+    installed: true
+  libselinux-python:
+    installed: true
+  openssh-clients:
+    installed: true
   vim-minimal:
     installed: true

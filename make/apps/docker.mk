@@ -122,7 +122,7 @@ docker-images-rm:
 docker-images-rm-%:
 	docker images |awk '$$1 ~ /^$(subst /,\/,$*)/ {print $$3}' |sort -u |while read image; do $(RUN) docker rmi -f $$image; done
 
-# target docker-login: Exec 'docker login'
+# target docker-login: Run 'docker login'
 .PHONY: docker-login
 docker-login: myos-base
 	$(RUN) docker login
@@ -131,7 +131,7 @@ docker-login: myos-base
 .PHONY: docker-network-create
 docker-network-create: docker-network-create-$(DOCKER_NETWORK)
 
-# target docker-network-create-%: Exec 'docker network create %'
+# target docker-network-create-%: Run 'docker network create %'
 .PHONY: docker-network-create-%
 docker-network-create-%:
 	if [ -z "$(shell docker network ls -q --filter name='^$*$$' 2>/dev/null)" ]; then \
@@ -142,18 +142,25 @@ docker-network-create-%:
 .PHONY: docker-network-rm
 docker-network-rm: docker-network-rm-$(DOCKER_NETWORK)
 
-# target docker-network-rm-%: Remove docker network %
+# target docker-network-rm-%: Run 'docker network rm %'
 .PHONY: docker-network-rm-%
 docker-network-rm-%:
 	if [ -n "$(shell docker network ls -q --filter name='^$*$$' 2>/dev/null)" ]; then \
 	  $(RUN) docker network rm $* >/dev/null \
 	   && $(or $(call INFO,docker network $* removed), true); fi \
 
-# target docker-plugin-install: Exec 'docker plugin install DOCKER_PLUGIN_OPTIONS DOCKER_PLUGIN'
+# target docker-plugin-install: Run 'docker plugin install DOCKER_PLUGIN_OPTIONS DOCKER_PLUGIN'
 .PHONY: docker-plugin-install
 docker-plugin-install:
 	$(eval docker_plugin_state := $(shell docker plugin ls | awk '$$2 == "$(DOCKER_PLUGIN)" {print $$NF}') )
-	$(if $(docker_plugin_state),$(if $(filter $(docker_plugin_state),false),printf "Enabling docker plugin $(DOCKER_PLUGIN) ... " && $(RUN) docker plugin enable $(DOCKER_PLUGIN) >/dev/null 2>&1 && printf "done\n" || printf "ERROR\n"),printf "Installing docker plugin $(DOCKER_PLUGIN) ... " && $(RUN) docker plugin install $(DOCKER_PLUGIN_OPTIONS) $(DOCKER_PLUGIN) $(DOCKER_PLUGIN_ARGS) >/dev/null 2>&1 && printf "done\n" || printf "ERROR\n")
+	$(if $(docker_plugin_state),\
+	  $(if $(filter $(docker_plugin_state),false),\
+	    $(RUN) docker plugin enable $(DOCKER_PLUGIN) >/dev/null 2>&1 \
+	     && $(or $(call INFO,docker plugin $(DOCKER_PLUGIN) enabled), true) \
+	  ), \
+	  $(RUN) docker plugin install $(DOCKER_PLUGIN_OPTIONS) $(DOCKER_PLUGIN) $(DOCKER_PLUGIN_ARGS) >/dev/null 2>&1 \
+	   && $(or $(call INFO,docker plugin $(DOCKER_PLUGIN) installed), true) \
+	)
 
 # target docker-push: Call docker-push for each SERVICES
 .PHONY: docker-push
@@ -205,7 +212,7 @@ docker-run-%: docker-build-%
 	$(eval path            := $(patsubst %/,%,$*))
 	$(eval image           := $(DOCKER_REPOSITORY)/$(lastword $(subst /, ,$(path)))$(if $(findstring :,$*),,:$(DOCKER_IMAGE_TAG)))
 	$(eval image_id        := $(shell docker images -q $(image) 2>/dev/null))
-	$(call docker-run,$(command),$(if $(image_id),$(image),$(path)))
+	$(call docker-run,$(RUN) $(command),$(if $(image_id),$(image),$(path)))
 
 # target docker-tag: Call docker-tag for each SERVICES
 .PHONY: docker-tag

@@ -1,24 +1,30 @@
 ---
 # file: tasks/ssh.yml
 
-- name: ssh - add keys to file ~/.ssh/authorized_keys
-  authorized_key: user="root" key=https://github.com/{{item}}.keys
-  with_items: "{{hosts_ssh_users|default([])}}"
-  become: yes
+- name: ssh - add ssh_authorized_keys to file ~/.ssh/authorized_keys
+  authorized_key: user="{{ ansible_user|default('root') }}" key="{{ item }}"
+  with_items: "{{ hosts_ssh_authorized_keys|default([]) }}"
+  ignore_errors: true
 
-- name: ssh - copy ssh private keys
-  with_items: "{{hosts_ssh_private_keys|default([])}}"
-  copy: src={{item}} dest=~/.ssh/ mode=0400
-  become: yes
-
-- name: ssh - add public hosts keys to known_hosts
-  with_items: "{{hosts_ssh_public_hosts_keys|default([])}}"
+- name: ssh - add ssh_public_hosts keys to known_hosts
+  with_items: "{{ hosts_ssh_public_hosts|default([]) }}"
   known_hosts:
-    name: "{{item.name}}"
-    key: "{{ lookup('file', '{{item.key}}') }}"
-  become: yes
+    name: "{{ item }}"
+    key: "{{ lookup('pipe', 'ssh-keyscan -t rsa -H ' + item) }}"
+  ignore_errors: true
 
-- name: ssh - define configuration
+- name: ssh - copy ssh_private_keys to ~/.ssh/
+  with_items: "{{ hosts_ssh_private_keys|default([]) }}"
+  copy: src="{{ item }}" dest=~/.ssh/ mode=0400
+  ignore_errors: true
+
+- name: ssh - update ~/.ssh/myos/config
+  template:
+    src: ssh_config.j2
+    dest: ~/.ssh/myos/config
+    mode: 0400
+
+- name: ssh - define sshd configuration
   set_fact:
     sshd_config:
     - dest: /etc/conf.d/dropbear
@@ -27,22 +33,25 @@
     - dest: /etc/ssh/sshd_config
       line: Banner /etc/issue.net
       regex: ^#?Banner
+    - dest: /etc/ssh/sshd_config
+      line: PermitRootLogin prohibit-password
+      regex: ^#?PermitRootLogin
 
-- name: ssh - stat configuration file
+- name: ssh - stat sshd configuration file
   changed_when: false
   register: sshd_config_stat
   stat:
-    path: '{{item.dest}}'
-  with_items: '{{sshd_config|default([])}}'
+    path: "{{ item.dest }}"
+  with_items: "{{ sshd_config|default([]) }}"
 
 - name: ssh - configure sshd
   become: yes
   lineinfile:
     backrefs: true
-    dest: '{{item.0.dest}}'
-    line: '{{item.0.line}}'
-    regex: '{{item.0.regex}}'
+    dest: "{{ item.0.dest }}"
+    line: "{{ item.0.line }}"
+    regex: "{{ item.0.regex }}"
   with_together:
-  - '{{sshd_config|default([])}}'
-  - '{{sshd_config_stat.results}}'
+  - "{{ sshd_config|default([]) }}"
+  - "{{ sshd_config_stat.results }}"
   when: item.1.stat.exists

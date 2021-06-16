@@ -8,3 +8,4 @@
     dest: "{{ item.dest|default('/src') }}"
     key_file: "{{ item.key_file|default('~/.ssh/id_rsa') }}"
     version: "{{ item.version|default('HEAD') }}"
+  become: yes

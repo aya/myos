@@ -12,6 +12,10 @@ APP_TYPE                        ?= $(if $(SUBREPO),subrepo) $(if $(filter .,$(MY
 APPS                            ?= $(if $(MONOREPO),$(sort $(patsubst $(MONOREPO_DIR)/%/.git,%,$(wildcard $(MONOREPO_DIR)/*/.git))))
 APPS_NAME                       ?= $(foreach app,$(APPS),$(or $(shell awk -F '=' '$$1 == "APP" {print $$2}' $(or $(wildcard $(MONOREPO_DIR)/$(app)/.env),$(wildcard $(MONOREPO_DIR)/$(app)/.env.$(ENV)),$(MONOREPO_DIR)/$(app)/.env.dist) 2>/dev/null),$(app)))
 BRANCH                          ?= $(GIT_BRANCH)
+CMD_APK_INSTALL                 ?= $(if $(shell type -p apk),apk --no-cache --update add)
+CMD_APK_REMOVE                  ?= $(if $(shell type -p apk),apk --no-cache del)
+CMD_APT_INSTALL                 ?= $(if $(shell type -p apt-get),apt-get update && apt-get -fy install)
+CMD_APT_REMOVE                  ?= $(if $(shell type -p apt-get),apt-get -fy remove)
 CMDS                            ?= exec exec:% exec@% install-app install-apps run run:% run@%
 COLOR_INFO                      ?= $(COLOR_BROWN)
 COLOR_HIGHLIGHT                 ?= $(COLOR_GREEN)
@@ -28,17 +32,24 @@ COLOR_CYAN                      ?= \033[36m
 COLOR_GRAY                      ?= \033[37m
 COMMIT                          ?= $(or $(SUBREPO_COMMIT),$(GIT_COMMIT))
 CONFIG                          ?= $(RELATIVE)config
-CONFIG_REPOSITORY               ?= $(call pop,$(or $(APP_UPSTREAM_REPOSITORY),$(GIT_UPSTREAM_REPOSITORY)))/$(notdir $(CONFIG))
-CONTEXT                         ?= $(if $(APP),APP BRANCH DOMAIN VERSION) $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null)
+CONFIG_REPOSITORY               ?= $(CONFIG_REPOSITORY_URL)
+CONFIG_REPOSITORY_HOST          ?= $(shell printf '$(CONFIG_REPOSITORY_URI)\n' |sed 's|/.*||;s|.*@||')
+CONFIG_REPOSITORY_PATH          ?= $(shell printf '$(CONFIG_REPOSITORY_URI)\n' |sed 's|[^/]*/||;')
+CONFIG_REPOSITORY_SCHEME        ?= $(shell printf '$(CONFIG_REPOSITORY_URL)\n' |sed 's|://.*||;')
+CONFIG_REPOSITORY_URI           ?= $(shell printf '$(CONFIG_REPOSITORY_URL)\n' |sed 's|.*://||;')
+CONFIG_REPOSITORY_URL           ?= $(call pop,$(APP_UPSTREAM_REPOSITORY))/$(notdir $(CONFIG))
+CONTEXT                         ?= ENV $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null)
 CONTEXT_DEBUG                   ?= MAKEFILE_LIST env env.docker APPS GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME MAKE_DIR MAKE_SUBDIRS MAKE_CMD_ARGS MAKE_ENV_ARGS UID USER
 DEBUG                           ?= 
-DOCKER                          ?= $(if $(BUILD),false,true)
+DOCKER                          ?= $(shell type -p docker)
+DOCKER_RUN                      ?= $(if $(filter-out false False FALSE,$(DOCKER)),$(DOCKER))
 DOMAIN                          ?= localhost
 DRONE                           ?= false
 DRYRUN                          ?= false
 DRYRUN_RECURSIVE                ?= false
 ELAPSED_TIME                     = $(shell $(call TIME))
 ENV                             ?= local
+ENV_ARGS                         = $(if $(DOCKER_RUN),$(env.docker.args) $(env.docker.dist),$(env.args) $(env.dist))
 ENV_FILE                        ?= $(wildcard $(CONFIG)/$(ENV)/$(APP)/.env .env)
 ENV_LIST                        ?= $(shell ls .git/refs/heads/ 2>/dev/null)
 ENV_RESET                       ?= false
@@ -53,10 +64,14 @@ GIT_STATUS                      ?= $(shell git status -uno --porcelain 2>/dev/nu
 GIT_TAG                         ?= $(shell git tag -l --points-at $(BRANCH) 2>/dev/null)
 GIT_UPSTREAM_REPOSITORY         ?= $(if $(findstring ://,$(GIT_REPOSITORY)),$(call pop,$(call pop,$(GIT_REPOSITORY)))/,$(call pop,$(GIT_REPOSITORY),:):)$(GIT_UPSTREAM_USER)/$(lastword $(subst /, ,$(GIT_REPOSITORY)))
 GIT_UPSTREAM_USER               ?= $(lastword $(subst /, ,$(call pop,$(MYOS_REPOSITORY))))
+GIT_USER                        ?= $(GIT_AUTHOR_NAME)
 GIT_VERSION                     ?= $(shell git describe --tags $(BRANCH) 2>/dev/null || git rev-parse $(BRANCH) 2>/dev/null)
 HOSTNAME                        ?= $(shell hostname 2>/dev/null |sed 's/\..*//')
 IGNORE_DRYRUN                   ?= false
 IGNORE_VERBOSE                  ?= false
+INSTALL                         ?= $(SUDO) $(subst &&,&& $(SUDO),$(INSTALL_CMD))
+INSTALL_CMDS                    ?= APK_INSTALL APT_INSTALL
+$(foreach cmd,$(INSTALL_CMDS),$(if $(CMD_$(cmd)),$(eval INSTALL_CMD ?= $(CMD_$(cmd)))))
 LOG_LEVEL                       ?= $(if $(DEBUG),debug,$(if $(VERBOSE),info,error))
 MAKE_ARGS                       ?= $(foreach var,$(MAKE_VARS),$(if $($(var)),$(var)='$($(var))'))
 MAKE_SUBDIRS                    ?= $(if $(filter myos,$(MYOS)),monorepo,$(if $(APP),apps $(foreach type,$(APP_TYPE),$(if $(wildcard $(MAKE_DIR)/apps/$(type)),apps/$(type)))))
@@ -83,6 +98,7 @@ SHARED                          ?= $(RELATIVE)shared
 SSH_DIR                         ?= ${HOME}/.ssh
 STATUS                          ?= $(GIT_STATUS)
 SUBREPO                         ?= $(if $(wildcard .gitrepo),$(notdir $(CURDIR)))
+SUDO                            ?= $(if $(filter-out 0,$(UID)),$(shell type -p sudo))
 TAG                             ?= $(GIT_TAG)
 UID                             ?= $(shell id -u 2>/dev/null)
 USER                            ?= $(shell id -nu 2>/dev/null)
@@ -90,18 +106,13 @@ USER_ENV                        ?= $(USER)_$(ENV)
 VERBOSE                         ?= $(if $(DEBUG),true)
 VERSION                         ?= $(GIT_VERSION)
 
-ifeq ($(DOCKER), true)
-ENV_ARGS                         = $(env.docker.args) $(env.docker.dist)
-else
-ENV_ARGS                         = $(env.args) $(env.dist)
-endif
-
 ifneq ($(DEBUG),)
 CONTEXT                         += $(CONTEXT_DEBUG)
 else
 .SILENT:
 endif
 
+# Guess RUN
 ifeq ($(DRYRUN),true)
 RUN                              = $(if $(filter-out true,$(IGNORE_DRYRUN)),echo)
 ifeq ($(RECURSIVE), true)
@@ -124,14 +135,12 @@ HOST_SYSTEM                     := DARWIN
 endif
 endif
 
-# include .env files
-include $(wildcard $(ENV_FILE))
-
 ifeq ($(HOST_SYSTEM),DARWIN)
-ifneq ($(DOCKER),true)
 SED_SUFFIX                      := ''
 endif
-endif
+
+# include .env files
+include $(wildcard $(ENV_FILE))
 
 # function conf: Extract variable=value line from configuration files
 ## it prints the line with variable 3 definition from block 2 in file 1
@@ -165,7 +174,20 @@ endef
 # macro force: Run command 1 sine die
 ## it starts command 1 if it is not already running
 ## it returns never
-force = $$(while true; do [ $$(ps x |awk 'BEGIN {nargs=split("'"$$*"'",args)} $$field == args[1] { matched=1; for (i=1;i<=NF-field;i++) { if ($$(i+field) == args[i+1]) {matched++} } if (matched == nargs) {found++} } END {print found+0}' field=4) -eq 0 ] && $(RUN) $(1) || sleep 1; done)
+force = $$(while true; do \
+ [ $$(ps x |awk '\
+  BEGIN {nargs=split("'"$$*"'",args)} \
+  $$field == args[1] { \
+   matched=1; \
+   for (i=1;i<=NF-field;i++) { \
+    if ($$(i+field) == args[i+1]) {matched++} \
+   } \
+   if (matched == nargs) {found++} \
+  } \
+  END {print found+0}' field=4) -eq 0 \
+ ] \
+ && $(RUN) $(1) || sleep 1; done \
+)
 
 # macro gid: Return GID of group 1
 gid = $(shell grep '^$(1):' /etc/group 2>/dev/null |awk -F: '{print $$3}')
@@ -188,14 +210,14 @@ ${COLOR_HIGHLIGHT}$@${COLOR_RESET}:${COLOR_RESET} ' >&$(INFO_FD) \
   && printf '\n' >&$(INFO_FD) \
 ))
 
-# function install-app: Exec 'git clone url 1 dir 2' or Call update-app with url 1 dir 2
+# function install-app: Run 'git clone url 1 dir 2' or Call update-app with url 1 dir 2
 define install-app
 	$(call INFO,install-app,$(1)$(comma) $(2))
-	$(eval url := $(or $(1), $(APP_REPOSITORY)))
+	$(eval url := $(or $(1), $(APP_REPOSITORY_URL)))
 	$(eval dir := $(or $(2), $(RELATIVE)$(lastword $(subst /, ,$(url)))))
 	$(if $(wildcard $(dir)/.git), \
-		$(call update-app,$(url),$(dir)), \
-		$(RUN) $(call exec,git clone $(QUIET) $(url) $(dir)) \
+	  $(call update-app,$(url),$(dir)), \
+	  $(RUN) git clone $(QUIET) $(url) $(dir) \
 	)
 endef
 
@@ -228,21 +250,21 @@ endef
 # macro pop: Return last word of string 1 according to separator 2
 pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
 
-# macro sed: Exec sed script 1 on file 2
-sed = $(call env-exec,$(RUN) sed -i $(SED_SUFFIX) '$(1)' $(2))
+# macro sed: Run sed script 1 on file 2
+sed = $(RUN) sed -i $(SED_SUFFIX) '$(1)' $(2)
 
 # macro TIME: Print time elapsed since unixtime 1
 TIME = awk '{printf "%02d:%02d:%02d\n",int($$1/3600),int(($$1%3600)/60),int($$1%60)}' \
-	   <<< $(shell bc <<< "$(or $(2),$(MAKE_UNIXTIME_CURRENT))-$(or $(1),$(MAKE_UNIXTIME_START))" 2>/dev/null)
+	   <<< $(shell awk 'BEGIN {current=$(or $(2),$(MAKE_UNIXTIME_CURRENT)); start=$(or $(1),$(MAKE_UNIXTIME_START)); print (current  - start)}' 2>/dev/null)
 
-# function update-app: Exec 'cd dir 1 && git pull' or Call install-app
+# function update-app: Run 'cd dir 1 && git pull' or Call install-app
 define update-app
 	$(call INFO,update-app,$(1)$(comma) $(2))
-	$(eval url := $(or $(1), $(APP_REPOSITORY)))
+	$(eval url := $(or $(1), $(APP_REPOSITORY_URL)))
 	$(eval dir := $(or $(2), $(APP_DIR)))
 	$(if $(wildcard $(dir)/.git), \
-		$(RUN) $(call exec,sh -c 'cd $(dir) && git pull $(QUIET)'), \
-		$(call install-app,$(url),$(dir)) \
+	  $(RUN) sh -c 'cd $(dir) && git pull $(QUIET)', \
+	  $(call install-app,$(url),$(dir)) \
 	)
 endef
 

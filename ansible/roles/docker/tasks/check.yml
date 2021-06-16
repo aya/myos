@@ -7,10 +7,3 @@
       docker requires a minimum kernel version of {{docker_check_kernel}}
       on {{ansible_distribution}} {{ansible_distribution_version}}
   when: ansible_kernel is version(docker_check_kernel, "<")
-
-- name: check - machine architecture
-  fail:
-    msg: >
-      docker requires a {{docker_check_machine}} version
-      of {{ansible_distribution}} {{ansible_distribution_version}}
-  when: ansible_machine != docker_check_machine

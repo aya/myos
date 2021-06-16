@@ -3,23 +3,27 @@
     name=py3-pip
     state=present
   when: ansible_os_family|lower == "alpine"
+  become: yes
 
 - name: 'Install Python PIP'
   package: >
     name=python-pip
     state=present
   when: ansible_os_family|lower != "alpine"
+  become: yes
 
 - name: 'Install python-pathlib'
   pip: >
     name=pathlib
     state=present
+  become: yes
 
 - name: "Discover NVMe EBS"
   disks_ebs_config:
     config: "{{ disks_additional_disks }}"
   register: __disks_ebs_config
   when: disks_discover_aws_nvme_ebs | default(True) | bool
+  become: yes
 
 - set_fact:
     disks_additional_disks: "{{ disks_additional_disks|defaut([]) + __disks_ebs_config['ansible_facts']['config'] }}"
@@ -32,6 +36,7 @@
     use: '{{ disks_package_use }}'
   when: disks_additional_disks
   tags: ['disks', 'pkgs']
+  become: yes
 
 - name: "Install additional fs progs"
   package:
@@ -40,6 +45,7 @@
   with_items: "{{ disks_additional_packages|default([]) }}"
   when: disks_additional_packages is defined
   tags: ['disks', 'pkgs']
+  become: yes
 
 - name: disks - start additional services
   service:
@@ -48,6 +54,7 @@
     state: started
   with_items: "{{ disks_additional_services|default([]) }}"
   tags: ['disks', 'pkgs']
+  become: yes
 
 - name: "Get disk alignment for disks"
   shell: |
@@ -85,6 +92,7 @@
     executable: '/bin/bash'
   with_items: '{{ disks_additional_disks }}'
   tags: ['disks']
+  become: yes
 
 - name: "Create filesystem on the first partition"
   filesystem:
@@ -97,6 +105,7 @@
     - '{{ disks_stat.results }}'
   when: item.1.stat.exists
   tags: ['disks']
+  become: yes
 
 - name: "Disable periodic fsck and reserved space on ext3 or ext4 formatted disks"
   environment:
@@ -107,6 +116,7 @@
     - '{{ disks_stat.results }}'
   when: "disks_additional_disks and ( item.0.fstype == 'ext4' or item.0.fstype == 'ext3' ) and item.0.disable_periodic_fsck|default(false)|bool and item.1.stat.exists"
   tags: ['disks']
+  become: yes
 
 - name: "Ensure the mount directory exists"
   file:
@@ -114,6 +124,7 @@
     state: directory
   with_items: '{{ disks_additional_disks }}'
   tags: ['disks']
+  become: yes
 
 - name: "Get UUID for partition"
   environment:
@@ -145,6 +156,7 @@
   register: disks_additional_disks_handler_notify
   notify:
     - restart services
+  become: yes
 
 - name: "Mount additional disks - nfs"
   mount:
@@ -159,6 +171,7 @@
   register: disks_additional_disks_nfs_handler_notify
   notify:
     - restart services - nfs
+  become: yes
 
 - name: "Ensure the permissions are set correctly"
   file:
@@ -168,6 +181,7 @@
     state: directory
   with_items: '{{ disks_additional_disks }}'
   when: item.user is defined or item.group is defined
-  tags: ['disk']
+  tags: ['disks']
+  become: yes
 
 - meta: flush_handlers

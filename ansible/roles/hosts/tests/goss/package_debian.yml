@@ -1,5 +1,13 @@
 gossfile:
-  package_common.yml: {}
+  package.yml: {}
 package:
+  coreutils:
+    installed: true
+  groff:
+    installed: true
+  openssh-client:
+    installed: true
+  util-linux:
+    installed: true
   vim-nox:
     installed: true

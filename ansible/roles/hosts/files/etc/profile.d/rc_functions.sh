@@ -1,10 +1,10 @@
 # shellcheck shell=sh
-## rc_function.sh defines customs shell functions
-# author: Yann "aya" Autissier
-# license: MIT
-# updated: 2021/03/04
+# file rc_functions.sh: Define shell functions
+## author: Yann "aya" Autissier
+## license: MIT
+## version: 20210620
 
-## force() runs a command sine die
+# function force: Run a command sine die
 force() {
   if [ $# -gt 0 ]; then
     while true; do
@@ -14,7 +14,7 @@ force() {
   fi
 }
 
-## force8() runs a command sine die if not already running
+# function force8: Run a command sine die if not already running
 force8() {
   if [ $# -gt 0 ]; then
     while true; do
@@ -38,13 +38,13 @@ force8() {
   fi
 }
 
-## load_average() prints the current load average
+# function load_average; Print the current load average
 load_average() {
   awk '{printf "%.1f\n" $1}' /proc/loadavg 2>/dev/null\
    || uptime 2>/dev/null |awk '{printf "%.1f\n", $(NF-2)}'
   }
 
-## process_count() prints number of "processes"/"running processes"/"D-state"
+# function process_count: Print number of "processes"/"running processes"/"D-state"
 process_count() {
   ps ax -o stat 2>/dev/null |awk '
     $1 ~ /R/ {process_running++};
@@ -52,7 +52,7 @@ process_count() {
     END { print NR-1"/"process_running+0"/"process_dstate+0; }'
 }
 
-## prompt_set() exports custom PROMPT_COMMAND
+# function prompt_set: Export custom PROMPT_COMMAND
 prompt_set() {
   case "${TERM}" in
     screen*)
@@ -81,7 +81,7 @@ prompt_set() {
   unset ESCAPE_CODE_DCS ESCAPE_CODE_ST
 }
 
-## ps1_set() exports custom PS1
+# function ps1_set: Export custom PS1
 ps1_set() {
   case "$0" in
     *sh)
@@ -164,7 +164,7 @@ ps1_set() {
         PS1_USER PS1_USER_COLOR PS1_STATUS PS1_WORKDIR
 }
 
-## screen_attach() attaches existing screen session or creates a new one
+# function screen_attach: Attach existing screen session or Create a new one
 screen_attach() {
   command -v screen >/dev/null 2>&1 || return
   SCREEN_SESSION="$(id -nu)@$(hostname |sed 's/\..*//')"
@@ -182,12 +182,12 @@ screen_attach() {
   unset SCREEN_SESSION
 }
 
-## screen_detach() detaches current screen session
+# function screen_detach: Detach current screen session
 screen_detach() {
   screen -d
 }
 
-## ssh_add() loads all private keys in ~/.ssh/ to ssh agent
+# function ssh_add: Load all private keys in ~/.ssh/ to ssh agent
 ssh_add() {
   command -v ssh-agent >/dev/null 2>&1 && command -v ssh-add >/dev/null 2>&1 || return
   SSH_AGENT_DIR="/tmp/ssh-$(id -u)"
@@ -224,7 +224,7 @@ ssh_add() {
   unset GREP_RECURSIVE_CHAR GREP_RECURSIVE_FLAG SSH_AGENT_DIR SSH_AGENT_SOCK SSH_PRIVATE_KEYS
 }
 
-## ssh_del() removes all private keys in ~/.ssh/ from ssh agent
+# function ssh_del: removes all private keys in ~/.ssh/ from ssh agent
 ssh_del() {
   command -v ssh-add >/dev/null 2>&1 || return
   # attach to agent
@@ -250,7 +250,7 @@ ssh_del() {
   unset GREP_RECURSIVE_CHAR GREP_RECURSIVE_FLAG SSH_PRIVATE_KEYS
 }
 
-## tmux_attach() attaches existing tmux session or creates a new one
+# function tmux_attach: Attach existing tmux session or Create a new one
 tmux_attach() {
   command -v tmux >/dev/null 2>&1 || return
   TMUX_SESSION="$(id -nu)@$(hostname |sed 's/\..*//')"
@@ -263,12 +263,12 @@ tmux_attach() {
   unset TMUX_SESSION
 }
 
-## tmux_detach() detaches current tmux session
+# function tmux_detach: Detach current tmux session
 tmux_detach() {
   tmux detach
 }
 
-## user_count() prints number of "users sessions"/"users"/"logged users"
+# function user_count: Print number of "users sessions"/"users"/"logged users"
 user_count() {
   ps ax -o user,tty 2>/dev/null |awk '
   $2 ~ /^(pts|tty)/ { users_session++; logged[$1]++; };

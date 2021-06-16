@@ -7,11 +7,3 @@ file:
     filetype: file
     contains:
       - /^PermitRootLogin prohibit-password/
-  /root/.ssh/authorized_keys:
-    exists: true
-    mode: "0600"
-    owner: root
-    group: root
-    filetype: file
-    contains:
-      - "Jpb0EeFEebgvi7Kpp6gpIXKFEeuuE"

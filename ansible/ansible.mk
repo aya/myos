@@ -20,9 +20,9 @@ ansible-pull@%: ssh-get-PrivateIpAddress-$(SERVER_NAME)
 
 # target ansible-run: Fire ssh-add ansible-run-localhost
 .PHONY: ansible-run
-ansible-run: ssh-add ansible-run-localhost
+ansible-run: ansible-run-localhost
 
 # target ansible-run-%: Fire docker-build-ansible, Call ansible-playbook ANSIBLE_PLAYBOOK
 .PHONY: ansible-run-%
-ansible-run-%: $(if $(DOCKER_RUN),docker-build-ansible)
+ansible-run-%: $(if $(DOCKER_RUN),docker-build-ansible,install-ansible)
 	$(call ansible-playbook,$(if $(ANSIBLE_TAGS),--tags $(ANSIBLE_TAGS)) $(if $(ANSIBLE_EXTRA_VARS),--extra-vars '$(patsubst target=localhost,target=$*,$(ANSIBLE_EXTRA_VARS))') $(if $(findstring true,$(DRYRUN)),--check) $(if $(ANSIBLE_INVENTORY),--inventory $(ANSIBLE_INVENTORY)) $(ANSIBLE_PLAYBOOK))

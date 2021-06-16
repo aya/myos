@@ -1,0 +1,22 @@
+Host *
+  LogLevel quiet
+  Compression yes
+{% if hosts_ssh_bastion_hostname|length %}
+Host myos-bastion
+  HostName {{ hosts_ssh_bastion_hostname }}
+{% if hosts_ssh_bastion_username|length %}
+  User {{ hosts_ssh_bastion_username }}
+{% endif %}
+{% endif %}
+{% if hosts_ssh_private_ip_range|length %}
+Host {{ hosts_ssh_private_ip_range }}
+{% if hosts_ssh_bastion_hostname|length %}
+  ProxyCommand ssh -q myos-bastion nc -q0 %h 22
+{% endif %}
+  HostName %h
+{% if hosts_ssh_username|length %}
+  User {{ hosts_ssh_username }}
+{% endif %}
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+{% endif %}
