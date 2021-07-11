@@ -5,5 +5,6 @@ hosts_packages_distro:
   - { "name": "groff-base", "state": "present" }
   - { "name": "libselinux-python", "state": "present" }
   - { "name": "openssh-clients", "state": "present" }
+  - { "name": "python-pip", "state": "present" }
   - { "name": "vim-minimal", "state": "present" }
 

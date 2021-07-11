@@ -1,6 +1,21 @@
 ##
 # INSTALL
 
+# target install-build-config: Call install-config with file * and dest build
+.PHONY: install-build-config
+install-build-config:
+	$(call install-config,,*,build)
+
+# target install-config: Call install-config
+.PHONY: install-config
+install-config:
+	$(call install-config)
+
+# target install-config-%: Call install-config with app %
+.PHONY: install-config-%
+install-config-%:
+	$(call install-config,$*)
+
 # target install-mysql-database-%: Import %.mysql.gz to database %
 # on local host
 ## it creates database %
@@ -33,18 +48,3 @@ install-pgsql-database-%: myos-base
 	$(call exec,[ $$(PGPASSWORD=$* psql -h postgres -U $* -d $* -c "\d" 2>/dev/null |wc -l) -eq 0 ] && [ -f "${APP_DIR}/$*.pgsql" ]) \
 		&& $(call exec,$(RUN) sh -c 'PGPASSWORD="postgres" psql -h postgres -U postgres -c "ALTER ROLE $* WITH SUPERUSER" && PGPASSWORD="postgres" pg_restore -h postgres --no-owner --role=$* -U postgres -d $* ${APP_DIR}/$*.pgsql && PGPASSWORD="postgres" psql -h postgres -U postgres -c "ALTER ROLE $* WITH NOSUPERUSER"') \
 		||:
-
-# target install-build-config: Call install-config with file * and dest build
-.PHONY: install-build-config
-install-build-config:
-	$(call install-config,,*,build)
-
-# target install-config: Call install-config
-.PHONY: install-config
-install-config:
-	$(call install-config)
-
-# target install-config-%: Call install-config with app %
-.PHONY: install-config-%
-install-config-%:
-	$(call install-config,$*)

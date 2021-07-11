@@ -17,19 +17,20 @@ CMD_APK_REMOVE                  ?= $(if $(shell type -p apk),apk --no-cache del)
 CMD_APT_INSTALL                 ?= $(if $(shell type -p apt-get),apt-get update && apt-get -fy install)
 CMD_APT_REMOVE                  ?= $(if $(shell type -p apt-get),apt-get -fy remove)
 CMDS                            ?= exec exec:% exec@% install-app install-apps run run:% run@%
-COLOR_INFO                      ?= $(COLOR_BROWN)
+COLOR_BLUE                      ?= \033[01;34m
+COLOR_BROWN                     ?= \033[33m
+COLOR_CYAN                      ?= \033[36m
+COLOR_DGRAY                     ?= \033[30m
+COLOR_ERROR                     ?= $(COLOR_RED)
+COLOR_GRAY                      ?= \033[37m
+COLOR_GREEN                     ?= \033[32m
 COLOR_HIGHLIGHT                 ?= $(COLOR_GREEN)
+COLOR_INFO                      ?= $(COLOR_BROWN)
+COLOR_RED                       ?= \033[31m
+COLOR_RESET                     ?= \033[0m
 COLOR_VALUE                     ?= $(COLOR_CYAN)
 COLOR_WARNING                   ?= $(COLOR_YELLOW)
-COLOR_RESET                     ?= \033[0m
-COLOR_DGRAY                     ?= \033[30m
-COLOR_RED                       ?= \033[31m
-COLOR_GREEN                     ?= \033[32m
-COLOR_BROWN                     ?= \033[33m
 COLOR_YELLOW                    ?= \033[01;33m
-COLOR_BLUE                      ?= \033[01;34m
-COLOR_CYAN                      ?= \033[36m
-COLOR_GRAY                      ?= \033[37m
 COMMIT                          ?= $(or $(SUBREPO_COMMIT),$(GIT_COMMIT))
 CONFIG                          ?= $(RELATIVE)config
 CONFIG_REPOSITORY               ?= $(CONFIG_REPOSITORY_URL)
@@ -122,20 +123,20 @@ endif
 
 # Guess OS
 ifeq ($(OSTYPE),cygwin)
-HOST_SYSTEM                     := CYGWIN
+OPERATING_SYSTEM                := cygwin
 else ifeq ($(OS),Windows_NT)
-HOST_SYSTEM                     := WINDOWS
+OPERATING_SYSTEM                := Windows_NT
 else
 UNAME_S := $(shell uname -s 2>/dev/null)
 ifeq ($(UNAME_S),Linux)
-HOST_SYSTEM                     := LINUX
+OPERATING_SYSTEM                := Linux
 endif
 ifeq ($(UNAME_S),Darwin)
-HOST_SYSTEM                     := DARWIN
+OPERATING_SYSTEM                := Darwin
 endif
 endif
 
-ifeq ($(HOST_SYSTEM),DARWIN)
+ifeq ($(OPERATING_SYSTEM),Darwin)
 SED_SUFFIX                      := ''
 endif
 
@@ -171,6 +172,19 @@ define conf
 	done < "$(file)"
 endef
 
+ERROR_FD := 2
+# macro ERROR: print colorized warning
+ERROR = \
+printf '${COLOR_ERROR}ERROR:${COLOR_RESET} ${COLOR_INFO}$(APP)${COLOR_RESET}[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}]$(if $@, ${COLOR_VALUE}$@${COLOR_RESET}):${COLOR_RESET} ' >&$(ERROR_FD) \
+  $(if $(2), \
+    && printf '$(1) ${COLOR_HIGHLIGHT}$(2)${COLOR_RESET}' >&$(ERROR_FD) \
+    $(if $(3),&& printf ' $(3)$(if $(4), ${COLOR_VALUE}$(4)${COLOR_RESET})' >&$(ERROR_FD)) \
+  , \
+    && $(strip $(call PRINTF,$(1)) >&$(ERROR_FD)) \
+  ) \
+ && printf '\n' >&$(ERROR_FD) \
+ && exit 2
+
 # macro force: Run command 1 sine die
 ## it starts command 1 if it is not already running
 ## it returns never
@@ -190,15 +204,12 @@ force = $$(while true; do \
 )
 
 # macro gid: Return GID of group 1
-gid = $(shell grep '^$(1):' /etc/group 2>/dev/null |awk -F: '{print $$3}')
+gid = $(shell awk -F':' '$$1 == "$(1)" {print $$3}' /etc/group 2>/dev/null)
 
 INFO_FD := 2
-# macro INFO: customized info
-INFO = \
-$(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)), \
-  printf '${COLOR_INFO}$(APP)${COLOR_RESET}\
-[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}] \
-${COLOR_HIGHLIGHT}$@${COLOR_RESET}:${COLOR_RESET} ' >&$(INFO_FD) \
+# macro INFO: print colorized info
+INFO = $(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)), \
+  printf '${COLOR_INFO}$(APP)${COLOR_RESET}[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}]$(if $@, ${COLOR_VALUE}$@${COLOR_RESET}):${COLOR_RESET} ' >&$(INFO_FD) \
   $(if $(2), \
     && printf 'Call ${COLOR_HIGHLIGHT}$(1)${COLOR_RESET}$(lbracket)' >&$(INFO_FD) \
     && $(or $(strip $(call PRINTF,$(2))),printf '$(2)') >&$(INFO_FD) \
@@ -207,7 +218,7 @@ ${COLOR_HIGHLIGHT}$@${COLOR_RESET}:${COLOR_RESET} ' >&$(INFO_FD) \
   , \
     && $(strip $(call PRINTF,$(1)) >&$(INFO_FD)) \
   ) \
-  && printf '\n' >&$(INFO_FD) \
+ && printf '\n' >&$(INFO_FD) \
 ))
 
 # function install-app: Run 'git clone url 1 dir 2' or Call update-app with url 1 dir 2
@@ -279,18 +290,16 @@ $(TARGET):
 endef
 
 WARNING_FD := 2
-# macro WARNING: customized warning
-WARNING = printf '${COLOR_WARNING}WARNING:${COLOR_RESET} ${COLOR_INFO}$(APP)${COLOR_RESET}\
-[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}] \
-${COLOR_HIGHLIGHT}$@${COLOR_RESET}:${COLOR_RESET} ' >&$(WARNING_FD) \
+# macro WARNING: print colorized warning
+WARNING = \
+printf '${COLOR_WARNING}WARNING:${COLOR_RESET} ${COLOR_INFO}$(APP)${COLOR_RESET}[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}]$(if $@, ${COLOR_VALUE}$@${COLOR_RESET}):${COLOR_RESET} ' >&$(WARNING_FD) \
   $(if $(2), \
-    && printf '$(1) ' >&$(WARNING_FD) \
-    && printf '${COLOR_HIGHLIGHT}$(2)${COLOR_RESET}' >&$(WARNING_FD) \
-    $(if $(3),&& printf ' in ${COLOR_VALUE}$(3)${COLOR_RESET}' >&$(WARNING_FD)) \
+    && printf '$(1) ${COLOR_HIGHLIGHT}$(2)${COLOR_RESET}' >&$(WARNING_FD) \
+    $(if $(3),&& printf ' $(3)$(if $(4), ${COLOR_VALUE}$(4)${COLOR_RESET})' >&$(WARNING_FD)) \
   , \
     && $(strip $(call PRINTF,$(1)) >&$(WARNING_FD)) \
   ) \
-  && printf '\n' >&$(WARNING_FD)
+ && printf '\n' >&$(WARNING_FD)
 
 # set ENV=env for targets ending with :env
 ## for each env in ENV_LIST

@@ -27,7 +27,6 @@ DOCKER_BUILD_TARGETS            ?= $(ENV_DEPLOY)
 DOCKER_BUILD_VARS               ?= APP BRANCH DOCKER_GID DOCKER_REPOSITORY GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME SSH_BASTION_HOSTNAME SSH_BASTION_USERNAME SSH_PRIVATE_IP_RANGE SSH_PUBLIC_HOST_KEYS SSH_REMOTE_HOSTS UID USER VERSION
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
 DOCKER_COMPOSE_UP_OPTIONS       ?= -d
-DOCKER_GID                      ?= $(call gid,docker)
 DOCKER_IMAGE_TAG                ?= $(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest))
 DOCKER_IMAGES                   ?= $(patsubst %/,%,$(patsubst docker/%,%,$(dir $(wildcard docker/*/Dockerfile))))
 DOCKER_PLUGIN                   ?= rexray/s3fs:latest
@@ -45,7 +44,7 @@ DOCKER_REPOSITORY               ?= $(subst _,/,$(COMPOSE_PROJECT_NAME))
 DOCKER_SERVICE                  ?= $(lastword $(DOCKER_SERVICES))
 DOCKER_SERVICES                 ?= $(eval IGNORE_DRYRUN := true)$(shell $(call docker-compose,--log-level critical config --services))$(eval IGNORE_DRYRUN := false)
 DOCKER_SHELL                    ?= $(SHELL)
-ENV_VARS                        += COMPOSE_PROJECT_NAME COMPOSE_SERVICE_NAME DOCKER_BUILD_TARGET DOCKER_GID DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_REPOSITORY DOCKER_SHELL
+ENV_VARS                        += COMPOSE_PROJECT_NAME COMPOSE_SERVICE_NAME DOCKER_BUILD_TARGET DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_REPOSITORY DOCKER_SHELL
 
 ifneq ($(DOCKER_RUN),)
 DOCKER_COMPOSE                  ?= docker/compose:$(COMPOSE_VERSION)
@@ -61,7 +60,7 @@ DOCKER_COMPOSE_UP_OPTIONS       := -d --build
 endif
 
 # https://github.com/docker/libnetwork/pull/2348
-ifeq ($(HOST_SYSTEM), DARWIN)
+ifeq ($(OPERATING_SYSTEM),Darwin)
 DOCKER_HOST_IFACE               ?= $(shell docker run --rm -it --net=host alpine /sbin/ip -4 route list match 0/0 2>/dev/null |awk '{print $$5}' |awk '!seen[$$0]++' |head -1)
 DOCKER_HOST_INET                ?= $(shell docker run --rm -it --net=host alpine /sbin/ip -4 addr show $(DOCKER_HOST_IFACE) 2>/dev/null |awk '$$1 == "inet" {sub(/\/.*/,"",$$2); print $$2}')
 DOCKER_INTERNAL_DOCKER_GATEWAY  ?= $(shell docker run --rm -it alpine getent hosts gateway.docker.internal |awk '{print $$1}' |head -1)

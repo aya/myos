@@ -9,4 +9,4 @@
 - name: group - add me to the docker group
   user: name="{{ansible_user_id}}" groups=docker append=yes
   become: yes
-  when: ansible_os_family|lower != "alpine" and ansible_user_id != "root"
+  when: ansible_os_family|lower != "alpine" and ansible_user_uid != "0"

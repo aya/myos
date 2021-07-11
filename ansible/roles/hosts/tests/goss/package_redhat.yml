@@ -7,5 +7,7 @@ package:
     installed: true
   openssh-clients:
     installed: true
+  python-pip:
+    installed: true
   vim-minimal:
     installed: true

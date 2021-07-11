@@ -4,6 +4,18 @@
 # minimum kernel version
 docker_check_kernel: '3.10'
 
+# Location of configuration files of docker daemon
+docker_daemon_config_directory: "/etc/docker"
+
+# Configuration files of docker daemon
+docker_daemon_config_file: "{{docker_daemon_config_directory}}/daemon.json"
+
+# Configure docker daemon storage driver
+docker_daemon_config_storage: "{% if ansible_cmdline.fstype == 'btrfs'%}btrfs{% endif %}"
+
+# Docker daemon configuration
+docker_daemon_config: {}
+
 # The docker package name
 docker_package: docker
 
@@ -20,13 +32,6 @@ docker_opts: "OPTIONS"
 # services
 docker_services:
   - docker
-
-# dockers
-# dockers:
-#   - nginx
-
-# docker cluster
-# docker_cluster: ""
 
 # Start docker
 docker_start: true

@@ -46,3 +46,9 @@ define ansible-pull
 	$(call INFO,ansible-pull,$(1))
 	$(call env-run,$(RUN) ansible-pull $(ANSIBLE_ARGS) $(ANSIBLE_VERBOSE) $(1))
 endef
+# function ansible-user-add-groups: Call ansible to add user 1 in groups 2
+define ansible-user-add-groups
+	$(call INFO,ansible-user-add-groups,$(1)$(comma) $(2))
+	$(if $(DOCKER_RUN),$(call make,docker-build-ansible),$(call make,install-ansible))
+	$(call ansible,-b -m user -a 'name=$(1) groups=$(2) append=yes' localhost)
+endef

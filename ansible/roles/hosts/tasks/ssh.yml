@@ -1,28 +1,14 @@
 ---
 # file: tasks/ssh.yml
 
-- name: ssh - add ssh_authorized_keys to file ~/.ssh/authorized_keys
-  authorized_key: user="{{ ansible_user|default('root') }}" key="{{ item }}"
-  with_items: "{{ hosts_ssh_authorized_keys|default([]) }}"
-  ignore_errors: true
-
-- name: ssh - add ssh_public_hosts keys to known_hosts
+- name: ssh - add hosts_ssh_public_hosts keys to known_hosts
   with_items: "{{ hosts_ssh_public_hosts|default([]) }}"
   known_hosts:
+    path: /etc/ssh/ssh_known_hosts
     name: "{{ item }}"
     key: "{{ lookup('pipe', 'ssh-keyscan -t rsa -H ' + item) }}"
+  become: true
   ignore_errors: true
-
-- name: ssh - copy ssh_private_keys to ~/.ssh/
-  with_items: "{{ hosts_ssh_private_keys|default([]) }}"
-  copy: src="{{ item }}" dest=~/.ssh/ mode=0400
-  ignore_errors: true
-
-- name: ssh - update ~/.ssh/myos/config
-  template:
-    src: ssh_config.j2
-    dest: ~/.ssh/myos/config
-    mode: 0400
 
 - name: ssh - define sshd configuration
   set_fact:

@@ -35,3 +35,4 @@
   - https://raw.githubusercontent.com/dylanaraps/pfetch/master/pfetch
   get_url: url={{item}} dest=/usr/local/bin owner=root group=root mode=0755
   become: yes
+  ignore_errors: true

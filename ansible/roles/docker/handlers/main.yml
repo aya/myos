@@ -2,7 +2,8 @@
 # file handlers/main.yml
 
 - name: restart docker
+  with_items: "{{docker_services|default([])}}"
   service:
-    name: "{{docker_service}}"
-    state: "restarted"
-
+    name: "{{item}}"
+    state: restarted
+  become: yes

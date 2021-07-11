@@ -1,6 +1,16 @@
 ---
 # file: tasks/user.yml
 
+- name: user - add hosts_ssh_authorized_keys to ~/.ssh/authorized_keys
+  authorized_key: user="{{ ansible_user|default('root') }}" key="{{ item }}"
+  with_items: "{{ hosts_ssh_authorized_keys|default([]) }}"
+  ignore_errors: true
+
+- name: user - copy hosts_ssh_private_keys to ~/.ssh/
+  with_items: "{{ hosts_ssh_private_keys|default([]) }}"
+  copy: src="{{ item }}" dest=~/.ssh/ mode=0400
+  ignore_errors: true
+
 - name: user - create ~/.env
   template:
     src: env.j2
@@ -56,7 +66,7 @@
 
 - name: user - update ~/.screenrc
   with_items:
-  - defscrollback 1024
+  - defscrollback 4096
   - hardstatus alwayslastline "%{= kw}[%{G}$USER@%H%{-}] \# %?%-Lw%?[%{G}%n%f %t%{-}]%?%+Lw%?%?%=%-17< [%{B}%l%{-}]"
   - shell -$SHELL
   lineinfile: dest=~/.screenrc create=yes line='{{item}}'
@@ -65,6 +75,12 @@
   with_items:
   - include myos/config
   lineinfile: dest=~/.ssh/config create=yes line='{{item}}'
+
+- name: ssh - update ~/.ssh/myos/config
+  template:
+    src: ssh_config.j2
+    dest: ~/.ssh/myos/config
+    mode: 0400
 
 - name: user - update ~/.tmux.conf
   with_items:

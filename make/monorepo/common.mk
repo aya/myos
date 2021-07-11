@@ -24,7 +24,7 @@ config: $(APPS)
 # target copy: Copy files and folders to all APPS
 .PHONY: copy
 copy:
-	$(foreach app,$(APPS),$(foreach file,$(ARGS),$(if $(wildcard $(file)),$(RUN) $(if $(filter LINUX,$(HOST_SYSTEM)),cp -a --parents $(file) $(app)/,rsync -a $(file) $(app)/$(file)) &&)) true &&) true
+	$(foreach app,$(APPS),$(foreach file,$(ARGS),$(if $(wildcard $(file)),$(RUN) $(if $(filter Linux,$(OPERATING_SYSTEM)),cp -a --parents $(file) $(app)/,rsync -a $(file) $(app)/$(file)) &&)) true &&) true
 
 # target deploy: Fire APPS target
 .PHONY: deploy
@@ -95,7 +95,7 @@ upgrade: upgrade-apps release-upgrade ## Upgrade applications
 $(APPS):
 	$(if $(wildcard $@/Makefile), \
       $(call make,$(patsubst apps-%,%,$(MAKECMDGOALS)) STATUS=0,$(patsubst %/,%,$@),APP_PATH_PREFIX), \
-      $(call WARNING,no Makefile in,$@) \
+      $(call WARNING,no,Makefile,available in app,$@) \
 	)
 
 # target apps-%: Fire $(APPS) target to call target % in $(APPS)

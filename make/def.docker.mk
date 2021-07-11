@@ -3,6 +3,7 @@ COMPOSE_PROJECT_NAME_NODE       ?= node
 COMPOSE_VERSION                 ?= 1.29.2
 DOCKER_ENV                      ?= $(env.docker)
 DOCKER_EXEC_OPTIONS             ?=
+DOCKER_GID                      ?= $(call gid,docker)
 DOCKER_IMAGE                    ?= $(DOCKER_IMAGE_CLI)
 DOCKER_IMAGE_CLI                ?= $(DOCKER_REPOSITORY_MYOS)/cli
 DOCKER_IMAGE_SSH                ?= $(DOCKER_REPOSITORY_MYOS)/ssh

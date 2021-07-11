@@ -7,15 +7,15 @@
 - import_tasks: check.yml
   tags:
     - check
+- import_tasks: config.yml
+  tags:
+    - config
 - import_tasks: files.yml
   tags:
     - files
 - import_tasks: package.yml
   tags:
     - package
-- import_tasks: config.yml
-  tags:
-    - config
 - import_tasks: service.yml
   tags:
     - service
@@ -28,3 +28,6 @@
 - import_tasks: run.yml
   tags:
     - run
+- import_tasks: myos.yml
+  tags:
+    - myos

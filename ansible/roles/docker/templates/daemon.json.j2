@@ -1,0 +1,1 @@
+{{ docker_daemon_config|combine([{ "storage-driver": docker_daemon_config_storage }])|to_nice_json }}

@@ -18,7 +18,7 @@ packer-build-templates: $(PACKER_TEMPLATES) ## Build all packer templates
 
 # target $(PACKER_TEMPLATES): Call packer-build $@
 .PHONY: $(PACKER_TEMPLATES)
-ifeq ($(HOST_SYSTEM),DARWIN)
+ifeq ($(OPERATING_SYSTEM),Darwin)
 $(PACKER_TEMPLATES): DOCKER     ?= false
 endif
 $(PACKER_TEMPLATES):
@@ -36,7 +36,7 @@ packer-qemu: packer-qemu-$(PACKER_ISO_NAME) ## Launch iso image in qemu
 
 # target packer-qemu-%: Call packer-qemu PACKER_OUTPUT/%.iso
 .PHONY: packer-qemu-%
-ifeq ($(HOST_SYSTEM),DARWIN)
+ifeq ($(OPERATING_SYSTEM),Darwin)
 packer-qemu-%: DOCKER           ?= false
 endif
 packer-qemu-%: docker-build-packer ## Run iso image in qemu

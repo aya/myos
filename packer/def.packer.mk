@@ -62,16 +62,16 @@ password                        := $(or $(shell pwgen -csy -r\' 64 1 2>/dev/null
 endif
 endif
 
-ifeq ($(HOST_SYSTEM),DARWIN)
+ifeq ($(OPERATING_SYSTEM),Darwin)
 ifneq ($(DOCKER), true)
 PACKER_QEMU_ACCELERATOR         := hvf
 else
 PACKER_QEMU_ACCELERATOR         := tcg
 PACKER_QEMU_ARGS                += -cpu max,vendor=GenuineIntel,vmware-cpuid-freq=on,+invtsc,+aes,+vmx
 endif
-else ifeq ($(HOST_SYSTEM),LINUX)
+else ifeq ($(OPERATING_SYSTEM),Linux)
 DOCKER_RUN_OPTIONS_PACKER       += $(if $(KVM_GID),--group-add $(KVM_GID)) --device /dev/kvm
-else ifeq ($(HOST_SYSTEM),WINDOWS)
+else ifeq ($(OPERATING_SYSTEM),Windows_NT)
 PACKER_QEMU_ACCELERATOR         := hax
 endif
 

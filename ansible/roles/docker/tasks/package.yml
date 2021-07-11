@@ -9,6 +9,7 @@
 - name: package - add docker GPG key
   apt_key: url=https://download.docker.com/linux/debian/gpg
   when: ansible_os_family|lower == "debian"
+  ignore_errors: true
   become: yes
 
 - name: package - define arch

@@ -1,17 +1,3 @@
-- name: 'Install Python PIP'
-  package: >
-    name=py3-pip
-    state=present
-  when: ansible_os_family|lower == "alpine"
-  become: yes
-
-- name: 'Install Python PIP'
-  package: >
-    name=python-pip
-    state=present
-  when: ansible_os_family|lower != "alpine"
-  become: yes
-
 - name: 'Install python-pathlib'
   pip: >
     name=pathlib

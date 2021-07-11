@@ -168,7 +168,7 @@ docker-push:
 ifneq ($(filter $(DEPLOY),true),)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-push,$(service)))
 else
-	$(call WARNING,disabled target,$@,$(APP))
+	$(call WARNING,target,$@,disabled in app,$(APP))
 endif
 
 # target docker-push-%: Call docker-push with tag % for each SERVICES
@@ -177,7 +177,7 @@ docker-push-%:
 ifneq ($(filter $(DEPLOY),true),)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-push,$(service),,$*))
 else
-	$(call WARNING,disabled target,$@,$(APP))
+	$(call WARNING,target,$@,disabled in app,$(APP))
 endif
 
 # target docker-rebuild: Call docker-build target with DOCKER_BUILD_CAHE=false
@@ -220,7 +220,7 @@ docker-tag:
 ifneq ($(filter $(DEPLOY),true),)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-tag,$(service)))
 else
-	$(call WARNING,disabled target,$@,$(APP))
+	$(call WARNING,target,$@,disabled in app,$(APP))
 endif
 
 # target docker-tag-%: Call docker-tag with target tag % for each SERVICES
@@ -229,7 +229,7 @@ docker-tag-%:
 ifneq ($(filter $(DEPLOY),true),)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-tag,$(service),,,,$*))
 else
-	$(call WARNING,disabled target,$@,$(APP))
+	$(call WARNING,target,$@,disabled in app,$(APP))
 endif
 
 # target docker-volume-rm: Fire docker-volume-rm-% for COMPOSE_PROJECT_NAME

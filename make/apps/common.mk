@@ -9,7 +9,7 @@ bootstrap: bootstrap-git bootstrap-docker app-bootstrap ## Update application fi
 # target bootstrap-docker: Build and start application dockers
 # on local host
 .PHONY: boostrap-docker
-bootstrap-docker: install-bin-docker docker-network-create
+bootstrap-docker: install-bin-docker setup-docker-group
 
 # target bootstrap-git: Fire update-app
 .PHONY: bootstrap-git
@@ -215,4 +215,4 @@ upgrade: update app-upgrade release-upgrade ## Upgrade application
 
 # target %-rule-exists: Print a warning message if % target does not exists
 %-rule-exists:
-	$(if $(filter $*,$(MAKECMDGOALS)),$(if $(filter-out $*,$(MAKE_TARGETS)),$(call WARNING,no target,$*,$(APP))))
+	$(if $(filter $*,$(MAKECMDGOALS)),$(if $(filter-out $*,$(MAKE_TARGETS)),$(call WARNING,target,$*,unavailable in app,$(APP))))
