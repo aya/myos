@@ -62,7 +62,7 @@ connect@%:
 
 # target deploy: Fire deploy@% for ENV
 .PHONY: deploy
-deploy: deploy@$(ENV) ## Deploy application dockers
+deploy: $(if $(filter $(ENV),$(ENV_DEPLOY)),deploy-localhost,deploy@$(ENV)) ## Deploy application dockers
 
 # target down: Remove application dockers
 # on local host

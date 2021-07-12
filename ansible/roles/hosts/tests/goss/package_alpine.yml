@@ -5,6 +5,8 @@ package:
     installed: true
   groff:
     installed: true
+  ncurses:
+    installed: true
   openssh-client:
     installed: true
   py3-pip:

@@ -40,7 +40,7 @@ CONFIG_REPOSITORY_SCHEME        ?= $(shell printf '$(CONFIG_REPOSITORY_URL)\n' |
 CONFIG_REPOSITORY_URI           ?= $(shell printf '$(CONFIG_REPOSITORY_URL)\n' |sed 's|.*://||;')
 CONFIG_REPOSITORY_URL           ?= $(call pop,$(APP_UPSTREAM_REPOSITORY))/$(notdir $(CONFIG))
 CONTEXT                         ?= ENV $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null)
-CONTEXT_DEBUG                   ?= MAKEFILE_LIST env env.docker APPS GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME MAKE_DIR MAKE_SUBDIRS MAKE_CMD_ARGS MAKE_ENV_ARGS UID USER
+CONTEXT_DEBUG                   ?= MAKEFILE_LIST DOCKER_ENV_ARGS ENV_ARGS APPS GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME MAKE_DIR MAKE_SUBDIRS MAKE_CMD_ARGS MAKE_ENV_ARGS UID USER
 DEBUG                           ?= 
 DOCKER                          ?= $(shell type -p docker)
 DOCKER_RUN                      ?= $(if $(filter-out false False FALSE,$(DOCKER)),$(DOCKER))
@@ -50,7 +50,7 @@ DRYRUN                          ?= false
 DRYRUN_RECURSIVE                ?= false
 ELAPSED_TIME                     = $(shell $(call TIME))
 ENV                             ?= local
-ENV_ARGS                         = $(if $(DOCKER_RUN),$(env.docker.args) $(env.docker.dist),$(env.args) $(env.dist))
+ENV_ARGS                        ?= $(env_args)
 ENV_FILE                        ?= $(wildcard $(CONFIG)/$(ENV)/$(APP)/.env .env)
 ENV_LIST                        ?= $(shell ls .git/refs/heads/ 2>/dev/null)
 ENV_RESET                       ?= false
@@ -143,35 +143,6 @@ endif
 # include .env files
 include $(wildcard $(ENV_FILE))
 
-# function conf: Extract variable=value line from configuration files
-## it prints the line with variable 3 definition from block 2 in file 1
-define conf
-	$(call INFO,conf,$(1)$(comma) $(2)$(comma) $(3))
-	$(eval file := $(1))
-	$(eval block := $(2))
-	$(eval variable := $(3))
-	[ -r "$(file)" ] && while IFS='=' read -r key value; do \
-		case $${key} in \
-		  \#*) \
-			continue; \
-			;; \
-		  \[*\]) \
-			current_bloc="$${key##\[}"; \
-			current_bloc="$${current_bloc%%\]}"; \
-			[ -z "$(block)" ] && [ -z "$(variable)" ] && printf '%s\n' "$${current_bloc}" ||:; \
-			;; \
-		  *) \
-			key=$${key%$${key##*[![:space:]]}}; \
-			value=$${value#$${value%%[![:space:]]*}}; \
-			if [ "$(block)" = "$${current_bloc}" ] && [ "$${key}" ]; then \
-				[ -z "$(variable)" ] && printf '%s=%s\n' "$${key}" "$${value}" ||:; \
-				[ "$(variable)" = "$${key}" ] && printf '%s\n' "$${value}" ||:; \
-			fi \
-			;; \
-		esac \
-	done < "$(file)"
-endef
-
 ERROR_FD := 2
 # macro ERROR: print colorized warning
 ERROR = \
@@ -221,6 +192,69 @@ INFO = $(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)), \
  && printf '\n' >&$(INFO_FD) \
 ))
 
+# macro pop: Return last word of string 1 according to separator 2
+pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
+
+# macro sed: Run sed script 1 on file 2
+sed = $(RUN) sed -i $(SED_SUFFIX) '$(1)' $(2)
+
+# macro TIME: Print time elapsed since unixtime 1
+TIME = awk '{printf "%02d:%02d:%02d\n",int($$1/3600),int(($$1%3600)/60),int($$1%60)}' \
+	   <<< $(shell awk 'BEGIN {current=$(or $(2),$(MAKE_UNIXTIME_CURRENT)); start=$(or $(1),$(MAKE_UNIXTIME_START)); print (current  - start)}' 2>/dev/null)
+
+WARNING_FD := 2
+# macro WARNING: print colorized warning
+WARNING = \
+printf '${COLOR_WARNING}WARNING:${COLOR_RESET} ${COLOR_INFO}$(APP)${COLOR_RESET}[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}]$(if $@, ${COLOR_VALUE}$@${COLOR_RESET}):${COLOR_RESET} ' >&$(WARNING_FD) \
+  $(if $(2), \
+    && printf '$(1) ${COLOR_HIGHLIGHT}$(2)${COLOR_RESET}' >&$(WARNING_FD) \
+    $(if $(3),&& printf ' $(3)$(if $(4), ${COLOR_VALUE}$(4)${COLOR_RESET})' >&$(WARNING_FD)) \
+  , \
+    && $(strip $(call PRINTF,$(1)) >&$(WARNING_FD)) \
+  ) \
+ && printf '\n' >&$(WARNING_FD)
+
+# function conf: Extract variable=value line from configuration files
+## it prints the line with variable 3 definition from block 2 in file 1
+define conf
+	$(call INFO,conf,$(1)$(comma) $(2)$(comma) $(3))
+	$(eval file := $(1))
+	$(eval block := $(2))
+	$(eval variable := $(3))
+	[ -r "$(file)" ] && while IFS='=' read -r key value; do \
+		case $${key} in \
+		  \#*) \
+			continue; \
+			;; \
+		  \[*\]) \
+			current_bloc="$${key##\[}"; \
+			current_bloc="$${current_bloc%%\]}"; \
+			[ -z "$(block)" ] && [ -z "$(variable)" ] && printf '%s\n' "$${current_bloc}" ||:; \
+			;; \
+		  *) \
+			key=$${key%$${key##*[![:space:]]}}; \
+			value=$${value#$${value%%[![:space:]]*}}; \
+			if [ "$(block)" = "$${current_bloc}" ] && [ "$${key}" ]; then \
+				[ -z "$(variable)" ] && printf '%s=%s\n' "$${key}" "$${value}" ||:; \
+				[ "$(variable)" = "$${key}" ] && printf '%s\n' "$${value}" ||:; \
+			fi \
+			;; \
+		esac \
+	done < "$(file)"
+endef
+
+# function env-exec: Exec arg 1 with custom env
+define env-exec
+	$(call INFO,env-exec,$(1))
+	IFS=$$'\n'; env $(env_reset) $(env_args) $(1)
+endef
+
+# function env-run: Call env-exec with arg 1
+define env-run
+	$(call INFO,env-run,$(1))
+	$(call env-exec,$(or $(1),$(SHELL)))
+endef
+
 # function install-app: Run 'git clone url 1 dir 2' or Call update-app with url 1 dir 2
 define install-app
 	$(call INFO,install-app,$(1)$(comma) $(2))
@@ -258,16 +292,6 @@ define make
 	$(if $(filter true,$(DRYRUN_RECURSIVE)),$(MAKE) $(MAKE_DIR) $(patsubst %,-o %,$(MAKE_OLDFILE)) MAKE_OLDFILE="$(MAKE_OLDFILE)" DRYRUN=$(DRYRUN) RECURSIVE=$(RECURSIVE) $(MAKE_ARGS) $(cmd))
 endef
 
-# macro pop: Return last word of string 1 according to separator 2
-pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
-
-# macro sed: Run sed script 1 on file 2
-sed = $(RUN) sed -i $(SED_SUFFIX) '$(1)' $(2)
-
-# macro TIME: Print time elapsed since unixtime 1
-TIME = awk '{printf "%02d:%02d:%02d\n",int($$1/3600),int(($$1%3600)/60),int($$1%60)}' \
-	   <<< $(shell awk 'BEGIN {current=$(or $(2),$(MAKE_UNIXTIME_CURRENT)); start=$(or $(1),$(MAKE_UNIXTIME_START)); print (current  - start)}' 2>/dev/null)
-
 # function update-app: Run 'cd dir 1 && git pull' or Call install-app
 define update-app
 	$(call INFO,update-app,$(1)$(comma) $(2))
@@ -288,18 +312,6 @@ $(TARGET): $(ASSIGN_ENV_FILE)
 $(TARGET):
 	$$(call make,$$*,,ENV_FILE)
 endef
-
-WARNING_FD := 2
-# macro WARNING: print colorized warning
-WARNING = \
-printf '${COLOR_WARNING}WARNING:${COLOR_RESET} ${COLOR_INFO}$(APP)${COLOR_RESET}[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}]$(if $@, ${COLOR_VALUE}$@${COLOR_RESET}):${COLOR_RESET} ' >&$(WARNING_FD) \
-  $(if $(2), \
-    && printf '$(1) ${COLOR_HIGHLIGHT}$(2)${COLOR_RESET}' >&$(WARNING_FD) \
-    $(if $(3),&& printf ' $(3)$(if $(4), ${COLOR_VALUE}$(4)${COLOR_RESET})' >&$(WARNING_FD)) \
-  , \
-    && $(strip $(call PRINTF,$(1)) >&$(WARNING_FD)) \
-  ) \
- && printf '\n' >&$(WARNING_FD)
 
 # set ENV=env for targets ending with :env
 ## for each env in ENV_LIST

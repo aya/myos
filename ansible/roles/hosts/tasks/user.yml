@@ -52,6 +52,7 @@
 - name: user - update ~/.bashrc
   with_items:
   - PS1="╭∩╮$PS1"
+  - source .shrc
   - unset user_count process_count
   lineinfile: dest=~/.bashrc create=yes line='{{item}}'
 

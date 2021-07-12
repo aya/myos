@@ -2,7 +2,7 @@
 # file rc_functions.sh: Define shell functions
 ## author: Yann "aya" Autissier
 ## license: MIT
-## version: 20210620
+## version: 20210711
 
 # function force: Run a command sine die
 force() {
@@ -213,7 +213,7 @@ ssh_add() {
     else
       GREP_RECURSIVE_CHAR="*"
     fi
-    SSH_PRIVATE_KEYS="${SSH_PRIVATE_KEYS:-} ${dir}/id_rsa $(grep -l${GREP_RECURSIVE_FLAG:-} 'PRIVATE KEY' "${dir}"/"${GREP_RECURSIVE_CHAR:-}" 2>/dev/null |grep -vw "${dir}"/id_rsa)"
+    SSH_PRIVATE_KEYS="${SSH_PRIVATE_KEYS:-} ${dir}/id_rsa $(grep -l${GREP_RECURSIVE_FLAG:-} 'PRIVATE KEY' "${dir}/"${GREP_RECURSIVE_CHAR:-} 2>/dev/null |grep -vw "${dir}"/id_rsa)"
   done
   # shellcheck disable=SC2086
   printf '%s\n' ${SSH_PRIVATE_KEYS} |while read -r file; do
@@ -239,7 +239,7 @@ ssh_del() {
     else
       GREP_RECURSIVE_CHAR="*"
     fi
-    SSH_PRIVATE_KEYS="${SSH_PRIVATE_KEYS:-} ${dir}/id_rsa $(grep -l${GREP_RECURSIVE_FLAG:-} 'PRIVATE KEY' "${dir}"/"${GREP_RECURSIVE_CHAR:-}" 2>/dev/null |grep -vw "${dir}"/id_rsa)"
+    SSH_PRIVATE_KEYS="${SSH_PRIVATE_KEYS:-} ${dir}/id_rsa $(grep -l${GREP_RECURSIVE_FLAG:-} 'PRIVATE KEY' "${dir}/"${GREP_RECURSIVE_CHAR:-} 2>/dev/null |grep -vw "${dir}"/id_rsa)"
   done
   # shellcheck disable=SC2086
   printf '%s\n' ${SSH_PRIVATE_KEYS} |while read -r file; do

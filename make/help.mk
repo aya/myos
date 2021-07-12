@@ -9,20 +9,20 @@ blank1 blank2:
 # target context: Print Context and Call contexts target
 .PHONY: context
 context:
-	printf "${COLOR_INFO}Context:${COLOR_RESET}\n"
+	@printf "${COLOR_INFO}Context:${COLOR_RESET}\n"
 	$(MAKE) contexts
 
 # target context: Fire context-% target for each CONTEXT
 .PHONY: contexts
 contexts: $(foreach var,$(CONTEXT),context-$(var))
 
-# target context-%: Print % value
-.PHONY: context-%
-context-%:
-	printf "${COLOR_HIGHLIGHT}%-37s${COLOR_RESET}" $*
-	printf "${COLOR_VALUE}"
-	$(call PRINTF,$($*))
-	printf "${COLOR_RESET}\n"
+# target context-% print-%: Print % value
+.PHONY: context-% print-%
+context-% print-%:
+	@printf "${COLOR_HIGHLIGHT}%-37s${COLOR_RESET}" $*
+	@printf "${COLOR_VALUE}"
+	@$(call PRINTF,$($*))
+	@printf "${COLOR_RESET}\n"
 
 # target doc: Fire functions macros target variables
 doc: functions macros targets variables ;

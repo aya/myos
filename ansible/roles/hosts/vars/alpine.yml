@@ -4,6 +4,7 @@
 hosts_packages_distro:
   - { "name": "coreutils", "state": "present" }
   - { "name": "groff", "state": "present" }
+  - { "name": "ncurses", "state": "present" }
   - { "name": "openssh-client", "state": "present" }
   - { "name": "py3-pip", "state": "present" }
   - { "name": "util-linux", "state": "present" }

@@ -18,15 +18,14 @@ ifneq (,$(filter true,$(ENV_RESET)))
 env_reset := -i
 endif
 
-env = $(env.args) $(env.dist) $(env.file)
-env.docker = $(env.docker.args) $(env.docker.dist) $(env.docker.file)
-
-env.args = $(foreach var,$(ENV_VARS),$(if $($(var)),$(var)='$($(var))'))
-env.dist ?= $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A)' .env.dist - 2>/dev/null)
-env.file ?= $(shell cat $(or $(ENV_FILE),/dev/null) 2>/dev/null |sed '/^[ \t]*$$/d;/^[ \t]*\#/d;s/='\''/=/;s/'\''$$//;s/='\"'/=/;s/'\"'$$//;' |awk -F '=' '{print $$1"='\''"$$2"'\''"}')
-env.docker.args = $(foreach var,$(ENV_VARS),$(if $($(var)),-e $(var)='$($(var))'))
-env.docker.dist ?= $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A) {print "-e "$$0}' .env.dist - 2>/dev/null)
-env.docker.file ?= $(patsubst %,--env-file %,$(wildcard $(ENV_FILE)))
+docker.env.args  = $(foreach var,$(ENV_VARS),$(if $($(var)),-e $(var)='$($(var))'))
+docker.env.dist ?= $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A) {print "-e "$$0}' .env.dist - 2>/dev/null)
+docker.env.file ?= $(patsubst %,--env-file %,$(wildcard $(ENV_FILE)))
+docker_env_args  = $(docker.env.args) $(docker.env.dist) $(docker.env.file)
+env.args         = $(foreach var,$(ENV_VARS),$(if $($(var)),$(var)='$($(var))'))
+env.dist        ?= $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A)' .env.dist - 2>/dev/null)
+env.file        ?= $(shell cat $(or $(ENV_FILE),/dev/null) 2>/dev/null |sed '/^[ \t]*$$/d;/^[ \t]*\#/d;s/='\''/=/;s/'\''$$//;s/='\"'/=/;s/'\"'$$//;' |awk -F '=' '{print $$1"='\''"$$2"'\''"}')
+env_args         = $(env.args) $(env.dist) $(env.file)
 
 SHELL:=/bin/bash
 

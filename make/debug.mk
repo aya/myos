@@ -8,7 +8,7 @@ debug:
 
 # target debug-%: Print value of %
 .PHONY: debug-%
-debug-%: context-% ;
+debug-%: $(if $(DEBUG),context-%) ;
 
 # target profile: Print timing informations
 .PHONY: profile

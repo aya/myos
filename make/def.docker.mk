@@ -1,7 +1,7 @@
 COMPOSE_PROJECT_NAME_MYOS       ?= $(USER_ENV)_myos
 COMPOSE_PROJECT_NAME_NODE       ?= node
 COMPOSE_VERSION                 ?= 1.29.2
-DOCKER_ENV                      ?= $(env.docker)
+DOCKER_ENV_ARGS                 ?= $(docker_env_args)
 DOCKER_EXEC_OPTIONS             ?=
 DOCKER_GID                      ?= $(call gid,docker)
 DOCKER_IMAGE                    ?= $(DOCKER_IMAGE_CLI)
@@ -21,7 +21,7 @@ DOCKER_RUN_OPTIONS              += --rm -it
 DOCKER_RUN_VOLUME               += -v /var/run/docker.sock:/var/run/docker.sock
 DOCKER_RUN_WORKDIR              ?= -w $(PWD)
 DOCKER_VOLUME_SSH               ?= $(COMPOSE_PROJECT_NAME_MYOS)_ssh
-ENV_VARS                        += DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC DOCKER_REPOSITORY_MYOS DOCKER_REPOSITORY_NODE DOCKER_VOLUME_SSH
+ENV_VARS                        += DOCKER_IMAGE_CLI DOCKER_IMAGE_SSH DOCKER_NAME_CLI DOCKER_NAME_SSH DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC DOCKER_REPOSITORY_MYOS DOCKER_REPOSITORY_NODE DOCKER_VOLUME_SSH
 
 ifeq ($(DRONE), true)
 DOCKER_RUN_OPTIONS              := --rm --network $(DOCKER_NETWORK)
@@ -52,14 +52,14 @@ else
 # function exec: Exec arg 1 in docker DOCKER_NAME
 define exec
 	$(call INFO,exec,$(1))
-	$(RUN) docker exec $(DOCKER_ENV) $(DOCKER_EXEC_OPTIONS) $(DOCKER_RUN_WORKDIR) $(DOCKER_NAME) $(or $(1),$(SHELL))
+	$(RUN) docker exec $(DOCKER_ENV_ARGS) $(DOCKER_EXEC_OPTIONS) $(DOCKER_RUN_WORKDIR) $(DOCKER_NAME) $(or $(1),$(SHELL))
 endef
 endif
 # function run: Run docker run with arg 1 and docker repository 2
 ## attention: arg 2 should end with slash or space
 define run
 	$(call INFO,run,$(1)$(comma) $(2))
-	$(RUN) docker run $(DOCKER_ENV) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(DOCKER_SSH_AUTH) $(2)$(1)
+	$(RUN) docker run $(DOCKER_ENV_ARGS) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(DOCKER_SSH_AUTH) $(2)$(1)
 endef
 
 else
@@ -68,7 +68,7 @@ SHELL                           := /bin/bash
 # function docker-run DOCKER=false: Run docker image 2 with arg 1
 define docker-run
 	$(call INFO,docker-run,$(1)$(comma) $(2))
-	$(RUN) docker run $(DOCKER_ENV) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(or $(2),$(DOCKER_IMAGE)) $(1)
+	$(RUN) docker run $(DOCKER_ENV_ARGS) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(or $(2),$(DOCKER_IMAGE)) $(1)
 endef
 # function exec DOCKER=false: Call env-exec with arg 1 or SHELL
 define exec
@@ -91,16 +91,4 @@ define docker-volume-copy
 	$(RUN) docker volume inspect $(from) >/dev/null
 	$(RUN) docker volume inspect $(to) >/dev/null 2>&1 || $(RUN) docker volume create $(to) >/dev/null
 	$(RUN) docker run --rm -v $(from):/from -v $(to):/to alpine ash -c "cd /from; cp -a . /to"
-endef
-
-# function env-run: Call env-exec with arg 1
-define env-run
-	$(call INFO,env-run,$(1))
-	$(call env-exec,$(or $(1),$(SHELL)))
-endef
-
-# function env-exec: Exec arg 1 with custom env
-define env-exec
-	$(call INFO,env-exec,$(1))
-	IFS=$$'\n'; env $(env_reset) $(env) $(1)
 endef

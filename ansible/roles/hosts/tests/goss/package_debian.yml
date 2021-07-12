@@ -7,7 +7,11 @@ package:
     installed: true
   openssh-client:
     installed: true
+  pass:
+    installed: true
   python-pip:
+    installed: true
+  rclone:
     installed: true
   util-linux:
     installed: true

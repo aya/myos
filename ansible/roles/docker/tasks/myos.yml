@@ -1,10 +1,14 @@
 ---
 # file: tasks/myos.yml
 
-- name: myos - register myos
-  lookup:
-    file: ~/.env
-  register: myos
+- name: myos - register myos.tags
+  set_fact:
+    myos_tags: "{{ lookup('env', 'MYOS_TAGS_JSON')|from_json or lookup('file', '~/.env') }}"
+  tags: debug
+
+- debug:
+    msg: "{{myos_tags|to_nice_json}}"
+  tags: debug
 
 - name: myos - check AWS meta-data URI
   uri:
