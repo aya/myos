@@ -41,3 +41,4 @@
   - name: tests - failure message
     fail: msg="{{tests_goss_results.msg}}"
     when: tests_goss_results|failed
+

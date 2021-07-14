@@ -5,6 +5,7 @@
   ec2_metadata_facts:
 
 - name: myos_ec2 - get instance tags
+  when: ansible_ec2_instance_id is defined
   ec2_tag:
     aws_access_key: "{{ aws_access_key_id }}"
     aws_secret_key: "{{ aws_secret_access_key }}"
@@ -12,9 +13,8 @@
     resource: "{{ ansible_ec2_instance_id }}"
     state: list
   register: myos
-  when: ansible_ec2_instance_id is defined
 
 - name: myos_ec2 - ecr login
-  shell: "$(aws ecr get-login --no-include-email --region {{ aws_region }})"
   when: myos.tags is defined
+  shell: "$(aws ecr get-login --no-include-email --region {{ aws_region }})"
 

@@ -14,16 +14,14 @@
   uri:
     url: http://169.254.169.254/latest/meta-data
     timeout: 1
-  register: aws_uri_check
-  tags:
-    - aws
   failed_when: False
+  register: aws_uri_check
 
 - import_tasks: myos_ec2.yml
+  when: aws_uri_check.status == 200
   tags:
     - aws
     - ec2
-  when: aws_uri_check.status == 200
 
 # ansible v2.8
 # - name: myos - prune docker objects
@@ -37,6 +35,8 @@
 #     builder_cache: yes
 
 - name: myos - launch docker containers
+  when: myos.tags is defined and myos.tags.env is defined and myos.tags.services is defined and myos.tags.user is defined
+  with_items: '{{myos.tags.services.split(" ")}}'
   docker_container:
     image: "{{docker_registry|default(myos.tags.user)}}/{{myos.tags.user}}/{{myos.tags.env}}/{% if ':' in item %}{{item}}{% else %}{{item}}:{{docker_image_tag|default('latest')}}{% endif %}"
     name: "{{myos.tags.user}}_{{myos.tags.env}}_{{item|replace('/','_')|regex_replace(':.*','')}}"
@@ -47,19 +47,18 @@
     - "{{ lookup('env','ANSIBLE_DISKS_NFS_PATH') }}:/shared"
     - /etc/localtime:/etc/localtime:ro
     - /var/run/docker.sock:/tmp/docker.sock:ro
-  with_items: '{{myos.tags.services.split(" ")}}'
-  when: myos.tags is defined and myos.tags.env is defined and myos.tags.services is defined and myos.tags.user is defined
 
 - name: myos - add docker containers to inventory
+  when: myos.tags is defined and myos.tags.env is defined and myos.tags.services is defined and myos.tags.user is defined
+  with_items: '{{myos.tags.services.split(" ")}}'
   add_host:
     name: "{{myos.tags.user}}_{{myos.tags.env}}_{{item|replace('/','_')|regex_replace(':.*','')}}"
     ansible_connection: docker
   changed_when: false
-  with_items: '{{myos.tags.services.split(" ")}}'
-  when: myos.tags is defined and myos.tags.env is defined and myos.tags.services is defined and myos.tags.user is defined
 
 - name: myos - run make deploy-hook in docker containers
+  when: myos.tags is defined and myos.tags.env is defined and myos.tags.services is defined and myos.tags.user is defined
+  with_items: '{{myos.tags.services.split(" ")}}'
   delegate_to: "{{myos.tags.user}}_{{myos.tags.env}}_{{item|replace('/','_')|regex_replace(':.*','')}}"
   raw: "command -v make || exit 0 && make deploy-hook CONTAINER={{myos.tags.user}}_{{myos.tags.env}}_{{item|replace('/','_')|regex_replace(':.*','')}} HOST={{ansible_ec2_local_ipv4}}"
-  with_items: '{{myos.tags.services.split(" ")}}'
-  when: myos.tags is defined and myos.tags.env is defined and myos.tags.services is defined and myos.tags.user is defined
+

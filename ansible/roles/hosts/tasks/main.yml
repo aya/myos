@@ -19,15 +19,19 @@
 - import_tasks: git.yml
   tags:
     - git
+- import_tasks: groups.yml
+  tags:
+    - groups
 - import_tasks: packages.yml
   tags:
     - packages
-- import_tasks: service.yml
+- import_tasks: services.yml
   tags:
-    - service
+    - services
 - import_tasks: ssh.yml
   tags:
     - ssh
 - import_tasks: user.yml
   tags:
     - user
+

@@ -1,0 +1,28 @@
+---
+# file: tasks/myos.yml
+
+- name: myos - AWS - check meta-data URL
+  uri:
+    url: http://169.254.169.254/latest/meta-data
+    timeout: 1
+  failed_when: False
+  register: uri_check_aws
+
+- name: myos - AWS - get metadata from ec2_metadata_facts
+  when: uri_check_aws.status == 200
+  ec2_metadata_facts:
+
+- name: myos - AWS - register myos from ec2_tag
+  when: ansible_ec2_instance_id is defined
+  ec2_tag:
+    aws_access_key: "{{ aws_access_key_id }}"
+    aws_secret_key: "{{ aws_secret_access_key }}"
+    region: "{{ ansible_ec2_placement_region }}"
+    resource: "{{ ansible_ec2_instance_id }}"
+    state: list
+  register: myos
+
+- name: myos - set hostname
+  when: myos.tags is defined and myos.tags.hostname is defined
+  hostname: name="{{ myos.tags.hostname }}{% if myos.tags.domainname is defined %}.{{ myos.tags.domainname }}{% endif %}"
+

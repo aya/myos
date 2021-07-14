@@ -4,3 +4,5 @@
 - hosts: '{{ target | default("disks") }}'
   roles:
   - disks
+  tags:
+  - disks

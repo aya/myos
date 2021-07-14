@@ -1,0 +1,14 @@
+---
+# file: tasks/config.yml
+
+- name: config - discover NVMe EBS
+  when: aws_ebs_discover | default(True) | bool
+  disks_ebs_config:
+    config: "{{ disks_to_mount }}"
+  become: yes
+  register: __disks_ebs_config
+
+- set_fact:
+    disks_to_mount: "{{ disks_to_mount|defaut([]) + __disks_ebs_config['ansible_facts']['config'] }}"
+  when: __disks_ebs_config is defined and 'ansible_facts' in __disks_ebs_config
+

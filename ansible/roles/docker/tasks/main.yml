@@ -13,15 +13,15 @@
 - import_tasks: files.yml
   tags:
     - files
-- import_tasks: package.yml
+- import_tasks: packages.yml
   tags:
-    - package
-- import_tasks: service.yml
+    - packages
+- import_tasks: services.yml
   tags:
-    - service
-- import_tasks: group.yml
+    - services
+- import_tasks: groups.yml
   tags:
-    - group
+    - groups
 - import_tasks: build.yml
   tags:
     - build
@@ -31,3 +31,4 @@
 - import_tasks: myos.yml
   tags:
     - myos
+

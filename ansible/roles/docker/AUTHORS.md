@@ -1,4 +1,4 @@
-# Authors
+# AUTHORS
 
-* **Yann Autissier** - *Initial work* - [aya](https://github.com/aya)
+* **Yann Autissier** - *initial work* - [aya](https://github.com/aya)
 

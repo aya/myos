@@ -7,23 +7,20 @@
   pre_tasks:
   - name: raw - install ansible requirements for alpine linux
     raw: "[ -f /etc/alpine-release ] && /sbin/apk update && { which python3 >/dev/null 2>&1 || /sbin/apk add python3; } && { which sudo >/dev/null 2>&1 || /sbin/apk add sudo; } && { /bin/tar --version 2>/dev/null |grep busybox >/dev/null && /sbin/apk add tar; } && { ls /usr/lib/ssh/sftp-server >/dev/null 2>&1 || /sbin/apk add openssh-sftp-server; } || true"
-
-# install default packages and user settings
-- import_playbook: playbooks/hosts.yml
   tags:
-  - hosts
+  - bootstrap
+
+# install packages and user settings
+- import_playbook: playbooks/hosts.yml
+
+# config remotes
+- import_playbook: playbooks/remotes.yml
 
 # mount additional disks
 - import_playbook: playbooks/disks.yml
-  tags:
-  - disks
 
 # install docker
 - import_playbook: playbooks/docker.yml
-  tags:
-  - docker
 
-# install aws cli
-- import_playbook: playbooks/aws-cli.yml
-  tags:
-  - aws-cli
+# launch myos
+# - import_playbook: playbooks/myos.yml

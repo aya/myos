@@ -10,23 +10,24 @@
       regex: '^default_kernel_opts="((?!.*clocksource=tsc tsc=reliable).*)"$'
 
 - name: boot - stat config file
-  changed_when: false
-  register: boot_config_stat
+  with_items: '{{boot_config|default([])}}'
   stat:
     path: '{{item.dest}}'
-  with_items: '{{boot_config|default([])}}'
+  changed_when: false
+  register: boot_config_stat
 
 - name: boot - update config
-  become: yes
+  when: item.1.stat.exists
+  with_together:
+  - '{{boot_config|default([])}}'
+  - '{{boot_config_stat.results}}'
   lineinfile:
     backrefs: true
     dest: '{{item.0.dest}}'
     line: '{{item.0.line}}'
     regex: '{{item.0.regex}}'
-  with_together:
-  - '{{boot_config|default([])}}'
-  - '{{boot_config_stat.results}}'
-  when: item.1.stat.exists
-  register: boot_config_handler_notify
+  become: yes
   notify:
   - update boot config
+  register: boot_config_handler_notify
+

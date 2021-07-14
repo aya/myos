@@ -1,28 +1,29 @@
 ---
-# file: tasks/package.yml
+# file: tasks/packages.yml
 
-- name: package - packages pre installation
-  with_items: "{{docker_packages|default([])}}"
+- name: packages - install/remove docker packages
+  with_items: "{{ docker_packages|default([]) }}"
   package: name="{{item.name}}" state="{{item.state}}"
   become: yes
 
-- name: package - add docker GPG key
-  apt_key: url=https://download.docker.com/linux/debian/gpg
+- name: packages - add docker GPG key
   when: ansible_os_family|lower == "debian"
+  apt_key: url=https://download.docker.com/linux/debian/gpg
   ignore_errors: true
   become: yes
 
-- name: package - define arch
+- name: packages - define arch
   set_fact:
     docker_apt_arch: "{% if ansible_machine == 'aarch64' %}arm64{% endif %}{% if ansible_machine == 'x86_64' %}amd64{% endif %}"
 
-- name: add docker APT repository
+- name: packages - add docker APT repository
+  when: ansible_os_family|lower == "debian"
   apt_repository:
     repo: deb [arch={{docker_apt_arch}}] https://download.docker.com/linux/{{ansible_distribution|lower}} {{ansible_distribution_release}} stable
-  when: ansible_os_family|lower == "debian"
   become: yes
 
-- name: package - add docker package
-  package: name="{{docker_package}}" state=present
+- name: packages - add docker package
   when: docker_package|length > 0
+  package: name="{{docker_package}}" state=present
   become: yes
+

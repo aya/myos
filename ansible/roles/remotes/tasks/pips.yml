@@ -1,0 +1,10 @@
+---
+# file: tasks/pips.yml
+
+- name: pips - install/remove python packages
+  with_items: "{{ remotes_pips|default([]) }}"
+  pip:
+    name: "{{item.name}}"
+    state: "{{item.state}}"
+  become: yes
+

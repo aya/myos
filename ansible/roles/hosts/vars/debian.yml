@@ -1,5 +1,5 @@
 ---
-# file vars/debian.yml
+# file: vars/debian.yml
 
 hosts_packages_distro:
   - { "name": "coreutils", "state": "present" }

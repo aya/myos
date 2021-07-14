@@ -1,105 +1,111 @@
-# Ansible role to run dockers
+# docker role for Ansible
 
-An ansible role to install the [docker](https://www.docker.com/) daemon and build and run dockers.
-
-It installs the docker daemon and ensure it is up and running.
-It sets the STORAGE_DRIVER if the docker host uses systemd and it configures the MTU to 1450 if it is a VM running on OpenStack.
-It builds and runs docker images on the docker host.
-
-## Requirements
-
-This Ansible role requires at least Ansible version 1.9.
+Install and configure the [docker](https://www.docker.com/) daemon
 
 ## Role Variables
 
-* `docker_check_kernel` - The minimum kernel version allowed on hosts to run docker.
+### Default Variables
+
+* `docker_check_kernel` - Minimum kernel version allowed on your hosts to run docker
 
 ``` yaml
-# minimum kernel version
 docker_check_kernel: '3.10'
 ```
 
-* `docker_check_machine` - The hosts architecture needed to run docker.
+* `docker_check_machine` - Hosts architecture needed to run docker
 
 ``` yaml
-# architecture
 docker_check_machine: 'x86_64'
 ```
 
-* `docker_package` - The name of the docker package.
+* `docker_package` - Name of the docker package
 
 ``` yaml
-# The docker package name
-docker_package: docker
+docker_package: docker-ce
 ```
 
-* `docker_packages` - A list of packages to install/remove before installing the docker package.
+* `docker_packages` - List of packages to install/remove before installing the docker package
 
 ``` yaml
-# A list of package to install/remove
-# docker_packages:
-#   - { "name": "docker", "state": "absent" }
+docker_packages:
+  - { "name": "docker", "state": "absent" }
 ```
 
-* `docker_init_config_directory` - The location of the configuration file of the docker daemon init script.
+* `docker_init_config_directory` - Location of the configuration file of the docker daemon init script
 
 ``` yaml
-# Location of configuration files loaded by the init script
 docker_init_config_directory: "/etc/sysconfig"
 ```
 
-* `docker_opts` - The name of the environment variable used to pass options to the docker daemon.
+* `docker_opts` - Name of the environment variable used to pass options to the docker daemon
 
 ``` yaml
-# docker daemon options environment variable
 docker_opts: "OPTIONS"
 ```
 
-* `docker_services` - A list of system services to start
+* `docker_services` - List of services to enable/disable on your hosts
 
 ``` yaml
-# services
 docker_services:
-  - docker
+  - { "name": "docker", "state": "started", "enabled": "yes" }
 ```
 
-* `dockers` - A list of docker images to build and run on the docker host with the docker-build and docker-run commands
+### Deprecated variables
+
+* `dockers` - List of docker images to build and run on the docker host with the docker-build and docker-run commands
 
 ``` yaml
-# dockers
-# dockers:
-#   - nginx
+dockers: []
 ```
 
-* `docker_cluster` - An optional cluster name to pass to the docker-build and docker-run commands
+* `docker_cluster` - Optional cluster name to pass to the docker-build and docker-run commands
 
 ``` yaml
-# docker cluster
-# docker_cluster: ""
+docker_cluster: ""
 ```
 
-* `docker_cluster` - Starts the dockers if set to true.
+* `docker_start` - Starts the dockers if set to true
 
 ``` yaml
-# Start docker
 docker_start: true
 ```
 
-* `docker_restart` - Restarts dockers when their image has been updated. It removes current running dockers and start new ones.
+* `docker_restart` - Restarts dockers when their image has been updated, removes current running dockers and start new ones
 
 ``` yaml
-# Stop and remove running docker to start a new one when image has been updated
 docker_restart: true
 ```
 
-* `docker_force_restart` - Restart dockers, even if image has not been updated. It removes current running dockers and start new ones.
+* `docker_force_restart` - Restart dockers, even if image has not been updated, removes current running dockers and start new ones
 
 ``` yaml
-# Stop and remove running docker to start a new one even if image has not been updated
 docker_force_restart: false
 ```
 
-## Helper scripts
+## Example playbook
+
+``` yaml
+- hosts: 'docker'
+  roles:
+  - role: 'aynicos.docker'
+    docker_check_kernel: "3.3"
+    docker_package: "docker-ee"
+    docker_registry: "hub.docker.com"
+```
+
+## Tests
+
+To test this role on your `docker` hosts, run the tests/playbook.yml playbook.
+
+``` bash
+$ ansible-playbook tests/playbook.yml
+```
+
+## DEPRECATED
+
+Following sections remain of a time where docker compose was borning.
+
+### Helper scripts
 
 This role comes with a few helper scripts. Here is a short description.
 
@@ -120,14 +126,6 @@ This role comes with a few helper scripts. Here is a short description.
 * `docker-log-truncate` - Truncate the file logging the docker output on the docker host.
 
 * `docker-run` - Run a docker, reading options to pass to the `docker run` command from a Dockeropts file.
-
-## Example
-
-To launch this role on your `docker` hosts, run the default playbook.yml.
-
-``` bash
-$ ansible-playbook playbook.yml
-```
 
 ### Build a docker image
 
@@ -212,7 +210,7 @@ Overriding options is done several times, reading options from the more specific
 /etc/docker/nginx/custom/Dockeropts
 /etc/docker/nginx/Dockeropts
 
-## Common configuration
+### Common configuration
 
 Following configuration builds and runs the docker image 'nginx-develop' for the 'custom' cluster described in our example.
 The Dockerfile and Dockeropts files needed in the /etc/docker/nginx directory should be present on the docker host, likely synchronised by an other ansible role.
@@ -223,15 +221,6 @@ docker:
   - nginx-develop
 ```
 
-## Tests
-
-To test this role on your `docker` hosts, run the tests/playbook.yml playbook.
-
-``` bash
-$ ansible-playbook tests/playbook.yml
-```
-
 ## Limitations
 
 This role is known to work on Ubuntu, Debian, CentOS and Alpine Linux.
-

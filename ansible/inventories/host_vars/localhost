@@ -1,20 +1,18 @@
 ---
 # file: inventories/host_vars/localhost
 
-disks_additional_disks:
-- disk: none
-  fstype: btrfs
-  mount: /var/lib/docker
-  service: docker
+disks_packages:
+- { "name": "btrfs-progs", "state": "present" }
+- { "name": "xfsprogs", "state": "present" }
 docker_image_tag: "{{ lookup('env','ANSIBLE_DOCKER_IMAGE_TAG') or 'latest' }}"
 docker_registry: "{{ lookup('env','ANSIBLE_DOCKER_REGISTRY') }}"
-hosts_enable_local: true
-hosts_enable_rc: true
-hosts_enable_zram: true
 hosts_git_repositories:
 - { "repo": "{{ lookup('env','ANSIBLE_GIT_REPOSITORY') }}", "dest": "{{ lookup('env','ANSIBLE_GIT_DIRECTORY') }}", "key_file": "{{ lookup('env','ANSIBLE_GIT_KEY_FILE') or '~/.ssh/id_rsa' }}", "version": "{{ lookup('env','ANSIBLE_GIT_VERSION') }}" }
 hosts_packages:
 - { "name": "ansible", "state": "present" }
+hosts_services:
+- { "name": "local", "state": "started", "enabled": "yes" }
+- { "name": "zram", "state": "started", "enabled": "yes" }
 hosts_user_env:
 - ANSIBLE_CONFIG
 - ANSIBLE_DOCKER_IMAGE_TAG
@@ -26,3 +24,4 @@ hosts_user_env:
 - ANSIBLE_INVENTORY
 - ANSIBLE_PLAYBOOK
 - ENV
+hosts_user_rc_enable: true

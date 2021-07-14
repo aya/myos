@@ -1,5 +1,5 @@
 ---
-# file handlers/main.yml
+# file: handlers/main.yml
 
 - name: restart docker
   with_items: "{{docker_services|default([])}}"
@@ -7,3 +7,4 @@
     name: "{{item}}"
     state: restarted
   become: yes
+

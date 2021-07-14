@@ -1,5 +1,5 @@
 ---
-# file vars/alpine.yml
+# file: vars/alpine.yml
 
 hosts_packages_distro:
   - { "name": "coreutils", "state": "present" }

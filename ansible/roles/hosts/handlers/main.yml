@@ -9,3 +9,4 @@
   - '{{ boot_config_handler_notify.results }}'
   command: "update-extlinux"
   when: item.1.changed and item.0.dest == "/etc/update-extlinux.conf"
+

@@ -1,5 +1,5 @@
 ---
-# file vars/redhat.yml
+# file: vars/redhat.yml
 
 hosts_packages_distro:
   - { "name": "groff-base", "state": "present" }

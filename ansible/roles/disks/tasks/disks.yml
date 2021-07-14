@@ -1,0 +1,25 @@
+---
+# file: tasks/disks.yml
+
+- name: disks - get disk alignment
+  with_items: '{{ disks_to_mount }}'
+  shell: |
+    if
+      [[ -e /sys/block/{{ item.disk | basename }}/queue/optimal_io_size && -e /sys/block/{{ item.disk | basename }}/alignment_offset && -e /sys/block/{{ item.disk | basename }}/queue/physical_block_size ]];
+    then
+      echo $[$(( ($(cat /sys/block/{{ item.disk | basename }}/queue/optimal_io_size) + $(cat /sys/block/{{ item.disk | basename }}/alignment_offset)) / $(cat /sys/block/{{ item.disk | basename }}/queue/physical_block_size) )) | 2048];
+    else
+      echo 2048;
+    fi
+  args:
+    creates: '{{ item.part | default(item.disk + "1") }}'
+    executable: '/bin/bash'
+  register: disks_offset
+
+- name: disks - stat if the disk exists
+  with_items: '{{ disks_to_mount }}'
+  stat:
+    path: '{{ item.disk }}'
+  changed_when: False
+  register: disks_stat
+

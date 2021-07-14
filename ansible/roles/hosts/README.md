@@ -1,165 +1,160 @@
-# Ansible role to customize servers
+# hosts role for Ansible
 
-An ansible role to customize servers after a fresh install
+Bootstrap hosts, installing standard packages and user settings
 
 ## Role Variables
 
-* `hosts_enable_cloudinit` - Install and configure cloud-init
+* `hosts_cloudinit_config` - cloud-init yaml config
 
 ``` yaml
-# enable cloud-init
-hosts_enable_cloudinit: false
+hosts_cloudinit_config:
+    preserve_hostname: false
+    datasource_list:
+    - Ec2
+    datasource:
+      Ec2:
+        metadata_urls:
+        - 'http://169.254.169.254'
 ```
 
-* `hosts_enable_local` - Run ansible pull at boot
+* `hosts_cloudinit_enable` - Install and configure cloud-init
 
 ``` yaml
-# enable rc.local script
-hosts_enable_local: false
+hosts_cloudinit_enable: false
 ```
 
-* `hosts_enable_rc` - Run user specific functions on ssh connection. This allow a user to customize his session when connecting to a server, like attaching automaticaly a screen session for example.
+* `hosts_git_repositories` - Clone git repositories
 
 ``` yaml
-# run user specific rc functions on ssh connection
-hosts_enable_rc: false
-```
-
-* `hosts_enable_zram` - Activate zram swap devices. This option allows to create virtual swap devices compressed in RAM. It can increase hosts performances, specially on hosts without physical swap.
-
-``` yaml
-# Activate zram swap devices
-hosts_enable_zram: false
-```
-
-* `hosts_git_repositories` - Clone git repositories.
-
-``` yaml
-# git repositories to clone
 hosts_git_repositories:
 - { "repo": "https://github.com/aya/myos", "dest": "/src/com/github/aya/myos", "key_file": "~/.ssh/id_rsa", "version": "master" }
 ```
 
-* `hosts_packages` - A list of packages to install on your servers. This list should be overrided for a specific distro.
+* `hosts_packages` - List of packages to install/remove on your hosts, should be overrided for a specific distro
 
 ``` yaml
-# packages specific to a distribution
 hosts_packages: []
 ```
 
-* `hosts_packages_common` - A common list of packages to install on your servers. This list should be common to all distros.
+* `hosts_packages_common` - List of packages to install/remove on your hosts, common to all distros
 
 ``` yaml
-# packages common to all distributions
 hosts_packages_common:
 - { "name": "bash", "state": "present" }
 ```
 
-* `hosts_packages_distro` - A list of packages to install on your servers. This list is specific to your distro.
+* `hosts_packages_distro` - List of packages to install/remove on your hosts, specific to a distro
 
 ``` yaml
-# packages specific to a distribution
 hosts_packages_distro:
 - { "name": "vim-nox", "state": "present" }
 ```
 
-* `hosts_rc_functions` - List of user specific functions to run on ssh connection. Here you can add any function to be called when you connect to the host. Default functions are available in the /etc/profile.d/rc_functions.sh file.
+* `hosts_services` - List of services to enable/disable on your hosts
 
 ``` yaml
-# list of rc functions to call at user connection
-hosts_rc_functions:
-# load shell functions
-- 00_source
-# customize PROMPT variable
-- 10_prompt_set
-# customize PS1 variable
-- 10_ps1_set
-# create and/or attach a tmux session
-- 20_tmux_attach
-# display host infos
-- 30_pfetch
-# create and/or attach a screen session
-- 30_screen_attach
-# launch ssh agent and load private keys in ~/.ssh
-- 40_ssh_add
+hosts_services:
+# Enable ansible, running ansible pull at boot
+  - { "name": "ansible", "state": "started", "enabled": "yes" }
+# Enable zram, creating virtual swap devices compressed in RAM, usefull on hosts without physical swap to increase performances
+  - { "name": "zram", "state": "started", "enabled": "yes" }
 ```
 
-* `hosts_rc_cleanup` - List of rc functions you do not want to run anymore. If you had previously activated a rc function in `hosts_rc_functions`, you can add it to `hosts_rc_cleanup` to disable it.
+* `hosts_ssh_authorized_keys` - List of urls to add ssh public keys in ~/.ssh/authorized_keys
 
 ``` yaml
-# list of rc functions to cleanup (remove files)
-hosts_rc_cleanup:
-- 01_custom_ps1
-- 02_custom_prompt
-- 03_ssh_agent
-- 04_attach_tmux
-- 05_attach_screen
-```
-
-* `hosts_ssh_authorized_keys` - A list of urls. Fetch ssh public keys from urls and add them to file ~/.ssh/authorized_keys of the ansible user.
-
-``` yaml
-# a list of urls to get ssh public keys
 hosts_ssh_authorized_keys:
-- https://github.com/aya.keys
+- https://github.com/aynicos.keys
 ```
 
-* `hosts_ssh_bastion_hostname` - Hostname of ssh bastion. Needed to add myos-bastion to file ~/.ssh/myos/config of the ansible user.
+* `hosts_ssh_bastion_hostname` - Hostname of ssh bastion added in ~/.ssh/myos/config
 
 ``` yaml
-# hostname of myos-bastion to add in ~/.ssh/myos/config
 hosts_ssh_bastion_hostname: 8.4.2.1
 ```
 
-* `hosts_ssh_bastion_username` - Username of ssh bastion. Needed to add myos-bastion to file ~/.ssh/myos/config of the ansible user.
+* `hosts_ssh_bastion_username` - Username of ssh bastion added in ~/.ssh/myos/config
 
 ``` yaml
-# hostname of myos-bastion to add in ~/.ssh/myos/config
 hosts_ssh_bastion_username: root
 ```
 
-* `hosts_ssh_private_ip_range` - Ip range to pass through ssh bastion.
+* `hosts_ssh_private_ip_range` - Ip range proxified through ssh bastion to add in ~/.ssh/myos/config
 
 ``` yaml
-# ip range proxyfied through myos-bastion to add in ~/.ssh/myos/config
 hosts_ssh_private_ip_range: 10.* 192.168.42.*
 ```
 
-* `hosts_ssh_private_keys` - A list of ssh private keys to copy. Default to ~/.ssh/id_rsa
+* `hosts_ssh_private_keys` - List of ssh private keys to copy, default to ~/.ssh/id_rsa
 
 ``` yaml
-# a list of urls to get ssh public keys
 hosts_ssh_private_keys:
 - ~/.ssh/id_rsa
 ```
 
-* `hosts_ssh_public_hosts` - A list of host names to get ssh fingerprint
+* `hosts_ssh_public_hosts` - List of host names to add ssh public fingerprints in ~/.ssh/known_hosts
 
 ``` yaml
-# a list of public hosts to add to ~/.ssh/known_hosts
 hosts_ssh_public_hosts:
 - github.com
 - gitlab.com
 ```
 
-* `hosts_ssh_username` - ssh user used to ssh on remote hosts
+* `hosts_ssh_username` - User to ssh on remote hosts
 
 ``` yaml
-# ssh username to ssh on remote hosts
 hosts_ssh_username: root
 ```
 
-## Example
+* `hosts_user_env` - List of environment variables added in ~/.env
 
-To launch this role on your `hosts` servers, run the default playbook.
+``` yaml
+hosts_user_env:
+  - ENV
+  - DOCKER
+```
 
-``` bash
-$ ansible-playbook playbook.yml
+* `hosts_user_rc_enable` - Call specific functions on user login, allowing it to customize his session
+
+``` yaml
+hosts_user_rc_enable: false
+```
+
+* `hosts_user_rc_functions` - List of specific functions to call on user login, defined in /etc/profile.d/rc_functions.sh
+
+``` yaml
+hosts_user_rc_functions:
+# customize PROMPT variable
+- { "path": "10_prompt_set", "state": "touch" }
+# customize PS1 variable
+- { "path": "10_ps1_set", "state": "touch" }
+# create and/or attach a tmux session
+- { "path": "20_tmux_attach", "state": "touch" }
+# display host infos
+- { "path": "30_pfetch", "state": "touch" }
+# create and/or attach a screen session
+- { "path": "30_screen_attach", "state": "touch" }
+# launch ssh agent and load private keys in ~/.ssh
+- { "path": "40_ssh_add", "state": "touch" }
+# remove tmux_attach
+- { "path": "20_tmux_attach", "state": "absent" }
+```
+
+## Example playbook
+
+``` yaml
+- hosts: 'hosts'
+  roles:
+  - role: 'aynicos.hosts'
+    hosts_services:
+    - { "name": "local", "state": "started", "enabled": "yes" }
+    - { "name": "zram", "state": "started", "enabled": "yes" }
+    hosts_user_rc_enable: true
 ```
 
 ## Tests
 
-To test this role on your `hosts` servers, run the tests/playbook.yml playbook.
+To test this role on your `hosts`, run the tests/playbook.yml playbook.
 
 ``` bash
 $ ansible-playbook tests/playbook.yml

@@ -1,173 +1,29 @@
-- name: 'Install python-pathlib'
-  pip: >
-    name=pathlib
-    state=present
-  become: yes
+---
+# file: tasks/main.yml
 
-- name: "Discover NVMe EBS"
-  disks_ebs_config:
-    config: "{{ disks_additional_disks }}"
-  register: __disks_ebs_config
-  when: disks_discover_aws_nvme_ebs | default(True) | bool
-  become: yes
-
-- set_fact:
-    disks_additional_disks: "{{ disks_additional_disks|defaut([]) + __disks_ebs_config['ansible_facts']['config'] }}"
-  when: __disks_ebs_config is defined and 'ansible_facts' in __disks_ebs_config
-
-- name: "Install parted"
-  package:
-    name: parted
-    state: present
-    use: '{{ disks_package_use }}'
-  when: disks_additional_disks
-  tags: ['disks', 'pkgs']
-  become: yes
-
-- name: "Install additional fs progs"
-  package:
-    name: "{{ item }}"
-    state: present
-  with_items: "{{ disks_additional_packages|default([]) }}"
-  when: disks_additional_packages is defined
-  tags: ['disks', 'pkgs']
-  become: yes
-
-- name: disks - start additional services
-  service:
-    name: "{{item}}"
-    enabled: yes
-    state: started
-  with_items: "{{ disks_additional_services|default([]) }}"
-  tags: ['disks', 'pkgs']
-  become: yes
-
-- name: "Get disk alignment for disks"
-  shell: |
-    if
-      [[ -e /sys/block/{{ item.disk | basename }}/queue/optimal_io_size && -e /sys/block/{{ item.disk | basename }}/alignment_offset && -e /sys/block/{{ item.disk | basename }}/queue/physical_block_size ]];
-    then
-      echo $[$(( ($(cat /sys/block/{{ item.disk | basename }}/queue/optimal_io_size) + $(cat /sys/block/{{ item.disk | basename }}/alignment_offset)) / $(cat /sys/block/{{ item.disk | basename }}/queue/physical_block_size) )) | 2048];
-    else
-      echo 2048;
-    fi
-  args:
-    creates: '{{ item.part | default(item.disk + "1") }}'
-    executable: '/bin/bash'
-  with_items: '{{ disks_additional_disks }}'
-  register: disks_offset
-  tags: ['disks']
-
-- name: "Ensure the disk exists"
-  stat:
-    path: '{{ item.disk }}'
-  with_items: '{{ disks_additional_disks }}'
-  register: disks_stat
-  changed_when: False
-  tags: ['disks']
-
-- name: "Partition additional disks"
-  shell: |
-    if
-        [ -b {{ item.disk }} ]
-    then
-        [ -b {{ item.part | default(item.disk + "1") }} ] || parted -a optimal --script "{{ item.disk }}" mklabel gpt mkpart primary {{ disks_offset.stdout|default("2048") }}s 100% && sleep 5 && partprobe {{ item.disk }}; sleep 5
-    fi
-  args:
-    creates: '{{ item.part | default(item.disk + "1") }}'
-    executable: '/bin/bash'
-  with_items: '{{ disks_additional_disks }}'
-  tags: ['disks']
-  become: yes
-
-- name: "Create filesystem on the first partition"
-  filesystem:
-    dev: '{{ item.0.part | default(item.0.disk + "1") }}'
-    force: '{{ item.0.force|d(omit) }}'
-    fstype: '{{ item.0.fstype }}'
-    opts: '{{ item.0.fsopts|d(omit) }}'
-  with_together:
-    - '{{ disks_additional_disks }}'
-    - '{{ disks_stat.results }}'
-  when: item.1.stat.exists
-  tags: ['disks']
-  become: yes
-
-- name: "Disable periodic fsck and reserved space on ext3 or ext4 formatted disks"
-  environment:
-    PATH: "{{ ansible_env.PATH }}:/usr/sbin:/sbin"
-  shell: tune2fs -c0 -i0 -m0 {{ item.0.part | default(item.0.disk + "1") }}
-  with_together:
-    - '{{ disks_additional_disks }}'
-    - '{{ disks_stat.results }}'
-  when: "disks_additional_disks and ( item.0.fstype == 'ext4' or item.0.fstype == 'ext3' ) and item.0.disable_periodic_fsck|default(false)|bool and item.1.stat.exists"
-  tags: ['disks']
-  become: yes
-
-- name: "Ensure the mount directory exists"
-  file:
-    path: '{{ item.mount }}'
-    state: directory
-  with_items: '{{ disks_additional_disks }}'
-  tags: ['disks']
-  become: yes
-
-- name: "Get UUID for partition"
-  environment:
-    PATH: "{{ ansible_env.PATH }}:/usr/sbin:/sbin"
-  command: blkid -s UUID -o value {{ item.0.part | default(item.0.disk + "1") }}
-  check_mode: no
-  register: disks_blkid
-  with_together:
-    - '{{ disks_additional_disks }}'
-    - '{{ disks_stat.results }}'
-  changed_when: False
-  when: item.1.stat.exists
-  tags: ['disks']
-
-- name: "Mount additional disks"
-  mount:
-    name: '{{ item.0.mount }}'
-    fstype: '{{ item.0.fstype }}'
-    opts: '{{ item.0.mount_options|d(omit) }}'
-    passno: '0'
-    src: 'UUID={{ item.1.stdout }}'
-    state: '{{ item.0.mount_state|d("mounted") }}'
-  with_together:
-    - '{{ disks_additional_disks }}'
-    - '{{ disks_blkid.results }}'
-    - '{{ disks_stat.results }}'
-  when: item.2.stat.exists
-  tags: ['disks']
-  register: disks_additional_disks_handler_notify
-  notify:
-    - restart services
-  become: yes
-
-- name: "Mount additional disks - nfs"
-  mount:
-    name: '{{ item.mount }}'
-    fstype: '{{ item.fstype }}'
-    opts: '{{ item.mount_options|d(omit) }}'
-    src: '{{ item.disk }}'
-    state: '{{ item.mount_state|d("mounted") }}'
-  when: item.fstype == 'nfs'
-  with_items: '{{ disks_additional_disks }}'
-  tags: ['disks']
-  register: disks_additional_disks_nfs_handler_notify
-  notify:
-    - restart services - nfs
-  become: yes
-
-- name: "Ensure the permissions are set correctly"
-  file:
-    path: '{{ item.mount }}'
-    owner: '{{ item.user | default("root") }}'
-    group: '{{ item.group | default("root") }}'
-    state: directory
-  with_items: '{{ disks_additional_disks }}'
-  when: item.user is defined or item.group is defined
-  tags: ['disks']
-  become: yes
-
+- import_tasks: vars.yml
+  tags:
+    - vars
+- import_tasks: config.yml
+  tags:
+    - config
+- import_tasks: packages.yml
+  tags:
+    - packages
+- import_tasks: services.yml
+  tags:
+    - services
+- import_tasks: disks.yml
+  tags:
+    - disks
+- import_tasks: partitions.yml
+  tags:
+    - partitions
+- import_tasks: filesystems.yml
+  tags:
+    - filesystems
+- import_tasks: mount.yml
+  tags:
+    - mount
 - meta: flush_handlers
+

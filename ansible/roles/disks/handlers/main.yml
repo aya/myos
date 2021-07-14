@@ -3,8 +3,8 @@
 
 - name: restart services
   with_together:
-  - '{{ disks_additional_disks }}'
-  - '{{ disks_additional_disks_handler_notify.results }}'
+  - '{{ disks_to_mount }}'
+  - '{{ disks_to_mount_handler_notify.results }}'
   service:
     name: "{{item.0.service}}"
     state: restarted
@@ -12,8 +12,8 @@
 
 - name: restart services - nfs
   with_together:
-  - '{{ disks_additional_disks }}'
-  - '{{ disks_additional_disks_nfs_handler_notify.results }}'
+  - '{{ disks_to_mount }}'
+  - '{{ disks_to_mount_nfs_handler_notify.results }}'
   service:
     name: "{{item.0.service}}"
     state: restarted

@@ -1,6 +1,0 @@
----
-# file: playbook.yml
-
-- hosts: docker
-  roles:
-    - .

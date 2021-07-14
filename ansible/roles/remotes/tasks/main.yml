@@ -1,0 +1,22 @@
+---
+# file: tasks/main.yml
+
+- import_tasks: vars.yml
+  tags:
+    - vars
+- import_tasks: packages.yml
+  tags:
+    - packages
+- import_tasks: pips.yml
+  tags:
+    - pips
+- import_tasks: services.yml
+  tags:
+    - services
+- import_tasks: user.yml
+  tags:
+    - user
+- import_tasks: myos.yml
+  tags:
+    - myos
+

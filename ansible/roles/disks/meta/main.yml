@@ -1,21 +1,27 @@
+---
+# file: meta/main.yml
+
+dependencies: []
 galaxy_info:
-  author: Emilien Kenler <ekenler@wizcorp.jp>
-  description: This role allows setting up extra disks and their mount points
-  company: Wizcorp K.K.
-  license: MIT
-  min_ansible_version: 2.0.0
-  platforms:
-    - name: EL
-      versions:
-        - 6
-        - 7
-    - name: Debian
-      versions:
-        - wheezy
-        - jessie
-    - name: Ubuntu
-      versions:
-        - all
+  author: Yann Autissier
   categories:
     - system
-dependencies: []
+  description: Format and mount additional disks
+  license: GPL
+  platforms:
+  - name: Alpine
+    versions:
+    - all
+  - name: Debian
+    versions:
+    - all
+  - name: EL
+    versions:
+    - all
+  - name: Fedora
+    versions:
+    - all
+  - name: Ubuntu
+    versions:
+    - all
+

@@ -1,7 +1,0 @@
----
-# file: playbook.yml
-
-- hosts: hosts
-  roles:
-    - .
-

@@ -1,0 +1,52 @@
+---
+# file: tasks/mount.yml
+
+- name: mount - check directory mount exists
+  with_items: '{{ disks_to_mount }}'
+  file:
+    path: '{{ item.mount }}'
+    state: directory
+  become: yes
+
+- name: mount - mount additional disks
+  when: item.2.stat.exists
+  with_together:
+    - '{{ disks_to_mount }}'
+    - '{{ disks_blkid.results }}'
+    - '{{ disks_stat.results }}'
+  mount:
+    name: '{{ item.0.mount }}'
+    fstype: '{{ item.0.fstype }}'
+    opts: '{{ item.0.mount_options|d(omit) }}'
+    passno: '0'
+    src: 'UUID={{ item.1.stdout }}'
+    state: '{{ item.0.mount_state|d("mounted") }}'
+  become: yes
+  notify:
+    - restart services
+  register: disks_to_mount_handler_notify
+
+- name: mount - mount additional disks - nfs
+  when: item.fstype == 'nfs'
+  with_items: '{{ disks_to_mount }}'
+  mount:
+    name: '{{ item.mount }}'
+    fstype: '{{ item.fstype }}'
+    opts: '{{ item.mount_options|d(omit) }}'
+    src: '{{ item.disk }}'
+    state: '{{ item.mount_state|d("mounted") }}'
+  become: yes
+  notify:
+    - restart services - nfs
+  register: disks_to_mount_nfs_handler_notify
+
+- name: mount - set permissions
+  when: item.user is defined or item.group is defined
+  with_items: '{{ disks_to_mount }}'
+  file:
+    path: '{{ item.mount }}'
+    owner: '{{ item.user | default("root") }}'
+    group: '{{ item.group | default("root") }}'
+    state: directory
+  become: yes
+

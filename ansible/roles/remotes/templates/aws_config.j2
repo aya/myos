@@ -1,6 +1,6 @@
 [default]
-{% if aws_output_format|length %}
-output = {{ aws_output_format }}
+{% if aws_output|length %}
+output = {{ aws_output }}
 {% endif %}
 {% if aws_region|length %}
 region = {{ aws_region }}

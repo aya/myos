@@ -2,8 +2,8 @@
 # file: tasks/user.yml
 
 - name: user - add hosts_ssh_authorized_keys to ~/.ssh/authorized_keys
-  authorized_key: user="{{ ansible_user|default('root') }}" key="{{ item }}"
   with_items: "{{ hosts_ssh_authorized_keys|default([]) }}"
+  authorized_key: user="{{ ansible_user|default('root') }}" key="{{ item }}"
   ignore_errors: true
 
 - name: user - copy hosts_ssh_private_keys to ~/.ssh/
@@ -19,23 +19,18 @@
     mode: 0400
 
 - name: user - create ~/.rc.d
-  file: path=~/.rc.d/ state={{hosts_enable_rc|default(false)|ternary('directory', 'absent')}} mode="0700"
+  file: path=~/.rc.d/ state={{hosts_user_rc_enable|default(false)|ternary('directory', 'absent')}} mode="0700"
 
 - name: user - source /etc/profile.d/rc_functions.sh
+  when: hosts_user_rc_enable|default(false)
   with_items:
   - /etc/profile.d/rc_functions.sh
   lineinfile: dest=~/.rc.d/00_source create=yes line="{{ item }}" mode="0600"
-  when: hosts_enable_rc|default(false)
 
-- name: user - enable rc functions
-  with_items: "{{hosts_rc_functions|default([])}}"
-  file: path="~/.rc.d/{{item}}" state="touch" mode="0600"
-  when: hosts_enable_rc|default(false)
-
-- name: user - disable rc functions
-  with_items: "{{hosts_rc_cleanup|default([])}}"
-  file: path="~/.rc.d/{{item}}" state="absent"
-  when: hosts_enable_rc|default(false)
+- name: user - enable/disable rc functions
+  when: hosts_user_rc_enable|default(false)
+  with_items: "{{ hosts_user_rc_functions|default([]) }}"
+  file: path="~/.rc.d/{{item.path}}" state="{{item.state}}"
 
 - name: user - copy ~/.*aliases ~/.*functions ~/.*profile ~/.shrc
   with_items:
@@ -112,3 +107,4 @@
     src: Makefile.j2
     dest: ~/Makefile
     force: yes
+

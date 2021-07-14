@@ -1,0 +1,22 @@
+---
+# file: tasks/services.yml
+
+- name: services - enable/disable disks services
+  when: ansible_service_mgr|lower != "openrc"
+  with_items: "{{ disks_services|default([]) }}"
+  service:
+    name: "{{item.name}}"
+    state: "{{item.state}}"
+    enabled: "{{item.enabled}}"
+  become: yes
+
+- name: services - openrc - enable/disable disks services
+  when: ansible_service_mgr|lower == "openrc"
+  with_items: "{{ disks_services|default([]) }}"
+  service:
+    name: "{{item.name}}"
+    state: "{{item.state}}"
+    enabled: "{{item.enabled}}"
+    runlevel: boot
+  become: yes
+

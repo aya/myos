@@ -7,8 +7,8 @@
     path: /etc/ssh/ssh_known_hosts
     name: "{{ item }}"
     key: "{{ lookup('pipe', 'ssh-keyscan -t rsa -H ' + item) }}"
-  become: true
   ignore_errors: true
+  become: true
 
 - name: ssh - define sshd configuration
   set_fact:
@@ -24,20 +24,21 @@
       regex: ^#?PermitRootLogin
 
 - name: ssh - stat sshd configuration file
-  changed_when: false
-  register: sshd_config_stat
+  with_items: "{{ sshd_config|default([]) }}"
   stat:
     path: "{{ item.dest }}"
-  with_items: "{{ sshd_config|default([]) }}"
+  changed_when: false
+  register: sshd_config_stat
 
 - name: ssh - configure sshd
-  become: yes
+  when: item.1.stat.exists
+  with_together:
+  - "{{ sshd_config|default([]) }}"
+  - "{{ sshd_config_stat.results }}"
   lineinfile:
     backrefs: true
     dest: "{{ item.0.dest }}"
     line: "{{ item.0.line }}"
     regex: "{{ item.0.regex }}"
-  with_together:
-  - "{{ sshd_config|default([]) }}"
-  - "{{ sshd_config_stat.results }}"
-  when: item.1.stat.exists
+  become: yes
+
