@@ -40,7 +40,10 @@ hosts_user_env:
 - ANSIBLE_GIT_REPOSITORY
 - ANSIBLE_INVENTORY
 - ANSIBLE_PLAYBOOK
+- COMPOSE_PROJECT_NAME
 - ENV
+- MYOS
+- MYOS_TAGS
 hosts_user_rc_enable: true
 hosts_user_rc_functions:
 - { "path": "10_prompt_set", "state": "touch" }

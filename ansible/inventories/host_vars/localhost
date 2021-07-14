@@ -6,7 +6,7 @@ disks_packages:
 - { "name": "xfsprogs", "state": "present" }
 docker_image_tag: "{{ lookup('env','ANSIBLE_DOCKER_IMAGE_TAG') or 'latest' }}"
 docker_registry: "{{ lookup('env','ANSIBLE_DOCKER_REGISTRY') }}"
-hosts_git_repositories:
+git_repositories:
 - { "repo": "{{ lookup('env','ANSIBLE_GIT_REPOSITORY') }}", "dest": "{{ lookup('env','ANSIBLE_GIT_DIRECTORY') }}", "key_file": "{{ lookup('env','ANSIBLE_GIT_KEY_FILE') or '~/.ssh/id_rsa' }}", "version": "{{ lookup('env','ANSIBLE_GIT_VERSION') }}" }
 hosts_packages:
 - { "name": "ansible", "state": "present" }
@@ -24,4 +24,5 @@ hosts_user_env:
 - ANSIBLE_INVENTORY
 - ANSIBLE_PLAYBOOK
 - ENV
+- MYOS
 hosts_user_rc_enable: true

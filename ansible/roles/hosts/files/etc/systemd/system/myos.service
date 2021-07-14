@@ -1,0 +1,11 @@
+[Unit]
+Description=System calls from https://github.com/aynicos/myos
+ 
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/etc/init.d/myos start
+ExecStop=/etc/init.d/myos stop
+ 
+[Install]
+WantedBy=sysinit.target

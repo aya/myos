@@ -66,6 +66,15 @@ aws_secret_access_key: 'YOUR_SECRET_ACCESS_KEY'
 aws_user: 'root'
 ```
 
+### Git variables
+
+* `git_repositories` - Clone git repositories
+
+``` yaml
+git_repositories:
+- { "repo": "https://github.com/aynicos/myos", "dest": "/dns/com/github/aynicos/myos", "key_file": "~/.ssh/id_rsa", "version": "master" }
+```
+
 ## Example playbook
 
 ``` yaml

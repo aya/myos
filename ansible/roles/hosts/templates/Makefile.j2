@@ -3,13 +3,13 @@ SERVICE ?= cli
 -include .env
 
 ansible:
-	@make -C $(ANSIBLE_GIT_DIRECTORY) ansible-run-localhost $(foreach var,$(ENV_USER_VARS),$(if $($(var)),$(var)='$($(var))'))
+	@make -C $(ANSIBLE_GIT_DIRECTORY) ansible-run-localhost
 
 ansible-%:
-	@make -C $(ANSIBLE_GIT_DIRECTORY) ansible-run-localhost $(foreach var,$(ENV_USER_VARS),$(if $($(var)),$(var)='$($(var))')) ANSIBLE_TAGS=$*
+	@make -C $(ANSIBLE_GIT_DIRECTORY) ansible-run-localhost ANSIBLE_TAGS=$*
 
 ansible-pull:
-	@$(foreach var,$(ENV_USER_VARS),$(if $($(var)),$(var)='$($(var))')) $(if $(ANSIBLE_CONFIG),ANSIBLE_CONFIG=$(ANSIBLE_GIT_DIRECTORY)/$(ANSIBLE_CONFIG)) ansible-pull --url $(ANSIBLE_GIT_REPOSITORY) $(if $(ANSIBLE_GIT_KEY_FILE),--key-file $(ANSIBLE_GIT_KEY_FILE)) $(if $(ANSIBLE_GIT_VERSION),--checkout $(ANSIBLE_GIT_VERSION)) $(if $(ANSIBLE_GIT_DIRECTORY),--directory $(ANSIBLE_GIT_DIRECTORY)) $(if $(ANSIBLE_TAGS),--tags $(ANSIBLE_TAGS)) $(if $(ANSIBLE_EXTRA_VARS),--extra-vars '$(ANSIBLE_EXTRA_VARS)') $(if $(findstring true,$(FORCE)),--force) $(if $(findstring true,$(DRYRUN)),--check) --full $(if $(ANSIBLE_INVENTORY),--inventory $(ANSIBLE_INVENTORY)) $(ANSIBLE_VERBOSE) $(ANSIBLE_PLAYBOOK)
+	@$(if $(ANSIBLE_CONFIG),ANSIBLE_CONFIG=$(ANSIBLE_GIT_DIRECTORY)/$(ANSIBLE_CONFIG)) ansible-pull --url $(ANSIBLE_GIT_REPOSITORY) $(if $(ANSIBLE_GIT_KEY_FILE),--key-file $(ANSIBLE_GIT_KEY_FILE)) $(if $(ANSIBLE_GIT_VERSION),--checkout $(ANSIBLE_GIT_VERSION)) $(if $(ANSIBLE_GIT_DIRECTORY),--directory $(ANSIBLE_GIT_DIRECTORY)) $(if $(ANSIBLE_TAGS),--tags $(ANSIBLE_TAGS)) $(if $(ANSIBLE_EXTRA_VARS),--extra-vars '$(ANSIBLE_EXTRA_VARS)') $(if $(findstring true,$(FORCE)),--force) $(if $(findstring true,$(DRYRUN)),--check) --full $(if $(ANSIBLE_INVENTORY),--inventory $(ANSIBLE_INVENTORY)) $(ANSIBLE_VERBOSE) $(ANSIBLE_PLAYBOOK)
 
 exec:
 	@make -C $(ANSIBLE_GIT_DIRECTORY) exec ARGS='$(ARGS)' DOCKER_NAME=$(COMPOSE_PROJECT_NAME)_$(SERVICE) ENV=$(ENV) DOCKER_RUN_WORKDIR=

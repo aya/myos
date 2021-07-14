@@ -23,13 +23,6 @@ hosts_cloudinit_config:
 hosts_cloudinit_enable: false
 ```
 
-* `hosts_git_repositories` - Clone git repositories
-
-``` yaml
-hosts_git_repositories:
-- { "repo": "https://github.com/aya/myos", "dest": "/src/com/github/aya/myos", "key_file": "~/.ssh/id_rsa", "version": "master" }
-```
-
 * `hosts_packages` - List of packages to install/remove on your hosts, should be overrided for a specific distro
 
 ``` yaml

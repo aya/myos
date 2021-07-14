@@ -19,6 +19,9 @@ aws_user: "{{ ansible_user|default('root') }}"
 # aws_secret_access_key to add in ~/.aws/credentials
 aws_secret_access_key: 'YOUR_SECRET_ACCESS_KEY'
 
+# git repositories to clone
+git_repositories: []
+
 # packages to install/remove
 remotes_packages: []
 

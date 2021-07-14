@@ -2,7 +2,7 @@
 # file: tasks/git.yml
 
 - name: git - clone repositories
-  with_items: "{{ hosts_git_repositories|default([]) }}"
+  with_items: "{{ git_repositories|default([]) }}"
   git:
     repo: "{{ item.repo }}"
     dest: "{{ item.dest|default('/src') }}"

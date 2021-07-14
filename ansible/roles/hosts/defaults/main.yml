@@ -78,9 +78,6 @@ hosts_cloudinit_config:
 # enable cloud-init
 hosts_cloudinit_enable: false
 
-# git repositories to clone
-hosts_git_repositories: []
-
 # packages to install/remove
 hosts_packages: []
 
