@@ -1,6 +1,5 @@
 # ~/.profile: executed by the command interpreter for login shells.
 # set -x
-umask 027
 
 # source ~/.*aliases and ~/.*functions files
 for source in aliases functions; do

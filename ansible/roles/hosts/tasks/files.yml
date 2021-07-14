@@ -9,6 +9,13 @@
   copy: src=../files/{{item}} dest={{item}} owner=root group=root mode=0644
   become: yes
 
+- name: files - copy myos cron file
+  when: hosts_update
+  with_items:
+  - /etc/cron.d/myos
+  copy: src=../files/{{item}} dest={{item}} owner=root group=root mode=0644
+  become: yes
+
 - name: files - copy binary files
   with_items:
   - /etc/init.d/myos
@@ -19,6 +26,8 @@
 - name: files - systemd - copy files
   when: ansible_service_mgr|lower == "systemd"
   with_items:
+  - /etc/systemd/system/ansible.service
+  - /etc/systemd/system/ansible.timer
   - /etc/systemd/system/myos.service
   - /etc/systemd/system/zram.service
   copy: src=../files/{{item}} dest={{item}} owner=root group=root mode=0644

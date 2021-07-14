@@ -12,10 +12,28 @@ Install and configure the [docker](https://www.docker.com/) daemon
 docker_check_kernel: '3.10'
 ```
 
-* `docker_check_machine` - Hosts architecture needed to run docker
+* `docker_daemon_config_directory` - Path to docker daemon configuration files
 
 ``` yaml
-docker_check_machine: 'x86_64'
+docker_daemon_config_directory: '/etc/docker'
+```
+
+* `docker_daemon_config_file` - Docker daemon configuration file
+
+``` yaml
+docker_daemon_config_file: "{{docker_daemon_config_directory}}/daemon.json"
+```
+
+* `docker_daemon_config_file` - Docker daemon configuration file
+
+``` yaml
+docker_daemon_config_storage: 'overlay2'
+```
+
+* `docker_daemon_config` - docker daemon yaml config
+
+``` yaml
+docker_daemon_config: { "storage-driver": "devicemapper" }
 ```
 
 * `docker_package` - Name of the docker package

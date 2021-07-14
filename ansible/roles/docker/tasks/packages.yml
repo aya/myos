@@ -2,6 +2,7 @@
 # file: tasks/packages.yml
 
 - name: packages - install/remove docker packages
+  when: docker_packages is defined
   with_items: "{{ docker_packages|default([]) }}"
   package: name="{{item.name}}" state="{{item.state}}"
   become: yes

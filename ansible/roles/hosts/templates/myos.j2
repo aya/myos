@@ -1,3 +1,4 @@
+MYOS={{ lookup('env','ANSIBLE_MYOS') }}
 {% for var in hosts_user_env|default([]) %}
 {{var}}={{ lookup('env',var) }}
 {% endfor %}

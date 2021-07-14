@@ -1,8 +1,8 @@
 # shellcheck shell=sh
 # file rc_functions.sh: Define shell functions
 ## author: Yann "aya" Autissier
-## license: MIT
-## version: 20210711
+## license: GPL
+## version: 20210714
 
 # function force: Run a command sine die
 force() {

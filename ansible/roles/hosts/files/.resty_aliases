@@ -1,8 +1,0 @@
-alias DELETE='resty-delete'
-alias GET='resty-get'
-alias HEAD='resty-head'
-alias OPTIONS='resty-options'
-alias PATCH='resty-patch'
-alias POST='resty-post'
-alias PUT='resty-put'
-alias TRACE='resty-trace'

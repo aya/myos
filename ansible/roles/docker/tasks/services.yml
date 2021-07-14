@@ -2,7 +2,7 @@
 # file: tasks/services.yml
 
 - name: services - enable/disable docker services
-  when: ansible_service_mgr|lower != "openrc"
+  when: docker_services is defined and ansible_service_mgr|lower != "openrc"
   with_items: "{{ docker_services|default([]) }}"
   service:
     name: "{{item.name}}"
@@ -11,13 +11,13 @@
   become: yes
 
 - name: services - openrc - force service status
-  when: ansible_service_mgr|lower == "openrc"
+  when: docker_services is defined and ansible_service_mgr|lower == "openrc"
   shell: "kill -0 $(cat /run/{{item.name}}.pid) && [ ! -h /run/openrc/started/{{item.name}} ] && ln -s /etc/init.d/{{item.name}} /run/openrc/started/{{item.name}} && service {{item.name}} restart ||:"
   with_items: "{{ docker_services|default([]) }}"
   become: yes
 
 - name: services - openrc - enable/disable docker services
-  when: ansible_service_mgr|lower == "openrc"
+  when: docker_services is defined and ansible_service_mgr|lower == "openrc"
   with_items: "{{ docker_services|default([]) }}"
   service:
     name: "{{item.name}}"

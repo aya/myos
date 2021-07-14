@@ -12,8 +12,8 @@
     docker_daemon_config: "{{ lookup('file',docker_daemon_config_file)|default('{}')|from_json}}"
   ignore_errors: true
 
-- name: config - add docker daemon storage configuration for btrfs
-  when: docker_package|length > 0
+- name: config - add docker daemon storage configuration
+  when: false and docker_package|length > 0
   template:
     src: daemon.json.j2
     dest: "{{docker_daemon_config_file}}"

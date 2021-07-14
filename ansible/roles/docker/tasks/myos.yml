@@ -3,7 +3,7 @@
 
 - name: myos - register myos.tags
   set_fact:
-    myos_tags: "{{ lookup('env', 'MYOS_TAGS_JSON')|from_json or lookup('file', '~/.env') }}"
+    myos_tags: "{{ lookup('env', 'MYOS_TAGS_JSON')|from_json }}"
   tags: debug
 
 - debug:

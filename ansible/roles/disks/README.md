@@ -22,7 +22,7 @@ disks_to_mount:
  - disk: /dev/sdb
    fstype: ext4
    mount_options: defaults
-   mount: /data
+   mount: /data1
    user: www-data
    group: www-data
    disable_periodic_fsck: false
@@ -31,14 +31,10 @@ disks_to_mount:
    fstype: xfs
    mount_options: defaults,noatime
    mount: /data2
- - device_name: /dev/sdf
-   fstype: ext4
-   mount_options: defaults
-   mount: /data
  - disk: nfs-host:/nfs/export
    fstype: nfs
    mount_options: defaults,noatime
-   mount: /srv/nfs
+   mount: /data3
 ```
 
 The following filesystems are currently supported:

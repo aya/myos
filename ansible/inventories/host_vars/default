@@ -8,12 +8,11 @@ aws_secret_access_key: "{{ lookup('env','ANSIBLE_AWS_SECRET_ACCESS_KEY') }}"
 disks_packages:
 - { "name": "e2fsprogs-extra", "state": "present" }
 - { "name": "nfs-utils", "state": "present" }
-git_repositories:
+hosts_git_repositories:
 - { "repo": "{{ lookup('env','ANSIBLE_GIT_REPOSITORY') }}", "dest": "{{ lookup('env','ANSIBLE_GIT_DIRECTORY') }}", "key_file": "{{ lookup('env','ANSIBLE_GIT_KEY_FILE') or '~/.ssh/id_rsa' }}", "version": "{{ lookup('env','ANSIBLE_GIT_VERSION') }}" }
 hosts_packages:
 - { "name": "ansible", "state": "present" }
 hosts_services:
-- { "name": "local", "state": "started", "enabled": "yes" }
 - { "name": "zram", "state": "started", "enabled": "yes" }
 hosts_user_env:
 - ANSIBLE_AWS_ACCESS_KEY_ID
@@ -29,9 +28,9 @@ hosts_user_env:
 - ANSIBLE_GIT_KEY_FILE
 - ANSIBLE_GIT_REPOSITORY
 - ANSIBLE_INVENTORY
+- ANSIBLE_MYOS
 - ANSIBLE_PLAYBOOK
 - ENV
-- MYOS
 hosts_user_rc_enable: true
 hosts_user_rc_functions:
 - { "path": "10_prompt_set", "state": "touch" }

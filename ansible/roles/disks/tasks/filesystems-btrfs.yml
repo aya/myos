@@ -1,25 +1,3 @@
 ---
 # file: tasks/filesystems-btrfs.yml
 
-- name: filesystems-btrfs - create filesystem on the first partition
-  when: item.1.stat.exists
-  with_together:
-    - '{{ disks_to_mount }}'
-    - '{{ disks_stat.results }}'
-  filesystem:
-    dev: '{{ item.0.part | default(item.0.disk + "1") }}'
-    force: '{{ item.0.force|d(omit) }}'
-    fstype: '{{ item.0.fstype }}'
-    opts: '{{ item.0.fsopts|d(omit) }}'
-  become: yes
-
-- name: filesystems-btrfs - disable periodic fsck and reserved space on ext3 or ext4 formatted disks
-  when: "disks_to_mount and ( item.0.fstype == 'ext4' or item.0.fstype == 'ext3' ) and item.0.disable_periodic_fsck|default(false)|bool and item.1.stat.exists"
-  with_together:
-    - '{{ disks_to_mount }}'
-    - '{{ disks_stat.results }}'
-  environment:
-    PATH: "{{ ansible_env.PATH }}:/usr/sbin:/sbin"
-  shell: tune2fs -c0 -i0 -m0 {{ item.0.part | default(item.0.disk + "1") }}
-  become: yes
-

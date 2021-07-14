@@ -8,6 +8,7 @@ docker_packages:
   - { "name": "apt-transport-https", "state": "present" }
   - { "name": "ca-certificates", "state": "present" }
   - { "name": "curl", "state": "present" }
+  - { "name": "docker-compose", "state": "present" }
   - { "name": "gnupg2", "state": "present" }
   - { "name": "software-properties-common", "state": "present" }
 

@@ -2,7 +2,7 @@
 # file: tasks/packages.yml
 
 - name: packages - install parted
-  when: disks_to_mount
+  when: disks_to_mount is defined
   package:
     name: parted
     state: present

@@ -1,0 +1,14 @@
+---
+# file: tasks/config.yml
+
+- name: config - arch != x86 - do not run docker-compose in docker
+  when: ansible_machine|lower != "x86_64"
+  lineinfile: dest="/etc/default/myos" state="present" line="DOCKER=false"
+  become: yes
+
+- name: config - set MYOS config in /etc/default/myos
+  with_items:
+  - MYOS={{ lookup('env','ANSIBLE_MYOS') }}
+  lineinfile: dest="/etc/default/myos" create="yes" line="{{ item }}" mode="0644"
+  become: yes
+

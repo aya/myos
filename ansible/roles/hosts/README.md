@@ -23,6 +23,13 @@ hosts_cloudinit_config:
 hosts_cloudinit_enable: false
 ```
 
+* `hosts_git_repositories` - Clone git repositories
+
+``` yaml
+hosts_git_repositories:
+- { "repo": "https://github.com/aynicos/myos", "dest": "/dns/com/github/aynicos/myos", "key_file": "~/.ssh/id_rsa", "version": "master" }
+```
+
 * `hosts_packages` - List of packages to install/remove on your hosts, should be overrided for a specific distro
 
 ``` yaml
@@ -99,7 +106,13 @@ hosts_ssh_public_hosts:
 hosts_ssh_username: root
 ```
 
-* `hosts_user_env` - List of environment variables added in ~/.env
+* `hosts_update` - Update hosts every day
+
+``` yaml
+hosts_update: false
+```
+
+* `hosts_user_env` - List of environment variables to add in file ~/.myos
 
 ``` yaml
 hosts_user_env:

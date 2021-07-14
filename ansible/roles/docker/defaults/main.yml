@@ -11,7 +11,7 @@ docker_daemon_config_directory: "/etc/docker"
 docker_daemon_config_file: "{{docker_daemon_config_directory}}/daemon.json"
 
 # configure docker daemon storage driver
-docker_daemon_config_storage: "{% if ansible_cmdline.fstype == 'btrfs'%}btrfs{% endif %}"
+docker_daemon_config_storage: "overlay2"
 
 # docker daemon configuration
 docker_daemon_config: {}

@@ -6,12 +6,10 @@ disks_packages:
 - { "name": "xfsprogs", "state": "present" }
 docker_image_tag: "{{ lookup('env','ANSIBLE_DOCKER_IMAGE_TAG') or 'latest' }}"
 docker_registry: "{{ lookup('env','ANSIBLE_DOCKER_REGISTRY') }}"
-git_repositories:
+hosts_git_repositories:
 - { "repo": "{{ lookup('env','ANSIBLE_GIT_REPOSITORY') }}", "dest": "{{ lookup('env','ANSIBLE_GIT_DIRECTORY') }}", "key_file": "{{ lookup('env','ANSIBLE_GIT_KEY_FILE') or '~/.ssh/id_rsa' }}", "version": "{{ lookup('env','ANSIBLE_GIT_VERSION') }}" }
-hosts_packages:
-- { "name": "ansible", "state": "present" }
 hosts_services:
-- { "name": "local", "state": "started", "enabled": "yes" }
+- { "name": "myos", "state": "stopped", "enabled": "yes" }
 - { "name": "zram", "state": "started", "enabled": "yes" }
 hosts_user_env:
 - ANSIBLE_CONFIG
@@ -22,7 +20,7 @@ hosts_user_env:
 - ANSIBLE_GIT_KEY_FILE
 - ANSIBLE_GIT_REPOSITORY
 - ANSIBLE_INVENTORY
+- ANSIBLE_MYOS
 - ANSIBLE_PLAYBOOK
 - ENV
-- MYOS
 hosts_user_rc_enable: true

@@ -23,8 +23,9 @@ docker_registry: "{{ lookup('env','ANSIBLE_DOCKER_REGISTRY') }}"
 hosts_packages:
 - { "name": "ansible", "state": "present" }
 hosts_services:
-- { "name": "local", "state": "started", "enabled": "yes" }
+- { "name": "myos", "state": "stopped", "enabled": "yes" }
 - { "name": "zram", "state": "started", "enabled": "yes" }
+hosts_update: true
 hosts_user_env:
 - ANSIBLE_AWS_ACCESS_KEY_ID
 - ANSIBLE_AWS_SECRET_ACCESS_KEY
@@ -39,10 +40,10 @@ hosts_user_env:
 - ANSIBLE_GIT_KEY_FILE
 - ANSIBLE_GIT_REPOSITORY
 - ANSIBLE_INVENTORY
+- ANSIBLE_MYOS
 - ANSIBLE_PLAYBOOK
 - COMPOSE_PROJECT_NAME
 - ENV
-- MYOS
 - MYOS_TAGS
 hosts_user_rc_enable: true
 hosts_user_rc_functions:
@@ -51,3 +52,5 @@ hosts_user_rc_functions:
 - { "path": "30_pfetch", "state": "touch" }
 - { "path": "30_screen_attach", "state": "touch" }
 - { "path": "40_ssh_add", "state": "touch" }
+remotes_services:
+- { "name": "ansible", "state": "stopped", "enabled": "yes" }

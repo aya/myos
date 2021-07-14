@@ -9,10 +9,10 @@ start() {
 	/etc/init.d/myos start
 }
 
-stop() {
-	/etc/init.d/myos stop
+status() {
+	/etc/init.d/myos ps
 }
 
-status() {
-	/etc/init.d/myos status
+stop() {
+	/etc/init.d/myos stop
 }

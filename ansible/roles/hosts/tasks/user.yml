@@ -11,10 +11,10 @@
   copy: src="{{ item }}" dest=~/.ssh/ mode=0400
   ignore_errors: true
 
-- name: user - create ~/.env
+- name: user - create ~/.myos
   template:
-    src: env.j2
-    dest: ~/.env
+    src: myos.j2
+    dest: ~/.myos
     force: no
     mode: 0400
 
@@ -32,13 +32,11 @@
   with_items: "{{ hosts_user_rc_functions|default([]) }}"
   file: path="~/.rc.d/{{item.path}}" state="{{item.state}}"
 
-- name: user - copy ~/.*aliases ~/.*functions ~/.*profile ~/.shrc
+- name: user - copy ~/.*aliases ~/.*profile ~/.shrc
   with_items:
     - ".dircolors_aliases"
     - ".docker_aliases"
-    - ".resty_aliases"
     - ".vim_aliases"
-    - ".sh_functions"
     - ".bash_profile"
     - ".profile"
     - ".shrc"

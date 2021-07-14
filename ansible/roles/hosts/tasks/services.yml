@@ -2,7 +2,7 @@
 # file: tasks/services.yml
 
 - name: services - enable/disable hosts services
-  when: ansible_service_mgr|lower != "openrc"
+  when: hosts_services is defined and ansible_service_mgr|lower != "openrc"
   with_items: "{{ hosts_services|default([]) }}"
   service:
     name: "{{item.name}}"
@@ -11,7 +11,7 @@
   become: yes
 
 - name: services - openrc - enable/disable hosts services
-  when: ansible_service_mgr|lower == "openrc"
+  when: hosts_services is defined and ansible_service_mgr|lower == "openrc"
   with_items: "{{ hosts_services|default([]) }}"
   service:
     name: "{{item.name}}"

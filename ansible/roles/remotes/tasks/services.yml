@@ -1,18 +1,18 @@
 ---
 # file: tasks/services.yml
 
-- name: services - enable/disable disks services
-  when: ansible_service_mgr|lower != "openrc"
-  with_items: "{{ disks_services|default([]) }}"
+- name: services - enable/disable remotes services
+  when: remotes_services is defined and ansible_service_mgr|lower != "openrc"
+  with_items: "{{ remotes_services|default([]) }}"
   service:
     name: "{{item.name}}"
     state: "{{item.state}}"
     enabled: "{{item.enabled}}"
   become: yes
 
-- name: services - openrc - enable/disable disks services
-  when: ansible_service_mgr|lower == "openrc"
-  with_items: "{{ disks_services|default([]) }}"
+- name: services - openrc - enable/disable remotes services
+  when: remotes_services is defined and ansible_service_mgr|lower == "openrc"
+  with_items: "{{ remotes_services|default([]) }}"
   service:
     name: "{{item.name}}"
     state: "{{item.state}}"

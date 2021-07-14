@@ -1,0 +1,9 @@
+[Unit]
+Description=Call ansible
+
+[Timer]
+OnCalendar=*-*-* 00:00:00
+Unit=ansible.service
+
+[Install]
+WantedBy=timers.target

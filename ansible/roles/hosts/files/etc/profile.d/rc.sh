@@ -1,8 +1,8 @@
 # shellcheck shell=sh
 # file rc.sh: Call user defined functions
 ## author: Yann "aya" Autissier
-## license: MIT
-## version: 20210620
+## license: GPL
+## version: 20210714
 
 case $- in
   # if this is an interactive shell
