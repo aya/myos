@@ -70,7 +70,7 @@
   - include myos/config
   lineinfile: dest=~/.ssh/config create=yes line='{{item}}'
 
-- name: ssh - update ~/.ssh/myos/config
+- name: user - update ~/.ssh/myos/config
   template:
     src: ssh_config.j2
     dest: ~/.ssh/myos/config

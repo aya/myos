@@ -8,7 +8,7 @@ bootstrap: bootstrap-git bootstrap-docker app-bootstrap ## Update application fi
 
 # target bootstrap-docker: Build and start application dockers
 # on local host
-.PHONY: boostrap-docker
+.PHONY: bootstrap-docker
 bootstrap-docker: install-bin-docker setup-docker-group
 
 # target bootstrap-git: Fire update-app

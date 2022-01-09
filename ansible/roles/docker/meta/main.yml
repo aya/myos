@@ -12,16 +12,50 @@ galaxy_info:
   - name: Alpine
     versions:
     - all
-  - name: Debian
+  - name: Centos
     versions:
     - all
+  - name: Debian
+    versions:
+    - bookworm
+    - bullseye
+    - buster
+    - stretch
+    - jessie
+    - wheezy
+  - name: Devuan
+    versions:
+    - daedalus
+    - chimaera
+    - beowulf
+    - ascii
+    - jessie
   - name: EL
     versions:
     - all
   - name: Fedora
     versions:
     - all
+  - name: Raspbian
+    versions:
+    - bookworm
+    - bullseye
+    - buster
+    - stretch
+    - jessie
   - name: Ubuntu
     versions:
-    - all
+    - impish
+    - hirsute
+    - groovy
+    - focal
+    - eoan
+    - disco
+    - cosmic
+    - bionic
+    - artful
+    - zesty
+    - yakkety
+    - xenial
+    - trusty
 

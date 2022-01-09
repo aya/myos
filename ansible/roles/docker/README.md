@@ -36,6 +36,24 @@ docker_daemon_config_storage: 'overlay2'
 docker_daemon_config: { "storage-driver": "devicemapper" }
 ```
 
+* `docker_distribution` - Docker package distribution
+
+``` yaml
+docker_distribution: debian
+```
+
+* `docker_distribution_release` - Docker package distribution release
+
+``` yaml
+docker_distribution_release: bullseye
+```
+
+* `docker_machine` - Docker package architecture
+
+``` yaml
+docker_machine: amd64
+```
+
 * `docker_package` - Name of the docker package
 
 ``` yaml
@@ -199,7 +217,7 @@ Both DOCKER_BUILD_PREFIX and DOCKER_BUILD_SUFFIX variables are empty, the Docker
 
 The DOCKER_BUILD_PREFIX variable is populated with 'custom/' to force the Dockerfile to search for a `./custom/nginx.conf` file, ie /etc/docker/nginx/custom/nginx.conf file.
 
-* Whith an image name suffixed with a dash, the docker-build command will search for a suffixed file as well.
+* With an image name suffixed with a dash, the docker-build command will search for a suffixed file as well.
 
 ``` bash
 # docker-build -c custom nginx-develop && docker-run -c custom nginx-develop
@@ -241,4 +259,4 @@ docker:
 
 ## Limitations
 
-This role is known to work on Ubuntu, Debian, CentOS and Alpine Linux.
+This role is known to work on Alpine Linux, Armbian, Centos, Debian, Devuan, Fedora, Raspbian, RedHat and Ubuntu.

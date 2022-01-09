@@ -2,7 +2,7 @@
 # file: tasks/services.yml
 
 - name: services - enable/disable docker services
-  when: docker_services is defined and ansible_service_mgr|lower != "openrc"
+  when: docker_services is defined and ansible_service_mgr|lower != "openrc" and ansible_service_mgr|lower != "runit"
   with_items: "{{ docker_services|default([]) }}"
   service:
     name: "{{item.name}}"
@@ -10,13 +10,13 @@
     enabled: "{{item.enabled}}"
   become: yes
 
-- name: services - openrc - force service status
+- name: services - force service status - openrc
   when: docker_services is defined and ansible_service_mgr|lower == "openrc"
   shell: "kill -0 $(cat /run/{{item.name}}.pid) && [ ! -h /run/openrc/started/{{item.name}} ] && ln -s /etc/init.d/{{item.name}} /run/openrc/started/{{item.name}} && service {{item.name}} restart ||:"
   with_items: "{{ docker_services|default([]) }}"
   become: yes
 
-- name: services - openrc - enable/disable docker services
+- name: services - enable/disable docker services - openrc
   when: docker_services is defined and ansible_service_mgr|lower == "openrc"
   with_items: "{{ docker_services|default([]) }}"
   service:
@@ -26,7 +26,16 @@
     runlevel: boot
   become: yes
 
-- name: services - openrc - force service restart
+- name: services - enable/disable docker services - runit
+  when: docker_services is defined and ansible_service_mgr|lower == "runit"
+  with_items: "{{ docker_services|default([]) }}"
+  sysvinit:
+    name: "{{item.name}}"
+    state: "{{item.state}}"
+    enabled: "{{item.enabled}}"
+  become: yes
+
+- name: services - force service restart - openrc
   when: ansible_service_mgr|lower == "openrc"
   shell: "[ ! -d /var/lib/docker/tmp ] && service docker restart ||:"
   become: yes

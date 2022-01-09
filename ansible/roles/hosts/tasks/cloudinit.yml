@@ -6,7 +6,7 @@
   package: name="cloud-init" state="present"
   become: yes
 
-- name: cloudinit - alpine - install cloud-init packages
+- name: cloudinit - install cloud-init packages - alpine
   when: hosts_cloudinit_enable|default(false) and ansible_os_family|lower == "alpine"
   with_items:
   - { "name": "cloud-init", "state": "present" }
@@ -37,7 +37,7 @@
     enabled: yes
   become: yes
 
-- name: cloudinit - activate service (openrc)
+- name: cloudinit - activate service - openrc
   when: hosts_cloudinit_enable|default(false) and ansible_service_mgr|lower == "openrc"
   service:
     name: cloud-init

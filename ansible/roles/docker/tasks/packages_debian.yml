@@ -1,0 +1,53 @@
+---
+# file: tasks/packages_debian.yml
+
+- name: packages - add docker GPG key
+  apt_key: url=https://download.docker.com/linux/debian/gpg
+  ignore_errors: true
+  become: yes
+
+- name: packages - define docker_machine
+  set_fact:
+    docker_machine: "{% if ansible_machine == 'aarch64' %}arm64{% endif %}{% if ansible_machine == 'x86_64' %}amd64{% endif %}"
+  when: docker_machine is undefined
+
+- name: packages - define docker_distribution
+  set_fact:
+    docker_distribution: "{% if ansible_distribution|lower == 'devuan' %}debian{% else %}{{ansible_distribution|lower}}{% endif %}"
+  when: docker_distribution is undefined
+
+- name: packages - define docker_distribution_release - debian bookworm (not yet available)
+  set_fact:
+    docker_distribution_release: "bullseye"
+  when: docker_distribution_release is undefined and ansible_distribution_release|lower == 'bookworm'
+
+- name: packages - define docker_distribution_release - devuan daealus
+  set_fact:
+    docker_distribution_release: "bullseye"
+  when: docker_distribution_release is undefined and ansible_distribution_release|lower == 'daedalus/ceres'
+
+- name: packages - define docker_distribution_release - devuan chimaera
+  set_fact:
+    docker_distribution_release: "bullseye"
+  when: docker_distribution_release is undefined and ansible_distribution_release|lower == 'chimaera'
+
+- name: packages - define docker_distribution_release - devuan beowulf
+  set_fact:
+    docker_distribution_release: "buster"
+  when: docker_distribution_release is undefined and ansible_distribution_release|lower == 'beowulf'
+
+- name: packages - define docker_distribution_release - devuan ascii
+  set_fact:
+    docker_distribution_release: "stretch"
+  when: docker_distribution_release is undefined and ansible_distribution_release|lower == 'ascii'
+
+- name: packages - define docker_distribution_release
+  set_fact:
+    docker_distribution_release: "{{ansible_distribution_release|lower}}"
+  when: docker_distribution_release is undefined
+
+- name: packages - add docker APT repository
+  apt_repository:
+    repo: deb [arch={{docker_machine}}] https://download.docker.com/linux/{{docker_distribution}} {{docker_distribution_release}} stable
+  become: yes
+

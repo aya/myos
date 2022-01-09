@@ -25,7 +25,7 @@
 
 - name: filesystems - btrfs
   when: "disks_to_mount and ansible_cmdline.fstype == 'btrfs'"
-  import_tasks: filesystems-btrfs.yml
+  import_tasks: filesystems_btrfs.yml
   tags:
     - btrfs
 

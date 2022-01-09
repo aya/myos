@@ -1,4 +1,4 @@
-ANSIBLE_ARGS                    ?= $(if $(filter-out 0,$(UID)),$(if $(shell sudo -l 2>/dev/null |grep 'NOPASSWD: ALL'),,-K))$(if $(DOCKER_RUN),$(if $(shell ssh-add -l >/dev/null 2>&1 || echo false), -k))
+ANSIBLE_ARGS                    ?= $(if $(filter-out 0,$(UID)),$(if $(shell sudo -l 2>/dev/null |grep 'NOPASSWD: ALL'),,--ask-become-pass))$(if $(DOCKER_RUN),$(if $(shell ssh-add -l >/dev/null 2>&1 || echo false), --ask-pass))
 ANSIBLE_AWS_ACCESS_KEY_ID       ?= $(AWS_ACCESS_KEY_ID)
 ANSIBLE_AWS_DEFAULT_OUTPUT      ?= $(AWS_DEFAULT_OUTPUT)
 ANSIBLE_AWS_DEFAULT_REGION      ?= $(AWS_DEFAULT_REGION)

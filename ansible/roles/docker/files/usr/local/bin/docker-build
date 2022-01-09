@@ -1,7 +1,7 @@
 #!/bin/bash
 # Author: Yann Autissier <yann.autissier@gmail.com>
 
-DOCKER_IMAGE_REPOSITORY="centile"
+DOCKER_IMAGE_REPOSITORY="local"
 DOCKER_BUILD_DIRECTORY="/etc/docker"
 
 usage() {
@@ -30,9 +30,9 @@ usage() {
     echo -e "Build a docker image named '${DOCKER_IMAGE_REPOSITORY}/elk-es01' with Dockerfile ${DOCKER_BUILD_DIRECTORY}/elk/Dockerfile"
     echo -e "and build-arg DOCKER_BUILD_SUFFIX=-es01"
     echo 
-    echo -e "$0 -c elisa-sdc elk-es01"
+    echo -e "$0 -c custom elk-es01"
     echo -e "Build a docker image named '${DOCKER_IMAGE_REPOSITORY}/elk-es01' with Dockerfile ${DOCKER_BUILD_DIRECTORY}/elk/Dockerfile,"
-    echo -e "build-arg DOCKER_BUILD_PREFIX=elisa-sdc/ and build-arg DOCKER_BUILD_SUFFIX=-es01"
+    echo -e "build-arg DOCKER_BUILD_PREFIX=custom/ and build-arg DOCKER_BUILD_SUFFIX=-es01"
     echo 
     exit 1
 }

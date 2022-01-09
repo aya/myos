@@ -4,7 +4,7 @@
 # target debug: Print more informations
 .PHONY: debug
 debug:
-	$(MAKE) doc help profile DEBUG=true
+	$(MAKE) help profile DEBUG=true
 
 # target debug-%: Print value of %
 .PHONY: debug-%

@@ -6,7 +6,7 @@ hosts_packages_distro:
   - { "name": "groff", "state": "present" }
   - { "name": "openssh-client", "state": "present" }
   - { "name": "pass", "state": "present" }
-  - { "name": "python-pip", "state": "present" }
+  - { "name": "python3-pip", "state": "present" }
   - { "name": "rclone", "state": "present" }
   - { "name": "util-linux", "state": "present" }
   - { "name": "vim-nox", "state": "present" }
