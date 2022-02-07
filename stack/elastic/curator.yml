@@ -7,7 +7,6 @@ services:
       - DOCKER_BUILD_DIR=docker/elastic/curator
       context: ../..
       dockerfile: docker/elastic/curator/Dockerfile
-      target: ${DOCKER_BUILD_TARGET}
     environment:
     - DEPLOY=${DEPLOY}
     - HOSTS=${ELASTICSEARCH_PROTOCOL}://${ELASTICSEARCH_HOST}

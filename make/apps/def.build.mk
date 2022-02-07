@@ -7,7 +7,7 @@ BUILD_LABEL_VARS                ?= org.label-schema.% org.opencontainers.% os.my
 BUILD_LABEL_ARGS                ?= $(foreach var,$(filter $(BUILD_LABEL_VARS),$(MAKE_FILE_VARS)),$(if $($(var)),$(var)='$($(var))'))
 BUILD_LICENSE                   ?= GPL-3.0
 BUILD_NAME                      ?= $(COMPOSE_SERVICE_NAME)-$(BUILD_SERVICE)
-BUILD_SERVICE                   ?= undef
+BUILD_SERVICE                   ?= $(or $(service),undefined)
 BUILD_STATUS                    ?= $(shell git status -uno --porcelain 2>/dev/null)
 
 org.label-schema.build-date             ?= $(BUILD_DATE)

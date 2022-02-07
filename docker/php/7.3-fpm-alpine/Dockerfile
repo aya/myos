@@ -1,4 +1,5 @@
 FROM php:7.3-fpm-alpine as dist
+LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 ARG AMQP_VERSION=stable
 ARG AST_VERSION=stable
@@ -23,8 +24,6 @@ ARG UUID_VERSION=stable
 ARG XDEBUG_VERSION=stable
 ARG XHPROF_VERSION=2.2.0
 ARG YAML_VERSION=stable
-
-LABEL maintainer aynic.os <support+docker@asycn.io>
 
 RUN apk --no-cache upgrade \
  && apk add --no-cache --virtual .build-deps \

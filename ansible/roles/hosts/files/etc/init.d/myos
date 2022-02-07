@@ -1,11 +1,11 @@
 #!/bin/bash
 ### BEGIN INIT INFO
 # Provides: myos
-# Required-Start:
+# Required-Start: docker
 # Required-Stop:
 # Default-Start: 2 3 4 5
 # Default-Stop: 0 1 6
-# Description: MYOS system call
+# Description: MYOS system calls
 ### END INIT INFO
 
 set -e

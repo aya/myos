@@ -1,8 +1,7 @@
 FROM ubuntu:18.04 as dist
+LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 # https://github.com/theia-ide/theia-apps/blob/master/theia-full-docker/Dockerfile
-
-LABEL maintainer aynic.os <support+docker@asycn.io>
 
 ENV DEBIAN_FRONTEND noninteractive
 

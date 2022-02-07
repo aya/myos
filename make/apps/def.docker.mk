@@ -26,6 +26,7 @@ DOCKER_BUILD_TARGET             ?= $(if $(filter $(ENV),$(DOCKER_BUILD_TARGETS))
 DOCKER_BUILD_TARGET_DEFAULT     ?= master
 DOCKER_BUILD_TARGETS            ?= $(ENV_DEPLOY)
 DOCKER_BUILD_VARS               ?= APP BRANCH DOCKER_GID DOCKER_REPOSITORY GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME SSH_BASTION_HOSTNAME SSH_BASTION_USERNAME SSH_PRIVATE_IP_RANGE SSH_PUBLIC_HOST_KEYS SSH_REMOTE_HOSTS UID USER VERSION
+DOCKER_COMPOSE                  ?= $(if $(DOCKER_RUN),docker/compose:$(COMPOSE_VERSION),$(or $(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'),docker-compose))
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
 DOCKER_COMPOSE_UP_OPTIONS       ?= -d
 DOCKER_IMAGE_TAG                ?= $(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest))
@@ -46,12 +47,6 @@ DOCKER_SERVICE                  ?= $(lastword $(DOCKER_SERVICES))
 DOCKER_SERVICES                 ?= $(eval IGNORE_DRYRUN := true)$(shell $(call docker-compose,--log-level critical config --services))$(eval IGNORE_DRYRUN := false)
 DOCKER_SHELL                    ?= $(SHELL)
 ENV_VARS                        += COMPOSE_PROJECT_NAME COMPOSE_SERVICE_NAME DOCKER_BUILD_TARGET DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_REPOSITORY DOCKER_SHELL
-
-ifneq ($(DOCKER_RUN),)
-DOCKER_COMPOSE                  ?= docker/compose:$(COMPOSE_VERSION)
-else
-DOCKER_COMPOSE                  ?= $(or $(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'),docker-compose)
-endif
 
 ifeq ($(DRONE), true)
 APP_PATH_PREFIX                 := $(DRONE_BUILD_NUMBER)
@@ -88,7 +83,8 @@ endef
 define docker-build
 	$(call INFO,docker-build,$(1)$(comma) $(2)$(comma) $(3))
 	$(eval path            := $(patsubst %/,%,$(1)))
-	$(eval tag             := $(or $(2),$(DOCKER_REPOSITORY)/$(lastword $(subst /, ,$(path))):$(DOCKER_IMAGE_TAG)))
+	$(eval service         := $(lastword $(subst /, ,$(path))))
+	$(eval tag             := $(or $(2),$(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG)))
 	$(eval target          := $(subst ",,$(subst ',,$(or $(3),$(DOCKER_BUILD_TARGET)))))
 	$(eval image_id        := $(shell docker images -q $(tag) 2>/dev/null))
 	$(eval build_image     := $(or $(filter false,$(DOCKER_BUILD_CACHE)),$(if $(image_id),,true)))

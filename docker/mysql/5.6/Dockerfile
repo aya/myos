@@ -1,7 +1,6 @@
 FROM mysql:5.6.44 as dist
-ARG DOCKER_BUILD_DIR
-
 LABEL maintainer aynic.os <support+docker@asycn.io>
+ARG DOCKER_BUILD_DIR
 
 # config
 COPY ${DOCKER_BUILD_DIR}/conf.d/all.cnf /etc/mysql/conf.d/

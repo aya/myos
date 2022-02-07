@@ -1,9 +1,8 @@
 FROM alpine:latest as dist
+LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 ARG GIT_AUTHOR_NAME
 ARG GIT_AUTHOR_EMAIL
-
-LABEL maintainer aynic.os <support+docker@asycn.io>
 
 ENV GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME}
 ENV GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}

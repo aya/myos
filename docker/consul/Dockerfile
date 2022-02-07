@@ -1,21 +1,22 @@
-FROM consul:1.6.1 as dist
-ARG DOCKER_BUILD_DIR
-
+FROM consul:1.11.1 as dist
 LABEL maintainer aynic.os <support+docker@asycn.io>
+ARG DOCKER_BUILD_DIR
+ARG DOCKER_GID=999
 
-# install docker
-RUN apk add --no-cache bash docker gawk sudo \
- && echo "consul ALL=(root) NOPASSWD: /usr/local/bin/container-list-status" >> /etc/sudoers
+# add user consul in group docker
+RUN DOCKER_GROUP=$(awk -F: '$3 == '${DOCKER_GID}' {print $1}' < /etc/group) \
+ && if [ -n "${DOCKER_GROUP}" ]; then adduser consul ${DOCKER_GROUP}; \
+    else addgroup -g ${DOCKER_GID} docker && adduser consul docker; \
+    fi
 
-# install goss
-ADD https://github.com/aelsabbahy/goss/releases/latest/download/goss-linux-amd64 /usr/bin/goss
-RUN chmod +rx /usr/bin/goss
-COPY ${DOCKER_BUILD_DIR}/goss.yml /tests/goss.yml
+COPY ${DOCKER_BUILD_DIR}/docker-healthcheck /usr/local/bin/
+RUN chmod +rx /usr/local/bin/docker-healthcheck
 
-COPY ${DOCKER_BUILD_DIR}/container-check-status ${DOCKER_BUILD_DIR}/container-list-status /usr/local/bin/
-RUN chmod +rx /usr/local/bin/container-check-status /usr/local/bin/container-list-status
-
-HEALTHCHECK CMD goss -g /tests/goss.yml validate --format tap
+HEALTHCHECK CMD ((((echo -e 'GET /v1/health/service/consul HTTP/1.0\n' \
+                     |nc -w 1 localhost:8500; echo $? >&3) \
+                     |sed -n '/^\[/,$p' \
+                     |jq '.[].Checks[0].Output' >&4) 3>&1) \
+                     | (read err; exit $err)) 4>&1
 
 FROM dist as master
 ARG DOCKER_BUILD_DIR

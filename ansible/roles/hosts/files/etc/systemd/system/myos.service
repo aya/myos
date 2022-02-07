@@ -1,5 +1,5 @@
 [Unit]
-Description=System calls from https://github.com/aynicos/myos
+Description=MYOS system calls
  
 [Service]
 Type=oneshot

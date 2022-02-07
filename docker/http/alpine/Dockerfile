@@ -1,9 +1,8 @@
 FROM httpd:alpine as dist
+LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 ARG HTTPD_LOAD_MODULE="env expires headers lbmethod_bybusyness lbmethod_byrequests proxy proxy_balancer proxy_fcgi proxy_http setenvif slotmem_shm reqtimeout rewrite"
 ARG HTTPD_CONF_EXTRA="default info mpm vhosts"
-
-LABEL maintainer aynic.os <support+docker@asycn.io>
 
 RUN sed -E -i \
         -e 's!^#?\s*(LoadModule ('${HTTPD_LOAD_MODULE// /|}')_module modules/mod_('${HTTPD_LOAD_MODULE// /|}').so)\s*!\1!g' \

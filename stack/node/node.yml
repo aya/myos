@@ -38,13 +38,13 @@ services:
     - consul:/consul/data
     - /var/run/docker.sock:/var/run/docker.sock
   fabio:
+    image: fabiolb/fabio:latest
     command: -registry.backend "consul" -registry.consul.addr "consul:8500" -registry.consul.token "$FABIO_CONSUL_HTTP_TOKEN" -proxy.addr ":80,:443;cs=local" -proxy.cs "cs=local;type=file;cert=/certs/${DOMAIN}.crt.pem;key=/certs/${DOMAIN}.key.pem"
     depends_on:
     - consul
     extra_hosts:
     - consul:${DOCKER_HOST_INET}
     hostname: ${HOSTNAME}
-    image: fabiolb/fabio:latest
     labels:
     - SERVICE_80_CHECK_TCP=true
     - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME}-fabio-80
@@ -83,8 +83,11 @@ services:
     build:
       args:
       - DOCKER_BUILD_DIR=docker/registrator
+      - GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME}
+      - GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}
       context: ../..
       dockerfile: docker/registrator/Dockerfile
+    image: ${DOCKER_REPOSITORY_NODE}/registrator:${DOCKER_IMAGE_TAG}
     command: -internal -cleanup -deregister always -resync=30 -useIpFromNetwork node -useIpFromLabel SERVICE_ADDRESS consul://consul:8500
     depends_on:
     - consul
@@ -93,7 +96,6 @@ services:
     extra_hosts:
     - consul:${DOCKER_HOST_INET}
     hostname: ${HOSTNAME}
-    image: ${DOCKER_REPOSITORY_NODE}/registrator:${DOCKER_IMAGE_TAG}
     network_mode: host
     restart: always
     volumes:

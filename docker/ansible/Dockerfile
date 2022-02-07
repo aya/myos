@@ -1,13 +1,12 @@
 FROM alpine:latest as dist
-ARG DOCKER_BUILD_DIR
-
 LABEL maintainer aynic.os <support+docker@asycn.io>
 
 RUN apk --no-cache add \
         ansible \
-        py3-pip
+        py3-pip \
+ && pip3 install boto
 
-RUN pip3 install boto
+RUN apk --no-cache upgrade
 
 ENTRYPOINT ["/usr/bin/ansible"]
 CMD ["--help"]

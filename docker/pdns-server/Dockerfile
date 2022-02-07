@@ -1,10 +1,9 @@
 FROM alpine:3.11 as dist
+LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 ARG VERSION_PDNS_REC=4.2.1
 ARG VERSION_PDNS_AUTH=4.2.1
 ARG VERSION_PDNS_DNSDIST=1.4.0
-
-LABEL maintainer aynic.os <support+docker@asycn.io>
 
 RUN apk upgrade --no-cache \
  && apk add --no-cache --virtual .build-deps \

@@ -6,6 +6,8 @@ services:
       args:
       - DOCKER_BUILD_DIR=docker/cli
       - GID=${GID}
+      - GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME}
+      - GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}
       - UID=${UID}
       - USER=${USER}
       - SSH_BASTION_HOSTNAME=${SSH_BASTION_HOSTNAME}
@@ -14,7 +16,6 @@ services:
       - SSH_PRIVATE_IP_RANGE=${SSH_RIVATE_IP_RANGE}
       context: ../..
       dockerfile: docker/cli/Dockerfile
-      target: ${DOCKER_BUILD_TARGET}
     command: tail -f /dev/null
     container_name: ${DOCKER_NAME_CLI}
     depends_on:
@@ -38,7 +39,6 @@ services:
       - USER=${USER}
       context: ../..
       dockerfile: docker/ssh/Dockerfile
-      target: ${DOCKER_BUILD_TARGET}
     container_name: ${DOCKER_NAME_SSH}
     image: ${DOCKER_IMAGE_SSH}:${DOCKER_IMAGE_TAG}
     networks:

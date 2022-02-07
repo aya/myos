@@ -4,9 +4,9 @@ services:
   es-exporter:
     build:
       args:
-      - DOCKER_BUILD_DIR=docker/es-exporter
+      - DOCKER_BUILD_DIR=docker/prometheus/es-exporter
       context: ../..
-      dockerfile: docker/es-exporter/Dockerfile
+      dockerfile: docker/prometheus/es-exporter/Dockerfile
     command: -e ${ES_EXPORTER_ELASTICSEARCH_URL}
     image: ${DOCKER_REPOSITORY}/es-exporter:${DOCKER_IMAGE_TAG}
     labels:

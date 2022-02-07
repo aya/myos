@@ -1,10 +1,8 @@
-FROM golang:1.12-alpine AS builder
-ARG DOCKER_BUILD_DIR
-ARG GOOFYS_VERSION=v0.20.0
-
+FROM golang:1.15-alpine AS build
 LABEL maintainer aynic.os <support+docker@asycn.io>
+ARG GOOFYS_VERSION=v0.24.0
 
-WORKDIR /go/src/github.com/kahing/goofys/
+WORKDIR /src/github.com/kahing/goofys/
 
 RUN apk --no-cache upgrade \
  && apk --no-cache add git make \
@@ -14,10 +12,9 @@ RUN apk --no-cache upgrade \
  && make install
 
 FROM alpine:latest as dist
-ARG DOCKER_BUILD_DIR
 
 RUN apk add --no-cache ca-certificates
-COPY --from=builder /go/bin/goofys /bin/goofys
+COPY --from=build /go/bin/goofys /bin/goofys
 
 ENTRYPOINT ["/bin/goofys"]
 

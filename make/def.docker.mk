@@ -15,7 +15,7 @@ DOCKER_NETWORK_PUBLIC           ?= node
 DOCKER_REPOSITORY_MYOS          ?= $(subst _,/,$(COMPOSE_PROJECT_NAME_MYOS))
 DOCKER_REPOSITORY_NODE          ?= $(subst _,/,$(COMPOSE_PROJECT_NAME_NODE))
 # DOCKER_RUN: if empty, run system command, else run it in a docker
-DOCKER_RUN                      ?=
+DOCKER_RUN                      ?= $(if $(filter-out false False FALSE,$(DOCKER)),$(DOCKER))
 # DOCKER_RUN_OPTIONS: default options of `docker run` command
 DOCKER_RUN_OPTIONS              += --rm -it
 # DOCKER_RUN_VOLUME: options -v of `docker run` command to mount additionnal volumes

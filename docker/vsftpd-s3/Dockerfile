@@ -1,8 +1,7 @@
 FROM alpine:3.11 as dist
+LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 ARG S3FS_VERSION=v1.85
-
-LABEL maintainer aynic.os <support+docker@asycn.io>
 
 # Install s3fs-fuse and sftpserver
 RUN apk --no-cache upgrade \

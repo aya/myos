@@ -1,7 +1,6 @@
 FROM alpine:latest as dist
-ARG DOCKER_BUILD_DIR
-
 LABEL maintainer aynic.os <support+docker@asycn.io>
+ARG DOCKER_BUILD_DIR
 
 # Install dependencies
 RUN apk add --no-cache \

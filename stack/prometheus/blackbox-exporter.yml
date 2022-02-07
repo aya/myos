@@ -4,9 +4,9 @@ services:
   blackbox:
     build:
       args:
-      - DOCKER_BUILD_DIR=docker/blackbox
+      - DOCKER_BUILD_DIR=docker/prometheus/blackbox-exporter
       context: ../..
-      dockerfile: docker/blackbox/Dockerfile
+      dockerfile: docker/prometheus/blackbox-exporter/Dockerfile
     image: ${DOCKER_REPOSITORY}/blackbox:${DOCKER_IMAGE_TAG}
     labels:
     - SERVICE_9115_NAME=${COMPOSE_SERVICE_NAME}-blackbox-9115

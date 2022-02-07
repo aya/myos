@@ -4,9 +4,9 @@ services:
   apm-server-oss:
     build:
       args:
-      - DOCKER_BUILD_DIR=docker/apm-server-oss
+      - DOCKER_BUILD_DIR=docker/elastic/apm-server-oss
       context: ../..
-      dockerfile: docker/apm-server-oss/Dockerfile
+      dockerfile: docker/elastic/apm-server-oss/Dockerfile
     image: ${DOCKER_REPOSITORY}/apm-server-oss:${DOCKER_IMAGE_TAG}
     command: -c apm-server.yml --strict.perms=false -e -E output.elasticsearch.hosts=["${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}"] -E output.elasticsearch.protocol=${ELASTICSEARCH_PROTOCOL} -E output.elasticsearch.username=${ELASTICSEARCH_USERNAME} -E output.elasticsearch.password=${ELASTICSEARCH_PASSWORD} -E apm-server.register.ingest.pipeline.enabled=false
     labels:

@@ -5,9 +5,10 @@ services:
     build:
       args:
       - DOCKER_BUILD_DIR=docker/theia
+      - GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME}
+      - GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}
       context: ../..
       dockerfile: docker/theia/Dockerfile
-      target: ${DOCKER_BUILD_TARGET}
     environment:
     - ENV=${ENV}
     - MONOREPO_DIR=${MONOREPO_DIR}

@@ -1,5 +1,0 @@
-#!/bin/sh
-# https://github.com/hashicorp/consul/issues/3182
-
-# docker inspect -f '{{.Id}} {{.Config.Hostname}} {{.Name}} {{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}} {{.State.Health.Status}}' $(docker ps -q) 2>/dev/null
-docker container inspect --format '{{.State.Health.Status}}{{printf "\t"}}{{.Id}}{{printf "\t"}}{{.Name}}{{printf "\t"}}{{.Config.Hostname}}{{printf "\t"}}{{range .NetworkSettings.Networks}}{{.IPAddress}}{{printf "\t"}}{{end}}{{printf "\t"}}{{$output := ""}}{{range .State.Health.Log}}{{$output = .Output}}{{end}}{{$output}}{{printf "%c" 0}}' $(docker ps -q) 2>/dev/null

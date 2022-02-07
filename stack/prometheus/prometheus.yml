@@ -4,11 +4,11 @@ services:
   prometheus:
     build:
       args:
-      - DOCKER_BUILD_DIR=docker/prometheus
+      - DOCKER_BUILD_DIR=docker/prometheus/prometheus
       - MONITORING_PRIMARY_TARGETS_BLACKBOX=${PROMETHEUS_MONITORING_PRIMARY_TARGETS_BLACKBOX}
       - MONITORING_SECONDARY_TARGETS_BLACKBOX=${PROMETHEUS_MONITORING_SECONDARY_TARGETS_BLACKBOX}
       context: ../..
-      dockerfile: docker/prometheus/Dockerfile
+      dockerfile: docker/prometheus/prometheus/Dockerfile
     image: ${DOCKER_REPOSITORY}/prometheus:${DOCKER_IMAGE_TAG}
     labels:
     - SERVICE_9090_NAME=${COMPOSE_SERVICE_NAME}-prometheus-9090

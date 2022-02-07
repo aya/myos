@@ -1,4 +1,5 @@
 FROM phabricator/daemon:latest as dist
+LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 
 RUN apt-get update \

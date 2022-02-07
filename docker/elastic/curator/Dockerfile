@@ -1,8 +1,7 @@
 FROM alpine:latest as dist
+LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 ARG CURATOR_VERSION=5.8.3
-
-LABEL maintainer aynic.os <support+docker@asycn.io>
 
 RUN apk --no-cache add \
     bash \

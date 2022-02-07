@@ -1,13 +1,11 @@
 FROM alpine:latest as dist
-ARG DOCKER_BUILD_DIR
-
 LABEL maintainer aynic.os <support+docker@asycn.io>
 
 RUN apk --no-cache add \
         groff \
         less \
-        py-pip \
- && pip install awscli
+        py-pip3 \
+ && pip3 install awscli
 
 RUN apk --no-cache upgrade
 

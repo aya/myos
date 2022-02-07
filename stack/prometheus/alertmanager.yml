@@ -4,10 +4,10 @@ services:
   alertmanager:
     build:
       args:
-      - DOCKER_BUILD_DIR=docker/alertmanager
+      - DOCKER_BUILD_DIR=docker/prometheus/alertmanager
       - SLACK_WEBHOOK_ID=${ALERTMANAGER_SLACK_WEBHOOK_ID}
       context: ../..
-      dockerfile: docker/alertmanager/Dockerfile
+      dockerfile: docker/prometheus/alertmanager/Dockerfile
     image: ${DOCKER_REPOSITORY}/alertmanager:${DOCKER_IMAGE_TAG}
     labels:
     - SERVICE_9093_NAME=${COMPOSE_SERVICE_NAME}-alertmanager-9093
