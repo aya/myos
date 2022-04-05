@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  vdi:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/x2go/xfce-debian
+      context: ../..
+      dockerfile: docker/x2go/xfce-debian/Dockerfile
+    cap_add:
+    - IPC_LOCK # ecryptfs
+    - NET_ADMIN # iptables
+    - NET_RAW # iptables
+    - SYS_ADMIN # ecryptfs
+    environment:
+    - LANG=${VDI_LANG}
+    - SUDOERS=${VDI_SUDOERS}
+    - TZ=${VDI_TZ}
+    - USERS=${VDI_USERS}
+    ports:
+    - "${VDI_PORT}:22"
+    restart: unless-stopped
+    security_opt:
+    - apparmor=unconfined # ecryptfs
+    - seccomp=unconfined # ecryptfs
+    tty: true
+    volumes:
+    - type: tmpfs
+      target: /home
+      tmpfs:
+        size: 8589934592 # 8GB
+    - type: tmpfs
+      target: /dev/shm
+      tmpfs:
+        size: 2147483648 # 2GB
