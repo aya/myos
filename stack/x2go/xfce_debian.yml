@@ -13,6 +13,8 @@ services:
     - NET_RAW # iptables
     - SYS_ADMIN # ecryptfs
     environment:
+    - DEBUG=${VDI_DEBUG}
+    - ECRYPTERS=${VDI_ECRYPTERS}
     - LANG=${VDI_LANG}
     - SUDOERS=${VDI_SUDOERS}
     - TZ=${VDI_TZ}
@@ -25,11 +27,22 @@ services:
     - seccomp=unconfined # ecryptfs
     tty: true
     volumes:
-    - type: tmpfs
-      target: /home
-      tmpfs:
-        size: 8589934592 # 8GB
-    - type: tmpfs
-      target: /dev/shm
-      tmpfs:
-        size: 2147483648 # 2GB
+    - home:/home:delegated
+    - shared:/shared:cached
+    - shm:/dev/shm:delegated
+
+
+volumes:
+  home:
+  shared:
+    driver: local
+    driver_opts:
+      type: none
+      device: /mnt/shared
+      o: bind
+  shm:
+    driver: local
+    driver_opts:
+      type: tmpfs
+      device: tmpfs
+      o: mode=1777,size=2147483648 # 2GB
