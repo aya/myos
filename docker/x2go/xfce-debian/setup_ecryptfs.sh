@@ -21,17 +21,12 @@ if ! grep -q "${LOWER_DIR} ${UPPER_DIR} ecryptfs " /proc/mounts 2>/dev/null; the
 key="${KEY}",\
 no_sig_cache,\
 ecryptfs_cipher="${CIPHER}",\
-ecryptfs_enable_filename=y,\
-ecryptfs_enable_filename_crypto=y,\
 ecryptfs_fnek_sig="${FNEK_SIG}",\
 ecryptfs_key_bytes="${KEY_BYTES}",\
-ecryptfs_passthrough=n,\
 ecryptfs_unlink_sigs\
    "${LOWER_DIR}" "${UPPER_DIR}" >/dev/null
 
   # Overwrite sensible variables with random data
-  ECRYPTFS_KEY="$(/usr/bin/base64 /dev/urandom |/usr/bin/head -c 64)"
-  ECRYPTFS_PASSPHRASE="$(/usr/bin/base64 /dev/urandom |/usr/bin/head -c 64)"
   KEY="$(/usr/bin/base64 /dev/urandom |/usr/bin/head -c 64)"
   PASSPHRASE="$(/usr/bin/base64 /dev/urandom |/usr/bin/head -c 64)"
 fi
