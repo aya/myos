@@ -34,7 +34,7 @@ ssh-get-PrivateIpAddress-%: aws-ec2-get-instances-PrivateIpAddress-%;
 
 # target ssh-key: Add ssh private key SSH_KEY to SSH_DIR
 .PHONY: ssh-key
-ssh-key: $(if $(DOCKER_RUN),stack-base-up)
+ssh-key: $(if $(DOCKER_RUN),stack-User-up)
 ifneq (,$(filter true,$(DRONE)))
 	$(call exec,sh -c '[ ! -d $(SSH_DIR) ] && mkdir -p $(SSH_DIR) && chown $(UID) $(SSH_DIR) && chmod 0700 $(SSH_DIR) ||:')
 endif
@@ -44,16 +44,3 @@ endif
 .PHONY: ssh-run
 ssh-run: ssh-get-PrivateIpAddress-$(SERVER_NAME)
 	$(call ssh-exec,$(AWS_INSTANCE_IP),make run $(if $(SERVICE),SERVICE=$(SERVICE)) $(if $(ARGS),ARGS='\''"$(ARGS)"'\''))
-
-# target ssl-certs: Create ${DOMAIN}.key.pem and ${DOMAIN}.crt.pem files
-.PHONY: ssl-certs
-ssl-certs:
-	docker run --rm --mount source=$(COMPOSE_PROJECT_NAME_NODE)_ssl-certs,target=/certs alpine [ -f /certs/$(DOMAIN).crt.pem -a -f /certs/$(DOMAIN).key.pem ] \
-	 || $(RUN) docker run --rm -e DOMAIN=$(DOMAIN) --mount source=$(COMPOSE_PROJECT_NAME_NODE)_ssl-certs,target=/certs alpine sh -c "\
-	   apk --no-cache add openssl \
-	   && { [ -f /certs/${DOMAIN}.key.pem ] || openssl genrsa -out /certs/${DOMAIN}.key.pem 2048; } \
-	   && openssl req -key /certs/${DOMAIN}.key.pem -out /certs/${DOMAIN}.crt.pem \
-		  -addext extendedKeyUsage=serverAuth \
-		  -addext subjectAltName=DNS:${DOMAIN} \
-		  -subj \"/C=/ST=/L=/O=/CN=${DOMAIN}\" \
-		  -x509 -days 365"

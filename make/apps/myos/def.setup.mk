@@ -1,3 +1,5 @@
+SETUP_BINFMT                    ?= false
+SETUP_BINFMT_ARCH               ?= all
 SETUP_NFSD                      ?= false
 SETUP_NFSD_OSX_CONFIG           ?= nfs.server.bonjour=0 nfs.server.mount.regular_files=1 nfs.server.mount.require_resv_port=0 nfs.server.nfsd_threads=16 nfs.server.async=1
 SETUP_SYSCTL                    ?= false

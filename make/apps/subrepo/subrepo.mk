@@ -16,6 +16,6 @@ subrepo-push subrepos-push:
 subrepo-tag-create-% subrepos-tag-create-%:
 	$(call make,subrepo-tag-create-$*,..,SUBREPO TAG)
 
-# target subrepo-update subrepos-update: Fire bootstrap-git git-stash subrepo-push git-unstash
+# target subrepo-update subrepos-update: Fire bootstrap-app git-stash subrepo-push git-unstash
 .PHONY: subrepo-update subrepos-update
-subrepo-update subrepos-update: bootstrap-git git-stash subrepo-push git-unstash
+subrepo-update subrepos-update: bootstrap-app git-stash subrepo-push git-unstash

@@ -27,7 +27,7 @@ aws-ecr-get-login:
 
 # target aws-iam-create-role-%: Call aws iam create-role with role-name % and role-policy file aws/policies/%-trust.json
 .PHONY: aws-iam-create-role-%
-aws-iam-create-role-%: base docker-build-aws
+aws-iam-create-role-%: user docker-build-aws
 	$(eval IGNORE_DRYRUN := true)
 	$(eval json := $(shell $(call exec,sh -c 'envsubst < aws/policies/$*-trust.json')))
 	$(eval IGNORE_DRYRUN := false)
@@ -35,7 +35,7 @@ aws-iam-create-role-%: base docker-build-aws
 
 # target aws-iam-put-role-policy-%: Call aws iam put-role-policy with policy-name % and policy-document file aws/policies/%.json
 .PHONY: aws-iam-put-role-policy-%
-aws-iam-put-role-policy-%: base docker-build-aws
+aws-iam-put-role-policy-%: user docker-build-aws
 	$(eval IGNORE_DRYRUN := true)
 	$(eval json := $(shell $(call exec,sh -c 'envsubst < aws/policies/$*.json')))
 	$(eval IGNORE_DRYRUN := false)
@@ -81,7 +81,7 @@ aws-s3api-get-head-object-lastmodified: docker-build-aws
 
 # target aws-ec2-import-snapshot: Call aws ec2 import-snapshot with S3Bucket AWS_S3_BUCKET and S3Key AWS_S3_KEY
 .PHONY: aws-ec2-import-snapshot
-aws-ec2-import-snapshot: base docker-build-aws aws-s3api-get-head-object-etag aws-s3api-get-head-object-lastmodified
+aws-ec2-import-snapshot: user docker-build-aws aws-s3api-get-head-object-etag aws-s3api-get-head-object-lastmodified
 	$(eval IGNORE_DRYRUN := true)
 	$(eval json := $(shell $(call exec,sh -c 'envsubst < aws/import-snapshot.json')))
 	$(eval IGNORE_DRYRUN := false)
@@ -189,7 +189,7 @@ aws-ec2-wait-snapshot-completed-%: docker-build-aws
 
 # target aws-ec2-register-image: Fire aws-ec2-get-import-snapshot-tasks-id, Eval AWS_AMI_ID with Name AWS_AMI_NAME, Echo 'ImageId: AWS_AMI_ID'
 .PHONY: aws-ec2-register-image
-aws-ec2-register-image: base docker-build-aws aws-ec2-get-import-snapshot-tasks-id
+aws-ec2-register-image: user docker-build-aws aws-ec2-get-import-snapshot-tasks-id
 	$(eval IGNORE_DRYRUN := true)
 	$(eval json := $(shell $(call exec,sh -c 'envsubst < aws/register-image-device-mappings.json')))
 	$(eval IGNORE_DRYRUN := false)

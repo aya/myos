@@ -124,7 +124,7 @@ docker-images-rm-%:
 
 # target docker-login: Run 'docker login'
 .PHONY: docker-login
-docker-login: myos-base
+docker-login: myos-user
 	$(RUN) docker login
 
 # target docker-network-create: Fire docker-network-create-% for DOCKER_NETWORK

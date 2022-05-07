@@ -10,7 +10,7 @@ else
 COMPOSE_FILE_APP                ?= true
 endif
 COMPOSE_IGNORE_ORPHANS          ?= false
-COMPOSE_PROJECT_NAME            ?= $(APP_ENV)$(subst /,,$(subst -,,$(APP_PATH)))
+COMPOSE_PROJECT_NAME            ?= $(PROJECT_ENV)$(subst /,,$(subst -,,$(APP_PATH)))
 COMPOSE_SERVICE_NAME            ?= $(subst _,-,$(COMPOSE_PROJECT_NAME))
 COMPOSE_VERSION                 ?= 1.29.2
 CONTEXT                         += COMPOSE_FILE DOCKER_REPOSITORY

@@ -9,7 +9,7 @@
 # target .env-clean: Remove .env
 .PHONY: .env-clean
 .env-clean:
-	rm -f .env || true
+	rm -i .env || true
 
 # include .env file
 -include .env

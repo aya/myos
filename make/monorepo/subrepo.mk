@@ -3,7 +3,7 @@
 
 # target subrepo-branch-delete: Delete branch $(BRANCH) on remote $(SUBREPO)
 .PHONY: subrepo-branch-delete
-subrepo-branch-delete: myos-base subrepo-check
+subrepo-branch-delete: myos-user subrepo-check
 ifneq ($(words $(BRANCH)),0)
 	[ $$(git ls-remote --heads $(REMOTE) $(BRANCH) 2>/dev/null |wc -l) -eq 1 ] \
 	 && $(RUN) git push $(REMOTE) :$(BRANCH)
@@ -26,19 +26,19 @@ endif
 ## it gets child of parent commit : git rev-list --ancestry-path parent..HEAD |tail -n 1
 ## it compares child commit with our tree : git diff --quiet child -- subrepo
 .PHONY: subrepo-git-diff
-subrepo-git-diff: myos-base subrepo-check
+subrepo-git-diff: myos-user subrepo-check
 	$(eval IGNORE_DRYRUN := true)
 	$(eval DIFF = $(shell git diff --quiet $(shell git rev-list --ancestry-path $(shell awk '$$1 == "parent" {print $$3}' $(SUBREPO)/.gitrepo)..HEAD |tail -n 1) -- $(SUBREPO); printf '$$?\n') )
 	$(eval IGNORE_DRYRUN := false)
 
 # target subrepo-git-fetch: Fetch git remote
 .PHONY: subrepo-git-fetch
-subrepo-git-fetch: myos-base subrepo-check
+subrepo-git-fetch: myos-user subrepo-check
 	$(RUN) git fetch --prune $(REMOTE)
 
 # target subrepo-tag-create-%: Create tag TAG to reference branch REMOTE/%
 .PHONY: subrepo-tag-create-%
-subrepo-tag-create-%: myos-base subrepo-check subrepo-git-fetch
+subrepo-tag-create-%: myos-user subrepo-check subrepo-git-fetch
 ifneq ($(words $(TAG)),0)
 	[ $$(git ls-remote --tags $(REMOTE) $(TAG) |wc -l) -eq 0 ] \
 	 || $(call exec,$(RUN) git push $(REMOTE) :refs/tags/$(TAG))
@@ -47,7 +47,7 @@ endif
 
 # target subrepo-push: Push to subrepo
 .PHONY: subrepo-push
-subrepo-push: myos-base subrepo-check subrepo-git-fetch subrepo-git-diff
+subrepo-push: myos-user subrepo-check subrepo-git-fetch subrepo-git-diff
 # update .gitrepo only on master branch
 ifeq ($(BRANCH),master)
 	$(eval UPDATE_SUBREPO_OPTIONS += -u)
@@ -82,7 +82,7 @@ subrepos-tag-create-%: $(APPS) ;
 
 # target subrepos-update: Fire APPS target and push updates to upstream
 .PHONY: subrepos-update
-subrepos-update: myos-base git-stash $(APPS) git-unstash ## Update subrepos
+subrepos-update: myos-user git-stash $(APPS) git-unstash ## Update subrepos
 	$(RUN) git push upstream $(BRANCH)
 
 # target subrepo-update-%: Call subrepo-update target in folder %

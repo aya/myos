@@ -4,16 +4,26 @@
 # target bootstrap: Update application files and start dockers
 # on local host
 .PHONY: bootstrap
-bootstrap: bootstrap-git bootstrap-docker app-bootstrap ## Update application files and start dockers
+bootstrap: bootstrap-app bootstrap-host bootstrap-user app-bootstrap ## Update application files and start dockers
 
-# target bootstrap-docker: Build and start application dockers
+# target bootstrap-app: Fire install-bin-git
+.PHONY: bootstrap-app
+bootstrap-app: install-bin-git
+
+# target bootstrap-docker: Install and configure docker
 # on local host
 .PHONY: bootstrap-docker
 bootstrap-docker: install-bin-docker setup-docker-group
 
-# target bootstrap-git: Fire update-app
-.PHONY: bootstrap-git
-bootstrap-git: install-bin-git
+# target bootstrap-host: Fire bootstrap-docker target and start node stack
+# on local host
+.PHONY: bootstrap-host
+bootstrap-host: bootstrap-docker node
+
+# target bootstrap-user: Fire bootstrap-docker target and start user stack
+# on local host
+.PHONY: bootstrap-user
+bootstrap-user: bootstrap-docker user
 
 # target build: Build application docker images to run
 # on local host
@@ -23,7 +33,7 @@ build: docker-compose-build ## Build application docker images
 # target build@%: Build application docker images of % ENV
 # on local host
 .PHONY: build@% app-build
-build@%: myos-base
+build@%: myos-user
 	$(eval docker_images   += $(foreach service,$(SERVICES),$(if $(shell docker images -q $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG) 2>/dev/null),$(service))))
 	$(eval build_app       := $(or $(filter $(DOCKER_BUILD_CACHE),false),$(filter-out $(docker_images),$(SERVICES))))
 	$(if $(build_app), \
@@ -170,14 +180,14 @@ stack:
 # target stack-%: Call docker-compose-% target on STACK
 ## it splits % on dashes and extracts stack from the beginning and command from
 ## the last part of %
-## ex: stack-base-up will fire the docker-compose-up target in the base stack
+## ex: stack-User-up will fire the docker-compose-up target in the User stack
 .PHONY: stack-%
 stack-%:
 	$(eval stack   := $(subst -$(lastword $(subst -, ,$*)),,$*))
 	$(eval command := $(lastword $(subst -, ,$*)))
 	$(if $(findstring -,$*), \
-	  $(if $(filter $(command),$(filter-out %-%,$(patsubst docker-compose-%,%,$(filter docker-compose-%,$(MAKE_TARGETS))))), \
-	    $(call make,docker-compose-$(command) STACK="$(stack)" $(if $(filter node,$(stack)),COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME_NODE)),,ARGS COMPOSE_IGNORE_ORPHANS SERVICE)))
+		$(if $(filter $(command),$(filter-out %-%,$(patsubst docker-compose-%,%,$(filter docker-compose-%,$(MAKE_TARGETS))))), \
+		$(call make,docker-compose-$(command) STACK="$(stack)" $(if $(filter $(COMPOSE_PROJECT_NAME_NODE),$(stack)),COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME_NODE)),,ARGS COMPOSE_IGNORE_ORPHANS SERVICE)))
 
 # target start app-start: Start application dockers
 # on local host

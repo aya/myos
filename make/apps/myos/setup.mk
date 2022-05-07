@@ -29,3 +29,10 @@ setup-sysctl:
 ifeq ($(SETUP_SYSCTL),true)
 	$(foreach config,$(SETUP_SYSCTL_CONFIG),$(call docker-run,sysctl -q -w $(config),--privileged alpine) &&) true
 endif
+
+# target setup-binfmt: Install binfmt abstraction layer
+.PHONY: setup-binfmt
+setup-binfmt:
+ifeq ($(SETUP_BINFMT),true)
+	$(call docker-run,--install $(SETUP_BINFMT_ARCH),--privileged tonistiigi/binfmt)
+endif

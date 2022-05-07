@@ -32,6 +32,7 @@ RUN \
     && curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh \
     && dep ensure -vendor-only \
     && go mod init \
+    && go mod tidy \
     && go mod vendor \
     && CGO_ENABLED=0 GOOS=linux go build \
         -a -installsuffix cgo \

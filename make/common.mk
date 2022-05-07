@@ -4,17 +4,17 @@
 # target $(APP): Call update-app
 .PHONY: $(APP)
 $(APP): APP_DIR := $(RELATIVE)$(APP)
-$(APP): myos-base
+$(APP): myos-user
 	$(call update-app)
 
 # target install-app install-apps: Call install-app for each ARGS
 .PHONY: install-app install-apps
-install-app install-apps: myos-base install-app-required
+install-app install-apps: myos-user install-app-required
 	$(foreach url,$(ARGS),$(call install-app,$(url)))
 
 # target install-app-required: Call install-app for each APP_REQUIRED
 .PHONY: install-app-required
-install-app-required: myos-base
+install-app-required: myos-user
 	$(foreach url,$(APP_REQUIRED),$(call install-app,$(url)))
 
 # target install-bin-%; Call ansible-run-localhost when bin % is not available
@@ -41,7 +41,7 @@ update-app-%: % ;
 
 # target update-config: Update config files
 .PHONY: update-config
-update-config: myos-base
+update-config: myos-user
 	$(call update-app,$(CONFIG_REPOSITORY),$(CONFIG))
 
 # target update-hosts: Update /etc/hosts
@@ -60,17 +60,17 @@ endif
 
 # target update-remote-%: fetch git remote %
 .PHONY: update-remote-%
-update-remote-%: myos-base
+update-remote-%: myos-user
 	$(RUN) git fetch --prune --tags $*
 
 # target update-remotes: fetch all git remotes
 .PHONY: update-remotes
-update-remotes: myos-base
+update-remotes: myos-user
 	$(RUN) git fetch --all --prune --tags
 
 # target update-upstream: fetch git remote upstream
 .PHONY: update-upstream
-update-upstream: myos-base .git/refs/remotes/upstream/master
+update-upstream: myos-user .git/refs/remotes/upstream/master
 	$(RUN) git fetch --prune --tags upstream
 
 # target .git/refs/remotes/upstream/master: add git upstream APP_UPSTREAM_REPOSITORY

@@ -22,7 +22,7 @@ install-config-%:
 ## it creates user % with password % and all privileges on database %
 ## it imports %.mysql.gz file in database %
 .PHONY: install-mysql-database-%
-install-mysql-database-%: $(if $(DOCKER_RUN),myos-base)
+install-mysql-database-%: myos-user
 	$(call exec,mysql -h mysql -u root -proot $* -e "use $*" >/dev/null 2>&1) \
 		|| $(call exec,$(RUN) mysql -h mysql -u root -proot mysql -e "create database $* character set utf8 collate utf8_unicode_ci;")
 	$(call exec,mysql -h mysql -u $* -p$* $* -e "use $*" >/dev/null 2>&1) \
@@ -37,7 +37,7 @@ install-mysql-database-%: $(if $(DOCKER_RUN),myos-base)
 ## it creates user % with password % and all privileges on database %
 ## it imports %.pgsql.gz file in database %
 .PHONY: install-pgsql-database-%
-install-pgsql-database-%: myos-base
+install-pgsql-database-%: myos-user
 	$(call exec,PGPASSWORD=$* psql -h postgres -U $* template1 -c "\q" >/dev/null 2>&1) \
 		|| $(call exec,$(RUN) PGPASSWORD=postgres psql -h postgres -U postgres -c "create user $* with createdb password '$*';")
 	$(call exec,PGPASSWORD=$* psql -h postgres -U $* -d $* -c "" >/dev/null 2>&1) \
