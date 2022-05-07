@@ -13,17 +13,17 @@ bootstrap-app: install-bin-git
 # target bootstrap-docker: Install and configure docker
 # on local host
 .PHONY: bootstrap-docker
-bootstrap-docker: install-bin-docker setup-docker-group
+bootstrap-docker: install-bin-docker setup-docker-group setup-sysctl
 
-# target bootstrap-host: Fire bootstrap-docker target and start node stack
+# target bootstrap-host: Fire node target
 # on local host
 .PHONY: bootstrap-host
-bootstrap-host: bootstrap-docker node
+bootstrap-host: node
 
-# target bootstrap-user: Fire bootstrap-docker target and start user stack
+# target bootstrap-user: Fire User target
 # on local host
 .PHONY: bootstrap-user
-bootstrap-user: bootstrap-docker user
+bootstrap-user: User
 
 # target build: Build application docker images to run
 # on local host

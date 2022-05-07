@@ -2,8 +2,6 @@ version: '3.6'
 
 services:
   elasticsearch:
-    depends_on:
-    - sysctl
     environment:
     - ES_JAVA_OPTS=-Xmx1024m -Xms1024m
     - xpack.security.enabled=false

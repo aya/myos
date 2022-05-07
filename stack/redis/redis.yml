@@ -2,8 +2,6 @@ version: '3.6'
 
 services:
   redis:
-    depends_on:
-    - sysctl
     image: redis:alpine
     command: redis-server --appendonly yes
     labels:

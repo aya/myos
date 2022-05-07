@@ -16,8 +16,9 @@ services:
                             , "enable_script_checks": true
                             , "acl": { "enabled": true
                                      , "default_policy": "deny"
+                                     , "down_policy": "extend-cache"
                                      , "enable_token_persistence": true
-                                     , "tokens": { "master": "$CONSUL_ACL_TOKENS_MASTER"
+                                     , "tokens": { "initial_management": "$CONSUL_ACL_TOKENS_MASTER"
                                                  , "agent": "$CONSUL_CONSUL_HTTP_TOKEN"
                                                  }
                                      }
@@ -27,15 +28,17 @@ services:
     - SERVICE_8300_IGNORE=true
     - SERVICE_8301_IGNORE=true
     - SERVICE_8302_IGNORE=true
-    - SERVICE_8500_CHECK_HTTP=/ui
+    - SERVICE_8500_CHECK_HTTP=/v1/health/service/consul
     - SERVICE_8500_NAME=${COMPOSE_SERVICE_NAME}-consul-8500
     - SERVICE_8500_TAGS=${CONSUL_SERVICE_8500_TAGS}
     - SERVICE_8600_IGNORE=true
     - SERVICE_ADDRESS=${DOCKER_HOST_INET}
+    - SERVICE_CHECK_SCRIPT=docker-healthcheck ${DOCKER_HOST_INET}
     network_mode: host
     restart: always
     volumes:
     - consul:/consul/data
+    - ssl-certs:/certs
     - /var/run/docker.sock:/var/run/docker.sock
   fabio:
     image: fabiolb/fabio:latest
@@ -46,39 +49,43 @@ services:
     - consul:${DOCKER_HOST_INET}
     hostname: ${HOSTNAME}
     labels:
-    - SERVICE_80_CHECK_TCP=true
     - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME}-fabio-80
-    - SERVICE_443_CHECK_TCP=true
     - SERVICE_443_NAME=${COMPOSE_SERVICE_NAME}-fabio-443
-    - SERVICE_9998_CHECK_TCP=true
+    - SERVICE_9998_CHECK_HTTP=/routes
     - SERVICE_9998_NAME=${COMPOSE_SERVICE_NAME}-fabio-9998
     - SERVICE_9998_TAGS=${FABIO_SERVICE_9998_TAGS}
     - SERVICE_9999_IGNORE=true
     ports:
-    - 80:80
-    - 443:443
-    - 9998
+    - 80:80/tcp
+    - 443:443/tcp
+    - 9998/tcp
     networks:
     - public
     restart: always
     volumes:
-      - ssl-certs:/certs
-  portainer:
-    image: portainer/portainer:latest
+    - ssl-certs:/certs
+  ipfs:
+    image: ipfs/go-ipfs:latest
     labels:
-    - SERVICE_8000_IGNORE=true
-    - SERVICE_9000_CHECK_HTTP=/
-    - SERVICE_9000_NAME=${COMPOSE_SERVICE_NAME}-portainer-9000
-    - SERVICE_9000_TAGS=${PORTAINER_SERVICE_9000_TAGS}
+    - SERVICE_4001_NAME=${COMPOSE_SERVICE_NAME}-ipfs-4001
+    - SERVICE_5001_NAME=${COMPOSE_SERVICE_NAME}-ipfs-5001
+    - SERVICE_8080_CHECK_HTTP=/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG/readme
+    - SERVICE_8080_NAME=${COMPOSE_SERVICE_NAME}-ipfs-8080
+    - SERVICE_8080_TAGS=${IPFS_SERVICE_8080_TAGS}
+    - SERVICE_8081_IGNORE=true
     networks:
     - public
     ports:
-    - 8000
-    - 9000
-    restart: always
+    - 4001:4001
+    - 5001/tcp
+    - 8080/tcp
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     volumes:
-    - /var/run/docker.sock:/var/run/docker.sock
-    - portainer:/data
+    - ipfs:/data/ipfs
+    restart: always
   registrator:
     build:
       args:
@@ -103,7 +110,7 @@ services:
 
 volumes:
   consul:
-  portainer:
+  ipfs:
   ssl-certs:
 
 networks:

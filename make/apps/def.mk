@@ -1,6 +1,6 @@
 APP_DIR                         ?= $(CURDIR)
-APP_DOMAIN                      ?= $(ENV)$(addprefix .,$(DOMAIN))
-APP_HOST                        ?= $(APP)$(addprefix .,$(APP_DOMAIN))
+APP_DOMAIN                      ?= $(addsuffix .,$(filter-out master,$(ENV)))$(DOMAIN)
+APP_HOST                        ?= $(addsuffix .,$(APP))$(APP_DOMAIN)
 APP_INSTALLED                   ?= $(APPS)
 APP_PARENT                      ?= $(MONOREPO)
 APP_PARENT_DIR                  ?= $(MONOREPO_DIR)

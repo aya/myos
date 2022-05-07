@@ -27,7 +27,7 @@ endif
 .PHONY: setup-sysctl
 setup-sysctl:
 ifeq ($(SETUP_SYSCTL),true)
-	$(foreach config,$(SETUP_SYSCTL_CONFIG),$(call docker-run,sysctl -q -w $(config),--privileged alpine) &&) true
+	$(SUDO) sysctl -q -w $(SETUP_SYSCTL_CONFIG)
 endif
 
 # target setup-binfmt: Install binfmt abstraction layer
