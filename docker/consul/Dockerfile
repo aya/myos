@@ -1,4 +1,5 @@
-FROM consul:1.11.1 as dist
+ARG CONSUL_VERSION=1.11.1
+FROM consul:${CONSUL_VERSION} as dist
 LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 ARG DOCKER_GID=999

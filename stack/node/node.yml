@@ -4,6 +4,7 @@ services:
   consul:
     build:
       args:
+      - CONSUL_VERSION=1.11.1
       - DOCKER_BUILD_DIR=docker/consul
       context: ../..
       dockerfile: docker/consul/Dockerfile
@@ -41,7 +42,15 @@ services:
     - ssl-certs:/certs
     - /var/run/docker.sock:/var/run/docker.sock
   fabio:
-    image: fabiolb/fabio:latest
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/fabio
+      - FABIO_VERSION=1.6.0
+      - OPERATING_SYSTEM=${OPERATING_SYSTEM}
+      - PROCESSOR_ARCHITECTURE=${PROCESSOR_ARCHITECTURE}
+      context: ../..
+      dockerfile: docker/fabio/Dockerfile
+    image: ${DOCKER_REPOSITORY_NODE}/fabio:${DOCKER_IMAGE_TAG}
     command: -registry.backend "consul" -registry.consul.addr "consul:8500" -registry.consul.token "$FABIO_CONSUL_HTTP_TOKEN" -proxy.addr ":80,:443;cs=local" -proxy.cs "cs=local;type=file;cert=/certs/${DOMAIN}.crt.pem;key=/certs/${DOMAIN}.key.pem"
     depends_on:
     - consul
