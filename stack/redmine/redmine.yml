@@ -22,9 +22,8 @@ services:
     - SMTP_PASS=${REDMINE_SMTP_PASS}
     - TZ=Europe/Paris
     labels:
-    - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME}-redmine-80
     - SERVICE_80_CHECK_TCP=true
-    - SERVICE_80_CHECK_INITIAL_STATUS=passing
+    - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME}-redmine:80
     - SERVICE_80_TAGS=${REDMINE_SERVICE_80_TAGS}
     - SERVICE_443_IGNORE=true
     networks:

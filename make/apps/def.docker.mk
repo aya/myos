@@ -1,4 +1,5 @@
 CMDS                            += docker-compose-exec docker-run docker-run-%
+COMPOSE_ARGS                    ?= --ansi auto
 COMPOSE_FILE                    ?= $(wildcard docker/docker-compose.yml $(foreach file,$(patsubst docker/docker-compose.%,%,$(basename $(wildcard docker/docker-compose.*.yml))),$(if $(filter true,$(COMPOSE_FILE_$(file)) $(COMPOSE_FILE_$(call UPPERCASE,$(file)))),docker/docker-compose.$(file).yml)))
 COMPOSE_FILE_$(ENV)             ?= true
 COMPOSE_FILE_DEBUG              ?= $(if $(DEBUG),true)
@@ -12,7 +13,7 @@ endif
 COMPOSE_IGNORE_ORPHANS          ?= false
 COMPOSE_PROJECT_NAME            ?= $(PROJECT_ENV)$(subst /,,$(subst -,,$(APP_PATH)))
 COMPOSE_SERVICE_NAME            ?= $(subst _,-,$(COMPOSE_PROJECT_NAME))
-COMPOSE_VERSION                 ?= 1.29.2
+COMPOSE_VERSION                 ?= 2.5.0
 CONTEXT                         += COMPOSE_FILE DOCKER_REPOSITORY
 CONTEXT_DEBUG                   += DOCKER_BUILD_TARGET DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_SERVICE DOCKER_SERVICES
 DOCKER_AUTHOR                   ?= $(DOCKER_AUTHOR_NAME) <$(DOCKER_AUTHOR_EMAIL)>
@@ -25,8 +26,8 @@ DOCKER_BUILD_NO_CACHE           ?= false
 DOCKER_BUILD_TARGET             ?= $(if $(filter $(ENV),$(DOCKER_BUILD_TARGETS)),$(ENV),$(DOCKER_BUILD_TARGET_DEFAULT))
 DOCKER_BUILD_TARGET_DEFAULT     ?= master
 DOCKER_BUILD_TARGETS            ?= $(ENV_DEPLOY)
-DOCKER_BUILD_VARS               ?= APP BRANCH DOCKER_GID DOCKER_REPOSITORY GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME SSH_BASTION_HOSTNAME SSH_BASTION_USERNAME SSH_PRIVATE_IP_RANGE SSH_PUBLIC_HOST_KEYS SSH_REMOTE_HOSTS UID USER VERSION
-DOCKER_COMPOSE                  ?= $(if $(DOCKER_RUN),docker/compose:$(COMPOSE_VERSION),$(or $(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'),docker-compose))
+DOCKER_BUILD_VARS               ?= APP BRANCH COMPOSE_VERSION DOCKER_GID DOCKER_REPOSITORY GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME OPERATING_SYSTEM PROCESSOR_ARCHITECTURE SSH_BASTION_HOSTNAME SSH_BASTION_USERNAME SSH_PRIVATE_IP_RANGE SSH_PUBLIC_HOST_KEYS SSH_REMOTE_HOSTS UID USER VERSION
+DOCKER_COMPOSE                  ?= $(if $(DOCKER_RUN),docker/compose:$(COMPOSE_VERSION),$(or $(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'),docker-compose)) $(COMPOSE_ARGS)
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
 DOCKER_COMPOSE_UP_OPTIONS       ?= -d
 DOCKER_IMAGE_TAG                ?= $(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest))
@@ -44,7 +45,7 @@ DOCKER_REGISTRY_USERNAME        ?= $(USER)
 DOCKER_REGISTRY_REPOSITORY      ?= $(addsuffix /,$(DOCKER_REGISTRY))$(subst $(USER),$(DOCKER_REGISTRY_USERNAME),$(DOCKER_REPOSITORY))
 DOCKER_REPOSITORY               ?= $(subst _,/,$(COMPOSE_PROJECT_NAME))
 DOCKER_SERVICE                  ?= $(lastword $(DOCKER_SERVICES))
-DOCKER_SERVICES                 ?= $(eval IGNORE_DRYRUN := true)$(shell $(call docker-compose,--log-level critical config --services))$(eval IGNORE_DRYRUN := false)
+DOCKER_SERVICES                 ?= $(eval IGNORE_DRYRUN := true)$(shell $(call docker-compose,config --services 2>/dev/null))$(eval IGNORE_DRYRUN := false)
 DOCKER_SHELL                    ?= $(SHELL)
 ENV_VARS                        += COMPOSE_PROJECT_NAME COMPOSE_SERVICE_NAME DOCKER_BUILD_TARGET DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_REPOSITORY DOCKER_SHELL
 
@@ -71,11 +72,13 @@ endif
 # function docker-compose: Run docker-compose with arg 1
 define docker-compose
 	$(call INFO,docker-compose,$(1))
+  $(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
 	$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
 endef
 # function docker-compose-exec: Run docker-compose-exec with arg 2 in service 1
 define docker-compose-exec
 	$(call INFO,docker-compose-exec,$(1)$(comma) $(2))
+  $(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
 	$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) exec -T $(1) sh -c '$(2)')
 endef
 
@@ -94,7 +97,7 @@ endef
 define docker-commit
 	$(call INFO,docker-commit,$(1)$(comma) $(2)$(comma) $(3)$(comma) $(4))
 	$(eval service         := $(or $(1),$(DOCKER_SERVICE)))
-	$(eval container       := $(or $(2),$(firstword $(shell $(call docker-compose,--log-level critical ps -q $(service))))))
+	$(eval container       := $(or $(2),$(firstword $(shell $(call docker-compose,ps -q $(service) 2>/dev/null)))))
 	$(eval repository      := $(or $(3),$(DOCKER_REPOSITORY)/$(service)))
 	$(eval tag             := $(or $(4),$(DOCKER_IMAGE_TAG)))
 	$(RUN) docker commit $(container) $(repository):$(tag)

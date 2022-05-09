@@ -9,9 +9,8 @@ services:
       dockerfile: docker/prometheus/blackbox-exporter/Dockerfile
     image: ${DOCKER_REPOSITORY}/blackbox:${DOCKER_IMAGE_TAG}
     labels:
-    - SERVICE_9115_NAME=${COMPOSE_SERVICE_NAME}-blackbox-9115
     - SERVICE_9115_CHECK_TCP=true
-    - SERVICE_9115_CHECK_INITIAL_STATUS=passing
+    - SERVICE_9115_NAME=${COMPOSE_SERVICE_NAME}-blackbox:9115
     - SERVICE_9115_TAGS=${BLACKBOX_SERVICE_9115_TAGS}
     networks:
     - private

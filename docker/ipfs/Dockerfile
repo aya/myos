@@ -1,5 +1,5 @@
-ARG IPFS_VERSION=v0.13.0-rc1
-FROM ipfs/go-ipfs:${IPFS_VERSION} as dist
+ARG IPFS_VERSION=0.13.0-rc1
+FROM ipfs/go-ipfs:v${IPFS_VERSION} as dist
 LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 

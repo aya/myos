@@ -11,7 +11,7 @@ services:
     command: -c apm-server.yml --strict.perms=false -e -E output.elasticsearch.hosts=["${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}"] -E output.elasticsearch.protocol=${ELASTICSEARCH_PROTOCOL} -E output.elasticsearch.username=${ELASTICSEARCH_USERNAME} -E output.elasticsearch.password=${ELASTICSEARCH_PASSWORD} -E apm-server.register.ingest.pipeline.enabled=false
     labels:
     - SERVICE_8200_CHECK_HTTP=/
-    - SERVICE_8200_NAME=${COMPOSE_SERVICE_NAME}-apm-server-oss-8200
+    - SERVICE_8200_NAME=${COMPOSE_SERVICE_NAME}-apm-server-oss:8200
     - SERVICE_8200_TAGS=${APM_SERVER_SERVICE_8200_TAGS}
     networks:
     - private

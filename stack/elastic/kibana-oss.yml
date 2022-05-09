@@ -4,7 +4,7 @@ services:
   kibana-oss:
     labels:
     - SERVICE_5601_CHECK_HTTP=/app/kibana
-    - SERVICE_5601_NAME=${COMPOSE_SERVICE_NAME}-kibana-oss-5601
+    - SERVICE_5601_NAME=${COMPOSE_SERVICE_NAME}-kibana-oss:5601
     - SERVICE_5601_TAGS=${KIBANA_SERVICE_5601_TAGS}
     networks:
     - private

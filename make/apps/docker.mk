@@ -9,7 +9,7 @@ docker-build: docker-images-myos
 # target docker-build-%: Call docker-build for each Dockerfile in docker/% folder
 .PHONY: docker-build-%
 docker-build-%:
-	if grep -q DOCKER_REPOSITORY docker/$*/Dockerfile 2>/dev/null; then $(eval DOCKER_BUILD_ARGS:=$(subst $(DOCKER_REPOSITORY),$(DOCKER_REPOSITORY_MYOS),$(DOCKER_BUILD_ARGS))) true; fi
+	if grep -q DOCKER_REPOSITORY docker/$*/Dockerfile 2>/dev/null; then $(eval DOCKER_BUILD_ARGS:=$(subst $(DOCKER_REPOSITORY),$(DOCKER_REPOSITORY_USER),$(DOCKER_BUILD_ARGS))) true; fi
 	$(if $(wildcard docker/$*/Dockerfile),$(call docker-build,docker/$*))
 	$(if $(findstring :,$*),$(eval DOCKERFILES := $(wildcard docker/$(subst :,/,$*)/Dockerfile)),$(eval DOCKERFILES := $(wildcard docker/$*/*/Dockerfile)))
 	$(foreach dockerfile,$(DOCKERFILES),$(call docker-build,$(dir $(dockerfile)),$(DOCKER_REPOSITORY)/$(word 2,$(subst /, ,$(dir $(dockerfile)))):$(lastword $(subst /, ,$(dir $(dockerfile)))),"") && true)

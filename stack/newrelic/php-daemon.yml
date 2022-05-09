@@ -5,9 +5,8 @@ services:
     image: newrelic/php-daemon:latest
     # command: "/usr/bin/newrelic-daemon --loglevel debug"
     labels:
-    - SERVICE_31339_NAME=${COMPOSE_SERVICE_NAME}-php-daemon-31339
     - SERVICE_31339_CHECK_TCP=true
-    - SERVICE_31339_CHECK_INITIAL_STATUS=passing
+    - SERVICE_31339_NAME=${COMPOSE_SERVICE_NAME}-php-daemon:31339
     networks:
     - private
     ports:

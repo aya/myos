@@ -4,15 +4,15 @@ DOCKER_ENV_ARGS                 ?= $(docker_env_args)
 DOCKER_EXEC_OPTIONS             ?=
 DOCKER_GID                      ?= $(call gid,docker)
 DOCKER_IMAGE                    ?= $(DOCKER_IMAGE_CLI)
-DOCKER_IMAGE_CLI                ?= $(DOCKER_REPOSITORY_MYOS)/cli
-DOCKER_IMAGE_SSH                ?= $(DOCKER_REPOSITORY_MYOS)/ssh
+DOCKER_IMAGE_CLI                ?= $(DOCKER_REPOSITORY_USER)/cli
+DOCKER_IMAGE_SSH                ?= $(DOCKER_REPOSITORY_USER)/ssh
 DOCKER_NAME                     ?= $(DOCKER_NAME_CLI)
 DOCKER_NAME_CLI                 ?= $(COMPOSE_PROJECT_NAME_USER)_cli
 DOCKER_NAME_SSH                 ?= $(COMPOSE_PROJECT_NAME_USER)_ssh
 DOCKER_NETWORK                  ?= $(DOCKER_NETWORK_PRIVATE)
 DOCKER_NETWORK_PRIVATE          ?= $(USER_ENV)
 DOCKER_NETWORK_PUBLIC           ?= $(COMPOSE_PROJECT_NAME_NODE)
-DOCKER_REPOSITORY_MYOS          ?= $(subst _,/,$(COMPOSE_PROJECT_NAME_USER))
+DOCKER_REPOSITORY_USER          ?= $(subst _,/,$(COMPOSE_PROJECT_NAME_USER))
 DOCKER_REPOSITORY_NODE          ?= $(subst _,/,$(COMPOSE_PROJECT_NAME_NODE))
 # DOCKER_RUN: if empty, run system command, else run it in a docker
 DOCKER_RUN                      ?= $(if $(filter-out false False FALSE,$(DOCKER)),$(DOCKER))
@@ -22,7 +22,7 @@ DOCKER_RUN_OPTIONS              += --rm -it
 DOCKER_RUN_VOLUME               += -v /var/run/docker.sock:/var/run/docker.sock
 DOCKER_RUN_WORKDIR              ?= -w $(PWD)
 DOCKER_VOLUME_SSH               ?= $(COMPOSE_PROJECT_NAME_USER)_ssh
-ENV_VARS                        += DOCKER_IMAGE_CLI DOCKER_IMAGE_SSH DOCKER_NAME_CLI DOCKER_NAME_SSH DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC DOCKER_REPOSITORY_MYOS DOCKER_REPOSITORY_NODE DOCKER_VOLUME_SSH
+ENV_VARS                        += DOCKER_IMAGE_CLI DOCKER_IMAGE_SSH DOCKER_NAME_CLI DOCKER_NAME_SSH DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC DOCKER_REPOSITORY_USER DOCKER_REPOSITORY_NODE DOCKER_VOLUME_SSH
 
 ifeq ($(DRONE), true)
 DOCKER_RUN_OPTIONS              := --rm --network $(DOCKER_NETWORK)

@@ -5,7 +5,7 @@ services:
     image: memcached:alpine
     labels:
     - SERVICE_11211_CHECK_TCP=true
-    - SERVICE_11211_NAME=${COMPOSE_SERVICE_NAME}-memcached-11211
+    - SERVICE_11211_NAME=${COMPOSE_SERVICE_NAME}-memcached:11211
     networks:
     - private
     ports:
