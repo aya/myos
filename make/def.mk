@@ -69,7 +69,7 @@ GIT_VERSION                     ?= $(shell git describe --tags $(BRANCH) 2>/dev/
 HOSTNAME                        ?= $(shell hostname 2>/dev/null |sed 's/\..*//')
 IGNORE_DRYRUN                   ?= false
 IGNORE_VERBOSE                  ?= false
-INSTALL                         ?= $(SUDO) $(subst &&,&& $(SUDO),$(INSTALL_CMD))
+INSTALL                         ?= $(RUN) $(SUDO) $(subst &&,&& $(RUN) $(SUDO),$(INSTALL_CMD))
 INSTALL_CMDS                    ?= APK_INSTALL APT_INSTALL
 $(foreach cmd,$(INSTALL_CMDS),$(if $(CMD_$(cmd)),$(eval INSTALL_CMD ?= $(CMD_$(cmd)))))
 LOG_LEVEL                       ?= $(if $(DEBUG),debug,$(if $(VERBOSE),info,error))
@@ -126,13 +126,8 @@ OPERATING_SYSTEM                := cygwin
 else ifeq ($(OS),Windows_NT)
 OPERATING_SYSTEM                := Windows_NT
 else
-UNAME_S := $(shell uname -s 2>/dev/null)
-ifeq ($(UNAME_S),Linux)
-OPERATING_SYSTEM                := Linux
-endif
-ifeq ($(UNAME_S),Darwin)
-OPERATING_SYSTEM                := Darwin
-endif
+PROCESSOR_ARCHITECTURE          := $(shell uname -m 2>/dev/null)
+OPERATING_SYSTEM                := $(shell uname -s 2>/dev/null)
 endif
 
 ifeq ($(OPERATING_SYSTEM),Darwin)

@@ -27,7 +27,7 @@ endif
 .PHONY: setup-sysctl
 setup-sysctl:
 ifeq ($(SETUP_SYSCTL),true)
-	$(SUDO) sysctl -q -w $(SETUP_SYSCTL_CONFIG)
+	$(RUN) $(SUDO) sysctl -q -w $(SETUP_SYSCTL_CONFIG)
 endif
 
 # target setup-binfmt: Install binfmt abstraction layer

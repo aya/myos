@@ -3,27 +3,12 @@
 
 # target bootstrap: Update application files and start dockers
 # on local host
-.PHONY: bootstrap
-bootstrap: bootstrap-app bootstrap-host bootstrap-user app-bootstrap ## Update application files and start dockers
+.PHONY: bootstrap app-bootstrap
+bootstrap: bootstrap-app app-bootstrap ## Update application files and start dockers
 
 # target bootstrap-app: Fire install-bin-git
 .PHONY: bootstrap-app
 bootstrap-app: install-bin-git
-
-# target bootstrap-docker: Install and configure docker
-# on local host
-.PHONY: bootstrap-docker
-bootstrap-docker: install-bin-docker setup-docker-group setup-sysctl
-
-# target bootstrap-host: Fire node target
-# on local host
-.PHONY: bootstrap-host
-bootstrap-host: node
-
-# target bootstrap-user: Fire User target
-# on local host
-.PHONY: bootstrap-user
-bootstrap-user: User
 
 # target build: Build application docker images to run
 # on local host
@@ -180,7 +165,7 @@ stack:
 # target stack-%: Call docker-compose-% target on STACK
 ## it splits % on dashes and extracts stack from the beginning and command from
 ## the last part of %
-## ex: stack-User-up will fire the docker-compose-up target in the User stack
+## ex: stack-node-up will fire the docker-compose-up target in the node stack
 .PHONY: stack-%
 stack-%:
 	$(eval stack   := $(subst -$(lastword $(subst -, ,$*)),,$*))

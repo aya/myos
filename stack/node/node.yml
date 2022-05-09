@@ -65,7 +65,14 @@ services:
     volumes:
     - ssl-certs:/certs
   ipfs:
-    image: ipfs/go-ipfs:latest
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/ipfs
+      context: ../..
+      dockerfile: docker/ipfs/Dockerfile
+    image: ${DOCKER_REPOSITORY_NODE}/ipfs:${DOCKER_IMAGE_TAG}
+    environment:
+    - IPFS_PROFILE=${IPFS_PROFILE}
     labels:
     - SERVICE_4001_NAME=${COMPOSE_SERVICE_NAME}-ipfs-4001
     - SERVICE_5001_NAME=${COMPOSE_SERVICE_NAME}-ipfs-5001
