@@ -1,4 +1,5 @@
-# ~/.profile: executed by the command interpreter for login shells.
+# shellcheck shell=sh source=/dev/null
+# ~/.sh_profile: executed by the command interpreter for login shells.
 # set -x
 
 # source ~/.*aliases and ~/.*functions files
@@ -24,7 +25,7 @@ for file in "$HOME"/.*shrc; do
   # remove $HOME/. prefix from file
   file="${file#${HOME}/.}"
   # source file if match current shell
-  [ "$(basename ${SHELL})" = "${file%rc}" ] && . "${HOME}/.$file"
+  [ "$(basename "${SHELL}")" = "${file%rc}" ] && . "${HOME}/.$file"
 done
 
 # set PATH to include user's bin

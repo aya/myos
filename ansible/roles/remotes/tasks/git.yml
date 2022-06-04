@@ -5,7 +5,7 @@
   with_items: "{{ git_repositories|default([]) }}"
   git:
     repo: "{{ item.repo }}"
-    dest: "{{ item.dest|default('/src') }}"
+    dest: "{{ item.dest }}"
     umask: "022"
     key_file: "{{ item.key_file|default('~/.ssh/id_rsa') }}"
     version: "{{ item.version|default('HEAD') }}"

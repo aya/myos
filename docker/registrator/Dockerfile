@@ -9,31 +9,17 @@ ENV GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}
 ENV GIT_COMMITTER_NAME=${GIT_AUTHOR_NAME}
 ENV GIT_COMMITTER_EMAIL=${GIT_AUTHOR_EMAIL}
 
-WORKDIR /go/src/github.com/gliderlabs/registrator/
+WORKDIR /go/src/github.com/auto1-oss/registrator/
 RUN \
-    apk add --no-cache curl git \
-    && git clone https://github.com/gliderlabs/registrator/ . \
-    && git reset --hard 4322fe00304d6de661865721b073dc5c7e750bd2 \
+    apk add --no-cache git \
+    && git clone https://github.com/auto1-oss/registrator/ . \
+    && git reset --hard 378a4ead31adfdae6550e112bfc186f1d1bed632 \
     # -useIpFromNetwork \
-    && git fetch origin pull/596/head \
-    && git merge --no-edit 8d904c60949e310893a25c8af3636b0151334dd4 \
+    && git fetch origin pull/18/head \
+    && git merge --no-edit 5ee80693b8057d92f261b87705445a1b989239ce \
     # fix SERVICE_CHECK_SCRIPT
-    && git fetch origin pull/686/head \
-    && git merge --no-edit 097305157a6a2c0c236fa430c17498c895536782 \
-#    # skip tls verification
-#    && git fetch origin pull/661/head \
-#    && git merge --no-edit 38fc83ac07b4a070be71079cb810429d94a60205 \
-#    # prevent publishing ip twice \
-#    && git fetch origin pull/703/head \
-#    && git merge --no-edit b628dcd0edacfb2d3e5f0a6f486b23339f35e82a \
-#    # -useIpFromEnv
-#    && git fetch origin pull/674/head \
-#    && git merge --no-edit 4fe9e216d9747e25ae5aa9d40f2246861c032dd1 \
-    && curl https://raw.githubusercontent.com/golang/dep/master/install.sh | sh \
-    && dep ensure -vendor-only \
-    && go mod init \
-    && go mod tidy \
-    && go mod vendor \
+    && git fetch origin pull/19/head \
+    && git merge --no-edit 9cfdfbee07dc6153af70f032eefc848af101fa7d \
     && CGO_ENABLED=0 GOOS=linux go build \
         -a -installsuffix cgo \
         -ldflags "-X main.Version=$(cat VERSION)" \

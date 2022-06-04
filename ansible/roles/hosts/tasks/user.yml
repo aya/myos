@@ -34,20 +34,22 @@
 
 - name: user - copy ~/.*aliases ~/.*profile ~/.shrc
   with_items:
-    - ".dircolors_aliases"
-    - ".docker_aliases"
-    - ".vim_aliases"
     - ".bash_profile"
-    - ".profile"
+    - ".sh_profile"
     - ".shrc"
   copy: src=../files/{{item}} dest=~/{{item}} mode="0640" backup="yes"
 
 - name: user - update ~/.bashrc
   with_items:
   - PS1="╭∩╮$PS1"
-  - source .shrc
+  - source ~/.shrc
   - unset user_count process_count
   lineinfile: dest=~/.bashrc create=yes line='{{item}}'
+
+- name: user - update ~/.profile
+  with_items:
+  - source ~/.sh_profile
+  lineinfile: dest=~/.profile create=yes line='{{item}}'
 
 - name: user - update ~/.config/git/ignore
   with_items:

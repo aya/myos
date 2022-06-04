@@ -1,4 +1,4 @@
-FROM alpine:3.15 as dist
+FROM alpine:latest as dist
 LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 

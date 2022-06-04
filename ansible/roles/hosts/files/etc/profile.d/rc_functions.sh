@@ -254,7 +254,8 @@ ssh_del() {
 tmux_attach() {
   command -v tmux >/dev/null 2>&1 || return
   TMUX_SESSION="$(id -nu)@$(hostname |sed 's/\..*//')"
-  if [ -z "${TMUX}" ]; then
+  # do not attach tmux in screen ;)
+  if [ -z "${TMUX}" -a -z "${STY}" ]; then
     printf 'Attaching tmux.' && sleep 1\
      && printf '.' && sleep 1\
      && printf '.' && sleep 1

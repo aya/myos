@@ -71,7 +71,7 @@ endef
 	  # add variables definition to the .env file
 define .env_update
 	$(call INFO,.env_update,$(env_file) $(env_dist) $(env_over))
-	touch $(env_file)
+	touch $(env_file) $(if $(VERBOSE)$(DEBUG),,2> /dev/null)
 	printenv \
 	  |awk -F '=' 'NR == FNR { if($$1 !~ /^(#|$$)/) { A[$$1]; next } } !($$1 in A)' - $(env_dist) \
 	  |cat $(env_over) - \

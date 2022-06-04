@@ -82,7 +82,7 @@ MAKE_ENV_VARS                   ?= $(strip $(foreach var, $(filter-out .VARIABLE
 MAKE_FILE_ARGS                  ?= $(foreach var,$(filter $(ENV_VARS),$(MAKE_FILE_VARS)),$(var)='$($(var))')
 MAKE_FILE_VARS                  ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter file,$(origin $(var))),$(var))))
 MAKE_OLDFILE                    ?= $@
-MAKE_TARGETS                    ?= $(filter-out $(.VARIABLES),$(shell $(MAKE) -qp 2>/dev/null |awk -F':' '/^[a-zA-Z0-9][^$$#\/\t=]*:([^=]|$$)/ {print $$1}' |sort -u))
+MAKE_TARGETS                    ?= $(filter-out $(.VARIABLES),$(shell $(MAKE) -qp 2>/dev/null |awk -F':' '/^[a-zA-Z0-9][^$$\#\/\t=]*:([^=]|$$)/ {print $$1}' |sort -u))
 MAKE_UNIXTIME_START             := $(shell date -u +'%s' 2>/dev/null)
 MAKE_UNIXTIME_CURRENT            = $(shell date -u "+%s" 2>/dev/null)
 MAKE_VARS                       ?= ENV

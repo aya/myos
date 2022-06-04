@@ -13,7 +13,7 @@
   ignore_errors: true
 
 - name: config - add docker daemon storage configuration
-  when: false and docker_package|length > 0
+  when: docker_package|length > 0
   template:
     src: daemon.json.j2
     dest: "{{docker_daemon_config_file}}"

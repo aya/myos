@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck source=/dev/null disable=SC2046
 ### BEGIN INIT INFO
 # Provides: myos
 # Required-Start: docker
@@ -8,16 +9,11 @@
 # Description: MYOS system calls
 ### END INIT INFO
 
-set -e
-
 # check system config
-[ -r /etc/default/myos ] && . /etc/default/myos || exit 1
-type make >/dev/null 2>&1 && [ -d "${MYOS}" ] || exit 2
-
-# load user config
-[ -r ~/.myos ] && . ~/.myos
+[ -r /etc/default/myos ] && . /etc/default/myos 2>/dev/null
+type make >/dev/null 2>&1 && [ -d "${MYOS}" ] || exit 1
 
 case "$1" in
   *)
-    IFS=$'\n'; exec sh -c "cd ${MYOS} && exec make $@ $(cat /etc/default/myos ~/.myos 2>/dev/null)"
+    IFS=$'\n'; cd "${MYOS}"; exec env $(cat /etc/default/myos ~/.myos 2>/dev/null) make "$@"
 esac
