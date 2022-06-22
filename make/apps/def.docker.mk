@@ -11,7 +11,7 @@ else
 COMPOSE_FILE_APP                ?= true
 endif
 COMPOSE_IGNORE_ORPHANS          ?= false
-COMPOSE_PROJECT_NAME            ?= $(PROJECT_ENV)$(subst /,,$(subst -,,$(APP_PATH)))
+COMPOSE_PROJECT_NAME            ?= $(PROJECT_NAME)$(addprefix _,$(subst /,,$(subst -,,$(APP_PATH))))
 COMPOSE_SERVICE_NAME            ?= $(subst _,-,$(COMPOSE_PROJECT_NAME))
 COMPOSE_VERSION                 ?= 2.5.0
 CONTEXT                         += COMPOSE_FILE DOCKER_REPOSITORY
@@ -43,10 +43,10 @@ DOCKER_PLUGIN_VARS              ?= S3FS_ACCESSKEY S3FS_OPTIONS S3FS_SECRETKEY S3
 DOCKER_REGISTRY                 ?= my.os
 DOCKER_REGISTRY_USERNAME        ?= $(USER)
 DOCKER_REGISTRY_REPOSITORY      ?= $(addsuffix /,$(DOCKER_REGISTRY))$(subst $(USER),$(DOCKER_REGISTRY_USERNAME),$(DOCKER_REPOSITORY))
-DOCKER_REPOSITORY               ?= $(subst _,/,$(COMPOSE_PROJECT_NAME))
+DOCKER_REPOSITORY               ?= $(subst -,/,$(subst _,/,$(COMPOSE_PROJECT_NAME)))
 DOCKER_SERVICE                  ?= $(lastword $(DOCKER_SERVICES))
-DOCKER_SERVICES                 ?= $(eval IGNORE_DRYRUN := true)$(shell $(call docker-compose,config --services 2>/dev/null))$(eval IGNORE_DRYRUN := false)
-DOCKER_SHELL                    ?= $(SHELL)
+DOCKER_SERVICES                 ?= $(eval IGNORE_DRYRUN := true)$(eval IGNORE_VERBOSE := true)$(shell $(call docker-compose,config --services) 2>/dev/null)$(eval IGNORE_DRYRUN := false)$(eval IGNORE_VERBOSE := false)
+DOCKER_SHELL                    ?= /bin/sh
 ENV_VARS                        += COMPOSE_PROJECT_NAME COMPOSE_SERVICE_NAME DOCKER_BUILD_TARGET DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_REPOSITORY DOCKER_SHELL
 
 ifeq ($(DRONE), true)

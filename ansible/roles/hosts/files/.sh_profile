@@ -1,6 +1,5 @@
 # shellcheck shell=sh source=/dev/null
 # ~/.sh_profile: executed by the command interpreter for login shells.
-# set -x
 
 # source ~/.*aliases and ~/.*functions files
 for source in aliases functions; do
@@ -36,3 +35,5 @@ for path in /*/local/sbin /*/local/bin /*/local/*/bin "${HOME}"/.*/bin; do
     *) export PATH="${path}:$PATH" ;;
   esac
 done
+
+[ -f ~/.profile ] && . ~/.profile

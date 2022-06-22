@@ -3,6 +3,7 @@
 
 - name: config - set MYOS config in /etc/default/myos
   with_items:
+  - APP_NAME={{ lookup('env','ANSIBLE_APP_NAME') }}
   - APP_TYPE={{ lookup('env','ANSIBLE_APP_TYPE') }}
   - MYOS={{ lookup('env','ANSIBLE_MYOS') }}
   lineinfile:

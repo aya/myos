@@ -105,6 +105,7 @@ hosts_packages_distro: []
 # services to enable/disable
 hosts_services:
   - { "name": "ansible", "state": "stopped", "enabled": "no" }
+  - { "name": "myos", "state": "stopped", "enabled": "no" }
   - { "name": "zram", "state": "stopped", "enabled": "no" }
 
 # list of urls to get public keys to add to ~/.ssh/authorized_keys

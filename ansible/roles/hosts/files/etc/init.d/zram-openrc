@@ -9,10 +9,10 @@ start() {
 	/etc/init.d/zram start
 }
 
-stop() {
-	/etc/init.d/zram stop
-}
-
 status() {
 	/etc/init.d/zram status
+}
+
+stop() {
+	/etc/init.d/zram stop
 }

@@ -24,10 +24,16 @@ docker_daemon_config_directory: '/etc/docker'
 docker_daemon_config_file: "{{docker_daemon_config_directory}}/daemon.json"
 ```
 
-* `docker_daemon_config_file` - Docker daemon configuration file
+* `docker_daemon_config_data_root` - Docker daemon data root directory
 
 ``` yaml
-docker_daemon_config_storage: 'overlay2'
+docker_daemon_config_data_root: '/var/lib/docker'
+```
+
+* `docker_daemon_config_storage_driver` - Docker daemon storage driver
+
+``` yaml
+docker_daemon_config_storage_driver: 'overlay2'
 ```
 
 * `docker_daemon_config` - docker daemon yaml config

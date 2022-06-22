@@ -79,7 +79,7 @@ services:
     build:
       args:
       - DOCKER_BUILD_DIR=docker/ipfs
-      - IPFS_VERSION=0.13.0-rc1
+      - IPFS_VERSION=0.13.0
       context: ../..
       dockerfile: docker/ipfs/Dockerfile
     command: daemon --migrate=true --mount

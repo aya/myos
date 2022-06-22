@@ -46,11 +46,6 @@
   - unset user_count process_count
   lineinfile: dest=~/.bashrc create=yes line='{{item}}'
 
-- name: user - update ~/.profile
-  with_items:
-  - source ~/.sh_profile
-  lineinfile: dest=~/.profile create=yes line='{{item}}'
-
 - name: user - update ~/.config/git/ignore
   with_items:
   - '.nfs*'

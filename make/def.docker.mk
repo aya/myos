@@ -1,5 +1,5 @@
 COMPOSE_PROJECT_NAME_NODE       ?= node
-COMPOSE_PROJECT_NAME_USER       ?= $(USER)_myos_$(ENV)
+COMPOSE_PROJECT_NAME_USER       ?= $(USER_ENV)_myos
 DOCKER_ENV_ARGS                 ?= $(docker_env_args)
 DOCKER_EXEC_OPTIONS             ?=
 DOCKER_GID                      ?= $(call gid,docker)
@@ -12,12 +12,12 @@ DOCKER_NAME_SSH                 ?= $(COMPOSE_PROJECT_NAME_USER)_ssh
 DOCKER_NETWORK                  ?= $(DOCKER_NETWORK_PRIVATE)
 DOCKER_NETWORK_PRIVATE          ?= $(USER_ENV)
 DOCKER_NETWORK_PUBLIC           ?= $(COMPOSE_PROJECT_NAME_NODE)
-DOCKER_REPOSITORY_USER          ?= $(subst _,/,$(COMPOSE_PROJECT_NAME_USER))
-DOCKER_REPOSITORY_NODE          ?= $(subst _,/,$(COMPOSE_PROJECT_NAME_NODE))
+DOCKER_REPOSITORY_USER          ?= $(subst -,/,$(subst _,/,$(COMPOSE_PROJECT_NAME_USER)))
+DOCKER_REPOSITORY_NODE          ?= $(subst -,/,$(subst _,/,$(COMPOSE_PROJECT_NAME_NODE)))
 # DOCKER_RUN: if empty, run system command, else run it in a docker
 DOCKER_RUN                      ?= $(if $(filter-out false False FALSE,$(DOCKER)),$(DOCKER))
 # DOCKER_RUN_OPTIONS: default options of `docker run` command
-DOCKER_RUN_OPTIONS              += --rm -it
+DOCKER_RUN_OPTIONS              += --rm
 # DOCKER_RUN_VOLUME: options -v of `docker run` command to mount additionnal volumes
 DOCKER_RUN_VOLUME               += -v /var/run/docker.sock:/var/run/docker.sock
 DOCKER_RUN_WORKDIR              ?= -w $(PWD)

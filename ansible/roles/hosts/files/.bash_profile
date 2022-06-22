@@ -1,8 +1,6 @@
 # shellcheck shell=bash source=/dev/null
 # ~/.bash_profile: executed by the command interpreter for bash login shell.
 
-[ -f ~/.sh_profile ] && . ~/.sh_profile
-
 # bash-completion
 if ! shopt -oq posix && [ -z "${BASH_COMPLETION_VERSINFO-}" ]; then
   if [ "${BASH_VERSINFO[0]}" -gt 4 ] \
@@ -17,3 +15,5 @@ if ! shopt -oq posix && [ -z "${BASH_COMPLETION_VERSINFO-}" ]; then
     . "${XDG_CONFIG_HOME:-$HOME/.config}/bash_completion"
   fi
 fi
+
+[ -f ~/.sh_profile ] && . ~/.sh_profile

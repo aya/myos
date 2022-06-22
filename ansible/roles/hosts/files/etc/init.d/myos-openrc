@@ -10,7 +10,7 @@ start() {
 }
 
 status() {
-	/etc/init.d/myos ps
+	/etc/init.d/myos status
 }
 
 stop() {

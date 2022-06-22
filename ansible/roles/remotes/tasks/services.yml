@@ -27,5 +27,10 @@
     name: "{{item.name}}"
     state: "{{item.state}}"
     enabled: "{{item.enabled}}"
+    runlevels:
+      - 2
+      - 3
+      - 4
+      - 5
   become: yes
 

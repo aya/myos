@@ -62,9 +62,9 @@ GIT_COMMIT                      ?= $(shell git rev-parse $(BRANCH) 2>/dev/null)
 GIT_REPOSITORY                  ?= $(if $(SUBREPO),$(shell awk -F ' = ' '$$1 ~ /^[[\s\t]]*remote$$/ {print $$2}' .gitrepo 2>/dev/null),$(shell git config --get remote.origin.url 2>/dev/null))
 GIT_STATUS                      ?= $(shell git status -uno --porcelain 2>/dev/null |wc -l)
 GIT_TAG                         ?= $(shell git tag -l --points-at $(BRANCH) 2>/dev/null)
-GIT_UPSTREAM_REPOSITORY         ?= $(if $(findstring ://,$(GIT_REPOSITORY)),$(call pop,$(call pop,$(GIT_REPOSITORY)))/,$(call pop,$(GIT_REPOSITORY),:):)$(GIT_UPSTREAM_USER)/$(lastword $(subst /, ,$(GIT_REPOSITORY)))
+GIT_UPSTREAM_REPOSITORY         ?= $(if $(GIT_REPOSITORY),$(if $(findstring ://,$(GIT_REPOSITORY)),$(call pop,$(call pop,$(GIT_REPOSITORY)))/,$(call pop,$(GIT_REPOSITORY),:):)$(or $(GIT_UPSTREAM_USER),$(GIT_USER))/$(lastword $(subst /, ,$(GIT_REPOSITORY))))
 GIT_UPSTREAM_USER               ?= $(lastword $(subst /, ,$(call pop,$(MYOS_REPOSITORY))))
-GIT_USER                        ?= $(GIT_AUTHOR_NAME)
+GIT_USER                        ?= $(USER)
 GIT_VERSION                     ?= $(shell git describe --tags $(BRANCH) 2>/dev/null || git rev-parse $(BRANCH) 2>/dev/null)
 HOSTNAME                        ?= $(shell hostname 2>/dev/null |sed 's/\..*//')
 IGNORE_DRYRUN                   ?= false
@@ -82,7 +82,7 @@ MAKE_ENV_VARS                   ?= $(strip $(foreach var, $(filter-out .VARIABLE
 MAKE_FILE_ARGS                  ?= $(foreach var,$(filter $(ENV_VARS),$(MAKE_FILE_VARS)),$(var)='$($(var))')
 MAKE_FILE_VARS                  ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter file,$(origin $(var))),$(var))))
 MAKE_OLDFILE                    ?= $@
-MAKE_TARGETS                    ?= $(filter-out $(.VARIABLES),$(shell $(MAKE) -qp 2>/dev/null |awk -F':' '/^[a-zA-Z0-9][^$$\#\/\t=]*:([^=]|$$)/ {print $$1}' |sort -u))
+MAKE_TARGETS                    ?= $(filter-out $(.VARIABLES),$(shell $(MAKE) -qp 2>/dev/null |awk -F':' '/^[a-zA-Z0-9][^$$\#\/\t=]*:([^=]|$$)/ {print $$1}' 2>/dev/null |sort -u))
 MAKE_UNIXTIME_START             := $(shell date -u +'%s' 2>/dev/null)
 MAKE_UNIXTIME_CURRENT            = $(shell date -u "+%s" 2>/dev/null)
 MAKE_VARS                       ?= ENV

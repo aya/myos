@@ -26,6 +26,7 @@ docker-commit-%:
 
 # target docker-compose-build: Fire docker-images-myos, Call docker-compose build SERVICE
 .PHONY: docker-compose-build
+docker-compose-build: DOCKER_RUN_OPTIONS += -it
 docker-compose-build: docker-images-myos
 	$(call docker-compose,build $(DOCKER_BUILD_ARGS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
@@ -37,11 +38,13 @@ docker-compose-config:
 # target docker-compose-connect: Call docker-compose exec SERVICE DOCKER_SHELL
 .PHONY: docker-compose-connect
 docker-compose-connect: SERVICE ?= $(DOCKER_SERVICE)
+docker-compose-connect: DOCKER_RUN_OPTIONS += -it
 docker-compose-connect:
 	$(call docker-compose,exec $(SERVICE) $(DOCKER_SHELL)) || true
 
 # target docker-compose-down: Call docker-compose rm SERVICE or docker-compose down
 .PHONY: docker-compose-down
+docker-compose-down: DOCKER_RUN_OPTIONS += -it
 docker-compose-down:
 	$(if $(filter $(SERVICE),$(SERVICES)),$(call docker-compose,rm -fs $(SERVICE)),$(call docker-compose,down $(DOCKER_COMPOSE_DOWN_OPTIONS)))
 
@@ -77,12 +80,14 @@ docker-compose-restart:
 
 # target docker-compose-rm: Call docker-compose rm SERVICE
 .PHONY: docker-compose-rm
+docker-compose-rm: DOCKER_RUN_OPTIONS += -it
 docker-compose-rm:
 	$(call docker-compose,rm -fs $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-run: Call docker-compose run SERVICE ARGS
 .PHONY: docker-compose-run
 docker-compose-run: SERVICE ?= $(DOCKER_SERVICE)
+docker-compose-run: DOCKER_RUN_OPTIONS += -it
 docker-compose-run:
 	$(call docker-compose,run $(SERVICE) $(ARGS))
 
@@ -104,6 +109,7 @@ docker-compose-stop:
 
 # target docker-compose-up: Fire docker-image-myos, Call docker-compose up SERVICE
 .PHONY: docker-compose-up
+docker-compose-up: DOCKER_RUN_OPTIONS += -it
 docker-compose-up: docker-images-myos
 	$(call docker-compose,up $(DOCKER_COMPOSE_UP_OPTIONS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 

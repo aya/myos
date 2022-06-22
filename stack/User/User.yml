@@ -13,7 +13,7 @@ services:
       - SSH_BASTION_HOSTNAME=${SSH_BASTION_HOSTNAME}
       - SSH_BASTION_USERNAME=${SSH_BASTION_USERNAME}
       - SSH_PUBLIC_HOSTS=${SSH_PUBLIC_HOSTS}
-      - SSH_PRIVATE_IP_RANGE=${SSH_RIVATE_IP_RANGE}
+      - SSH_PRIVATE_IP_RANGE=${SSH_PRIVATE_IP_RANGE}
       context: ../..
       dockerfile: docker/cli/Dockerfile
     command: tail -f /dev/null

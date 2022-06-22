@@ -1,11 +1,11 @@
 # target ansible: Fire docker-build-ansible, Call ansible ANSIBLE_ARGS ARGS or ansible-run target
 .PHONY: ansible
-ansible: $(if $(DOCKER_RUN),docker-build-ansible,install-ansible)
+ansible: $(if $(ANSIBLE_DOCKER_RUN),docker-build-ansible,install-ansible)
 	$(call ansible,$(ANSIBLE_ARGS) $(ARGS))
 
 # target ansible-playbook: Call ansible-playbook ANSIBLE_ARGS ARGS
 .PHONY: ansible-playbook
-ansible-playbook: $(if $(DOCKER_RUN),docker-build-ansible,install-ansible)
+ansible-playbook: $(if $(ANSIBLE_DOCKER_RUN),docker-build-ansible,install-ansible)
 	$(call ansible-playbook,$(ANSIBLE_ARGS) $(ARGS))
 
 # target ansible-pull: Call ansible-pull ANSIBLE_GIT_REPOSITORY ANSIBLE_PLAYBOOK
@@ -24,7 +24,7 @@ ansible-run: ansible-run-localhost
 
 # target ansible-run-%: Fire docker-build-ansible, Call ansible-playbook ANSIBLE_PLAYBOOK
 .PHONY: ansible-run-%
-ansible-run-%: $(if $(DOCKER_RUN),docker-build-ansible,install-ansible)
+ansible-run-%: $(if $(ANSIBLE_DOCKER_RUN),docker-build-ansible,install-ansible)
 	$(call ansible-playbook,$(if $(ANSIBLE_TAGS),--tags $(ANSIBLE_TAGS)) $(if $(ANSIBLE_EXTRA_VARS),--extra-vars '$(patsubst target=localhost,target=$*,$(ANSIBLE_EXTRA_VARS))') $(if $(findstring true,$(DRYRUN)),--check) $(if $(ANSIBLE_INVENTORY),--inventory $(ANSIBLE_INVENTORY)) $(ANSIBLE_PLAYBOOK))
 
 # target ansible-tests: Fire ssh-add ansible-tests-localhost

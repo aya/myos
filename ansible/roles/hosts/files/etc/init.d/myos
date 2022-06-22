@@ -9,11 +9,51 @@
 # Description: MYOS system calls
 ### END INIT INFO
 
+NAME="$(basename "$0")"
+
 # check system config
 [ -r /etc/default/myos ] && . /etc/default/myos 2>/dev/null
-type make >/dev/null 2>&1 && [ -d "${MYOS}" ] || exit 1
+type make >/dev/null 2>&1 && [ -d "${MYOS}" ] && cd "${MYOS}" || exit 1
 
 case "$1" in
+  force-stop)
+    HOOK="stop stack-node-stop"
+    shift
+    ;;
+  force-reload)
+    HOOK="recreate stack-node-recreate"
+    shift
+    ;;
+  force-restart)
+    HOOK="restart stack-node-restart"
+    shift
+    ;;
+  force-shutdown)
+    HOOK="down stack-node-down"
+    shift
+    ;;
+  reload)
+    HOOK="recreate"
+    shift
+    ;;
+  shutdown)
+    HOOK="down"
+    shift
+    ;;
+  start)
+    echo "Starting $NAME..."
+    HOOK="up"
+    shift
+    ;;
+  status)
+    HOOK="ps"
+    shift
+    ;;
+  stop)
+    echo "Stopping $NAME..."
+    ;;
   *)
-    IFS=$'\n'; cd "${MYOS}"; exec env $(cat /etc/default/myos ~/.myos 2>/dev/null) make "$@"
+    ;;
 esac
+
+IFS=$'\n'; exec env $(cat /etc/default/myos ~/.myos 2>/dev/null) make ${HOOK:-} "${@}"

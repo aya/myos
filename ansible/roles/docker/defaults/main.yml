@@ -5,16 +5,19 @@
 docker_check_kernel: '3.10'
 
 # location of configuration files of docker daemon
-docker_daemon_config_directory: "/etc/docker"
+# docker_daemon_config_directory: "/etc/docker"
 
 # configuration files of docker daemon
-docker_daemon_config_file: "{{docker_daemon_config_directory}}/daemon.json"
+# docker_daemon_config_file: "{{docker_daemon_config_directory}}/daemon.json"
+
+# configure docker daemon data root directory
+# docker_daemon_config_data_root: "/var/lib/docker"
 
 # configure docker daemon storage driver
-docker_daemon_config_storage: "overlay2"
+# docker_daemon_config_storage: "overlay2"
 
 # docker daemon configuration
-docker_daemon_config: {}
+# docker_daemon_config: {}
 
 # docker package name
 docker_package: docker

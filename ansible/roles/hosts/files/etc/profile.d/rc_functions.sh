@@ -2,7 +2,7 @@
 # file rc_functions.sh: Define shell functions
 ## author: Yann "aya" Autissier
 ## license: GPL
-## version: 20210714
+## version: 20220620
 
 # function force: Run a command sine die
 force() {
@@ -135,8 +135,8 @@ ps1_set() {
     fi
   )"
   PS1_GIT="${COLOR_CYAN}${PS1_GIT}${COLOR_RESET}"
-  PS1_HOSTNAME_COLOR="\`case \"\${ENV}\" in
-    [Pp][Rr][0Oo][Dd]*)
+  PS1_HOSTNAME_COLOR="\`case \"\${ENV}${HOSTNAME%%.*}\" in
+    *[Pp][Rr][0Oo][Dd]*|*[Pp][Rr][Dd]*)
       printf \"${COLOR_RED}\";;
     *)
       if [ -n \"\${ENV}\" ]; then
