@@ -1,15 +1,24 @@
 ##
 # ENV
 
-# target .env: Update .env
-## it updates .env file when .env.dist file is newer
+# target .env: Update file .env
+## it updates file .env when file .env.dist is newer
 .env: .env.dist
 	$(call .env,,,$(wildcard $(CONFIG)/$(ENV)/$(APP)/.env .env.$(ENV)))
 
-# target .env-clean: Remove .env
+# target .env-clean: Remove file .env
+## it removes file .env
 .PHONY: .env-clean
 .env-clean:
 	rm -i .env || true
+
+# target .env-update: Update file ENV_FILE
+## it updates file ENV_FILE with missing values from file ENV_DIST
+## it can override ENV_DIST with values from file ENV_OVER
+.PHONY: .env-update
+.env-update:
+	$(call INFO,.env-update,$(ENV_FILE)$(comma) $(ENV_DIST)$(comma) $(ENV_OVER))
+	$(foreach env_file,$(ENV_FILE),$(call .env,$(env_file),$(or $(ENV_DIST),$(env_file).dist),$(ENV_OVER)))
 
 # include .env file
 -include .env
@@ -70,7 +79,7 @@ endef
 	  # sort alphabetically
 	  # add variables definition to the .env file
 define .env_update
-	$(call INFO,.env_update,$(env_file) $(env_dist) $(env_over))
+	$(call INFO,.env_update,$(env_file)$(comma) $(env_dist)$(comma) $(env_over))
 	touch $(env_file) $(if $(VERBOSE)$(DEBUG),,2> /dev/null)
 	printenv \
 	  |awk -F '=' 'NR == FNR { if($$1 !~ /^(#|$$)/) { A[$$1]; next } } !($$1 in A)' - $(env_dist) \
