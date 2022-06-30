@@ -29,6 +29,7 @@ DOCKER_BUILD_TARGETS            ?= $(ENV_DEPLOY)
 DOCKER_BUILD_VARS               ?= APP BRANCH COMPOSE_VERSION DOCKER_GID DOCKER_REPOSITORY GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME OPERATING_SYSTEM PROCESSOR_ARCHITECTURE SSH_BASTION_HOSTNAME SSH_BASTION_USERNAME SSH_PRIVATE_IP_RANGE SSH_PUBLIC_HOST_KEYS SSH_REMOTE_HOSTS UID USER VERSION
 DOCKER_COMPOSE                  ?= $(if $(DOCKER_RUN),docker/compose:$(COMPOSE_VERSION),$(or $(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'),docker-compose)) $(COMPOSE_ARGS)
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
+DOCKER_COMPOSE_RUN_OPTIONS      ?= --rm
 DOCKER_COMPOSE_UP_OPTIONS       ?= -d
 DOCKER_IMAGE_TAG                ?= $(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest))
 DOCKER_IMAGES                   ?= $(patsubst %/,%,$(patsubst docker/%,%,$(dir $(wildcard docker/*/Dockerfile))))
@@ -56,32 +57,18 @@ DOCKER_COMPOSE_DOWN_OPTIONS     := --rmi all -v
 DOCKER_COMPOSE_UP_OPTIONS       := -d --build
 endif
 
-# https://github.com/docker/libnetwork/pull/2348
-ifeq ($(OPERATING_SYSTEM),Darwin)
-DOCKER_HOST_IFACE               ?= $(shell docker run --rm -it --net=host alpine /sbin/ip -4 route list match 0/0 2>/dev/null |awk '{print $$5}' |awk '!seen[$$0]++' |head -1)
-DOCKER_HOST_INET                ?= $(shell docker run --rm -it --net=host alpine /sbin/ip -4 addr show $(DOCKER_HOST_IFACE) 2>/dev/null |awk '$$1 == "inet" {sub(/\/.*/,"",$$2); print $$2}')
-DOCKER_INTERNAL_DOCKER_GATEWAY  ?= $(shell docker run --rm -it alpine getent hosts gateway.docker.internal 2>/dev/null |awk '{print $$1}' |head -1)
-DOCKER_INTERNAL_DOCKER_HOST     ?= $(shell docker run --rm -it alpine getent hosts host.docker.internal 2>/dev/null |awk '{print $$1}' |head -1)
-else
-DOCKER_HOST_IFACE               ?= $(shell /sbin/ip -4 route list match 0/0 2>/dev/null |awk '{print $$5}' |awk '!seen[$$0]++' |head -1)
-DOCKER_HOST_INET                ?= $(shell /sbin/ip -4 addr show $(DOCKER_HOST_IFACE) 2>/dev/null |awk '$$1 == "inet" {sub(/\/.*/,"",$$2); print $$2}')
-DOCKER_INTERNAL_DOCKER_GATEWAY  ?= $(shell /sbin/ip -4 route list match 0/0 2>/dev/null |awk '{print $$3}' |awk '!seen[$$0]++' |head -1)
-DOCKER_INTERNAL_DOCKER_HOST     ?= $(shell /sbin/ip addr show docker0 2>/dev/null |awk '$$1 == "inet" {sub(/\/.*/,"",$$2); print $$2}')
-endif
-
 # function docker-compose: Run docker-compose with arg 1
 define docker-compose
 	$(call INFO,docker-compose,$(1))
   $(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
-	$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
+	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(COMPOSE_PROJECT_NAME_NODE),$(COMPOSE_PROJECT_NAME)) $(1)))
 endef
 # function docker-compose-exec: Run docker-compose-exec with arg 2 in service 1
 define docker-compose-exec
 	$(call INFO,docker-compose-exec,$(1)$(comma) $(2))
   $(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
-	$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) exec -T $(1) sh -c '$(2)')
+	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(COMPOSE_PROJECT_NAME_NODE),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(COMPOSE_PROJECT_NAME_USER),$(COMPOSE_PROJECT_NAME))) exec -T $(1) sh -c '$(2)'))
 endef
-
 # function docker-build: Build docker image
 define docker-build
 	$(call INFO,docker-build,$(1)$(comma) $(2)$(comma) $(3))

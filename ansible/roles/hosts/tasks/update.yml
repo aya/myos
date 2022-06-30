@@ -1,0 +1,32 @@
+---
+# file: tasks/update.yml
+
+- name: update - copy files
+  with_items:
+  - /etc/cron.d/myos
+  copy: src=../files/{{item}} dest={{item}} owner=root group=root mode=0644
+  become: yes
+
+- name: update - copy files - systemd
+  when: ansible_service_mgr|lower == "systemd"
+  with_items:
+  - /etc/systemd/system/ansible.service
+  - /etc/systemd/system/ansible.timer
+  copy: src=../files/{{item}} dest={{item}} owner=root group=root mode=0644
+  become: yes
+
+- name: update - create /root/.myos
+  become: true
+  template:
+    src: myos.j2
+    dest: ~/.myos
+    force: no
+    mode: 0400
+
+- name: update - create /root/Makefile
+  become: true
+  template:
+    src: Makefile.j2
+    dest: ~/Makefile
+    force: yes
+

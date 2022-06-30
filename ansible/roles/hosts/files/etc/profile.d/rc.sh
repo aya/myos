@@ -2,7 +2,7 @@
 # file rc.sh: Call user defined functions
 ## author: Yann "aya" Autissier
 ## license: GPL
-## version: 20210714
+## version: 20220630
 
 case $- in
   # if this is an interactive shell
@@ -24,7 +24,7 @@ case $- in
         fi
     done
     # load user stuff from RC_* env vars
-    IFS="$(printf '%b_' '\n')"; IFS="${IFS%_}"; for line in $(printenv 2>/dev/null |awk '$0 ~ /^RC_[1-9A-Z_]*=/'); do
+    IFS="$(printf '%b_' '\n')"; IFS="${IFS%_}"; for line in $(printenv 2>/dev/null |awk '$0 ~ /^RC_[0-9A-Z_]*=/' |sort); do
         func_name=$(printf '%s\n' "${line%%=*}" |awk '{print tolower(substr($0,4))}')
         eval func_args=\$"${line%%=*}"
         [ "${func_args}" = "false" ] && continue

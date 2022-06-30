@@ -3,6 +3,8 @@ LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 ARG GIT_AUTHOR_NAME
 ARG GIT_AUTHOR_EMAIL
+ARG OPERATING_SYSTEM=Linux
+ARG PROCESSOR_ARCHITECTURE=x86_64
 
 ENV GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME}
 ENV GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}
@@ -12,15 +14,20 @@ ENV GIT_COMMITTER_EMAIL=${GIT_AUTHOR_EMAIL}
 RUN apk upgrade --no-cache \
  && apk add --no-cache \
         bash \
-        docker \
+        curl \
         gettext \
         git \
+        gpg \
+        gpg-agent \
         make \
-        mysql-client \
+        nano \
+        netcat-openbsd \
         openssh \
-        postgresql-client \
-        sudo \
-        zsh
+        screen \
+        socat \
+        tmux \
+        wget \
+        xz
 
 RUN git clone https://github.com/ingydotnet/git-subrepo \
  && cd git-subrepo \
@@ -33,7 +40,32 @@ RUN git clone https://github.com/ingydotnet/git-subrepo \
  && cd .. \
  && rm -rf git-subrepo
 
-CMD ["bash"]
+ARG IPFS_VERSION=0.13.0
+
+RUN { OS="$(echo ${OPERATING_SYSTEM} |awk '{print tolower($0)}')"; \
+    ARCH="$(echo ${PROCESSOR_ARCHITECTURE})"; \
+    wget -qO - https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.${OS}.${ARCH}.tar.xz \
+     |tar --strip-components 1 -C /usr/local/bin -xJf - shellcheck-stable/shellcheck; } \
+ && { ARCH="$(echo ${PROCESSOR_ARCHITECTURE} |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"; \
+    wget -qO - https://github.com/ipfs/go-ipfs/releases/download/v${IPFS_VERSION}/go-ipfs_v${IPFS_VERSION}_${OS}-${ARCH}.tar.gz \
+     |tar --strip-components 1 -C /usr/local/bin -xzf - go-ipfs/ipfs; } \
+ && mkdir -p /usr/local/lib/shellspec \
+ && wget -qO - https://github.com/shellspec/shellspec/archive/refs/heads/master.tar.gz \
+     |tar --strip-components 1 -C /usr/local/lib/shellspec -xzf - \
+ && ln -s /usr/local/lib/shellspec/shellspec /usr/local/bin/shellspec
+
+ADD https://raw.github.com/kvz/cronlock/master/cronlock /usr/local/bin/cronlock
+RUN chmod +rx /usr/local/bin/cronlock
+
+# Setup environment variables; export SSH_AUTH_SOCK from socket directory
+ENV SOCKET_DIR /tmp/ssh-agent
+ENV SSH_AUTH_SOCK ${SOCKET_DIR}/socket
+ENV SSH_AUTH_PROXY_SOCK ${SOCKET_DIR}/proxy-socket
+
+COPY ${DOCKER_BUILD_DIR}/docker-entrypoint.sh /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
+
+CMD ["start"]
 
 FROM dist as master
 ARG DOCKER_BUILD_DIR
@@ -48,6 +80,15 @@ ARG USER
 ENV UID=${UID}
 ENV GID=${UID}
 ENV USER=${USER}
+
+RUN apk add --no-cache \
+#         docker \
+#         docker-compose \
+#         mysql-client \
+#         postgresql-client \
+        sudo
+#         vim \
+#         zsh
 
 # If we provide a numeric UID
 RUN [ "$UID" -eq "$UID" ] 2>/dev/null \
@@ -77,9 +118,9 @@ RUN [ "$DOCKER_GID" -eq "$DOCKER_GID" ] 2>/dev/null \
 || true
 
 ## User groups
-RUN adduser $USER docker \
- && adduser $USER wheel \
- && echo '%wheel ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+RUN adduser $USER wheel \
+#  && adduser $USER docker \
+ && echo '%wheel ALL=(ALL:ALL) NOPASSWD: ALL' >> /etc/sudoers
 
 RUN echo -e "\n\
 Host *\n\
@@ -103,6 +144,13 @@ Host ssh-bastion\n\
       fi \
     fi
 
+# Custom rc functions
+COPY ansible/roles/hosts/files/etc/profile.d/rc*.sh /etc/profile.d/
+
+RUN mkdir -p $SOCKET_DIR && chown $USER $SOCKET_DIR
+
+VOLUME ${SOCKET_DIR}
+
 USER $USER
 ENV SHELL=${SHELL}
 WORKDIR /home/$USER
@@ -120,3 +168,6 @@ RUN mkdir -p ~/.ssh ~/.config/git \
 *.swp\n\
 Thumbs.db\n\
 " > ~/.config/git/ignore
+
+# dot files
+COPY ${DOCKER_BUILD_DIR}/.* /home/$USER/

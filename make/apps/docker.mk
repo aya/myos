@@ -46,7 +46,7 @@ docker-compose-connect:
 .PHONY: docker-compose-down
 docker-compose-down: DOCKER_RUN_OPTIONS += -it
 docker-compose-down:
-	$(if $(filter $(SERVICE),$(SERVICES)),$(call docker-compose,rm -fs $(SERVICE)),$(call docker-compose,down $(DOCKER_COMPOSE_DOWN_OPTIONS)))
+	$(if $(filter $(SERVICE),$(SERVICES)),$(call docker-compose,rm -fs $(SERVICE)),$(call docker-compose,down $(DOCKER_COMPOSE_DOWN_OPTIONS) ||:))
 
 # target docker-compose-exec: Call docker-compose-exec SERVICE ARGS
 .PHONY: docker-compose-exec
@@ -89,7 +89,7 @@ docker-compose-rm:
 docker-compose-run: SERVICE ?= $(DOCKER_SERVICE)
 docker-compose-run: DOCKER_RUN_OPTIONS += -it
 docker-compose-run:
-	$(call docker-compose,run $(SERVICE) $(ARGS))
+	$(call docker-compose,run $(DOCKER_COMPOSE_RUN_OPTIONS) $(SERVICE) $(ARGS))
 
 # target docker-compose-scale: Call docker-compose up --scale SERVICE=NUM
 .PHONY: docker-compose-scale

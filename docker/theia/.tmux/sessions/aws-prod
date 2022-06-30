@@ -1,2 +1,0 @@
-new-session -A -s aws-prod
-run-shell "ssh sshuser@ssh-bastion make list-nodes |sed '1d' |awk '$1 ~ /^aws\.prod\.[0-9a-z]+$/' |while read host ip; do type=\${host#*prod.}; num=\$(printf '%0d' \${ip}); num=\$(echo \${ip} | tr . '\n' | awk '{n = n*256 + $1} END{print n}'); tmux neww -t aws-prod:\$num -n \$type '/bin/bash -cli \"force ssh -Aqt ssh-bastion ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no 'root@\$ip'\"'; done"

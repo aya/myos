@@ -81,6 +81,11 @@ exec@%: SERVICE ?= $(DOCKER_SERVICE)
 exec@%:
 	$(call make,ssh-exec,$(MYOS),APP ARGS SERVICE)
 
+# target force-%: Fire targets % and stack-node-%
+# on local host
+.PHONY: force-%
+force-%: % stack-node-%;
+
 # target install app-install: Install application
 # on local host
 .PHONY: install app-install
@@ -150,6 +155,11 @@ run@%:
 .PHONY: scale
 scale: docker-compose-scale ## Scale SERVICE application to NUM dockers
 
+# target shutdown: remove application, node and user dockers
+# on local host
+.PHONY: shutdown
+shutdown: force-down ## Shutdown all dockers
+
 # target ssh@%: Connect to % ENV
 # on first remote host
 .PHONY: ssh@%
@@ -159,7 +169,7 @@ ssh@%:
 # target stack: Call docker-stack for each STACK
 ## it updates COMPOSE_FILE with all .yml files of the current stack
 .PHONY: stack
-stack:
+stack: docker-network-create
 	$(foreach stackz,$(STACK),$(call docker-stack,$(stackz)))
 
 # target stack-%: Call docker-compose-% target on STACK
@@ -172,7 +182,7 @@ stack-%:
 	$(eval command := $(lastword $(subst -, ,$*)))
 	$(if $(findstring -,$*), \
 		$(if $(filter $(command),$(filter-out %-%,$(patsubst docker-compose-%,%,$(filter docker-compose-%,$(MAKE_TARGETS))))), \
-		$(call make,docker-compose-$(command) STACK="$(stack)" $(if $(filter $(COMPOSE_PROJECT_NAME_NODE),$(stack)),COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME_NODE)),,ARGS COMPOSE_IGNORE_ORPHANS SERVICE)))
+		$(call make,docker-compose-$(command) STACK="$(stack)",,ARGS COMPOSE_IGNORE_ORPHANS SERVICE User node)))
 
 # target start app-start: Start application dockers
 # on local host
@@ -192,7 +202,7 @@ tests: app-tests ## Test application
 # target up: Create and start application dockers
 # on local host
 .PHONY: up
-up: docker-compose-up app-start ## Create application dockers
+up: stack-required docker-compose-up app-start ## Create application dockers
 
 # target update app-update: Update application files
 # on local host

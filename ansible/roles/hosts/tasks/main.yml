@@ -34,6 +34,10 @@
 - import_tasks: ssh.yml
   tags:
     - ssh
+- import_tasks: update.yml
+  tags:
+    - update
+  when: hosts_update|default(false)
 - import_tasks: user.yml
   tags:
     - user

@@ -53,7 +53,7 @@ ENV_ARGS                        ?= $(env_args)
 ENV_FILE                        ?= $(wildcard $(CONFIG)/$(ENV)/$(APP)/.env .env)
 ENV_LIST                        ?= $(shell ls .git/refs/heads/ 2>/dev/null)
 ENV_RESET                       ?= false
-ENV_VARS                        ?= APP BRANCH DOMAIN ENV HOSTNAME GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME MONOREPO MONOREPO_DIR OPERATING_SYSTEM PROCESSOR_ARCHITECTURE TAG UID USER VERSION
+ENV_VARS                        ?= APP BRANCH DOMAIN ENV HOME HOSTNAME GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME MONOREPO MONOREPO_DIR OPERATING_SYSTEM PROCESSOR_ARCHITECTURE TAG UID USER VERSION
 GID                             ?= $(shell id -g 2>/dev/null)
 GIT_AUTHOR_EMAIL                ?= $(or $(shell git config user.email 2>/dev/null),$(USER)@my.os)
 GIT_AUTHOR_NAME                 ?= $(or $(shell git config user.name 2>/dev/null),$(USER))
@@ -102,7 +102,6 @@ SUDO                            ?= $(if $(filter-out 0,$(UID)),$(shell type -p s
 TAG                             ?= $(GIT_TAG)
 UID                             ?= $(shell id -u 2>/dev/null)
 USER                            ?= $(shell id -nu 2>/dev/null)
-USER_ENV                        ?= $(USER)_$(ENV)
 VERBOSE                         ?= $(if $(DEBUG),true)
 VERSION                         ?= $(GIT_VERSION)
 

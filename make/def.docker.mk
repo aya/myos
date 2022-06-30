@@ -1,16 +1,14 @@
 COMPOSE_PROJECT_NAME_NODE       ?= node
-COMPOSE_PROJECT_NAME_USER       ?= $(USER_ENV)_myos
+COMPOSE_PROJECT_NAME_USER       ?= $(USER)_$(ENV)
+COMPOSE_SERVICE_NAME_NODE       ?= $(subst _,-,$(COMPOSE_PROJECT_NAME_NODE))
+COMPOSE_SERVICE_NAME_USER       ?= $(subst _,-,$(COMPOSE_PROJECT_NAME_USER))
 DOCKER_ENV_ARGS                 ?= $(docker_env_args)
 DOCKER_EXEC_OPTIONS             ?=
 DOCKER_GID                      ?= $(call gid,docker)
-DOCKER_IMAGE                    ?= $(DOCKER_IMAGE_CLI)
-DOCKER_IMAGE_CLI                ?= $(DOCKER_REPOSITORY_USER)/cli
-DOCKER_IMAGE_SSH                ?= $(DOCKER_REPOSITORY_USER)/ssh
-DOCKER_NAME                     ?= $(DOCKER_NAME_CLI)
-DOCKER_NAME_CLI                 ?= $(COMPOSE_PROJECT_NAME_USER)_cli
-DOCKER_NAME_SSH                 ?= $(COMPOSE_PROJECT_NAME_USER)_ssh
+DOCKER_IMAGE                    ?= $(DOCKER_REPOSITORY_USER)/myos
+DOCKER_NAME                     ?= $(COMPOSE_PROJECT_NAME_USER)_myos
 DOCKER_NETWORK                  ?= $(DOCKER_NETWORK_PRIVATE)
-DOCKER_NETWORK_PRIVATE          ?= $(USER_ENV)
+DOCKER_NETWORK_PRIVATE          ?= $(COMPOSE_PROJECT_NAME_USER)
 DOCKER_NETWORK_PUBLIC           ?= $(COMPOSE_PROJECT_NAME_NODE)
 DOCKER_REPOSITORY_USER          ?= $(subst -,/,$(subst _,/,$(COMPOSE_PROJECT_NAME_USER)))
 DOCKER_REPOSITORY_NODE          ?= $(subst -,/,$(subst _,/,$(COMPOSE_PROJECT_NAME_NODE)))
@@ -21,8 +19,21 @@ DOCKER_RUN_OPTIONS              += --rm
 # DOCKER_RUN_VOLUME: options -v of `docker run` command to mount additionnal volumes
 DOCKER_RUN_VOLUME               += -v /var/run/docker.sock:/var/run/docker.sock
 DOCKER_RUN_WORKDIR              ?= -w $(PWD)
-DOCKER_VOLUME_SSH               ?= $(COMPOSE_PROJECT_NAME_USER)_ssh
-ENV_VARS                        += DOCKER_IMAGE_CLI DOCKER_IMAGE_SSH DOCKER_NAME_CLI DOCKER_NAME_SSH DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC DOCKER_REPOSITORY_USER DOCKER_REPOSITORY_NODE DOCKER_VOLUME_SSH
+DOCKER_VOLUME                   ?= $(COMPOSE_PROJECT_NAME_USER)_myos
+ENV_VARS                        += COMPOSE_PROJECT_NAME_NODE COMPOSE_PROJECT_NAME_USER COMPOSE_SERVICE_NAME_NODE COMPOSE_SERVICE_NAME_USER DOCKER_IMAGE DOCKER_NAME DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC DOCKER_REPOSITORY_USER DOCKER_REPOSITORY_NODE DOCKER_VOLUME
+
+# https://github.com/docker/libnetwork/pull/2348
+ifeq ($(OPERATING_SYSTEM),Darwin)
+DOCKER_HOST_IFACE               ?= $(shell docker run --rm -it --net=host alpine /sbin/ip -4 route list match 0/0 2>/dev/null |awk '{print $$5}' |awk '!seen[$$0]++' |head -1)
+DOCKER_HOST_INET4               ?= $(shell docker run --rm -it --net=host alpine /sbin/ip -4 addr show $(DOCKER_HOST_IFACE) 2>/dev/null |awk '$$1 == "inet" {sub(/\/.*/,"",$$2); print $$2}' |head -1)
+DOCKER_INTERNAL_DOCKER_GATEWAY  ?= $(shell docker run --rm -it alpine getent hosts gateway.docker.internal 2>/dev/null |awk '{print $$1}' |head -1)
+DOCKER_INTERNAL_DOCKER_HOST     ?= $(shell docker run --rm -it alpine getent hosts host.docker.internal 2>/dev/null |awk '{print $$1}' |head -1)
+else
+DOCKER_HOST_IFACE               ?= $(shell /sbin/ip -4 route list match 0/0 2>/dev/null |awk '{print $$5}' |awk '!seen[$$0]++' |head -1)
+DOCKER_HOST_INET4               ?= $(shell /sbin/ip -4 addr show $(DOCKER_HOST_IFACE) 2>/dev/null |awk '$$1 == "inet" {sub(/\/.*/,"",$$2); print $$2}' |head -1)
+DOCKER_INTERNAL_DOCKER_GATEWAY  ?= $(shell /sbin/ip -4 route list match 0/0 2>/dev/null |awk '{print $$3}' |awk '!seen[$$0]++' |head -1)
+DOCKER_INTERNAL_DOCKER_HOST     ?= $(shell /sbin/ip addr show docker0 2>/dev/null |awk '$$1 == "inet" {sub(/\/.*/,"",$$2); print $$2}' |head -1)
+endif
 
 ifeq ($(DRONE), true)
 DOCKER_RUN_OPTIONS              := --rm --network $(DOCKER_NETWORK)
@@ -36,7 +47,7 @@ endif
 
 ifneq ($(DOCKER_RUN),)
 
-DOCKER_SSH_AUTH                 := -e SSH_AUTH_SOCK=/tmp/ssh-agent/socket -v $(DOCKER_VOLUME_SSH):/tmp/ssh-agent
+DOCKER_SSH_AUTH                 := -e SSH_AUTH_SOCK=/tmp/ssh-agent/socket -v $(DOCKER_VOLUME):/tmp/ssh-agent
 
 # function docker-run: Run docker image 2 with arg 1
 define docker-run

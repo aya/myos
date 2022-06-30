@@ -15,6 +15,7 @@ ipfs config Pubsub.Router gossipsub
 ipfs config --json Experimental.Libp2pStreamMounting true
 ipfs config --json Experimental.P2pHttpProxy true
 ipfs config Addresses.Gateway "/ip4/0.0.0.0/tcp/8080"
+ipfs config Addresses.Api "/ip4/0.0.0.0/tcp/5001"
 
 ## REMOVE IPFS BOOTSTRAP
 ipfs bootstrap rm --all

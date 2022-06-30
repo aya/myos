@@ -11,13 +11,6 @@
   copy: src="{{ item }}" dest=~/.ssh/ mode=0400
   ignore_errors: true
 
-- name: user - create ~/.myos
-  template:
-    src: myos.j2
-    dest: ~/.myos
-    force: no
-    mode: 0400
-
 - name: user - create ~/.rc.d
   file: path=~/.rc.d/ state={{hosts_user_rc_enable|default(false)|ternary('directory', 'absent')}} mode="0700"
 
@@ -96,10 +89,4 @@
   - :syn on
   - :filetype plugin indent on
   lineinfile: dest=~/.vimrc create=yes line='{{item}}'
-
-- name: user - update ~/Makefile
-  template:
-    src: Makefile.j2
-    dest: ~/Makefile
-    force: yes
 

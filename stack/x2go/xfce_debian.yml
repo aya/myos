@@ -31,7 +31,6 @@ services:
     - shared:/shared:cached
     - shm:/dev/shm:delegated
 
-
 volumes:
   home:
   shared:

@@ -18,5 +18,8 @@ EXPOSE 9998 9999
 ENTRYPOINT ["/usr/bin/fabio"]
 CMD ["-cfg", "/etc/fabio/fabio.properties"]
 
+HEALTHCHECK CMD status=$(echo -e 'GET /health HTTP/1.0\n' |nc -w 1 localhost 9998 | sed -n '$p') \
+                 && echo "$status" && [ "$status" = "OK" ] || exit 1
+
 FROM dist as master
 ARG DOCKER_BUILD_DIR

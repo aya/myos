@@ -9,7 +9,6 @@ NFS_DISK                        ?= $(NFS_HOST):/$(notdir $(SHARED))
 NFS_OPTIONS                     ?= rw,rsize=8192,wsize=8192,bg,hard,intr,nfsvers=3,noatime,nodiratime,actimeo=3
 NFS_PATH                        ?= /dns/$(subst $(space),/,$(strip $(call reverse,$(subst ., ,$(NFS_HOST)))))$(subst ..,,$(SHARED))
 SHELL                           ?= /bin/sh
-STACK                           ?= User
 
 env ?= $(ENV)
 user ?= $(USER)

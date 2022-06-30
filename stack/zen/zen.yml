@@ -1,0 +1,52 @@
+version: '3.6'
+
+services:
+  zen:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/zen
+      - GID=${GID}
+      - GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME}
+      - GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}
+      - IPFS_VERSION=0.13.0
+      - UID=${UID}
+      - USER=${USER}
+      context: ../..
+      dockerfile: docker/zen/Dockerfile
+    depends_on:
+    - ipfs
+    environment:
+    - ENV=${ENV}
+    - SHELL=${DOCKER_SHELL}
+    - SSH_AUTH_SOCK=/tmp/ssh-agent/socket
+    image: ${DOCKER_REPOSITORY}/zen:${DOCKER_IMAGE_TAG}
+    networks:
+    - private
+    restart: always
+    user: ${UID}:${GID}
+    volumes:
+    - astroport:${HOME}/astroport:cached
+    - ipfs:${HOME}/.ipfs:ro
+    - zen:${HOME}/.zen:delegated
+    - ssh-agent:/tmp/ssh-agent:ro
+    working_dir: ${HOME}/.zen
+
+volumes:
+  astroport:
+  ipfs:
+    external: true
+    name: ${COMPOSE_PROJECT_NAME_USER}_ipfs
+  ssh-agent:
+    external: true
+    name: ${DOCKER_VOLUME}
+  zen:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${HOME}/.zen
+      o: bind
+
+networks:
+  private:
+    external: true
+    name: ${DOCKER_NETWORK_PRIVATE}

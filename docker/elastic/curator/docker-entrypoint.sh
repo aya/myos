@@ -1,6 +1,5 @@
 #!/bin/sh
-set -euo pipefail
-set -o errexit
+set -euo errexit
 
 trap 'kill -SIGQUIT $PID' INT
 

@@ -16,44 +16,27 @@ NAME="$(basename "$0")"
 type make >/dev/null 2>&1 && [ -d "${MYOS}" ] && cd "${MYOS}" || exit 1
 
 case "$1" in
-  force-stop)
-    HOOK="stop stack-node-stop"
-    shift
-    ;;
   force-reload)
-    HOOK="recreate stack-node-recreate"
-    shift
-    ;;
-  force-restart)
-    HOOK="restart stack-node-restart"
-    shift
-    ;;
-  force-shutdown)
-    HOOK="down stack-node-down"
-    shift
+    TARGET='force-recreate'
     ;;
   reload)
-    HOOK="recreate"
-    shift
-    ;;
-  shutdown)
-    HOOK="down"
-    shift
+    TARGET="recreate"
     ;;
   start)
     echo "Starting $NAME..."
-    HOOK="up"
-    shift
+    TARGET="up"
     ;;
   status)
-    HOOK="ps"
-    shift
+    TARGET="ps"
     ;;
   stop)
     echo "Stopping $NAME..."
+    TARGET="$1"
     ;;
   *)
+    TARGET="$1"
     ;;
 esac
+shift ||:
 
-IFS=$'\n'; exec env $(cat /etc/default/myos ~/.myos 2>/dev/null) make ${HOOK:-} "${@}"
+IFS=$'\n'; exec env $(cat /etc/default/myos 2>/dev/null) make ${TARGET:-} ${TARGET_FORCE:-} $@

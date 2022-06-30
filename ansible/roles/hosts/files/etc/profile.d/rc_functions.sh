@@ -2,7 +2,7 @@
 # file rc_functions.sh: Define shell functions
 ## author: Yann "aya" Autissier
 ## license: GPL
-## version: 20220620
+## version: 20220630
 
 # function force: Run a command sine die
 force() {
@@ -40,9 +40,8 @@ force8() {
 
 # function load_average; Print the current load average
 load_average() {
-  awk '{printf "%.1f\n" $1}' /proc/loadavg 2>/dev/null\
-   || uptime 2>/dev/null |awk '{printf "%.1f\n", $(NF-2)}'
-  }
+  uptime 2>/dev/null |awk '{printf "%.1f\n", $(NF-2)}'
+}
 
 # function process_count: Print number of "processes"/"running processes"/"D-state"
 process_count() {

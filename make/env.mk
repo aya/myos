@@ -84,7 +84,7 @@ define .env_update
 	printenv \
 	  |awk -F '=' 'NR == FNR { if($$1 !~ /^(#|$$)/) { A[$$1]; next } } !($$1 in A)' - $(env_dist) \
 	  |cat $(env_over) - \
-	  |awk 'BEGIN {split("$(MAKECMDVARS)",vars," "); for (var in vars) {print vars[var]"="ENVIRON[vars[var]]};} {print}' \
+	  |awk 'BEGIN {split("$(MAKE_CMD_VARS)",vars," "); for (var in vars) {print vars[var]"="ENVIRON[vars[var]]};} {print}' \
 	  |awk -F '=' '!seen[$$1]++' \
 	  |awk -F '=' 'ARGV[1] == FILENAME { A[$$1]; next } ($$1 in A)' $(env_dist) - 2>/dev/null \
 	  |awk -F '=' 'ARGV[1] == FILENAME { A[$$1]; next } !($$1 in A)' $(env_file) - 2>/dev/null \

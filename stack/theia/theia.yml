@@ -12,14 +12,14 @@ services:
     environment:
     - ENV=${ENV}
     - MONOREPO_DIR=${MONOREPO_DIR}
-    - RC_01_CUSTOM_PS1=${RC_CUSTOM_PS1}
-    - RC_02_CUSTOM_PROMPT=${RC_CUSTOM_PROMPT}
-    - RC_03_SSH_AGENT=${RC_SSH_AGENT}
-    - RC_04_ATTACH_TMUX=${RC_ATTACH_TMUX}
-    - RC_05_ATTACH_SCREEN=${RC_ATTACH_SCREEN}
+    - RC_01_PS1_SET=${RC_PS1_SET}
+    - RC_02_PROMPT_SET=${RC_PROMPT_SET}
+    - RC_03_SSH_ADD=${RC_SSH_ADD}
+    - RC_04_TMUX_ATTACH=${RC_TMUX_ATTACH}
+    - RC_05_SCREEN_ATTACH=${RC_SCREEN_ATTACH}
     - SHELL=${DOCKER_SHELL}
     - SSH_AUTH_SOCK=/tmp/ssh-agent/socket
-    - WORKSPACE_DIR=/Sources/${MONOREPO}
+    - WORKSPACE_DIR=/Sources
     image: ${DOCKER_REPOSITORY}/theia:${DOCKER_IMAGE_TAG}
     labels:
     - SERVICE_3000_CHECK_TCP=true
@@ -30,7 +30,7 @@ services:
     - public
     restart: always
     volumes:
-    - monorepo:/Sources/${MONOREPO}:cached
+    - monorepo:/Sources:cached
     - ssh-agent:/tmp/ssh-agent:ro
     - /var/run/docker.sock:/var/run/docker.sock
 
@@ -43,7 +43,7 @@ volumes:
       o: bind
   ssh-agent:
     external:
-      name: ${DOCKER_VOLUME_SSH}
+      name: ${DOCKER_VOLUME}
 
 networks:
   private:

@@ -10,6 +10,7 @@ hosts_git_repositories:
 - { "repo": "{{ lookup('env','ANSIBLE_GIT_REPOSITORY') }}", "dest": "{{ lookup('env','ANSIBLE_GIT_DIRECTORY') }}", "key_file": "{{ lookup('env','ANSIBLE_GIT_KEY_FILE') or '~/.ssh/id_rsa' }}", "version": "{{ lookup('env','ANSIBLE_GIT_VERSION') }}" }
 hosts_services:
 - { "name": "myos", "state": "stopped", "enabled": "yes" }
+hosts_update: true
 hosts_user_env:
 - ANSIBLE_CONFIG
 - ANSIBLE_DOCKER_IMAGE_TAG

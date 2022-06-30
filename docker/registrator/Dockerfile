@@ -33,6 +33,7 @@ RUN apk add --no-cache ca-certificates
 COPY --from=build /go/bin/registrator /bin/registrator
 
 ENTRYPOINT ["/bin/registrator"]
+HEALTHCHECK CMD kill -SIGUSR1 1
 
 FROM dist as master
 ARG DOCKER_BUILD_DIR

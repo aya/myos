@@ -223,8 +223,8 @@ Host ssh-bastion\n\
   User ${SSH_BASTION_USERNAME}\n\
 " >> /etc/ssh/ssh_config
 
-# Custom prompt
-COPY ${DOCKER_BUILD_DIR}/rc*.sh /etc/profile.d/
+# Custom rc functions
+COPY ansible/roles/hosts/files/etc/profile.d/rc*.sh /etc/profile.d/
 
 USER $USER
 WORKDIR /home/$USER
@@ -250,7 +250,6 @@ Thumbs.db\n\
 
 # dot files
 COPY ${DOCKER_BUILD_DIR}/.* /home/$USER/
-COPY ${DOCKER_BUILD_DIR}/.tmux /home/$USER/.tmux/
 
 ARG GIT_AUTHOR_NAME
 ARG GIT_AUTHOR_EMAIL

@@ -14,6 +14,7 @@ hosts_packages:
 - { "name": "ansible", "state": "present" }
 hosts_services:
 - { "name": "zram", "state": "started", "enabled": "yes" }
+hosts_update: true
 hosts_user_env:
 - ANSIBLE_AWS_ACCESS_KEY_ID
 - ANSIBLE_AWS_SECRET_ACCESS_KEY

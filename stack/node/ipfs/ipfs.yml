@@ -1,0 +1,53 @@
+version: '3.6'
+
+services:
+  ipfs:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/ipfs
+      - IPFS_VERSION=0.13.0
+      context: ../..
+      dockerfile: docker/ipfs/Dockerfile
+    command: daemon --migrate=true
+    container_name: ${COMPOSE_PROJECT_NAME_NODE}_ipfs
+    cap_add:
+    - SYS_ADMIN # --mount
+    cpus: 0.5
+    devices:
+    - /dev/fuse:/dev/fuse # --mount
+    environment:
+    - IPFS_PROFILE=${IPFS_PROFILE}
+    image: ${DOCKER_REPOSITORY_NODE}/ipfs:${DOCKER_IMAGE_TAG}
+    labels:
+    - SERVICE_4001_CHECK_TCP=true
+    - SERVICE_4001_NAME=${COMPOSE_SERVICE_NAME_NODE}-ipfs:4001
+    - SERVICE_5001_CHECK_TCP=true
+    - SERVICE_5001_NAME=${COMPOSE_SERVICE_NAME_NODE}-ipfs:5001
+    - SERVICE_8080_CHECK_HTTP=/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG/readme
+    - SERVICE_8080_NAME=${COMPOSE_SERVICE_NAME_NODE}-ipfs:8080
+    - SERVICE_8080_TAGS=${IPFS_SERVICE_8080_TAGS_NODE}
+    - SERVICE_8081_IGNORE=true
+    networks:
+    - public
+    ports:
+    - 4001:4001
+    - 5001/tcp
+    - 8080/tcp
+    security_opt:
+    - apparmor:unconfined # --mount
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+    - ipfs:/data/ipfs:delegated
+    restart: always
+
+volumes:
+  ipfs:
+    name: ${COMPOSE_PROJECT_NAME_NODE}_ipfs
+
+networks:
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}
