@@ -26,6 +26,7 @@ RUN apt-get update \
         screen \
         socat \
         tmux \
+        vim-nox \
         wget \
         xz-utils
 
@@ -43,9 +44,6 @@ RUN { OS="$(echo ${OPERATING_SYSTEM} |awk '{print tolower($0)}')"; \
      |tar --strip-components 1 -C /usr/local/lib/shellspec -xzf - \
  && ln -s /usr/local/lib/shellspec/shellspec /usr/local/bin/shellspec
 
-ADD https://raw.github.com/aya/dpgpid/master/keygen /usr/local/bin/keygen
-RUN chmod +rx /usr/local/bin/keygen
-
 ADD https://raw.github.com/kvz/cronlock/master/cronlock /usr/local/bin/cronlock
 RUN chmod +rx /usr/local/bin/cronlock
 
@@ -54,9 +52,9 @@ ADD https://git.p2p.legal/axiom-team/astrXbian/raw/branch/master/install.sh /
 RUN chmod +r /include.sh \
  && chmod +rx /install.sh
 
-# COPY ${DOCKER_BUILD_DIR}/docker-entrypoint.sh /docker-entrypoint.sh
-# ENTRYPOINT ["/docker-entrypoint.sh"]
-# CMD ["/bin/sh"]
+COPY ${DOCKER_BUILD_DIR}/docker-entrypoint.sh /docker-entrypoint.sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["start"]
 
 FROM dist as master
 ARG DOCKER_BUILD_DIR
@@ -70,7 +68,6 @@ ENV USER=${USER}
 
 RUN apt-get -fy install \
         cron \
-        pkg-config \
         python3 \
         sudo
 
@@ -109,6 +106,8 @@ USER $USER
 ENV SHELL=${SHELL}
 WORKDIR /home/$USER
 
+RUN mkdir ~/.zen ~/astroport
+
 # git config
 RUN mkdir -p ~/.config/git \
  && echo -e "\
@@ -122,7 +121,3 @@ Thumbs.db\n\
 " > ~/.config/git/ignore
 
 RUN bash -c '. /include.sh && install_requirements'
-
-COPY ${DOCKER_BUILD_DIR}/docker-entrypoint.sh /docker-entrypoint.sh
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["start"]

@@ -6,11 +6,17 @@ services:
       args:
       - DOCKER_BUILD_DIR=docker/ipfs
       - IPFS_VERSION=0.13.0
+      - UID=${UID}
       context: ../..
       dockerfile: docker/ipfs/Dockerfile
     command: daemon --migrate=true
     cpus: 0.5
     environment:
+    - IPFS_ADDRESSES_API=${IPFS_ADDRESSES_API}
+    - IPFS_ADDRESSES_API_DOMAIN=${IPFS_ADDRESSES_API_DOMAIN}
+    - IPFS_ADDRESSES_API_INET4=${IPFS_ADDRESSES_API_INET4}
+    - IPFS_ADDRESSES_API_PORT=${IPFS_ADDRESSES_API_PORT}
+    - IPFS_LOGGING=${IPFS_LOGGING}
     - IPFS_PROFILE=${IPFS_PROFILE}
     image: ${DOCKER_REPOSITORY}/ipfs:${DOCKER_IMAGE_TAG}
     labels:
@@ -18,12 +24,13 @@ services:
     - SERVICE_4001_NAME=${COMPOSE_SERVICE_NAME}-ipfs:4001
     - SERVICE_5001_CHECK_TCP=true
     - SERVICE_5001_NAME=${COMPOSE_SERVICE_NAME}-ipfs:5001
-    - SERVICE_8080_CHECK_HTTP=/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG/readme
+    - SERVICE_8080_CHECK_HTTP=${IPFS_SERVICE_8080_CHECK_TCP}
     - SERVICE_8080_NAME=${COMPOSE_SERVICE_NAME}-ipfs:8080
     - SERVICE_8080_TAGS=${IPFS_SERVICE_8080_TAGS}
     - SERVICE_8081_IGNORE=true
     networks:
     - private
+    - public
     ports:
     - 4001
     - 5001/tcp
@@ -38,8 +45,16 @@ services:
 
 volumes:
   ipfs:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${HOME}/.ipfs
+      o: bind
 
 networks:
   private:
     external: true
     name: ${DOCKER_NETWORK_PRIVATE}
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

@@ -11,7 +11,7 @@ debug_msg ()
 }
 
 # Install astrXbian/Astroport.ONE
-# /install.sh
+/install.sh
 
 case "${1:-start}" in
 

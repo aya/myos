@@ -2,6 +2,7 @@
 # file: handlers/main.yml
 
 - name: update boot - syslinux
+  become: yes
   environment:
     PATH: "{{ ansible_env.PATH }}:/usr/sbin:/sbin"
   with_together:
@@ -11,6 +12,7 @@
   when: item.1.changed and item.0.dest == "/etc/update-extlinux.conf"
 
 - name: update boot - grub
+  become: yes
   environment:
     PATH: "{{ ansible_env.PATH }}:/usr/sbin:/sbin"
   with_together:

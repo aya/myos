@@ -9,7 +9,7 @@ ifeq ($(or $(filter $(USER),$(subst $(comma), ,$(shell awk -F':' '$$1 == "docker
 	$(call ansible-user-add-groups,$(USER),docker)
 	$(call WARNING,user,$(USER),added in group,docker)
 endif
-ifeq ($(filter 0 $(DOCKER_GID),$(shell id -G)),)
+ifeq ($(filter 0 $(DOCKER_GID),$(GIDS)),)
 	$(call ERROR,YOU MUST LOGOUT NOW AND LOGIN BACK TO GET DOCKER GROUP MEMBERSHIP)
 endif
 endif

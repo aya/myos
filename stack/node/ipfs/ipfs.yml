@@ -10,12 +10,13 @@ services:
       dockerfile: docker/ipfs/Dockerfile
     command: daemon --migrate=true
     container_name: ${COMPOSE_PROJECT_NAME_NODE}_ipfs
-    cap_add:
-    - SYS_ADMIN # --mount
     cpus: 0.5
-    devices:
-    - /dev/fuse:/dev/fuse # --mount
     environment:
+    - IPFS_ADDRESSES_API=${IPFS_ADDRESSES_API_NODE}
+    - IPFS_ADDRESSES_API_DOMAIN=${IPFS_ADDRESSES_API_DOMAIN_NODE}
+    - IPFS_ADDRESSES_API_INET4=${IPFS_ADDRESSES_API_INET4_NODE}
+    - IPFS_ADDRESSES_API_PORT=${IPFS_ADDRESSES_API_PORT_NODE}
+    - IPFS_LOGGING=${IPFS_LOGGING_NODE}
     - IPFS_PROFILE=${IPFS_PROFILE}
     image: ${DOCKER_REPOSITORY_NODE}/ipfs:${DOCKER_IMAGE_TAG}
     labels:
@@ -23,7 +24,7 @@ services:
     - SERVICE_4001_NAME=${COMPOSE_SERVICE_NAME_NODE}-ipfs:4001
     - SERVICE_5001_CHECK_TCP=true
     - SERVICE_5001_NAME=${COMPOSE_SERVICE_NAME_NODE}-ipfs:5001
-    - SERVICE_8080_CHECK_HTTP=/ipfs/QmYwAPJzv5CZsnA625s3Xf2nemtYgPpHdWEz79ojWnPbdG/readme
+    - SERVICE_8080_CHECK_HTTP=${IPFS_SERVICE_8080_CHECK_TCP_NODE}
     - SERVICE_8080_NAME=${COMPOSE_SERVICE_NAME_NODE}-ipfs:8080
     - SERVICE_8080_TAGS=${IPFS_SERVICE_8080_TAGS_NODE}
     - SERVICE_8081_IGNORE=true
@@ -33,8 +34,6 @@ services:
     - 4001:4001
     - 5001/tcp
     - 8080/tcp
-    security_opt:
-    - apparmor:unconfined # --mount
     ulimits:
       nofile:
         soft: 65536

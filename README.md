@@ -6,32 +6,34 @@ Docker paas based on docker compose files.
 
 This is work in progress ;)
 
+## Requirements
+
+You need `git` and `make`.
+
 ## Usage
 
 ### Examples
 
-* Configure myos for domain.tld
+* Configure myos for domain `domain.tld` and stack `zen`
 
 ```shell
-$ make bootstrap DOMAIN=domain.tld
+$ make bootstrap DOMAIN=domain.tld STACK=zen
 ```
 
 * Start myos stacks
 
 ```shell
-$ make node up STACK='zen'
+$ make node up
 ```
 
-`make node` starts the stack node with docker host services :
+`make node` starts the stack `node` with docker host services :
 - consul (service discovery)
 - fabio (load balancer)
 - ipfs (inter planetary file system)
 - registrator (docker/consul bridge)
-`make User` starts the stack User with docker user services :
-- myos (ssh-agent)
-- ipfs (when STACK=zen)
-`make up` starts the stack STACK
-- zen (when STACK=zen)
+`make up` starts the stack `zen` with docker services :
+- ipfs (mount ~/.ipfs)
+- zen (mount ~/.zen)
 
 * Stop myos
 
@@ -85,10 +87,10 @@ $ make print-VARIABLE
 $ make config
 ```
 
-`make config` show docker compose yaml config for stack STACK
-`make stack-node-config` show docker compose yaml config for stack node
-`make stack-User-config` show docker compose yaml config for stack User
-`make stack-elastic-config` show docker compose yaml config for stack elastic
+`make config` show docker compose yaml config for stack `STACK`
+`make node-config` show docker compose yaml config for stack `node`
+`make user-config` show docker compose yaml config for stack `User`
+`make stack-elastic-config` show docker compose yaml config for stack `elastic`
 
 * Show debug variables
 
@@ -110,4 +112,4 @@ $ make print-env_args
 
 ## Status
 
-Use it at your own risks.
+Beta software, use it at your own risks.

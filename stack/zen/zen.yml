@@ -26,7 +26,7 @@ services:
     user: ${UID}:${GID}
     volumes:
     - astroport:${HOME}/astroport:cached
-    - ipfs:${HOME}/.ipfs:ro
+    - ipfs:${HOME}/.ipfs:cached,ro
     - zen:${HOME}/.zen:delegated
     - ssh-agent:/tmp/ssh-agent:ro
     working_dir: ${HOME}/.zen
@@ -35,7 +35,7 @@ volumes:
   astroport:
   ipfs:
     external: true
-    name: ${COMPOSE_PROJECT_NAME_USER}_ipfs
+    name: ${COMPOSE_PROJECT_NAME}_ipfs
   ssh-agent:
     external: true
     name: ${DOCKER_VOLUME}

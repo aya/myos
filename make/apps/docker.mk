@@ -110,7 +110,7 @@ docker-compose-stop:
 # target docker-compose-up: Fire docker-image-myos, Call docker-compose up SERVICE
 .PHONY: docker-compose-up
 docker-compose-up: DOCKER_RUN_OPTIONS += -it
-docker-compose-up: docker-images-myos
+docker-compose-up: docker-images-myos bootstrap-stack
 	$(call docker-compose,up $(DOCKER_COMPOSE_UP_OPTIONS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-images-myos: Call myos-docker-build-% target for each DOCKER_IMAGES_MYOS
@@ -141,8 +141,10 @@ docker-network-create: docker-network-create-$(DOCKER_NETWORK)
 .PHONY: docker-network-create-%
 docker-network-create-%:
 	if [ -z "$(shell docker network ls -q --filter name='^$*$$' 2>/dev/null)" ]; then \
-	  $(RUN) sh -c 'docker network create $* >/dev/null' \
-	   && $(or $(call INFO,docker network $* created), true); fi \
+	  $(RUN) sh -c 'docker network create $* >/dev/null 2>&1' \
+	   && $(or $(call INFO,docker network $* created), true) \
+		 ||: ; \
+	fi
 
 # target docker-network-rm: Fire docker-network-rm-% for DOCKER_NETWORK
 .PHONY: docker-network-rm
@@ -152,8 +154,10 @@ docker-network-rm: docker-network-rm-$(DOCKER_NETWORK)
 .PHONY: docker-network-rm-%
 docker-network-rm-%:
 	if [ -n "$(shell docker network ls -q --filter name='^$*$$' 2>/dev/null)" ]; then \
-	  $(RUN) docker network rm $* >/dev/null \
-	   && $(or $(call INFO,docker network $* removed), true); fi \
+	  $(RUN) sh -c 'docker network rm $* >/dev/null 2>&1' \
+	   && $(or $(call INFO,docker network $* removed), true) \
+		 ||: ; \
+	fi
 
 # target docker-plugin-install: Run 'docker plugin install DOCKER_PLUGIN_OPTIONS DOCKER_PLUGIN'
 .PHONY: docker-plugin-install

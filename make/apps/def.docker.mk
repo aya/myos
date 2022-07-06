@@ -61,7 +61,7 @@ endif
 define docker-compose
 	$(call INFO,docker-compose,$(1))
   $(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
-	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(COMPOSE_PROJECT_NAME_NODE),$(COMPOSE_PROJECT_NAME)) $(1)))
+	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(COMPOSE_PROJECT_NAME_NODE),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(COMPOSE_PROJECT_NAME_USER),$(COMPOSE_PROJECT_NAME))) $(1)))
 endef
 # function docker-compose-exec: Run docker-compose-exec with arg 2 in service 1
 define docker-compose-exec

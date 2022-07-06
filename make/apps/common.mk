@@ -81,10 +81,10 @@ exec@%: SERVICE ?= $(DOCKER_SERVICE)
 exec@%:
 	$(call make,ssh-exec,$(MYOS),APP ARGS SERVICE)
 
-# target force-%: Fire targets % and stack-node-%
+# target force-%: Fire targets %, stack-user-% and stack-node-%
 # on local host
 .PHONY: force-%
-force-%: % stack-node-%;
+force-%: % stack-user-% stack-node-%;
 
 # target install app-install: Install application
 # on local host
@@ -169,7 +169,7 @@ ssh@%:
 # target stack: Call docker-stack for each STACK
 ## it updates COMPOSE_FILE with all .yml files of the current stack
 .PHONY: stack
-stack: docker-network-create
+stack:
 	$(foreach stackz,$(STACK),$(call docker-stack,$(stackz)))
 
 # target stack-%: Call docker-compose-% target on STACK
@@ -202,7 +202,7 @@ tests: app-tests ## Test application
 # target up: Create and start application dockers
 # on local host
 .PHONY: up
-up: stack-required docker-compose-up app-start ## Create application dockers
+up: docker-compose-up app-start ## Create application dockers
 
 # target update app-update: Update application files
 # on local host

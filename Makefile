@@ -3,7 +3,7 @@ include make/include.mk
 ##
 # APP
 
-app-bootstrap: bootstrap-docker bootstrap-host bootstrap-user
+app-bootstrap: bootstrap-docker
 
 app-build: user install-build-config
 	$(call make,docker-compose-build docker-compose-up)
@@ -11,6 +11,8 @@ app-build: user install-build-config
 	$(call make,docker-commit)
 
 app-install: ansible-run app-update-default
+
+app-start: $(foreach stack,$(STACK),start-stack-$(stack))
 
 app-update: ansible-pull app-update-default
 
@@ -24,16 +26,9 @@ app-tests: ansible-tests
 # BOOTSTRAP
 
 # target bootstrap-docker: Install and configure docker
-# on local host
 .PHONY: bootstrap-docker
 bootstrap-docker: install-bin-docker setup-docker-group setup-binfmt setup-nfsd setup-sysctl
 
-# target bootstrap-host: Create DOCKER_NETWORK_PUBLIC
-# on local host
-.PHONY: bootstrap-host
-bootstrap-host: docker-network-create-$(DOCKER_NETWORK_PUBLIC) node-ssl-certs
-
-# target bootstrap-user: Create DOCKER_NETWORK_PRIVATE
-# on local host
-.PHONY: bootstrap-user
-bootstrap-user: docker-network-create
+# target bootstrap-stack: Call bootstrap target of each stack
+.PHONY: bootstrap-stack
+bootstrap-stack: docker-network-create $(foreach stack,$(STACK),bootstrap-stack-$(stack))
