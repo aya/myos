@@ -8,7 +8,7 @@ This is work in progress ;)
 
 ## Requirements
 
-You need `git` and `make`.
+You need `docker`, `git` and `make`.
 
 ## Usage
 
@@ -46,6 +46,8 @@ $ make shutdown
 ```shell
 $ make install
 ```
+
+Install myos on a server and manage server config with ansible.
 
 ### Variables
 

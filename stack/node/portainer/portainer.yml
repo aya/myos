@@ -1,0 +1,28 @@
+version: '3.6'
+
+services:
+  portainer:
+    image: portainer/portainer:latest
+    labels:
+    - SERVICE_8000_IGNORE=true
+    - SERVICE_9000_CHECK_HTTP=/
+    - SERVICE_9000_NAME=${NODE_COMPOSE_SERVICE_NAME}-portainer:9000
+    - SERVICE_9000_TAGS=${NODE_PORTAINER_SERVICE_9000_TAGS}
+    networks:
+    - public
+    ports:
+    - 8000
+    - 9000
+    restart: always
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock
+    - portainer:/data
+
+volumes:
+  portainer:
+    name: ${NODE_COMPOSE_PROJECT_NAME}_portainer
+
+networks:
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

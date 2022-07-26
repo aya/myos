@@ -2,13 +2,13 @@ version: '3.6'
 
 services:
   cadvisor-exporter:
-    container_name: ${COMPOSE_PROJECT_NAME_NODE}_cadvisor-exporter
+    container_name: ${NODE_COMPOSE_PROJECT_NAME}_cadvisor-exporter
     hostname: ${HOSTNAME}
     image: google/cadvisor:latest
     labels:
     - SERVICE_8080_CHECK_TCP=true
-    - SERVICE_8080_NAME=${COMPOSE_SERVICE_NAME_NODE}-cadvisor-exporter:8080
-    - SERVICE_8080_TAGS=${CADVISOR_SERVICE_EXPORTER_8080_TAGS}
+    - SERVICE_8080_NAME=${NODE_COMPOSE_SERVICE_NAME}-cadvisor-exporter:8080
+    - SERVICE_8080_TAGS=${NODE_CADVISOR_EXPORTER_SERVICE_8080_TAGS}
     - SERVICE_9200_IGNORE=true
     networks:
     - public
@@ -26,13 +26,13 @@ services:
     - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
     - '--path.procfs=/host/proc'
     - '--path.sysfs=/host/sys'
-    container_name: ${COMPOSE_PROJECT_NAME_NODE}_node-exporter
+    container_name: ${NODE_COMPOSE_PROJECT_NAME}_node-exporter
     hostname: ${HOSTNAME}
     image: prom/node-exporter:latest
     labels:
     - SERVICE_9100_CHECK_TCP=true
-    - SERVICE_9100_NAME=${COMPOSE_SERVICE_NAME_NODE}-node-exporter:9100
-    - SERVICE_9100_TAGS=${SERVICE_NODE_EXPORTER_HTTP_TAGS}
+    - SERVICE_9100_NAME=${NODE_COMPOSE_SERVICE_NAME}-node-exporter:9100
+    - SERVICE_9100_TAGS=${NODE_EXPORTER_SERVICE_9100_TAGS}
     networks:
     - public
     ports:

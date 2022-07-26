@@ -61,13 +61,13 @@ endif
 define docker-compose
 	$(call INFO,docker-compose,$(1))
   $(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
-	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(COMPOSE_PROJECT_NAME_NODE),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(COMPOSE_PROJECT_NAME_USER),$(COMPOSE_PROJECT_NAME))) $(1)))
+	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(NODE_COMPOSE_PROJECT_NAME),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER_COMPOSE_PROJECT_NAME),$(COMPOSE_PROJECT_NAME))) $(1)))
 endef
 # function docker-compose-exec: Run docker-compose-exec with arg 2 in service 1
 define docker-compose-exec
 	$(call INFO,docker-compose-exec,$(1)$(comma) $(2))
   $(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
-	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(COMPOSE_PROJECT_NAME_NODE),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(COMPOSE_PROJECT_NAME_USER),$(COMPOSE_PROJECT_NAME))) exec -T $(1) sh -c '$(2)'))
+	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(NODE_COMPOSE_PROJECT_NAME),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER_COMPOSE_PROJECT_NAME),$(COMPOSE_PROJECT_NAME))) exec -T $(1) sh -c '$(2)'))
 endef
 # function docker-build: Build docker image
 define docker-build
