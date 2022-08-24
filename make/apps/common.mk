@@ -182,7 +182,7 @@ stack-%:
 	$(eval command := $(lastword $(subst -, ,$*)))
 	$(if $(findstring -,$*), \
 		$(if $(filter $(command),$(filter-out %-%,$(patsubst docker-compose-%,%,$(filter docker-compose-%,$(MAKE_TARGETS))))), \
-		$(call make,docker-compose-$(command) STACK="$(stack)",,ARGS COMPOSE_IGNORE_ORPHANS SERVICE User node)))
+		$(call make,$(command) STACK="$(stack)",,ARGS COMPOSE_IGNORE_ORPHANS SERVICE User node)))
 
 # target start app-start: Start application dockers
 # on local host

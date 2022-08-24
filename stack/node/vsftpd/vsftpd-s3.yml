@@ -9,7 +9,7 @@ services:
       dockerfile: docker/vsftpd-s3/Dockerfile
     cap_add:
     - sys_admin
-    container_name: ${NODE_COMPOSE_PROJECT_NAME}_vsftpd-s3
+    container_name: ${NODE_COMPOSE_PROJECT_NAME}-vsftpd-s3
     devices:
     - /dev/fuse
     environment:

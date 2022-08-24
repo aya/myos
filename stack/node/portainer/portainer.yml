@@ -2,6 +2,7 @@ version: '3.6'
 
 services:
   portainer:
+    container_name: ${NODE_COMPOSE_PROJECT_NAME}-portainer
     image: portainer/portainer:latest
     labels:
     - SERVICE_8000_IGNORE=true
@@ -20,7 +21,6 @@ services:
 
 volumes:
   portainer:
-    name: ${NODE_COMPOSE_PROJECT_NAME}_portainer
 
 networks:
   public:

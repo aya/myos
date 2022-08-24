@@ -1,8 +1,8 @@
 DOCKER_ENV_ARGS                 ?= $(docker_env_args)
 DOCKER_EXEC_OPTIONS             ?=
 DOCKER_GID                      ?= $(call gid,docker)
-DOCKER_IMAGE                    ?= $(USER_DOCKER_REPOSITORY)/myos:${DOCKER_IMAGE_TAG}
-DOCKER_NAME                     ?= $(USER_COMPOSE_PROJECT_NAME)_myos
+DOCKER_IMAGE                    ?= $(USER_DOCKER_IMAGE)
+DOCKER_NAME                     ?= $(USER_DOCKER_NAME)
 DOCKER_NETWORK                  ?= $(DOCKER_NETWORK_PRIVATE)
 DOCKER_NETWORK_PRIVATE          ?= $(USER_COMPOSE_PROJECT_NAME)
 DOCKER_NETWORK_PUBLIC           ?= $(NODE_COMPOSE_PROJECT_NAME)
@@ -13,14 +13,17 @@ DOCKER_RUN_OPTIONS              += --rm
 # DOCKER_RUN_VOLUME: options -v of `docker run` command to mount additionnal volumes
 DOCKER_RUN_VOLUME               += -v /var/run/docker.sock:/var/run/docker.sock
 DOCKER_RUN_WORKDIR              ?= -w $(PWD)
-DOCKER_VOLUME                   ?= $(USER_COMPOSE_PROJECT_NAME)_myos
-ENV_VARS                        += NODE_COMPOSE_PROJECT_NAME USER_COMPOSE_PROJECT_NAME NODE_COMPOSE_SERVICE_NAME USER_COMPOSE_SERVICE_NAME DOCKER_IMAGE DOCKER_NAME DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC USER_DOCKER_REPOSITORY NODE_DOCKER_REPOSITORY DOCKER_VOLUME
+ENV_VARS                        += DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC NODE_COMPOSE_PROJECT_NAME NODE_COMPOSE_SERVICE_NAME NODE_DOCKER_REPOSITORY NODE_DOCKER_VOLUME USER_COMPOSE_PROJECT_NAME USER_COMPOSE_SERVICE_NAME USER_DOCKER_IMAGE USER_DOCKER_NAME USER_DOCKER_REPOSITORY USER_DOCKER_VOLUME
 NODE_COMPOSE_PROJECT_NAME       ?= node
 NODE_COMPOSE_SERVICE_NAME       ?= $(subst _,-,$(NODE_COMPOSE_PROJECT_NAME))
 NODE_DOCKER_REPOSITORY          ?= $(subst -,/,$(subst _,/,$(NODE_COMPOSE_PROJECT_NAME)))
+NODE_DOCKER_VOLUME              ?= $(NODE_COMPOSE_PROJECT_NAME)_myos
 USER_COMPOSE_PROJECT_NAME       ?= $(USER)_$(ENV)
 USER_COMPOSE_SERVICE_NAME       ?= $(subst _,-,$(USER_COMPOSE_PROJECT_NAME))
+USER_DOCKER_IMAGE               ?= $(USER_DOCKER_REPOSITORY)/myos:${DOCKER_IMAGE_TAG}
+USER_DOCKER_NAME                ?= $(USER_COMPOSE_PROJECT_NAME)-myos
 USER_DOCKER_REPOSITORY          ?= $(subst -,/,$(subst _,/,$(USER_COMPOSE_PROJECT_NAME)))
+USER_DOCKER_VOLUME              ?= $(USER_COMPOSE_PROJECT_NAME)_myos
 
 # https://github.com/docker/libnetwork/pull/2348
 ifeq ($(OPERATING_SYSTEM),Darwin)
@@ -47,7 +50,7 @@ endif
 
 ifneq ($(DOCKER_RUN),)
 
-DOCKER_SSH_AUTH                 := -e SSH_AUTH_SOCK=/tmp/ssh-agent/socket -v $(DOCKER_VOLUME):/tmp/ssh-agent
+DOCKER_SSH_AUTH                 := -e SSH_AUTH_SOCK=/tmp/ssh-agent/socket -v $(USER_DOCKER_VOLUME):/tmp/ssh-agent
 
 # function docker-run: Run docker image 2 with arg 1
 define docker-run

@@ -11,7 +11,7 @@ ssh: ssh-get-PrivateIpAddress-$(SERVER_NAME) ## Connect to first remote host
 ssh-add: DOCKER_RUN_OPTIONS += -it
 ssh-add: ssh-key
 	$(eval SSH_PRIVATE_KEYS := $(foreach file,$(SSH_DIR)/id_rsa $(filter-out $(wildcard $(SSH_DIR)/id_rsa),$(wildcard $(SSH_DIR)/*)),$(if $(shell grep "PRIVATE KEY" $(file) 2>/dev/null),$(notdir $(file)))))
-	$(call run,sh -c '$(foreach file,$(patsubst %,$(SSH_DIR)/%,$(SSH_PRIVATE_KEYS)),ssh-add -l |grep -qw $$(ssh-keygen -lf $(file) 2>/dev/null |awk '\''{print $$2}'\'') 2>/dev/null || $(RUN) ssh-add $(file) ||: &&) true',-v $(SSH_DIR):$(SSH_DIR) $(DOCKER_IMAGE) )
+	$(call run,sh -c '$(foreach file,$(patsubst %,$(SSH_DIR)/%,$(SSH_PRIVATE_KEYS)),ssh-add -l |grep -qw $$(ssh-keygen -lf $(file) 2>/dev/null |awk '\''{print $$2}'\'') 2>/dev/null || $(RUN) ssh-add $(file) ||: &&) true',-v $(SSH_DIR):$(SSH_DIR) $(USER_DOCKER_IMAGE) )
 
 # target ssh-connect: Call ssh-connect make connect SERVICE
 .PHONY: ssh-connect
@@ -22,7 +22,7 @@ ssh-connect: ssh-get-PrivateIpAddress-$(SERVER_NAME)
 .PHONY: ssh-del
 ssh-del:
 	$(eval SSH_PRIVATE_KEYS := $(foreach file,$(SSH_DIR)/id_rsa $(filter-out $(wildcard $(SSH_DIR)/id_rsa),$(wildcard $(SSH_DIR)/*)),$(if $(shell grep "PRIVATE KEY" $(file) 2>/dev/null),$(notdir $(file)))))
-	$(call run,sh -c '$(foreach file,$(patsubst %,$(SSH_DIR)/%,$(SSH_PRIVATE_KEYS)),ssh-add -l |grep -qw $$(ssh-keygen -lf $(file) 2>/dev/null |awk '\''{print $$2}'\'') 2>/dev/null && $(RUN) ssh-add -d $(file) ||: &&) true',-v $(SSH_DIR):$(SSH_DIR) $(DOCKER_IMAGE) )
+	$(call run,sh -c '$(foreach file,$(patsubst %,$(SSH_DIR)/%,$(SSH_PRIVATE_KEYS)),ssh-add -l |grep -qw $$(ssh-keygen -lf $(file) 2>/dev/null |awk '\''{print $$2}'\'') 2>/dev/null && $(RUN) ssh-add -d $(file) ||: &&) true',-v $(SSH_DIR):$(SSH_DIR) $(USER_DOCKER_IMAGE) )
 
 # target ssh-exec: Call ssh-exec make exec SERVICE ARGS
 .PHONY: ssh-exec

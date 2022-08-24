@@ -2,7 +2,9 @@ FROM alpine:latest as dist
 LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 
-ENV PACKER_VERSION=1.6.6
+ARG ARCH="$(uname -m |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"
+ARG OS="$(uname -o |awk '{print tolower($0)}')"
+ARG PACKER_VERSION=1.6.6
 
 RUN apk --no-cache add \
         ansible \

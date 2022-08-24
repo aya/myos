@@ -32,7 +32,7 @@ services:
     restart: always
     volumes:
     - monorepo:/Sources:cached
-    - ssh-agent:/tmp/ssh-agent:ro
+    - myos:/tmp/ssh-agent:ro
     - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
@@ -42,9 +42,10 @@ volumes:
       type: none
       device: ${MONOREPO_DIR}
       o: bind
-  ssh-agent:
-    external:
-      name: ${DOCKER_VOLUME}
+    name: ${USER_COMPOSE_PROJECT_NAME}
+  myos:
+    external: true
+    name: ${USER_DOCKER_VOLUME}
 
 networks:
   private:

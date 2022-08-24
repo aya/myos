@@ -1,4 +1,5 @@
 #!/bin/sh
+[ -n "${DEBUG:-}" -a "${DEBUG:-}" != "false" ] && set -x
 set -e
 
 ## fix resource manager fatal error on arm64/linux with 2Gb RAM
@@ -20,7 +21,7 @@ echo "${IPFS_ADDRESSES_API_INET4}" |awk -F. '{ for ( i=1; i<=4; i++ ) if ($i >= 
 # check ${IPFS_ADDRESSES_API_PORT} format
 [ "${IPFS_ADDRESSES_API_PORT}" -eq "${IPFS_ADDRESSES_API_PORT}" ] 2>/dev/null && [ "${IPFS_ADDRESSES_API_PORT}" -ge 1 ] && [ "${IPFS_ADDRESSES_API_PORT}" -le 65535 ] \
  || unset IPFS_ADDRESSES_API_PORT
-ipfs config Addresses.Api "${IPFS_ADDRESSES_API:-/ip4/${IPFS_ADDRESSES_API_INET4:-127.0.0.1}/tcp/${IPFS_ADDRESSES_API_PORT:-5001}}"
+ipfs config Addresses.API "${IPFS_ADDRESSES_API:-/ip4/${IPFS_ADDRESSES_API_INET4:-127.0.0.1}/tcp/${IPFS_ADDRESSES_API_PORT:-5001}}"
 
 ## gateway address
 # search for ip address of $(hostname).${IPFS_ADDRESSES_GATEWAY_DOMAIN}
@@ -86,3 +87,4 @@ ipfs config --json Gateway.HTTPHeaders "${IPFS_GATEWAY_HTTPHEADERS:-{
 
 ## REMOVE IPFS BOOTSTRAP for private usage
 [ ${IPFS_NETWORK:-public} = "public" ] || ipfs bootstrap rm --all
+[ ${IPFS_NETWORK:-public} = "private" ] && export LIBP2P_FORCE_PNET=1 ||:

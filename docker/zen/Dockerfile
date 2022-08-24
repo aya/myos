@@ -14,6 +14,7 @@ ENV GIT_COMMITTER_EMAIL=${GIT_AUTHOR_EMAIL}
 RUN apt-get update \
  && apt-get -fy install \
         bash \
+        cron \
         curl \
         gettext \
         git \
@@ -23,22 +24,31 @@ RUN apt-get update \
         nano \
         netcat-openbsd \
         openssh-client \
+        python3 \
         screen \
         socat \
+        sudo \
         tmux \
         vim-nox \
         wget \
         xz-utils
 
-ARG IPFS_VERSION=0.13.0
+ADD https://git.p2p.legal/axiom-team/astrXbian/raw/branch/master/include.sh /
+ADD https://git.p2p.legal/axiom-team/astrXbian/raw/branch/master/install.sh /
+RUN chmod +r /include.sh \
+ && chmod +rx /install.sh \
+ && bash -c '. /include.sh && install_requirements'
+
+ARG IPFS_VERSION=0.14.0
 
 RUN { OS="$(echo ${OPERATING_SYSTEM} |awk '{print tolower($0)}')"; \
     ARCH="$(echo ${PROCESSOR_ARCHITECTURE})"; \
     wget -qO - https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.${OS}.${ARCH}.tar.xz \
      |tar --strip-components 1 -C /usr/local/bin -xJf - shellcheck-stable/shellcheck; } \
- && { ARCH="$(echo ${PROCESSOR_ARCHITECTURE} |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"; \
-    wget -qO - https://github.com/ipfs/go-ipfs/releases/download/v${IPFS_VERSION}/go-ipfs_v${IPFS_VERSION}_${OS}-${ARCH}.tar.gz \
-     |tar --strip-components 1 -C /usr/local/bin -xzf - go-ipfs/ipfs; } \
+ && { OS="$(echo ${OPERATING_SYSTEM} |awk '{print tolower($0)}')"; \
+    ARCH="$(echo ${PROCESSOR_ARCHITECTURE} |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"; \
+    wget -qO - https://github.com/ipfs/kubo/releases/download/v${IPFS_VERSION}/kubo_v${IPFS_VERSION}_${OS}-${ARCH}.tar.gz \
+     |tar --strip-components 1 -C /usr/local/bin -xzf - kubo/ipfs; } \
  && mkdir -p /usr/local/lib/shellspec \
  && wget -qO - https://github.com/shellspec/shellspec/archive/refs/heads/master.tar.gz \
      |tar --strip-components 1 -C /usr/local/lib/shellspec -xzf - \
@@ -46,11 +56,6 @@ RUN { OS="$(echo ${OPERATING_SYSTEM} |awk '{print tolower($0)}')"; \
 
 ADD https://raw.github.com/kvz/cronlock/master/cronlock /usr/local/bin/cronlock
 RUN chmod +rx /usr/local/bin/cronlock
-
-ADD https://git.p2p.legal/axiom-team/astrXbian/raw/branch/master/include.sh /
-ADD https://git.p2p.legal/axiom-team/astrXbian/raw/branch/master/install.sh /
-RUN chmod +r /include.sh \
- && chmod +rx /install.sh
 
 COPY ${DOCKER_BUILD_DIR}/docker-entrypoint.sh /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
@@ -65,11 +70,6 @@ ARG USER
 ENV UID=${UID}
 ENV GID=${UID}
 ENV USER=${USER}
-
-RUN apt-get -fy install \
-        cron \
-        python3 \
-        sudo
 
 # If we provide a numeric UID
 RUN [ "$UID" -eq "$UID" ] 2>/dev/null \
@@ -106,8 +106,6 @@ USER $USER
 ENV SHELL=${SHELL}
 WORKDIR /home/$USER
 
-RUN mkdir ~/.zen ~/astroport
-
 # git config
 RUN mkdir -p ~/.config/git \
  && echo -e "\
@@ -120,4 +118,4 @@ RUN mkdir -p ~/.config/git \
 Thumbs.db\n\
 " > ~/.config/git/ignore
 
-RUN bash -c '. /include.sh && install_requirements'
+RUN mkdir ~/.zen ~/astroport

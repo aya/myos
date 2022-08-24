@@ -8,7 +8,7 @@ services:
       - GID=${GID}
       - GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME}
       - GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}
-      - IPFS_VERSION=0.13.0
+      - IPFS_VERSION=${IPFS_VERSION}
       - UID=${UID}
       - USER=${USER}
       context: ../..
@@ -27,18 +27,17 @@ services:
     volumes:
     - astroport:${HOME}/astroport:cached
     - ipfs:${HOME}/.ipfs:cached,ro
+    - myos:/tmp/ssh-agent:ro
     - zen:${HOME}/.zen:delegated
-    - ssh-agent:/tmp/ssh-agent:ro
     working_dir: ${HOME}/.zen
 
 volumes:
   astroport:
   ipfs:
     external: true
-    name: ${COMPOSE_PROJECT_NAME}_ipfs
-  ssh-agent:
+  myos:
     external: true
-    name: ${DOCKER_VOLUME}
+    name: ${USER_DOCKER_VOLUME}
   zen:
     driver: local
     driver_opts:

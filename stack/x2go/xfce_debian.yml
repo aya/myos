@@ -27,19 +27,19 @@ services:
     - seccomp=unconfined # ecryptfs
     tty: true
     volumes:
-    - home:/home:delegated
-    - shared:/shared:cached
-    - shm:/dev/shm:delegated
+    - vdi-home:/home:delegated
+    - vdi-shared:/shared:cached
+    - vdi-shm:/dev/shm:delegated
 
 volumes:
-  home:
-  shared:
+  vdi-home:
+  vdi-shared:
     driver: local
     driver_opts:
       type: none
       device: /mnt/shared
       o: bind
-  shm:
+  vdi-shm:
     driver: local
     driver_opts:
       type: tmpfs
