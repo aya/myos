@@ -92,6 +92,7 @@ services:
     - consul
     environment:
     - CONSUL_HTTP_TOKEN=${NODE_CONSUL_HTTP_TOKEN}
+    - GL_DISABLE_VERSION_CHECK=true
     extra_hosts:
     - consul:${DOCKER_INTERNAL_DOCKER_HOST}
     hostname: ${HOSTNAME}

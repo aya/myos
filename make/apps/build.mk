@@ -6,7 +6,7 @@
 .PHONY: build-env
 build-env: SERVICE ?= $(DOCKER_SERVICE)
 build-env: bootstrap
-	$(call docker-compose-exec,$(SERVICE), \
+	$(call docker-compose-exec-sh,$(SERVICE), \
 		rm -f .env \
 		&& make .env ENV=$(ENV) \
 		&& printf 'BUILD=true\n' >> .env \
@@ -26,7 +26,7 @@ build-init:
 .PHONY: build-shared
 build-shared: SERVICE ?= $(DOCKER_SERVICE)
 build-shared: bootstrap
-	$(call docker-compose-exec,$(SERVICE), \
+	$(call docker-compose-exec-sh,$(SERVICE), \
 		mkdir -p /$(notdir $(SHARED)) \
 		&& $(foreach folder,$(SHARED_FOLDERS), \
 			rm -rf $(folder) \

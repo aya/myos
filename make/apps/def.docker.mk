@@ -1,4 +1,4 @@
-CMDS                            += docker-compose-exec docker-run docker-run-%
+CMDS                            += docker-run docker-run-%
 COMPOSE_ARGS                    ?= --ansi auto
 COMPOSE_FILE                    ?= $(wildcard docker/docker-compose.yml $(foreach file,$(patsubst docker/docker-compose.%,%,$(basename $(wildcard docker/docker-compose.*.yml))),$(if $(filter true,$(COMPOSE_FILE_$(file)) $(COMPOSE_FILE_$(call UPPERCASE,$(file)))),docker/docker-compose.$(file).yml)))
 COMPOSE_FILE_$(ENV)             ?= true
@@ -11,7 +11,7 @@ else
 COMPOSE_FILE_APP                ?= true
 endif
 COMPOSE_IGNORE_ORPHANS          ?= false
-COMPOSE_PROJECT_NAME            ?= $(PROJECT_NAME)$(addprefix _,$(subst /,,$(subst -,,$(APP_PATH))))
+COMPOSE_PROJECT_NAME            ?= $(USER)-$(APP)-$(ENV)$(addprefix -,$(subst /,,$(subst -,,$(APP_PATH))))
 COMPOSE_SERVICE_NAME            ?= $(subst _,-,$(COMPOSE_PROJECT_NAME))
 COMPOSE_VERSION                 ?= 2.5.0
 CONTEXT                         += COMPOSE_FILE DOCKER_REPOSITORY
@@ -63,9 +63,9 @@ define docker-compose
   $(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
 	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(NODE_COMPOSE_PROJECT_NAME),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER_COMPOSE_PROJECT_NAME),$(COMPOSE_PROJECT_NAME))) $(1)))
 endef
-# function docker-compose-exec: Run docker-compose-exec with arg 2 in service 1
-define docker-compose-exec
-	$(call INFO,docker-compose-exec,$(1)$(comma) $(2))
+# function docker-compose-exec-sh: Run docker-compose-exec sh -c 'arg 2' in service 1
+define docker-compose-exec-sh
+	$(call INFO,docker-compose-exec-sh,$(1)$(comma) $(2))
   $(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
 	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(NODE_COMPOSE_PROJECT_NAME),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER_COMPOSE_PROJECT_NAME),$(COMPOSE_PROJECT_NAME))) exec -T $(1) sh -c '$(2)'))
 endef

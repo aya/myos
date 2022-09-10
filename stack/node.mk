@@ -1,3 +1,4 @@
+CMDS                            += node-exec stack-node-exec node-exec:% node-exec@% node-run node-run:% node-run@%
 node                            ?= node/node
 ENV_VARS                        += DOCKER_HOST_IFACE DOCKER_HOST_INET4 DOCKER_INTERNAL_DOCKER_HOST
 
@@ -10,6 +11,7 @@ bootstrap-stack-node: docker-network-create-$(DOCKER_NETWORK_PUBLIC) node-ssl-ce
 node: stack-node-up
 
 # target node-%; Fire target stack-node-%
+.PHONY: node-%
 node-%: stack-node-%;
 
 # target node-ssl-certs: Create ${DOMAIN}.key.pem and ${DOMAIN}.crt.pem files

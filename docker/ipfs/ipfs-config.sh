@@ -34,6 +34,8 @@ echo "${IPFS_ADDRESSES_GATEWAY_INET4}" |awk -F. '{ for ( i=1; i<=4; i++ ) if ($i
  || unset IPFS_ADDRESSES_GATEWAY_PORT
 ipfs config Addresses.Gateway "${IPFS_ADDRESSES_GATEWAY:-/ip4/${IPFS_ADDRESSES_GATEWAY_INET4:-127.0.0.1}/tcp/${IPFS_ADDRESSES_GATEWAY_PORT:-8080}}"
 
+[ -n "${IPFS_ADDRESSES_NOANNOUNCE}" ] && ipfs config --json Addresses.NoAnnounce "${IPFS_ADDRESSES_NOANNOUNCE}"
+
 ## api http headers
 ipfs config --json API.HTTPHeaders "${IPFS_API_HTTPHEADERS:-{
 \"Access-Control-Allow-Credentials\": ${IPFS_API_HTTPHEADERS_ACA_CREDENTIALS:-null},
@@ -81,9 +83,19 @@ ipfs config --json Gateway.HTTPHeaders "${IPFS_GATEWAY_HTTPHEADERS:-{
 ## routing
 [ -n "${IPFS_ROUTING_TYPE}" ] && ipfs config Routing.Type "${IPFS_ROUTING_TYPE}"
 
+## reproviding local content to routing system
+[ -n "${IPFS_REPROVIDER_INTERVAL}" ] && ipfs config Reprovider.Interval "${IPFS_REPROVIDER_INTERVAL}"
+[ -n "${IPFS_REPROVIDER_STRATEGY}" ] && ipfs config Reprovider.Strategy "${IPFS_REPROVIDER_STRATEGY}"
+
 ## swarm config
-[ -n "${IPFS_SWARM_CONNMGR_LOWWATER}" ] && ipfs config --json Swarm.ConnMgr.LowWater "${IPFS_SWARM_CONNMGR_LOWWATER}"
 [ -n "${IPFS_SWARM_CONNMGR_HIGHWATER}" ] && ipfs config --json Swarm.ConnMgr.HighWater "${IPFS_SWARM_CONNMGR_HIGHWATER}"
+[ -n "${IPFS_SWARM_CONNMGR_LOWWATER}" ] && ipfs config --json Swarm.ConnMgr.LowWater "${IPFS_SWARM_CONNMGR_LOWWATER}"
+[ -n "${IPFS_SWARM_CONNMGR_TYPE}" ] && ipfs config --json Swarm.ConnMgr.Type "${IPFS_SWARM_CONNMGR_TYPE}"
+[ -n "${IPFS_SWARM_DISABLENATPORTMAP}" ] && ipfs config --bool Swarm.DisableNatPortMap "${SWARM_DISABLENATPORTMAP}"
+[ -n "${IPFS_SWARM_ENABLEHOLEPUNCHING}" ] && ipfs config --bool Swarm.EnableHolePunching "${SWARM_ENABLEHOLEPUNCHING}"
+[ -n "${IPFS_SWARM_RELAYCLIENT_ENABLED}" ] && ipfs config --bool Swarm.RelayClient.Enabled "${SWARM_RELAYCLIENT_ENABLED}"
+[ -n "${IPFS_SWARM_RELAYSERVICE_ENABLED}" ] && ipfs config --bool Swarm.RelayService.Enabled "${SWARM_RELAYSERVICE_ENABLED}"
+[ -n "${IPFS_SWARM_TRANSPORTS_NETWORK_RELAY}" ] && ipfs config --bool Swarm.Transports.Network.Relay "${SWARM_TRANSPORTS_NETWORK_RELAY}"
 
 ## REMOVE IPFS BOOTSTRAP for private usage
 [ ${IPFS_NETWORK:-public} = "public" ] || ipfs bootstrap rm --all

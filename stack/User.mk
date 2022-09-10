@@ -1,3 +1,4 @@
+CMDS                            += user-exec user-exec:% user-exec@% user-run user-run:% user-run@%
 User                            ?= User/User
 
 # target bootstrap-stack-User: Fire docker-network-create

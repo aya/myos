@@ -52,7 +52,7 @@ docker-compose-down:
 .PHONY: docker-compose-exec
 docker-compose-exec: SERVICE ?= $(DOCKER_SERVICE)
 docker-compose-exec:
-	$(call docker-compose-exec,$(SERVICE),$(ARGS)) || true
+	$(call docker-compose-exec-sh,$(SERVICE),$(ARGS)) || true
 
 # target docker-compose-logs: Call docker-compose logs SERVICE
 .PHONY: docker-compose-logs
