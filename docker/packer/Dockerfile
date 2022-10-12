@@ -2,9 +2,12 @@ FROM alpine:latest as dist
 LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 
-ARG ARCH="$(uname -m |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"
-ARG OS="$(uname -o |awk '{print tolower($0)}')"
-ARG PACKER_VERSION=1.6.6
+ARG MACHINE="$(uname -m)"
+ARG SYSTEM="$(uname -s)"
+ARG ARCH="$(echo ${MACHINE} |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"
+ARG OS="$(echo ${SYSTEM} |awk '{print tolower($0)}')"
+
+ARG PACKER_VERSION=1.8.3
 
 RUN apk --no-cache add \
         ansible \
@@ -17,13 +20,13 @@ RUN apk --no-cache add \
         socat \
         wget
 
-ADD https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip ./
+ADD https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_${OS}_${ARCH}.zip ./
 ADD https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS ./
 
-RUN sed -i '/.*linux_amd64.zip/!d' packer_${PACKER_VERSION}_SHA256SUMS
-RUN sha256sum -cs packer_${PACKER_VERSION}_SHA256SUMS\
- && unzip packer_${PACKER_VERSION}_linux_amd64.zip -d /bin
-RUN rm -f packer_${PACKER_VERSION}_linux_amd64.zip
+RUN sed -i '/.*'"${OS}"'_'"${ARCH}"'.zip/!d' packer_${PACKER_VERSION}_SHA256SUMS \
+ && sha256sum -cs packer_${PACKER_VERSION}_SHA256SUMS \
+ && unzip "packer_${PACKER_VERSION}_${OS}_${ARCH}.zip" -d /bin \
+ && rm -f "packer_${PACKER_VERSION}_${OS}_${ARCH}.zip"
 
 ENTRYPOINT ["/bin/packer"]
 

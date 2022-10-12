@@ -14,11 +14,11 @@ ifeq ($(filter 0 $(DOCKER_GID),$(GIDS)),)
 endif
 endif
 
-# target setup-nfsd: Call setup-nfsd-osx if SETUP_NFSD=true and OPERATING_SYSTEM=Darwin
+# target setup-nfsd: Call setup-nfsd-osx if SETUP_NFSD=true and SYSTEM=Darwin
 .PHONY: setup-nfsd
 setup-nfsd:
 ifeq ($(SETUP_NFSD),true)
-ifeq ($(OPERATING_SYSTEM),Darwin)
+ifeq ($(SYSTEM),Darwin)
 	$(call setup-nfsd-osx)
 endif
 endif

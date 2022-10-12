@@ -6,7 +6,7 @@
   gather_facts: false
   pre_tasks:
   - name: raw - install ansible requirements for alpine linux
-    raw: "[ -f /etc/alpine-release ] && /sbin/apk update && { which python3 >/dev/null 2>&1 || /sbin/apk add python3; } && { which sudo >/dev/null 2>&1 || /sbin/apk add sudo; } && { /bin/tar --version 2>/dev/null |grep busybox >/dev/null && /sbin/apk add tar; } && { ls /usr/lib/ssh/sftp-server >/dev/null 2>&1 || /sbin/apk add openssh-sftp-server; } || true"
+    raw: "[ -f /etc/alpine-release ] && /sbin/apk update && { which python3 >/dev/null 2>&1 || /sbin/apk add python3; } && { /bin/tar --version 2>/dev/null |grep busybox >/dev/null && /sbin/apk add tar; } && { ls /usr/lib/ssh/sftp-server >/dev/null 2>&1 || /sbin/apk add openssh-sftp-server; } || true"
   tags:
   - bootstrap
 

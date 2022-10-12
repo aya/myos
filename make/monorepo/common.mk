@@ -24,7 +24,7 @@ config: $(APPS)
 # target copy: Copy files and folders to all APPS
 .PHONY: copy
 copy:
-	$(foreach app,$(APPS),$(foreach file,$(ARGS),$(if $(wildcard $(file)),$(RUN) $(if $(filter Linux,$(OPERATING_SYSTEM)),cp -a --parents $(file) $(app)/,rsync -a $(file) $(app)/$(file)) &&)) true &&) true
+	$(foreach app,$(APPS),$(foreach file,$(ARGS),$(if $(wildcard $(file)),$(RUN) $(if $(filter Linux,$(SYSTEM)),cp -a --parents $(file) $(app)/,rsync -a $(file) $(app)/$(file)) &&)) true &&) true
 
 # target deploy: Fire APPS target
 .PHONY: deploy

@@ -47,8 +47,8 @@ services:
       args:
       - DOCKER_BUILD_DIR=docker/fabio
       - FABIO_VERSION=1.6.0
-      - OPERATING_SYSTEM=${OPERATING_SYSTEM}
-      - PROCESSOR_ARCHITECTURE=${PROCESSOR_ARCHITECTURE}
+      - SYSTEM=${SYSTEM}
+      - MACHINE=${MACHINE}
       context: ../..
       dockerfile: docker/fabio/Dockerfile
     container_name: ${NODE_COMPOSE_PROJECT_NAME}-fabio

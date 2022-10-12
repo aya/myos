@@ -18,7 +18,7 @@ packer-build-templates: $(PACKER_TEMPLATES) ## Build all packer templates
 
 # target $(PACKER_TEMPLATES): Call packer-build $@
 .PHONY: $(PACKER_TEMPLATES)
-ifeq ($(OPERATING_SYSTEM),Darwin)
+ifeq ($(SYSTEM),Darwin)
 $(PACKER_TEMPLATES): DOCKER     ?= false
 endif
 $(PACKER_TEMPLATES):
@@ -27,8 +27,8 @@ $(PACKER_TEMPLATES):
 # target packer-build-%: Call packer-build with file packer/*/%.json
 .PHONY: packer-build-%
 packer-build-%: docker-build-packer
-	$(if $(wildcard packer/*/$*.json),\
-	 $(call packer-build,$(wildcard packer/*/$*.json)))
+	$(if $(wildcard packer/*/$*.json packer/*/$*.pkr.hcl),\
+	 $(call packer-build,$(firstword $(wildcard packer/*/$*.json packer/*/$*.pkr.hcl))))
 
 # target packer-qemu: Fire packer-quemu-% for PACKER_ISO_NAME
 .PHONY: packer-qemu
@@ -36,7 +36,7 @@ packer-qemu: packer-qemu-$(PACKER_ISO_NAME) ## Launch iso image in qemu
 
 # target packer-qemu-%: Call packer-qemu PACKER_OUTPUT/%.iso
 .PHONY: packer-qemu-%
-ifeq ($(OPERATING_SYSTEM),Darwin)
+ifeq ($(SYSTEM),Darwin)
 packer-qemu-%: DOCKER           ?= false
 endif
 packer-qemu-%: docker-build-packer ## Run iso image in qemu

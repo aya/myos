@@ -26,7 +26,7 @@ USER_DOCKER_REPOSITORY          ?= $(subst -,/,$(subst _,/,$(USER_COMPOSE_PROJEC
 USER_DOCKER_VOLUME              ?= $(USER_COMPOSE_PROJECT_NAME)_myos
 
 # https://github.com/docker/libnetwork/pull/2348
-ifeq ($(OPERATING_SYSTEM),Darwin)
+ifeq ($(SYSTEM),Darwin)
 DOCKER_HOST_IFACE               ?= $(shell docker run --rm -it --net=host alpine /sbin/ip -4 route list match 0/0 2>/dev/null |awk '{print $$5}' |awk '!seen[$$0]++' |head -1)
 DOCKER_HOST_INET4               ?= $(shell docker run --rm -it --net=host alpine /sbin/ip -4 addr show $(DOCKER_HOST_IFACE) 2>/dev/null |awk '$$1 == "inet" {sub(/\/.*/,"",$$2); print $$2}' |head -1)
 DOCKER_INTERNAL_DOCKER_GATEWAY  ?= $(shell docker run --rm -it alpine getent hosts gateway.docker.internal 2>/dev/null |awk '{print $$1}' |head -1)

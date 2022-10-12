@@ -53,7 +53,7 @@ ENV_ARGS                        ?= $(env_args)
 ENV_FILE                        ?= $(wildcard $(CONFIG)/$(ENV)/$(APP)/.env .env)
 ENV_LIST                        ?= $(shell ls .git/refs/heads/ 2>/dev/null)
 ENV_RESET                       ?= false
-ENV_VARS                        ?= APP BRANCH DOMAIN ENV HOME HOSTNAME GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME GROUP MONOREPO MONOREPO_DIR OPERATING_SYSTEM PROCESSOR_ARCHITECTURE TAG UID USER VERSION
+ENV_VARS                        ?= APP BRANCH DOMAIN ENV HOME HOSTNAME GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME GROUP MACHINE MONOREPO MONOREPO_DIR SYSTEM TAG UID USER VERSION
 GID                             ?= $(shell id -g 2>/dev/null)
 GIDS                            ?= $(shell id -G 2>/dev/null)
 GIT_AUTHOR_EMAIL                ?= $(or $(shell git config user.email 2>/dev/null),$(USER)@my.os)
@@ -123,15 +123,15 @@ endif
 
 # Guess OS
 ifeq ($(OSTYPE),cygwin)
-OPERATING_SYSTEM                := cygwin
+SYSTEM                          := cygwin
 else ifeq ($(OS),Windows_NT)
-OPERATING_SYSTEM                := Windows_NT
+SYSTEM                          := Windows_NT
 else
-PROCESSOR_ARCHITECTURE          := $(shell uname -m 2>/dev/null)
-OPERATING_SYSTEM                := $(shell uname -s 2>/dev/null)
+SYSTEM                          := $(shell uname -s 2>/dev/null)
 endif
+MACHINE                         := $(shell uname -m 2>/dev/null)
 
-ifeq ($(OPERATING_SYSTEM),Darwin)
+ifeq ($(SYSTEM),Darwin)
 SED_SUFFIX                      := ''
 endif
 

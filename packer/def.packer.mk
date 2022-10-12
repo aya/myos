@@ -3,9 +3,9 @@ DOCKER_RUN_OPTIONS_PACKER       ?= -it -p $(PACKER_SSH_PORT):$(PACKER_SSH_PORT) 
 ENV_VARS                        += PACKER_CACHE_DIR PACKER_KEY_INTERVAL PACKER_LOG
 KVM_GID                         ?= $(call gid,kvm)
 PACKER_ARCH                     ?= $(PACKER_ALPINE_ARCH)
-PACKER_BOOT_WAIT                ?= 11s
+PACKER_BOOT_WAIT                ?= 24s
 PACKER_BUILD_ARGS               ?= -on-error=cleanup $(foreach var,$(PACKER_BUILD_VARS),$(if $($(var)),-var $(var)='$($(var))'))
-PACKER_BUILD_VARS               += accelerator boot_wait hostname iso_name iso_size output password qemuargs ssh_wait_timeout template username
+PACKER_BUILD_VARS               += accelerator boot_wait hostname iso_name iso_size nameserver output password pause_before qemuargs ssh_timeout template username
 PACKER_BUILD_VARS               += ansible_extra_vars ansible_user ansible_verbose
 PACKER_CACHE_DIR                ?= build/cache
 PACKER_HOSTNAME                 ?= $(PACKER_TEMPLATE)
@@ -14,19 +14,21 @@ PACKER_ISO_FILES                ?= $(wildcard build/iso/*/*/*.iso)
 PACKER_ISO_FILE                  = $(PACKER_OUTPUT)/$(PACKER_ISO_NAME).iso
 PACKER_ISO_INFO                  = $(PACKER_OUTPUT)/$(PACKER_ISO_NAME).nfo
 PACKER_ISO_NAME                  = $(PACKER_TEMPLATE)-$(PACKER_RELEASE)-$(PACKER_ARCH)
-PACKER_ISO_SIZE                 ?= 1024
-PACKER_KEY_INTERVAL             ?= 10ms
+PACKER_ISO_SIZE                 ?= 2048
+PACKER_KEY_INTERVAL             ?= 11ms
 PACKER_LOG                      ?= 1
+PACKER_NAMESERVER               ?= 1.1.1.1
 PACKER_OUTPUT                   ?= build/iso/$(ENV)/$(PACKER_TEMPLATE)/$(PACKER_RELEASE)-$(PACKER_ARCH)
 PACKER_PASSWORD                 ?= $(PACKER_TEMPLATE)
+PACKER_PAUSE_BEFORE             ?= 24s
 PACKER_QEMU_ACCELERATOR         ?= kvm
 PACKER_QEMU_ARCH                ?= $(PACKER_ARCH)
 PACKER_QEMU_ARGS                ?= -machine type=pc,accel=$(PACKER_QEMU_ACCELERATOR) -device virtio-rng-pci,rng=rng0,bus=pci.0,addr=0x7 -object rng-random,filename=/dev/urandom,id=rng0
 PACKER_RELEASE                  ?= $(PACKER_ALPINE_RELEASE)
 PACKER_SSH_ADDRESS              ?= $(if $(ssh_bind_address),$(ssh_bind_address),0.0.0.0)
 PACKER_SSH_PORT                 ?= $(if $(ssh_port_max),$(ssh_port_max),2222)
-PACKER_SSH_WAIT_TIMEOUT         ?= 42s
-PACKER_TEMPLATES                ?= $(wildcard packer/*/*.json)
+PACKER_SSH_TIMEOUT              ?= 42s
+PACKER_TEMPLATES                ?= $(wildcard packer/*/*.json packer/*/*.pkr.hcl)
 PACKER_TEMPLATE                 ?= alpine
 PACKER_USERNAME                 ?= root
 PACKER_VNC_PORT                 ?= $(if $(vnc_port_max),$(vnc_port_max),5900)
@@ -51,8 +53,9 @@ iso_name                        ?= $(PACKER_ISO_NAME)
 iso_size                        ?= $(PACKER_ISO_SIZE)
 output                          ?= $(PACKER_OUTPUT)
 password                        ?= $(PACKER_PASSWORD)
+pause_before                    ?= $(PACKER_PAUSE_BEFORE)
 qemuargs                        ?= $(call arrays_of_dquoted_args, $(PACKER_QEMU_ARGS))
-ssh_wait_timeout                ?= $(PACKER_SSH_WAIT_TIMEOUT)
+ssh_timeout                     ?= $(PACKER_SSH_TIMEOUT)
 template                        ?= $(PACKER_TEMPLATE)
 username                        ?= $(PACKER_USERNAME)
 
@@ -62,16 +65,17 @@ password                        := $(or $(shell pwgen -csy -r\' 64 1 2>/dev/null
 endif
 endif
 
-ifeq ($(OPERATING_SYSTEM),Darwin)
+ifeq ($(SYSTEM),Darwin)
 ifneq ($(DOCKER), true)
 PACKER_QEMU_ACCELERATOR         := hvf
+PACKER_QEMU_ARGS                += -cpu host
 else
 PACKER_QEMU_ACCELERATOR         := tcg
 PACKER_QEMU_ARGS                += -cpu max,vendor=GenuineIntel,vmware-cpuid-freq=on,+invtsc,+aes,+vmx
 endif
-else ifeq ($(OPERATING_SYSTEM),Linux)
+else ifeq ($(SYSTEM),Linux)
 DOCKER_RUN_OPTIONS_PACKER       += $(if $(KVM_GID),--group-add $(KVM_GID)) --device /dev/kvm
-else ifeq ($(OPERATING_SYSTEM),Windows_NT)
+else ifeq ($(SYSTEM),Windows_NT)
 PACKER_QEMU_ACCELERATOR         := hax
 endif
 
@@ -90,12 +94,13 @@ endef
 
 # function packer-build: Call packer build with arg 1, Add build infos to file PACKER_ISO_INFO
 define packer-build
-	$(eval PACKER_TEMPLATE := $(notdir $(basename $(1))))
+	$(eval PACKER_TEMPLATE := $(notdir $(basename $(basename $(1)))))
 	echo Building $(PACKER_ISO_FILE)
 	$(call packer,build $(PACKER_BUILD_ARGS) $(1))
 	echo 'aws_id: $(ANSIBLE_AWS_ACCESS_KEY_ID)'                  > $(PACKER_ISO_INFO)
 	echo 'aws_key: $(ANSIBLE_AWS_SECRET_ACCESS_KEY)'            >> $(PACKER_ISO_INFO)
 	echo 'aws_region: $(ANSIBLE_AWS_DEFAULT_REGION)'            >> $(PACKER_ISO_INFO)
+	echo 'dns: $(nameserver)'                                   >> $(PACKER_ISO_INFO)
 	echo 'docker_image_tag: $(ANSIBLE_DOCKER_IMAGE_TAG)'        >> $(PACKER_ISO_INFO)
 	echo 'docker_registry: $(ANSIBLE_DOCKER_REGISTRY)'          >> $(PACKER_ISO_INFO)
 	echo 'env: $(ENV)'                                          >> $(PACKER_ISO_INFO)
@@ -114,4 +119,4 @@ define packer-build
 	echo 'user: $(username)'                                    >> $(PACKER_ISO_INFO)
 endef
 
-arrays_of_dquoted_args = $(subst $(dquote) $(dquote),$(dquote)$(comma) $(dquote),$(subst $(dquote) $(dquote)-,$(dquote) ]$(comma) [ $(dquote)-,$(patsubst %,$(dquote)%$(dquote),$1)))
+arrays_of_dquoted_args = [ $(subst $(dquote) $(dquote),$(dquote)$(comma) $(dquote),$(subst $(dquote) $(dquote)-,$(dquote) ]$(comma) [ $(dquote)-,$(patsubst %,$(dquote)%$(dquote),$1))) ]

@@ -3,8 +3,8 @@ LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 ARG GIT_AUTHOR_NAME
 ARG GIT_AUTHOR_EMAIL
-ARG OPERATING_SYSTEM=Linux
-ARG PROCESSOR_ARCHITECTURE=x86_64
+ARG SYSTEM=Linux
+ARG MACHINE=x86_64
 
 ENV GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME}
 ENV GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}
@@ -42,11 +42,11 @@ RUN git clone https://github.com/ingydotnet/git-subrepo \
 
 ARG IPFS_VERSION=0.14.0
 
-RUN { OS="$(echo ${OPERATING_SYSTEM} |awk '{print tolower($0)}')"; \
-    ARCH="$(echo ${PROCESSOR_ARCHITECTURE})"; \
+RUN { OS="$(echo ${SYSTEM} |awk '{print tolower($0)}')"; \
+    ARCH="$(echo ${MACHINE})"; \
     wget -qO - https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.${OS}.${ARCH}.tar.xz \
      |tar --strip-components 1 -C /usr/local/bin -xJf - shellcheck-stable/shellcheck; } \
- && { ARCH="$(echo ${PROCESSOR_ARCHITECTURE} |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"; \
+ && { ARCH="$(echo ${MACHINE} |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"; \
     wget -qO - https://github.com/ipfs/kubo/releases/download/v${IPFS_VERSION}/kubo_v${IPFS_VERSION}_${OS}-${ARCH}.tar.gz \
      |tar --strip-components 1 -C /usr/local/bin -xzf - kubo/ipfs; } \
  && mkdir -p /usr/local/lib/shellspec \
