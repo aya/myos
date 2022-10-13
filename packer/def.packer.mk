@@ -1,5 +1,5 @@
 CMDS                            += packer
-DOCKER_RUN_OPTIONS_PACKER       ?= -it -p $(PACKER_SSH_PORT):$(PACKER_SSH_PORT) -p $(PACKER_VNC_PORT):$(PACKER_VNC_PORT)
+DOCKER_RUN_OPTIONS_PACKER       ?= -it -p $(PACKER_SSH_PORT):$(PACKER_SSH_PORT) -p $(PACKER_VNC_PORT):$(PACKER_VNC_PORT) -v $(SSH_DIR):$(SSH_DIR)
 ENV_VARS                        += PACKER_CACHE_DIR PACKER_KEY_INTERVAL PACKER_LOG
 KVM_GID                         ?= $(call gid,kvm)
 PACKER_ARCH                     ?= $(PACKER_ALPINE_ARCH)
@@ -14,7 +14,7 @@ PACKER_ISO_FILES                ?= $(wildcard build/iso/*/*/*.iso)
 PACKER_ISO_FILE                  = $(PACKER_OUTPUT)/$(PACKER_ISO_NAME).iso
 PACKER_ISO_INFO                  = $(PACKER_OUTPUT)/$(PACKER_ISO_NAME).nfo
 PACKER_ISO_NAME                  = $(PACKER_TEMPLATE)-$(PACKER_RELEASE)-$(PACKER_ARCH)
-PACKER_ISO_SIZE                 ?= 2048
+PACKER_ISO_SIZE                 ?= 1024
 PACKER_KEY_INTERVAL             ?= 11ms
 PACKER_LOG                      ?= 1
 PACKER_NAMESERVER               ?= 1.1.1.1
@@ -51,6 +51,7 @@ boot_wait                       ?= $(PACKER_BOOT_WAIT)
 hostname                        ?= $(PACKER_HOSTNAME)
 iso_name                        ?= $(PACKER_ISO_NAME)
 iso_size                        ?= $(PACKER_ISO_SIZE)
+nameserver                      ?= $(PACKER_NAMESERVER)
 output                          ?= $(PACKER_OUTPUT)
 password                        ?= $(PACKER_PASSWORD)
 pause_before                    ?= $(PACKER_PAUSE_BEFORE)
@@ -94,6 +95,7 @@ endef
 
 # function packer-build: Call packer build with arg 1, Add build infos to file PACKER_ISO_INFO
 define packer-build
+	$(eval ANSIBLE_USERNAME := $(PACKER_USERNAME))
 	$(eval PACKER_TEMPLATE := $(notdir $(basename $(basename $(1)))))
 	echo Building $(PACKER_ISO_FILE)
 	$(call packer,build $(PACKER_BUILD_ARGS) $(1))

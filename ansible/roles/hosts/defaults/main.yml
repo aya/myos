@@ -1,6 +1,9 @@
 ---
 # file: defaults/main.yml
 
+# enable cloud-init
+hosts_cloudinit: false
+
 # cloud-init config
 hosts_cloudinit_config:
     users:
@@ -75,8 +78,8 @@ hosts_cloudinit_config:
         templates_dir: /etc/cloud/templates/
       ssh_svcname: sshd
 
-# enable cloud-init
-hosts_cloudinit_enable: false
+# environment variables to add in /etc/default/myos
+hosts_default_env: []
 
 # git repositories to clone
 hosts_git_repositories: []
@@ -129,14 +132,11 @@ hosts_ssh_public_hosts: "{{ lookup('env','ANSIBLE_SSH_PUBLIC_HOSTS').split(' ') 
 # remote ssh user
 hosts_ssh_username: "{{ lookup('env','ANSIBLE_SSH_USERNAME') or ansible_user }}"
 
-# update hosts every day
+# update hosts every hour
 hosts_update: false
 
-# list of environment variables to add in ~/.myos
-hosts_user_env: []
-
 # run specific functions on user login
-hosts_user_rc_enable: false
+hosts_user_rc: false
 
 # list of rc functions to call at user connection
 hosts_user_rc_functions:

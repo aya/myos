@@ -6,6 +6,12 @@ Interact with remote services
 
 ### Default variables
 
+* `remotes_myos` - Retrieve myos tags
+
+``` yaml
+remotes_myos: false
+```
+
 * `remotes_packages` - List of packages to install/remove on your hosts
 
 ``` yaml

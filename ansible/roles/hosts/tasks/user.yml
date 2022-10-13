@@ -12,16 +12,16 @@
   ignore_errors: true
 
 - name: user - create ~/.rc.d
-  file: path=~/.rc.d/ state={{hosts_user_rc_enable|default(false)|ternary('directory', 'absent')}} mode="0700"
+  file: path=~/.rc.d/ state={{hosts_user_rc|default(false)|ternary('directory', 'absent')}} mode="0700"
 
 - name: user - source /etc/profile.d/rc_functions.sh
-  when: hosts_user_rc_enable|default(false)
+  when: hosts_user_rc|default(false)
   with_items:
   - /etc/profile.d/rc_functions.sh
   lineinfile: dest=~/.rc.d/00_source create=yes line="{{ item }}" mode="0600"
 
 - name: user - enable/disable rc functions
-  when: hosts_user_rc_enable|default(false)
+  when: hosts_user_rc|default(false)
   with_items: "{{ hosts_user_rc_functions|default([]) }}"
   file: path="~/.rc.d/{{item.path}}" state="{{item.state}}"
 

@@ -5,9 +5,9 @@ SSH_BASTION_HOSTNAME            ?=
 SSH_BASTION_USERNAME            ?= $(SSH_USER)
 SSH_ENV_VARS                    ?= SSH_BASTION_HOSTNAME SSH_BASTION_USERNAME SSH_PUBLIC_HOSTS SSH_PRIVATE_IP_RANGE SSH_USER
 SSH_GITHUB_AUTHORIZED_KEYS      ?= $(patsubst %,https://github.com/%,$(patsubst %,%.keys,$(SSH_USER)))
-SSH_PUBLIC_HOSTS                ?= $(CONFIG_REPOSITORY_HOST) $(SSH_BASTION_HOSTNAME) $(SSH_REMOTE_HOSTS)
+SSH_PUBLIC_HOSTS                ?= $(if $(filter ssh,$(CONFIG_REPOSITORY_SCHEME)),$(CONFIG_REPOSITORY_HOST)) $(SSH_BASTION_HOSTNAME) $(SSH_REMOTE_HOSTS)
 SSH_PRIVATE_IP_RANGE            ?= 
-SSH_PRIVATE_KEYS                ?= $(wildcard $(SSH_DIR)/id_rsa)
+SSH_PRIVATE_KEYS                ?= $(wildcard $(SSH_DIR)/id_ed25519 $(SSH_DIR)/id_rsa)
 SSH_REMOTE_HOSTS                ?= github.com gitlab.com
 SSH_USER                        ?= $(call slugify,$(GIT_USER))
 

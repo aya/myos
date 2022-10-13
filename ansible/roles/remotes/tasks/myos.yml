@@ -17,7 +17,7 @@
   ec2_tag:
     aws_access_key: "{{ aws_access_key_id }}"
     aws_secret_key: "{{ aws_secret_access_key }}"
-    region: "{{ ansible_ec2_placement_region }}"
+    region: "{{ ansible_ec2_placement_region |default('') }}"
     resource: "{{ ansible_ec2_instance_id }}"
     state: list
   register: myos

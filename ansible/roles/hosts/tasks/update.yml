@@ -2,9 +2,18 @@
 # file: tasks/update.yml
 
 - name: update - copy files
+  when: ansible_service_mgr|lower != "systemd" and ansible_os_family|lower != "alpine"
   with_items:
-  - /etc/cron.d/myos
-  copy: src=../files/{{item}} dest={{item}} owner=root group=root mode=0644
+  - /etc/cron.d/ansible
+  copy: src=../files/{{item}} dest={{item}} owner=root group=root
+  become: yes
+
+- name: update - copy files - alpine
+  when: ansible_service_mgr|lower != "systemd" and ansible_os_family|lower == "alpine"
+  with_items:
+  - /etc/periodic/hourly/ansible
+  - /etc/local.d/ansible.start
+  copy: src=../files/{{item}} dest={{item}} owner=root group=root mode=0755
   become: yes
 
 - name: update - copy files - systemd
@@ -12,21 +21,24 @@
   with_items:
   - /etc/systemd/system/ansible.service
   - /etc/systemd/system/ansible.timer
-  copy: src=../files/{{item}} dest={{item}} owner=root group=root mode=0644
+  copy: src=../files/{{item}} dest={{item}} owner=root group=root
   become: yes
 
-- name: update - create /root/.myos
-  become: true
-  template:
-    src: myos.j2
-    dest: ~/.myos
-    force: no
-    mode: 0400
+- name: update - enable nservices - openrc
+  when: ansible_service_mgr|lower == "openrc"
+  service:
+    name: local
+    enabled: true
+    runlevel: boot
+  become: yes
 
-- name: update - create /root/Makefile
-  become: true
-  template:
-    src: Makefile.j2
-    dest: ~/Makefile
-    force: yes
+- name: update - enable services - systemd
+  when: ansible_service_mgr|lower == "systemd"
+  with_items:
+    - ansible.service
+    - ansible.timer
+  service:
+    name: "{{item}}"
+    enabled: true
+  become: yes
 

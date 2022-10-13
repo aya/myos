@@ -2,12 +2,12 @@
 # file: tasks/cloudinit.yml
 
 - name: cloudinit - install cloud-init packages
-  when: hosts_cloudinit_enable|default(false) and ansible_os_family|lower != "alpine"
+  when: ansible_os_family|lower != "alpine"
   package: name="cloud-init" state="present"
   become: yes
 
 - name: cloudinit - install cloud-init packages - alpine
-  when: hosts_cloudinit_enable|default(false) and ansible_os_family|lower == "alpine"
+  when: ansible_os_family|lower == "alpine"
   with_items:
   - { "name": "cloud-init", "state": "present" }
   - { "name": "cloud-init-openrc", "state": "present" }
@@ -23,14 +23,13 @@
   become: yes
 
 - name: cloudinit - update /etc/cloud/cloud.cfg
-  when: hosts_cloudinit_enable|default(false)
   template:
     src: cloud.cfg.j2
     dest: /etc/cloud/cloud.cfg
     force: yes
 
 - name: cloudinit - activate service
-  when: hosts_cloudinit_enable|default(false) and ansible_service_mgr|lower != "openrc"
+  when: ansible_service_mgr|lower != "openrc"
   service:
     name: cloud-init
     state: started
@@ -38,7 +37,7 @@
   become: yes
 
 - name: cloudinit - activate service - openrc
-  when: hosts_cloudinit_enable|default(false) and ansible_service_mgr|lower == "openrc"
+  when: ansible_service_mgr|lower == "openrc"
   service:
     name: cloud-init
     state: started

@@ -23,6 +23,7 @@
   tags:
     - user
 - import_tasks: myos.yml
+  when: remotes_myos|default(false)
   tags:
     - myos
 

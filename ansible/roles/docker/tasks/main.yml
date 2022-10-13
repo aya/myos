@@ -29,6 +29,7 @@
   tags:
     - run
 - import_tasks: myos.yml
+  when: docker_myos|default(false)
   tags:
     - myos
 

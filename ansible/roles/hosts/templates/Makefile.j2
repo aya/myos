@@ -1,6 +1,6 @@
 CMDS    := exec
 SERVICE ?= cli
--include .myos
+-include /etc/default/myos
 
 ansible:
 	@make -C $(ANSIBLE_GIT_DIRECTORY) ansible-run-localhost

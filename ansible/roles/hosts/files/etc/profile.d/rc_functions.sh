@@ -212,7 +212,7 @@ ssh_add() {
     else
       GREP_RECURSIVE_CHAR="*"
     fi
-    SSH_PRIVATE_KEYS="${SSH_PRIVATE_KEYS:-} ${dir}/id_rsa $(grep -l${GREP_RECURSIVE_FLAG:-} 'PRIVATE KEY' "${dir}/"${GREP_RECURSIVE_CHAR:-} 2>/dev/null |grep -vw "${dir}"/id_rsa)"
+    SSH_PRIVATE_KEYS="${SSH_PRIVATE_KEYS:-} ${dir}/id_ed25519 ${dir}/id_rsa $(grep -l${GREP_RECURSIVE_FLAG:-} 'PRIVATE KEY' "${dir}/"${GREP_RECURSIVE_CHAR:-} 2>/dev/null |grep -vwE "${dir}/id_(rsa|ed25519)")"
   done
   # shellcheck disable=SC2086
   printf '%s\n' ${SSH_PRIVATE_KEYS} |while read -r file; do
@@ -238,7 +238,7 @@ ssh_del() {
     else
       GREP_RECURSIVE_CHAR="*"
     fi
-    SSH_PRIVATE_KEYS="${SSH_PRIVATE_KEYS:-} ${dir}/id_rsa $(grep -l${GREP_RECURSIVE_FLAG:-} 'PRIVATE KEY' "${dir}/"${GREP_RECURSIVE_CHAR:-} 2>/dev/null |grep -vw "${dir}"/id_rsa)"
+    SSH_PRIVATE_KEYS="${SSH_PRIVATE_KEYS:-} ${dir}/id_ed25519 ${dir}/id_rsa $(grep -l${GREP_RECURSIVE_FLAG:-} 'PRIVATE KEY' "${dir}/"${GREP_RECURSIVE_CHAR:-} 2>/dev/null |grep -vwE "${dir}/id_(rsa|ed25519)")"
   done
   # shellcheck disable=SC2086
   printf '%s\n' ${SSH_PRIVATE_KEYS} |while read -r file; do
@@ -270,14 +270,12 @@ tmux_detach() {
 
 # function user_count: Print number of "users sessions"/"users"/"logged users"
 user_count() {
-  ps ax -o user,tty 2>/dev/null |awk '
-  $2 ~ /^(pts|tty)/ { users_session++; logged[$1]++; };
-  { count[$1]++; }
-  END {
-    for (uc in count) { c = c" "uc; }; users_count=split(c,v," ")-1;
-    for (ul in logged) { l = l" "ul; }; users_logged=split(l,v," ")-1;
-    print users_session+0"/"users_count"/"users_logged;
-  }'
+  ps ax -o pid,user,tty,comm 2>/dev/null |awk '
+    $3 ~ /^(pts\/|tty[sS]?|[0-9]+,)[0-9]+$/ && $4 != "getty" { users_sessions++; logged[$2]++; };
+    $1 ~ /^[0-9]+$/ { count[$2]++; }
+    END {
+      for (uc in count) { c = c" "uc; }; users_count=split(c,v," ");
+      for (ul in logged) { l = l" "ul; }; users_logged=split(l,v," ");
+      print users_sessions+0"/"users_count+0"/"users_logged+0;
+    }'
 }
-
-# vim:ts=2:sw=2:sts=2:et

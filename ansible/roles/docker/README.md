@@ -60,6 +60,12 @@ docker_distribution_release: bullseye
 docker_machine: amd64
 ```
 
+* `docker_myos` - Register myos tags
+
+``` yaml
+docker_myos: false
+```
+
 * `docker_package` - Name of the docker package
 
 ``` yaml

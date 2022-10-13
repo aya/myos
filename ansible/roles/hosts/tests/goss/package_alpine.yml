@@ -7,11 +7,11 @@ package:
     installed: true
   ncurses:
     installed: true
+  neovim:
+    installed: true
   openssh-client:
     installed: true
   py3-pip:
     installed: true
   util-linux:
-    installed: true
-  vim:
     installed: true

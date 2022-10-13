@@ -6,7 +6,7 @@
   known_hosts:
     path: /etc/ssh/ssh_known_hosts
     name: "{{ item }}"
-    key: "{{ lookup('pipe', 'ssh-keyscan -t rsa -H ' + item) }}"
+    key: "{{ lookup('pipe', '/usr/bin/ssh-keyscan -H ' + item) }}"
   ignore_errors: true
   become: true
 

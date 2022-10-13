@@ -2,33 +2,39 @@ FROM alpine:latest as dist
 LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 
-ARG MACHINE="$(uname -m)"
-ARG SYSTEM="$(uname -s)"
-ARG ARCH="$(echo ${MACHINE} |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"
-ARG OS="$(echo ${SYSTEM} |awk '{print tolower($0)}')"
-
-ARG PACKER_VERSION=1.8.3
+ARG MACHINE="x86_64"
+ARG SYSTEM="Linux"
 
 RUN apk --no-cache add \
         ansible \
         bash \
+        dirmngr \
         git \
+        gpg \
+        gpg-agent \
         qemu \
         qemu-system-x86_64 \
         qemu-img \
+        openssh-client \
         openssl \
         socat \
         wget
 
-ADD https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_${OS}_${ARCH}.zip ./
-ADD https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS ./
+ARG PACKER_VERSION=1.8.3
 
-RUN sed -i '/.*'"${OS}"'_'"${ARCH}"'.zip/!d' packer_${PACKER_VERSION}_SHA256SUMS \
- && sha256sum -cs packer_${PACKER_VERSION}_SHA256SUMS \
- && unzip "packer_${PACKER_VERSION}_${OS}_${ARCH}.zip" -d /bin \
- && rm -f "packer_${PACKER_VERSION}_${OS}_${ARCH}.zip"
+RUN { OS="$(echo ${SYSTEM} |awk '{print tolower($0)}')"; \
+    ARCH="$(echo ${MACHINE} |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"; \
+    wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_${OS}_${ARCH}.zip \
+     && wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS \
+     && wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS.sig \
+     && GNUPGHOME="./.gnupg" gpg --batch --recv-keys C874011F0AB405110D02105534365D9472D7468F \
+     && GNUPGHOME="./.gnupg" gpg --batch --verify packer_${PACKER_VERSION}_SHA256SUMS.sig packer_${PACKER_VERSION}_SHA256SUMS \
+     && grep packer_${PACKER_VERSION}_${OS}_${ARCH}.zip packer_${PACKER_VERSION}_SHA256SUMS |sha256sum -c - \
+     && unzip "packer_${PACKER_VERSION}_${OS}_${ARCH}.zip" -d /usr/local/bin \
+     && rm -f "packer_${PACKER_VERSION}_${OS}_${ARCH}.zip" packer_${PACKER_VERSION}_SHA256SUMS.sig packer_${PACKER_VERSION}_SHA256SUMS ./.gnupg \
+    ; }
 
-ENTRYPOINT ["/bin/packer"]
+ENTRYPOINT ["/usr/local/bin/packer"]
 
 FROM dist as master
 ARG DOCKER_BUILD_DIR

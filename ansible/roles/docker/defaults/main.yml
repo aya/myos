@@ -19,6 +19,18 @@ docker_check_kernel: '3.10'
 # docker daemon configuration
 # docker_daemon_config: {}
 
+# docker package distribution
+docker_distribution: debian
+
+# docker package distribution release
+docker_distribution_release: bullseye
+
+# docker package architecture
+docker_machine: amd64
+
+# register myos tags
+docker_myos: false
+
 # docker package name
 docker_package: docker
 

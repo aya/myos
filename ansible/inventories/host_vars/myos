@@ -21,14 +21,12 @@ disks_services:
 docker_image_tag: "{{ lookup('env','ANSIBLE_DOCKER_IMAGE_TAG') or 'latest' }}"
 docker_registry: "{{ lookup('env','ANSIBLE_DOCKER_REGISTRY') }}"
 hosts_packages:
-- { "name": "ansible", "state": "present" }
+- { "name": "ansible-core", "state": "present" }
 hosts_services:
-- { "name": "myos", "state": "stopped", "enabled": "yes" }
+- { "name": "myos", "state": "started", "enabled": "yes" }
 - { "name": "zram", "state": "started", "enabled": "yes" }
 hosts_update: true
-hosts_user_env:
-- ANSIBLE_AWS_ACCESS_KEY_ID
-- ANSIBLE_AWS_SECRET_ACCESS_KEY
+hosts_default_env:
 - ANSIBLE_CONFIG
 - ANSIBLE_DISKS_NFS_DISK
 - ANSIBLE_DISKS_NFS_OPTIONS
@@ -45,12 +43,10 @@ hosts_user_env:
 - COMPOSE_PROJECT_NAME
 - ENV
 - MYOS_TAGS
-hosts_user_rc_enable: true
+hosts_user_rc: true
 hosts_user_rc_functions:
 - { "path": "10_prompt_set", "state": "touch" }
 - { "path": "10_ps1_set", "state": "touch" }
 - { "path": "30_pfetch", "state": "touch" }
 - { "path": "30_screen_attach", "state": "touch" }
 - { "path": "40_ssh_add", "state": "touch" }
-remotes_services:
-- { "name": "ansible", "state": "stopped", "enabled": "yes" }

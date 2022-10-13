@@ -4,6 +4,12 @@ Bootstrap hosts, installing standard packages and user settings
 
 ## Role Variables
 
+* `hosts_cloudinit` - Install and configure cloud-init
+
+``` yaml
+hosts_cloudinit: false
+```
+
 * `hosts_cloudinit_config` - cloud-init yaml config
 
 ``` yaml
@@ -17,10 +23,12 @@ hosts_cloudinit_config:
         - 'http://169.254.169.254'
 ```
 
-* `hosts_cloudinit_enable` - Install and configure cloud-init
+* `hosts_default_env` - List of environment variables to add in file /etc/default/myos
 
 ``` yaml
-hosts_cloudinit_enable: false
+hosts_default_env:
+  - ENV
+  - DOCKER
 ```
 
 * `hosts_git_repositories` - Clone git repositories
@@ -112,18 +120,10 @@ hosts_ssh_username: root
 hosts_update: false
 ```
 
-* `hosts_user_env` - List of environment variables to add in file ~/.myos
+* `hosts_user_rc` - Call specific functions on user login, allowing it to customize his session
 
 ``` yaml
-hosts_user_env:
-  - ENV
-  - DOCKER
-```
-
-* `hosts_user_rc_enable` - Call specific functions on user login, allowing it to customize his session
-
-``` yaml
-hosts_user_rc_enable: false
+hosts_user_rc: false
 ```
 
 * `hosts_user_rc_functions` - List of specific functions to call on user login, defined in /etc/profile.d/rc_functions.sh
@@ -153,9 +153,8 @@ hosts_user_rc_functions:
   roles:
   - role: 'aynicos.hosts'
     hosts_services:
-    - { "name": "local", "state": "started", "enabled": "yes" }
     - { "name": "zram", "state": "started", "enabled": "yes" }
-    hosts_user_rc_enable: true
+    hosts_user_rc: true
 ```
 
 ## Tests

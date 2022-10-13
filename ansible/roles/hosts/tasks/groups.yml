@@ -1,13 +1,17 @@
 ---
 # file: tasks/groups.yml
 
+- name: groups - remove floppy group - alpine
+  when: ansible_os_family|lower == "alpine"
+  group: gid="11" name="floppy" state="absent"
+  become: yes
+
 - name: groups - create dns group
-  when: ansible_os_family|lower != "alpine"
   group: gid="11" name="dns" state="present" system="yes"
   become: yes
 
 - name: groups - add me to the dns group
-  when: ansible_os_family|lower != "alpine" and ansible_user_uid != "0"
+  when: ansible_user_uid != "0"
   user: name="{{ansible_user_id}}" groups=dns append=yes
   become: yes
 

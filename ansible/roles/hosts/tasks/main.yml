@@ -8,11 +8,12 @@
   tags:
     - boot
 - import_tasks: cloudinit.yml
+  when: hosts_cloudinit|default(false)
   tags:
     - cloudinit
 - import_tasks: config.yml
   tags:
-    - cloudinit
+    - config
 - import_tasks: dir.yml
   tags:
     - dir
@@ -26,6 +27,7 @@
   tags:
     - packages
 - import_tasks: services.yml
+  when: hosts_services is defined
   tags:
     - services
 - import_tasks: git.yml
@@ -35,9 +37,9 @@
   tags:
     - ssh
 - import_tasks: update.yml
+  when: hosts_update|default(false)
   tags:
     - update
-  when: hosts_update|default(false)
 - import_tasks: user.yml
   tags:
     - user

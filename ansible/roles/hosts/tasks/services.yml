@@ -2,7 +2,7 @@
 # file: tasks/services.yml
 
 - name: services - enable/disable hosts services
-  when: hosts_services is defined and ansible_service_mgr|lower != "openrc" and ansible_service_mgr|lower != "runit"
+  when: ansible_service_mgr|lower != "openrc" and ansible_service_mgr|lower != "runit"
   with_items: "{{ hosts_services|default([]) }}"
   service:
     name: "{{item.name}}"
@@ -11,7 +11,7 @@
   become: yes
 
 - name: services - enable/disable hosts services - openrc
-  when: hosts_services is defined and ansible_service_mgr|lower == "openrc"
+  when: ansible_service_mgr|lower == "openrc"
   with_items: "{{ hosts_services|default([]) }}"
   service:
     name: "{{item.name}}"
@@ -21,7 +21,7 @@
   become: yes
 
 - name: services - enable/disable hosts services - runit
-  when: hosts_services is defined and ansible_service_mgr|lower == "runit"
+  when: ansible_service_mgr|lower == "runit"
   with_items: "{{ hosts_services|default([]) }}"
   sysvinit:
     name: "{{item.name}}"
