@@ -6,7 +6,7 @@ services:
     command: redis-server --appendonly yes
     labels:
     - SERVICE_6379_CHECK_TCP=true
-    - SERVICE_6379_NAME=${COMPOSE_SERVICE_NAME}-redis:6379
+    - SERVICE_6379_NAME=${COMPOSE_SERVICE_NAME}-redis-6379
     networks:
     - private
     ports:

@@ -18,10 +18,10 @@ services:
     - http.cors.allow-headers=X-Requested-With,X-Auth-Token,Content-Type,Content-Length
     labels:
     - SERVICE_9200_CHECK_HTTP=/
-    - SERVICE_9200_NAME=${COMPOSE_SERVICE_NAME}-elasticsearch:9200
+    - SERVICE_9200_NAME=${COMPOSE_SERVICE_NAME}-elasticsearch-9200
     - SERVICE_9200_TAGS=${ELASTICSEARCH_SERVICE_9200_TAGS}
     - SERVICE_9300_CHECK_TCP=true
-    - SERVICE_9300_NAME=${COMPOSE_SERVICE_NAME}-elasticsearch:9300
+    - SERVICE_9300_NAME=${COMPOSE_SERVICE_NAME}-elasticsearch-9300
     networks:
     - private
     - public

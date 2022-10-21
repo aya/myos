@@ -41,6 +41,7 @@ CONFIG_REPOSITORY_URI           ?= $(shell printf '$(CONFIG_REPOSITORY_URL)\n' |
 CONFIG_REPOSITORY_URL           ?= $(call pop,$(APP_UPSTREAM_REPOSITORY))/$(notdir $(CONFIG))
 CONTEXT                         ?= ENV $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null)
 CONTEXT_DEBUG                   ?= MAKEFILE_LIST DOCKER_ENV_ARGS ENV_ARGS APPS GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME MAKE_DIR MAKE_SUBDIRS MAKE_CMD_ARGS MAKE_ENV_ARGS UID USER
+CERTBOT                         ?=
 DEBUG                           ?= 
 DOCKER                          ?= $(shell type -p docker)
 DOMAIN                          ?= localhost

@@ -28,9 +28,9 @@ services:
     image: ${NODE_DOCKER_REPOSITORY}/vsftpd-s3:${DOCKER_IMAGE_TAG}
     labels:
     - SERVICE_21_CHECK_TCP=true
-    - SERVICE_21_NAME=${NODE_COMPOSE_SERVICE_NAME}-vsftpd-s3:21
+    - SERVICE_21_NAME=${NODE_COMPOSE_SERVICE_NAME}-vsftpd-s3-21
     - SERVICE_22_CHECK_TCP=true
-    - SERVICE_22_NAME=${NODE_COMPOSE_SERVICE_NAME}-vsftpd-s3:22
+    - SERVICE_22_NAME=${NODE_COMPOSE_SERVICE_NAME}-vsftpd-s3-22
     - SERVICE_65000_IGNORE=true
     security_opt:
     - apparmor:unconfined

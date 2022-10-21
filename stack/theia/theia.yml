@@ -24,7 +24,7 @@ services:
     image: ${DOCKER_REPOSITORY}/theia:${DOCKER_IMAGE_TAG}
     labels:
     - SERVICE_3000_CHECK_TCP=true
-    - SERVICE_3000_NAME=${COMPOSE_SERVICE_NAME}-theia:3000
+    - SERVICE_3000_NAME=${COMPOSE_SERVICE_NAME}-theia-3000
     - SERVICE_3000_TAGS=${THEIA_SERVICE_3000_TAGS}
     networks:
     - private

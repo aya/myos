@@ -1,6 +1,19 @@
 version: '3.6'
 
 services:
+  certbot:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/certbot
+      context: ../..
+      dockerfile: docker/certbot/Dockerfile
+    command: start
+    container_name: ${NODE_COMPOSE_PROJECT_NAME}-certbot
+    image: ${NODE_DOCKER_REPOSITORY}/certbot:${DOCKER_IMAGE_TAG}
+    network_mode: host
+    restart: always
+    volumes:
+    - myos:/etc/letsencrypt
   consul:
     build:
       args:
@@ -31,7 +44,7 @@ services:
     - SERVICE_8301_IGNORE=true
     - SERVICE_8302_IGNORE=true
     - SERVICE_8500_CHECK_HTTP=/v1/health/service/consul
-    - SERVICE_8500_NAME=${NODE_COMPOSE_SERVICE_NAME}-consul:8500
+    - SERVICE_8500_NAME=${NODE_COMPOSE_SERVICE_NAME}-consul-8500
     - SERVICE_8500_TAGS=${NODE_CONSUL_SERVICE_8500_TAGS}
     - SERVICE_8600_IGNORE=true
     - SERVICE_ADDRESS=${DOCKER_HOST_INET4}
@@ -40,20 +53,19 @@ services:
     restart: always
     volumes:
     - consul:/consul/data:delegated
-    - myos:/certs:ro
     - /var/run/docker.sock:/var/run/docker.sock
   fabio:
     build:
       args:
       - DOCKER_BUILD_DIR=docker/fabio
-      - FABIO_VERSION=1.6.0
+      - FABIO_VERSION=1.6.2
       - SYSTEM=${SYSTEM}
       - MACHINE=${MACHINE}
       context: ../..
       dockerfile: docker/fabio/Dockerfile
     container_name: ${NODE_COMPOSE_PROJECT_NAME}-fabio
     image: ${NODE_DOCKER_REPOSITORY}/fabio:${DOCKER_IMAGE_TAG}
-    command: -registry.backend "consul" -registry.consul.addr "consul:8500" -registry.consul.token "${NODE_CONSUL_HTTP_TOKEN}" -proxy.addr ":80,:443;cs=local" -proxy.cs "cs=local;type=file;cert=/certs/${DOMAIN}.crt.pem;key=/certs/${DOMAIN}.key.pem"
+    command: -registry.backend "consul" -registry.consul.addr "consul:8500" -registry.consul.token "${NODE_CONSUL_HTTP_TOKEN}" -proxy.addr ":80,:443;cs=local" -proxy.cs "cs=local;type=file;cert=/etc/letsencrypt/live/${DOMAIN}/fullchain.pem;key=/etc/letsencrypt/live/${DOMAIN}/privkey.pem"
     depends_on:
     - consul
     extra_hosts:
@@ -61,11 +73,11 @@ services:
     hostname: ${HOSTNAME}
     labels:
     - SERVICE_80_CHECK_TCP=true
-    - SERVICE_80_NAME=${NODE_COMPOSE_SERVICE_NAME}-fabio:80
+    - SERVICE_80_NAME=${NODE_COMPOSE_SERVICE_NAME}-fabio-80
     - SERVICE_443_CHECK_TCP=true
-    - SERVICE_443_NAME=${NODE_COMPOSE_SERVICE_NAME}-fabio:443
+    - SERVICE_443_NAME=${NODE_COMPOSE_SERVICE_NAME}-fabio-443
     - SERVICE_9998_CHECK_HTTP=/routes
-    - SERVICE_9998_NAME=${NODE_COMPOSE_SERVICE_NAME}-fabio:9998
+    - SERVICE_9998_NAME=${NODE_COMPOSE_SERVICE_NAME}-fabio-9998
     - SERVICE_9998_TAGS=${NODE_FABIO_SERVICE_9998_TAGS}
     - SERVICE_9999_IGNORE=true
     ports:
@@ -76,7 +88,7 @@ services:
     - public
     restart: always
     volumes:
-    - myos:/certs:ro
+    - myos:/etc/letsencrypt:ro
   registrator:
     build:
       args:

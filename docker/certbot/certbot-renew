@@ -1,0 +1,4 @@
+#!/bin/sh
+
+mkdir -p /etc/letsencrypt/renewal
+/usr/local/bin/certbot renew > /etc/letsencrypt/renewal/letsencrypt.log

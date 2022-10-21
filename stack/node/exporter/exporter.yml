@@ -7,7 +7,7 @@ services:
     image: google/cadvisor:latest
     labels:
     - SERVICE_8080_CHECK_TCP=true
-    - SERVICE_8080_NAME=${NODE_COMPOSE_SERVICE_NAME}-cadvisor-exporter:8080
+    - SERVICE_8080_NAME=${NODE_COMPOSE_SERVICE_NAME}-cadvisor-exporter-8080
     - SERVICE_8080_TAGS=${NODE_CADVISOR_EXPORTER_SERVICE_8080_TAGS}
     - SERVICE_9200_IGNORE=true
     networks:
@@ -31,7 +31,7 @@ services:
     image: prom/node-exporter:latest
     labels:
     - SERVICE_9100_CHECK_TCP=true
-    - SERVICE_9100_NAME=${NODE_COMPOSE_SERVICE_NAME}-node-exporter:9100
+    - SERVICE_9100_NAME=${NODE_COMPOSE_SERVICE_NAME}-node-exporter-9100
     - SERVICE_9100_TAGS=${NODE_EXPORTER_SERVICE_9100_TAGS}
     networks:
     - public

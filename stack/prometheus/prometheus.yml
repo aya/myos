@@ -12,7 +12,7 @@ services:
     image: ${DOCKER_REPOSITORY}/prometheus:${DOCKER_IMAGE_TAG}
     labels:
     - SERVICE_9090_CHECK_TCP=true
-    - SERVICE_9090_NAME=${COMPOSE_SERVICE_NAME}-prometheus:9090
+    - SERVICE_9090_NAME=${COMPOSE_SERVICE_NAME}-prometheus-9090
     - SERVICE_9090_TAGS=${PROMETHEUS_SERVICE_9090_TAGS}
     networks:
     - private

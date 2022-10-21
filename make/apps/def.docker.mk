@@ -1,6 +1,6 @@
 CMDS                            += docker-run docker-run-%
 COMPOSE_ARGS                    ?= --ansi auto
-COMPOSE_FILE                    ?= $(wildcard docker/docker-compose.yml $(foreach file,$(patsubst docker/docker-compose.%,%,$(basename $(wildcard docker/docker-compose.*.yml))),$(if $(filter true,$(COMPOSE_FILE_$(file)) $(COMPOSE_FILE_$(call UPPERCASE,$(file)))),docker/docker-compose.$(file).yml)))
+COMPOSE_FILE                    ?= $(wildcard docker-compose.yml docker/docker-compose.yml $(foreach file,$(patsubst docker/docker-compose.%,%,$(basename $(wildcard docker/docker-compose.*.yml))),$(if $(filter true,$(COMPOSE_FILE_$(file)) $(COMPOSE_FILE_$(call UPPERCASE,$(file)))),docker/docker-compose.$(file).yml)))
 COMPOSE_FILE_$(ENV)             ?= true
 COMPOSE_FILE_DEBUG              ?= $(if $(DEBUG),true)
 COMPOSE_FILE_NFS                ?= $(MOUNT_NFS)

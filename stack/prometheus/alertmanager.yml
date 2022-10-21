@@ -11,7 +11,7 @@ services:
     image: ${DOCKER_REPOSITORY}/alertmanager:${DOCKER_IMAGE_TAG}
     labels:
     - SERVICE_9093_CHECK_TCP=true
-    - SERVICE_9093_NAME=${COMPOSE_SERVICE_NAME}-alertmanager:9093
+    - SERVICE_9093_NAME=${COMPOSE_SERVICE_NAME}-alertmanager-9093
     - SERVICE_9093_TAGS=${ALERTMANAGER_SERVICE_9093_TAGS}
     networks:
     - private
