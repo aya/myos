@@ -1,35 +1,70 @@
+CMDS                            += apps-install install-app
+
 ##
 # COMMON
 
-# target $(APP): Call update-app
+# target $(APP): Call app-update
 .PHONY: $(APP)
 $(APP): APP_DIR := $(RELATIVE)$(APP)
 $(APP): myos-user
-	$(call update-app)
+	$(call app-update)
 
-# target install-app install-apps: Call install-app for each ARGS
-.PHONY: install-app install-apps
-install-app install-apps: myos-user install-app-required
-	$(foreach url,$(ARGS),$(call install-app,$(url)))
+# target app-%: Call app-$(command) for APP in APP_DIR
+## it splits % on dashes and extracts app from the beginning and command from the last part of %
+## ex: app-foo-build will call app-build for app foo in ../foo
+.PHONY: app-%
+app-%:
+	$(eval app     := $(subst -$(lastword $(subst -, ,$*)),,$*))
+	$(eval command := $(lastword $(subst -, ,$*)))
+	$(if $(findstring -,$*), \
+	 $(if $(filter app-$(command),$(.VARIABLES)), \
+	  $(eval APP := $(app)) \
+	  $(eval APP_DIR := $(RELATIVE)$(app)) \
+	  $(eval COMPOSE_PROJECT_NAME := $(USER)-$(app)-$(ENV)$(addprefix -,$(subst /,,$(subst -,,$(APP_PATH))))) \
+	  $(eval DOCKER_REPOSITORY := $(subst -,/,$(subst _,/,$(COMPOSE_PROJECT_NAME)))) \
+          $(eval DOCKER_IMAGE_TAG := $(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest))) \
+	  $(eval DOCKER_IMAGE := $(DOCKER_REPOSITORY)/$(app):$(DOCKER_IMAGE_TAG)) \
+	  $(call app-$(command)) \
+	 ) \
+	)
 
-# target install-app-required: Call install-app for each APP_REQUIRED
-.PHONY: install-app-required
-install-app-required: myos-user
-	$(foreach url,$(APP_REQUIRED),$(call install-app,$(url)))
+# target app-required-install: Call app-install for each APP_REQUIRED
+.PHONY: app-required-install
+app-required-install: myos-user
+	$(foreach url,$(APP_REQUIRED),$(call app-install,$(url)))
+
+# target apps-build: Call app-build for each APPS
+.PHONY: apps-build
+apps-build: myos-user
+	$(foreach app,$(APPS),$(call app-build,$(RELATIVE)$(app)))
+
+# target apps-install install-app: Call app-install for each ARGS
+.PHONY: apps-install install-app
+apps-install install-app: myos-user app-required-install
+	$(foreach url,$(ARGS),$(call app-install,$(url)))
+
+# target apps-update: Call app-update target for each APPS
+.PHONY: apps-update
+apps-update:
+	$(foreach app,$(APPS),$(call make,update-app APP_NAME=$(app)))
+
+# target debug: Print more informations
+.PHONY: debug
+debug:
+	$(MAKE) help profile DEBUG=true
+
+# target debug-%: Print value of %
+.PHONY: debug-%
+debug-%: $(if $(DEBUG),context-%) ;
 
 # target install-bin-%; Call ansible-run-localhost when bin % is not available
 .PHONY: install-bin-%
 install-bin-%:;
 	$(if $(shell type $* 2>/dev/null),,$(call make,ansible-run-localhost))
 
-# target $(SHARED): Create SHARED folder
-$(SHARED):
-	$(RUN) mkdir -p $(SHARED)
-
-# target update-apps: Call update-app target for each APPS
-.PHONY: update-apps
-update-apps:
-	$(foreach app,$(APPS),$(call make,update-app APP_NAME=$(app)))
+# target profile: Print timing informations
+.PHONY: profile
+profile: context-ELAPSED_TIME
 
 # target update-app: Fire update-app-% for APP_NAME
 .PHONY: update-app
@@ -42,7 +77,7 @@ update-app-%: % ;
 # target update-config: Update config files
 .PHONY: update-config
 update-config: myos-user
-	$(call update-app,$(CONFIG_REPOSITORY),$(CONFIG))
+	$(call app-update,$(CONFIG_REPOSITORY),$(CONFIG))
 
 # target update-hosts: Update /etc/hosts
 # on local host
@@ -80,3 +115,7 @@ update-upstream: myos-user .git/refs/remotes/upstream/master
 # target shared: Fire SHARED
 .PHONY: update-shared
 update-shared: $(SHARED)
+
+# target $(SHARED): Create SHARED folder
+$(SHARED):
+	$(RUN) mkdir -p $(SHARED)

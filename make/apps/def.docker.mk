@@ -60,7 +60,7 @@ endif
 # function docker-compose: Run docker-compose with arg 1
 define docker-compose
 	$(call INFO,docker-compose,$(1))
-  $(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
+	$(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
 	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(NODE_COMPOSE_PROJECT_NAME),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER_COMPOSE_PROJECT_NAME),$(COMPOSE_PROJECT_NAME))) $(1)))
 endef
 # function docker-compose-exec-sh: Run docker-compose-exec sh -c 'arg 2' in service 1
@@ -78,7 +78,7 @@ define docker-build
 	$(eval target          := $(subst ",,$(subst ',,$(or $(3),$(DOCKER_BUILD_TARGET)))))
 	$(eval image_id        := $(shell docker images -q $(tag) 2>/dev/null))
 	$(eval build_image     := $(or $(filter false,$(DOCKER_BUILD_CACHE)),$(if $(image_id),,true)))
-	$(if $(build_image),$(RUN) docker build $(DOCKER_BUILD_ARGS) --build-arg DOCKER_BUILD_DIR="$(path)" $(DOCKER_BUILD_LABEL) --tag $(tag) $(if $(target),--target $(target)) -f $(path)/Dockerfile .,$(call INFO,docker image $(tag) has id $(image_id)))
+	$(if $(build_image),$(RUN) docker build $(DOCKER_BUILD_ARGS) --build-arg DOCKER_BUILD_DIR="$(path)" $(DOCKER_BUILD_LABEL) --tag $(tag) $(if $(target),--target $(target)) -f $(path)/Dockerfile $(or $(DOCKER_BUILD_DIR),.),$(call INFO,docker image $(tag) has id $(image_id)))
 endef
 # function docker-commit: Commit docker image
 define docker-commit

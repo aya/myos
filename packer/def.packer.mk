@@ -69,6 +69,7 @@ endif
 ifeq ($(SYSTEM),Darwin)
 ifneq ($(DOCKER), true)
 PACKER_QEMU_ACCELERATOR         := hvf
+# PACKER_QEMU_ARGS                += -cpu Penryn,vendor=GenuineIntel
 PACKER_QEMU_ARGS                += -cpu host
 else
 PACKER_QEMU_ACCELERATOR         := tcg

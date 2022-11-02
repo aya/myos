@@ -16,7 +16,7 @@ CMD_APK_INSTALL                 ?= $(if $(shell type -p apk),apk --no-cache --up
 CMD_APK_REMOVE                  ?= $(if $(shell type -p apk),apk --no-cache del)
 CMD_APT_INSTALL                 ?= $(if $(shell type -p apt-get),apt-get update && apt-get -fy install)
 CMD_APT_REMOVE                  ?= $(if $(shell type -p apt-get),apt-get -fy remove)
-CMDS                            ?= exec exec:% exec@% install-app install-apps run run:% run@%
+CMDS                            ?= app-%-run exec exec:% exec@% run run:% run@%
 COLOR_BLUE                      ?= \033[01;34m
 COLOR_BROWN                     ?= \033[33m
 COLOR_CYAN                      ?= \033[36m
@@ -250,17 +250,6 @@ define env-run
 	$(call env-exec,$(or $(1),$(SHELL)))
 endef
 
-# function install-app: Run 'git clone url 1 dir 2' or Call update-app with url 1 dir 2
-define install-app
-	$(call INFO,install-app,$(1)$(comma) $(2))
-	$(eval url := $(or $(1), $(APP_REPOSITORY_URL)))
-	$(eval dir := $(or $(2), $(RELATIVE)$(lastword $(subst /, ,$(url)))))
-	$(if $(wildcard $(dir)/.git), \
-	  $(call update-app,$(url),$(dir)), \
-	  $(RUN) git clone $(QUIET) $(url) $(dir) \
-	)
-endef
-
 # function make: Call make with predefined options and variables
     # 1st arg: make command line (targets and arguments)
 	# 2nd arg: directory to call make from
@@ -285,17 +274,6 @@ define make
 	$(call INFO,make,$(MAKE_ARGS) $(cmd),$(dir))
 	$(RUN) $(MAKE) $(MAKE_DIR) $(patsubst %,-o %,$(MAKE_OLDFILE)) MAKE_OLDFILE="$(MAKE_OLDFILE)" $(MAKE_ARGS) $(cmd)
 	$(if $(filter true,$(DRYRUN_RECURSIVE)),$(MAKE) $(MAKE_DIR) $(patsubst %,-o %,$(MAKE_OLDFILE)) MAKE_OLDFILE="$(MAKE_OLDFILE)" DRYRUN=$(DRYRUN) RECURSIVE=$(RECURSIVE) $(MAKE_ARGS) $(cmd))
-endef
-
-# function update-app: Run 'cd dir 1 && git pull' or Call install-app
-define update-app
-	$(call INFO,update-app,$(1)$(comma) $(2))
-	$(eval url := $(or $(1), $(APP_REPOSITORY_URL)))
-	$(eval dir := $(or $(2), $(APP_DIR)))
-	$(if $(wildcard $(dir)/.git), \
-	  $(RUN) sh -c 'cd $(dir) && git pull $(QUIET)', \
-	  $(call install-app,$(url),$(dir)) \
-	)
 endef
 
 # function TARGET:ENV: Create a new target ending with :env
