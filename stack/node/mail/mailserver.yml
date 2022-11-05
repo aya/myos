@@ -130,6 +130,9 @@ services:
     - SERVICE_995_IGNORE=true
     - SERVICE_4190_CHECK_TCP=true
     - SERVICE_4190_NAME=${NODE_COMPOSE_SERVICE_NAME}-mailserver-4190
+    networks:
+    - private
+    - public
     ports:
     - "25:25"
     - "143:143"
@@ -153,3 +156,11 @@ volumes:
   myos:
     external: true
     name: ${NODE_DOCKER_VOLUME}
+
+networks:
+  private:
+    external: true
+    name: ${DOCKER_NETWORK_PRIVATE}
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

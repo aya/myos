@@ -7,7 +7,7 @@ quote                           ?= '
 lbracket                        ?= (
 rbracket                        ?= )
 APP                             ?= $(if $(wildcard .git),$(notdir $(CURDIR)))
-APP_NAME                        ?= $(APP)
+APP_NAME                        ?= $(subst _,,$(subst -,,$(subst .,,$(call LOWERCASE,$(APP)))))
 APP_TYPE                        ?= $(if $(SUBREPO),subrepo) $(if $(filter .,$(MYOS)),myos)
 APPS                            ?= $(if $(MONOREPO),$(sort $(patsubst $(MONOREPO_DIR)/%/.git,%,$(wildcard $(MONOREPO_DIR)/*/.git))))
 APPS_NAME                       ?= $(foreach app,$(APPS),$(or $(shell awk -F '=' '$$1 == "APP" {print $$2}' $(or $(wildcard $(MONOREPO_DIR)/$(app)/.env),$(wildcard $(MONOREPO_DIR)/$(app)/.env.$(ENV)),$(MONOREPO_DIR)/$(app)/.env.dist) 2>/dev/null),$(app)))
@@ -16,7 +16,7 @@ CMD_APK_INSTALL                 ?= $(if $(shell type -p apk),apk --no-cache --up
 CMD_APK_REMOVE                  ?= $(if $(shell type -p apk),apk --no-cache del)
 CMD_APT_INSTALL                 ?= $(if $(shell type -p apt-get),apt-get update && apt-get -fy install)
 CMD_APT_REMOVE                  ?= $(if $(shell type -p apt-get),apt-get -fy remove)
-CMDS                            ?= app-%-run exec exec:% exec@% run run:% run@%
+CMDS                            ?= app-%-run apps-install exec exec:% exec@% install-app run run:% run@%
 COLOR_BLUE                      ?= \033[01;34m
 COLOR_BROWN                     ?= \033[33m
 COLOR_CYAN                      ?= \033[36m

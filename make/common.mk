@@ -1,5 +1,3 @@
-CMDS                            += apps-install install-app
-
 ##
 # COMMON
 
@@ -16,31 +14,26 @@ $(APP): myos-user
 app-%:
 	$(eval app     := $(subst -$(lastword $(subst -, ,$*)),,$*))
 	$(eval command := $(lastword $(subst -, ,$*)))
-	$(if $(findstring -,$*), \
-	 $(if $(filter app-$(command),$(.VARIABLES)), \
-	  $(eval APP := $(app)) \
-	  $(eval APP_DIR := $(RELATIVE)$(app)) \
-	  $(eval COMPOSE_PROJECT_NAME := $(USER)-$(app)-$(ENV)$(addprefix -,$(subst /,,$(subst -,,$(APP_PATH))))) \
-	  $(eval DOCKER_REPOSITORY := $(subst -,/,$(subst _,/,$(COMPOSE_PROJECT_NAME)))) \
-          $(eval DOCKER_IMAGE_TAG := $(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest))) \
-	  $(eval DOCKER_IMAGE := $(DOCKER_REPOSITORY)/$(app):$(DOCKER_IMAGE_TAG)) \
+	$(if $(filter app-$(command),$(.VARIABLES)), \
+	  $(call app-bootstrap,$(app)) \
 	  $(call app-$(command)) \
-	 ) \
+	, \
+	  $(call app-bootstrap,$*) \
 	)
 
 # target app-required-install: Call app-install for each APP_REQUIRED
 .PHONY: app-required-install
-app-required-install: myos-user
+app-required-install:
 	$(foreach url,$(APP_REQUIRED),$(call app-install,$(url)))
 
 # target apps-build: Call app-build for each APPS
 .PHONY: apps-build
-apps-build: myos-user
+apps-build:
 	$(foreach app,$(APPS),$(call app-build,$(RELATIVE)$(app)))
 
 # target apps-install install-app: Call app-install for each ARGS
 .PHONY: apps-install install-app
-apps-install install-app: myos-user app-required-install
+apps-install install-app: app-required-install
 	$(foreach url,$(ARGS),$(call app-install,$(url)))
 
 # target apps-update: Call app-update target for each APPS
@@ -76,7 +69,7 @@ update-app-%: % ;
 
 # target update-config: Update config files
 .PHONY: update-config
-update-config: myos-user
+update-config:
 	$(call app-update,$(CONFIG_REPOSITORY),$(CONFIG))
 
 # target update-hosts: Update /etc/hosts

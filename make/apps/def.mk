@@ -1,6 +1,6 @@
 APP_DIR                         ?= $(CURDIR)
 APP_DOMAIN                      ?= $(addsuffix .,$(filter-out master,$(ENV)))$(USER).$(DOMAIN)
-APP_HOST                        ?= $(addsuffix .,$(APP))$(APP_DOMAIN)
+APP_HOST                        ?= $(addsuffix .,$(APP_NAME))$(APP_DOMAIN)
 APP_INSTALLED                   ?= $(APPS)
 APP_PARENT                      ?= $(MONOREPO)
 APP_PARENT_DIR                  ?= $(MONOREPO_DIR)
@@ -23,7 +23,4 @@ ENV_VARS                        += APP_DIR APP_DOMAIN APP_HOST APP_PATH APP_URL 
 MOUNT_NFS                       ?= false
 NFS_CONFIG                      ?= addr=$(NFS_HOST),actimeo=3,intr,noacl,noatime,nocto,nodiratime,nolock,soft,rsize=32768,wsize=32768,tcp,rw,vers=3
 NFS_HOST                        ?= host.docker.internal
-PROJECT_NAME                    ?= $(COMPOSE_PROJECT_NAME)
-SERVICE_NAME                    ?= $(COMPOSE_SERVICE_NAME)
-SERVICE_VERSION                 ?= $(BUILD_DATE)-$(VERSION)
 SERVICES                        ?= $(DOCKER_SERVICES)

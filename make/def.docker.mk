@@ -8,8 +8,9 @@ DOCKER_NETWORK_PRIVATE          ?= $(USER_COMPOSE_PROJECT_NAME)
 DOCKER_NETWORK_PUBLIC           ?= $(NODE_COMPOSE_PROJECT_NAME)
 # DOCKER_RUN: if empty, run system command, else run it in a docker
 DOCKER_RUN                      ?= $(if $(filter-out false False FALSE,$(DOCKER)),$(DOCKER))
+DOCKER_RUN_LABELS               ?= $(patsubst %,-l %,$(DOCKER_LABELS))
 # DOCKER_RUN_OPTIONS: default options of `docker run` command
-DOCKER_RUN_OPTIONS              += --rm
+DOCKER_RUN_OPTIONS              += --rm --network $(DOCKER_NETWORK)
 # DOCKER_RUN_VOLUME: options -v of `docker run` command to mount additionnal volumes
 DOCKER_RUN_VOLUME               += -v /var/run/docker.sock:/var/run/docker.sock
 DOCKER_RUN_WORKDIR              ?= -w $(PWD)
@@ -39,7 +40,6 @@ DOCKER_INTERNAL_DOCKER_HOST     ?= $(shell /sbin/ip addr show docker0 2>/dev/nul
 endif
 
 ifeq ($(DRONE), true)
-DOCKER_RUN_OPTIONS              := --rm --network $(DOCKER_NETWORK)
 # When running docker command in drone, we are already in a docker (dind).
 # Whe need to find the volume mounted in the current docker (runned by drone) to mount it in our docker command.
 # If we do not mount the volume in our docker, we wont be able to access the files in this volume as the /drone/src directory would be empty.
@@ -74,7 +74,7 @@ endif
 ## attention: arg 2 should end with slash or space
 define run
 	$(call INFO,run,$(1)$(comma) $(2))
-	$(RUN) docker run $(DOCKER_ENV_ARGS) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(DOCKER_SSH_AUTH) $(2)$(1)
+	$(RUN) docker run $(DOCKER_ENV_ARGS) $(DOCKER_RUN_LABELS) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(DOCKER_SSH_AUTH) $(DOCKER_RUN_NAME) $(2)$(1)
 endef
 
 else
@@ -83,7 +83,7 @@ SHELL                           := /bin/bash
 # function docker-run DOCKER=false: Run docker image 2 with arg 1
 define docker-run
 	$(call INFO,docker-run,$(1)$(comma) $(2))
-	$(RUN) docker run $(DOCKER_ENV_ARGS) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(or $(2),$(DOCKER_IMAGE)) $(1)
+	$(RUN) docker run $(DOCKER_ENV_ARGS) $(DOCKER_RUN_LABELS) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(DOCKER_RUN_NAME) $(or $(2),$(DOCKER_IMAGE)) $(1)
 endef
 # function exec DOCKER=false: Call env-exec with arg 1 or SHELL
 define exec

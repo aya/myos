@@ -1,5 +1,5 @@
 CMDS    := exec
-SERVICE ?= cli
+SERVICE ?= myos
 -include /etc/default/myos
 
 ansible:
@@ -12,16 +12,16 @@ ansible-pull:
 	@$(if $(ANSIBLE_CONFIG),ANSIBLE_CONFIG=$(ANSIBLE_GIT_DIRECTORY)/$(ANSIBLE_CONFIG)) ansible-pull --url $(ANSIBLE_GIT_REPOSITORY) $(if $(ANSIBLE_GIT_KEY_FILE),--key-file $(ANSIBLE_GIT_KEY_FILE)) $(if $(ANSIBLE_GIT_VERSION),--checkout $(ANSIBLE_GIT_VERSION)) $(if $(ANSIBLE_GIT_DIRECTORY),--directory $(ANSIBLE_GIT_DIRECTORY)) $(if $(ANSIBLE_TAGS),--tags $(ANSIBLE_TAGS)) $(if $(ANSIBLE_EXTRA_VARS),--extra-vars '$(ANSIBLE_EXTRA_VARS)') $(if $(findstring true,$(FORCE)),--force) $(if $(findstring true,$(DRYRUN)),--check) --full $(if $(ANSIBLE_INVENTORY),--inventory $(ANSIBLE_INVENTORY)) $(ANSIBLE_VERBOSE) $(ANSIBLE_PLAYBOOK)
 
 exec:
-	@make -C $(ANSIBLE_GIT_DIRECTORY) exec ARGS='$(ARGS)' DOCKER_NAME=$(COMPOSE_PROJECT_NAME)_$(SERVICE) ENV=$(ENV) DOCKER_RUN_WORKDIR=
+	@make -C $(ANSIBLE_GIT_DIRECTORY) exec ARGS='$(ARGS)' DOCKER_NAME=$(COMPOSE_PROJECT_NAME)-$(SERVICE) ENV=$(ENV) DOCKER_RUN_WORKDIR=
 
 connect:
-	@docker exec -it $(COMPOSE_PROJECT_NAME)_$(SERVICE) /bin/bash || true
+	@docker exec -it $(COMPOSE_PROJECT_NAME)-$(SERVICE) /bin/bash || true
 
 logs:
-	@docker logs --follow --tail 100 $(COMPOSE_PROJECT_NAME)_$(SERVICE) || true
+	@docker logs --follow --tail 100 $(COMPOSE_PROJECT_NAME)-$(SERVICE) || true
 
 logs-nofollow:
-	@docker logs --tail 100 $(COMPOSE_PROJECT_NAME)_$(SERVICE) || true
+	@docker logs --tail 100 $(COMPOSE_PROJECT_NAME)-$(SERVICE) || true
 
 run:
 	@$(ARGS)
