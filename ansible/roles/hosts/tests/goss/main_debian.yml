@@ -1,4 +1,0 @@
-gossfile:
-  file.yml: {}
-  package_debian.yml: {}
-  ssh.yml: {}

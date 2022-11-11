@@ -1,4 +1,0 @@
-PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin
-
-@reboot   root /etc/init.d/myos ansible-pull > /var/log/ansible.log
-0 * * * * root /etc/init.d/myos ansible-pull > /var/log/ansible.log

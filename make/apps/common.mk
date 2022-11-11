@@ -1,14 +1,22 @@
 ##
 # COMMON
 
-# target bootstrap: Update application files and start dockers
+# target bootstrap: Configure system
 # on local host
 .PHONY: bootstrap app-bootstrap
-bootstrap: bootstrap-app app-bootstrap ## Update application files and start dockers
+bootstrap: bootstrap-docker bootstrap-app app-bootstrap ## Configure system
 
 # target bootstrap-app: Fire install-bin-git
 .PHONY: bootstrap-app
 bootstrap-app: install-bin-git
+
+# target bootstrap-docker: Install and configure docker
+.PHONY: bootstrap-docker
+bootstrap-docker: install-bin-docker setup-docker-group setup-binfmt setup-nfsd setup-sysctl
+
+# target bootstrap-stack: Call bootstrap target of each stack
+.PHONY: bootstrap-stack
+bootstrap-stack: docker-network $(foreach stack,$(STACK),bootstrap-stack-$(stack))
 
 # target build: Build application docker images to run
 # on local host

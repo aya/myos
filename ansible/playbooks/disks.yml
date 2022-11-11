@@ -1,8 +1,0 @@
----
-# file: playbooks/disks.yml
-
-- hosts: '{{ target | default("disks") }}'
-  roles:
-  - disks
-  tags:
-  - disks

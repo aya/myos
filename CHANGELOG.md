@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.9 - 2022-11-11
+
+* split make files in `myos` project and install files in `yaip` project
+
 ## v0.1-beta - 2022-06-30
 
 Beta release, welcome ipfs

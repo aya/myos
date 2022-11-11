@@ -133,6 +133,10 @@ docker-images-rm-%:
 docker-login: myos-user
 	$(RUN) docker login
 
+# target docker-network: Fire docker-network-create-% for DOCKER_NETWORK_PRIVATE and DOCKER_NETWORK_PUBLIC
+.PHONY: docker-network
+docker-network: docker-network-create-$(DOCKER_NETWORK_PRIVATE) docker-network-create-$(DOCKER_NETWORK_PUBLIC)
+
 # target docker-network-create: Fire docker-network-create-% for DOCKER_NETWORK
 .PHONY: docker-network-create
 docker-network-create: docker-network-create-$(DOCKER_NETWORK)

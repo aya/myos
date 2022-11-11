@@ -1,0 +1,26 @@
+version: '3.6'
+
+services:
+  certbot:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/certbot
+      context: ../..
+      dockerfile: docker/certbot/Dockerfile
+    command: start
+    container_name: ${NODE_COMPOSE_PROJECT_NAME}-certbot
+    image: ${NODE_DOCKER_REPOSITORY}/certbot:${DOCKER_IMAGE_TAG}
+    network_mode: host
+    restart: always
+    volumes:
+    - myos:/etc/letsencrypt
+
+volumes:
+  myos:
+    external: true
+    name: ${NODE_DOCKER_VOLUME}
+
+networks:
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

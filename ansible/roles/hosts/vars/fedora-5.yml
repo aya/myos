@@ -1,7 +1,0 @@
----
-# file: vars/fedora-5.yml
-
-hosts_packages_distro: []
-hosts_packages_common: []
-hosts_ssh_authorized_keys: []
-

@@ -15,7 +15,7 @@ set -e
 ## ipfs client needs API address
 # search for ip address of $(hostname).${IPFS_ADDRESSES_API_DOMAIN}
 [ -n "${IPFS_ADDRESSES_API_DOMAIN}" ] && [ -z "${IPFS_ADDRESSES_API_INET4}" ] \
- && IPFS_ADDRESSES_API_INET4=$(nslookup -type=A "$(hostname).${IPFS_ADDRESSES_API_DOMAIN}" |awk 'found && /^Address:/ {print $2; found=0}; /^Name:\t'"$(hostname).${IPFS_ADDRESSES_API_DOMAIN}"'/ {found=1};')
+ && IPFS_ADDRESSES_API_INET4=$(nslookup -type=A -timeout=1 "$(hostname).${IPFS_ADDRESSES_API_DOMAIN}" |awk 'found && /^Address:/ {print $2; found=0}; /^Name:\t'"$(hostname).${IPFS_ADDRESSES_API_DOMAIN}"'/ {found=1};')
 # check ${IPFS_ADDRESSES_API_INET4} format
 echo "${IPFS_ADDRESSES_API_INET4}" |awk -F. '{ for ( i=1; i<=4; i++ ) if ($i >= 0 && $i <= 255); else exit 1;}; NF != 4 {exit 1;}' || unset IPFS_ADDRESSES_API_INET4
 # check ${IPFS_ADDRESSES_API_PORT} format
@@ -26,7 +26,7 @@ ipfs config Addresses.API "${IPFS_ADDRESSES_API:-/ip4/${IPFS_ADDRESSES_API_INET4
 ## gateway address
 # search for ip address of $(hostname).${IPFS_ADDRESSES_GATEWAY_DOMAIN}
 [ -n "${IPFS_ADDRESSES_GATEWAY_DOMAIN}" ] && [ -z "${IPFS_ADDRESSES_GATEWAY_INET4}" ] \
- && IPFS_ADDRESSES_GATEWAY_INET4=$(nslookup -type=A "$(hostname).${IPFS_ADDRESSES_GATEWAY_DOMAIN}" |awk 'found && /^Address:/ {print $2; found=0}; /^Name:\t'"$(hostname).${IPFS_ADDRESSES_GATEWAY_DOMAIN}"'/ {found=1};')
+ && IPFS_ADDRESSES_GATEWAY_INET4=$(nslookup -type=A -timeout=1 "$(hostname).${IPFS_ADDRESSES_GATEWAY_DOMAIN}" |awk 'found && /^Address:/ {print $2; found=0}; /^Name:\t'"$(hostname).${IPFS_ADDRESSES_GATEWAY_DOMAIN}"'/ {found=1};')
 # check ${IPFS_ADDRESSES_GATEWAY_INET4} format
 echo "${IPFS_ADDRESSES_GATEWAY_INET4}" |awk -F. '{ for ( i=1; i<=4; i++ ) if ($i >= 0 && $i <= 255); else exit 1;}; NF != 4 {exit 1;}' || unset IPFS_ADDRESSES_GATEWAY_INET4
 # check ${IPFS_ADDRESSES_GATEWAY_PORT} format

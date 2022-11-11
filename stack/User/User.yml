@@ -33,10 +33,9 @@ services:
     restart: always
     user: ${UID}:${GID}
     volumes:
-#     - ${HOME}:${HOME}:cached
+    - ${HOME}:${HOME}:cached
     - monorepo:${MONOREPO_DIR}:cached
     - myos:/tmp/ssh-agent
-#     - /var/run/docker.sock:/var/run/docker.sock
     working_dir: ${MONOREPO_DIR}
 
 volumes:

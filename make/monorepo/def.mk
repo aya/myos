@@ -1,4 +1,4 @@
-CMDS                            += copy master-tag release release-check release-create release-finish subrepo-push subrepo-update
+CMDARGS                         += copy master-tag release release-check release-create release-finish subrepo-push subrepo-update
 CONTEXT                         += APPS DOMAIN RELEASE
 DIRS                            ?= $(CONFIG) $(MAKE_DIR) $(SHARED)
 RELEASE_UPGRADE                 ?= $(filter v%, $(shell git tag -l 2>/dev/null |sort -V |awk '/$(RELEASE)/,0'))

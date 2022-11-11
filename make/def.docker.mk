@@ -2,6 +2,7 @@ DOCKER_ENV_ARGS                 ?= $(docker_env_args)
 DOCKER_EXEC_OPTIONS             ?=
 DOCKER_GID                      ?= $(call gid,docker)
 DOCKER_IMAGE                    ?= $(USER_DOCKER_IMAGE)
+DOCKER_MACHINE                  ?= $(shell docker run --rm alpine uname -m 2>/dev/null)
 DOCKER_NAME                     ?= $(USER_DOCKER_NAME)
 DOCKER_NETWORK                  ?= $(DOCKER_NETWORK_PRIVATE)
 DOCKER_NETWORK_PRIVATE          ?= $(USER_COMPOSE_PROJECT_NAME)
@@ -14,7 +15,8 @@ DOCKER_RUN_OPTIONS              += --rm --network $(DOCKER_NETWORK)
 # DOCKER_RUN_VOLUME: options -v of `docker run` command to mount additionnal volumes
 DOCKER_RUN_VOLUME               += -v /var/run/docker.sock:/var/run/docker.sock
 DOCKER_RUN_WORKDIR              ?= -w $(PWD)
-ENV_VARS                        += DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC NODE_COMPOSE_PROJECT_NAME NODE_COMPOSE_SERVICE_NAME NODE_DOCKER_REPOSITORY NODE_DOCKER_VOLUME USER_COMPOSE_PROJECT_NAME USER_COMPOSE_SERVICE_NAME USER_DOCKER_IMAGE USER_DOCKER_NAME USER_DOCKER_REPOSITORY USER_DOCKER_VOLUME
+DOCKER_SYSTEM                   ?= $(shell docker run --rm alpine uname -s 2>/dev/null)
+ENV_VARS                        += DOCKER_MACHINE DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC DOCKER_SYSTEM NODE_COMPOSE_PROJECT_NAME NODE_COMPOSE_SERVICE_NAME NODE_DOCKER_REPOSITORY NODE_DOCKER_VOLUME USER_COMPOSE_PROJECT_NAME USER_COMPOSE_SERVICE_NAME USER_DOCKER_IMAGE USER_DOCKER_NAME USER_DOCKER_REPOSITORY USER_DOCKER_VOLUME
 NODE_COMPOSE_PROJECT_NAME       ?= node
 NODE_COMPOSE_SERVICE_NAME       ?= $(subst _,-,$(NODE_COMPOSE_PROJECT_NAME))
 NODE_DOCKER_REPOSITORY          ?= $(subst -,/,$(subst _,/,$(NODE_COMPOSE_PROJECT_NAME)))
@@ -28,10 +30,10 @@ USER_DOCKER_VOLUME              ?= $(USER_COMPOSE_PROJECT_NAME)_myos
 
 # https://github.com/docker/libnetwork/pull/2348
 ifeq ($(SYSTEM),Darwin)
-DOCKER_HOST_IFACE               ?= $(shell docker run --rm -it --net=host alpine /sbin/ip -4 route list match 0/0 2>/dev/null |awk '{print $$5}' |awk '!seen[$$0]++' |head -1)
-DOCKER_HOST_INET4               ?= $(shell docker run --rm -it --net=host alpine /sbin/ip -4 addr show $(DOCKER_HOST_IFACE) 2>/dev/null |awk '$$1 == "inet" {sub(/\/.*/,"",$$2); print $$2}' |head -1)
-DOCKER_INTERNAL_DOCKER_GATEWAY  ?= $(shell docker run --rm -it alpine getent hosts gateway.docker.internal 2>/dev/null |awk '{print $$1}' |head -1)
-DOCKER_INTERNAL_DOCKER_HOST     ?= $(shell docker run --rm -it alpine getent hosts host.docker.internal 2>/dev/null |awk '{print $$1}' |head -1)
+DOCKER_HOST_IFACE               ?= $(shell docker run --rm --net=host alpine /sbin/ip -4 route list match 0/0 2>/dev/null |awk '{print $$5}' |awk '!seen[$$0]++' |head -1)
+DOCKER_HOST_INET4               ?= $(shell docker run --rm --net=host alpine /sbin/ip -4 addr show $(DOCKER_HOST_IFACE) 2>/dev/null |awk '$$1 == "inet" {sub(/\/.*/,"",$$2); print $$2}' |head -1)
+DOCKER_INTERNAL_DOCKER_GATEWAY  ?= $(shell docker run --rm alpine nslookup -type=A -timeout=1 gateway.docker.internal 2>/dev/null |awk 'found && /^Address:/ {print $$2; found=0}; /^Name:\tgateway.docker.internal/ {found=1};' |head -1)
+DOCKER_INTERNAL_DOCKER_HOST     ?= $(or $(shell docker run --rm alpine nslookup -type=A -timeout=1 host.docker.internal 2>/dev/null |awk 'found && /^Address:/ {print $$2; found=0}; /^Name:\thost.docker.internal/ {found=1};' |head -1),$(shell docker run --rm alpine /sbin/ip -4 route list match 0/0 2>/dev/null |awk '{print $$3}' |awk '!seen[$$0]++' |head -1))
 else
 DOCKER_HOST_IFACE               ?= $(shell /sbin/ip -4 route list match 0/0 2>/dev/null |awk '{print $$5}' |awk '!seen[$$0]++' |head -1)
 DOCKER_HOST_INET4               ?= $(shell /sbin/ip -4 addr show $(DOCKER_HOST_IFACE) 2>/dev/null |awk '$$1 == "inet" {sub(/\/.*/,"",$$2); print $$2}' |head -1)

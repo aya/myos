@@ -33,7 +33,7 @@ deploy-hook-ping-curl:
 ## it runs ansible-pull on localhost to pull docker images from the registry
 ## it tags and pushes docker images as latest to docker registry
 .PHONY: deploy-localhost
-deploy-localhost: myos-user build@$(ENV) ## Deploy application docker images
+deploy-localhost: myos-user build@$(ENV)
 	$(call make,docker-login docker-tag docker-push)
 	$(call make,myos-ansible-pull ANSIBLE_DOCKER_IMAGE_TAG=$(VERSION) ANSIBLE_TAGS=deploy,,APP MYOS_TAGS_JSON)
 	$(call make,docker-tag-latest docker-push-latest)

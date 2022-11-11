@@ -1,4 +1,0 @@
-gossfile:
-  file.yml: {}
-  package.yml: {}
-  ssh.yml: {}

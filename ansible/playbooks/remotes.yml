@@ -1,8 +1,0 @@
----
-# file: playbooks/remotes.yml
-
-- hosts: '{{ target | default("remotes") }}'
-  roles:
-  - remotes
-  tags:
-  - remotes

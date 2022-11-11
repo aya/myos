@@ -50,10 +50,10 @@ debug:
 .PHONY: debug-%
 debug-%: $(if $(DEBUG),context-%) ;
 
-# target install-bin-%; Call ansible-run-localhost when bin % is not available
+# target install-bin-%; Install package % when bin % is not available
 .PHONY: install-bin-%
 install-bin-%:;
-	$(if $(shell type $* 2>/dev/null),,$(call make,ansible-run-localhost))
+	$(if $(shell type $* 2>/dev/null),,$(RUN) $(INSTALL) $*)
 
 # target profile: Print timing informations
 .PHONY: profile

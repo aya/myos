@@ -1,8 +1,0 @@
----
-# file: playbooks/docker.yml
-
-- hosts: '{{ target | default("docker") }}'
-  roles:
-  - docker
-  tags:
-  - docker

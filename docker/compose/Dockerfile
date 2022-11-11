@@ -4,13 +4,13 @@ ARG DOCKER_BUILD_DIR
 
 ARG COMPOSE_REMOTE=https://github.com/docker/compose
 ARG COMPOSE_VERSION=2.5.0
-ARG SYSTEM=Linux
-ARG MACHINE=x86_64
+ARG DOCKER_MACHINE=x86_64
+ARG DOCKER_SYSTEM=Linux
 
 RUN apk update \
  && apk add --no-cache ca-certificates \
- && OS="$(echo ${SYSTEM} |awk '{print tolower($0)}')"; \
-    ARCH="$(echo ${MACHINE})"; \
+ && OS="$(echo ${DOCKER_SYSTEM} |awk '{print tolower($0)}')"; \
+    ARCH="$(echo ${DOCKER_MACHINE})"; \
     wget -qO /usr/bin/docker-compose ${COMPOSE_REMOTE}/releases/download/v${COMPOSE_VERSION}/docker-compose-${OS}-${ARCH} \
  && chmod +x /usr/bin/docker-compose
 

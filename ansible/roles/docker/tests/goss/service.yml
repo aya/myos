@@ -1,5 +1,0 @@
-service:
-  docker:
-    enabled: true
-    running: true
-

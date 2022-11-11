@@ -1,5 +1,0 @@
-export EDITOR=vim
-export GIT_PS1_SHOWUPSTREAM=auto
-export GIT_PS1_SHOWDIRTYSTATE=true
-export GIT_PS1_HIDE_IF_PWD_IGNORED=true
-export PAGER=less

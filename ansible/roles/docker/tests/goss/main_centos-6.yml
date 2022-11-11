@@ -1,4 +1,0 @@
-gossfile:
-  package_centos-6.yml: {}
-  service.yml: {}
-  group.yml: {}

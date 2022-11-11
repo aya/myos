@@ -2,6 +2,8 @@
 
 Docker paas based on docker compose files.
 
+Make Your Own Stack provides common make targets to build and run docker projects.
+
 ## Disclaimer
 
 This is work in progress ;)
@@ -10,44 +12,56 @@ This is work in progress ;)
 
 You need `docker`, `git` and `make`.
 
+## Install
+
+* Include myos `include.mk` file adding the following lines to your project `Makefile` file.
+
+```
+MYOS                            ?= ../myos
+MYOS_REPOSITORY                 ?= https://github.com/aynicos/myos
+$(MYOS):
+	-@git clone $(MYOS_REPOSITORY) $(MYOS)
+-include $(MYOS)/make/include.mk
+```
+
+* Call the `make help` command to show available targets.
+
+```
+$ make help
+Usage:
+make [target]
+
+Targets:
+help                                    This help
+[...]
+```
+
 ## Usage
 
 ### Examples
 
-* Configure myos for domain `domain.tld` and stack `zen`
+* Configure myos for domain `domain.tld` and stack `default`
 
 ```shell
-$ make bootstrap DOMAIN=domain.tld STACK=zen
+$ make bootstrap DOMAIN=domain.tld STACK=default
 ```
 
-* Start myos stacks
+* Start myos stack `node`
 
 ```shell
-$ make node up
+$ make node
 ```
 
 `make node` starts the stack `node` with docker host services :
 - consul (service discovery)
 - fabio (load balancer)
-- ipfs (inter planetary file system)
 - registrator (docker/consul bridge)
-`make up` starts the stack `zen` with docker services :
-- ipfs (mount ~/.ipfs)
-- zen (mount ~/.zen)
 
 * Stop myos
 
 ```shell
 $ make shutdown
 ```
-
-* Install myos
-
-```shell
-$ make install
-```
-
-Install myos on a server and manage server config with ansible.
 
 ### Variables
 

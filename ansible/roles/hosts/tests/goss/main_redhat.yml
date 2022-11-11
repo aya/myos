@@ -1,4 +1,0 @@
-gossfile:
-  file.yml: {}
-  package_redhat.yml: {}
-  ssh.yml: {}

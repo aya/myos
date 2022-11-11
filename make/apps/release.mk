@@ -39,7 +39,7 @@ release-update:
 
 # target release-upgrade: Run migration targets to upgrade specific releases
 .PHONY: release-upgrade
-release-upgrade: $(patsubst %,release-upgrade-from-%,$(RELEASE_UPGRADE)) release-update ## Upgrade release
+release-upgrade: $(patsubst %,release-upgrade-from-%,$(RELEASE_UPGRADE)) release-update
 
 # target release-upgrade-from-%: Sample of catch-all release migration target
 .PHONY: release-upgrade-from-%

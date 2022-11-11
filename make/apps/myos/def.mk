@@ -1,4 +1,4 @@
-CMDS                            += ssh-run
+CMDARGS                         += ssh-run
 COMPOSE_IGNORE_ORPHANS          := true
 ENV_VARS                        += COMPOSE_IGNORE_ORPHANS MYOS_TAGS_JSON
 HOME                            ?= /home/$(USER)

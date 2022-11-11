@@ -1,8 +1,0 @@
-{
-  "Description": "${AWS_S3_KEY}",
-  "Format": "raw",
-  "UserBucket": {
-    "S3Bucket": "${AWS_S3_BUCKET}",
-    "S3Key": "${AWS_S3_KEY}"
-  }
-}

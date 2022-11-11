@@ -1,11 +1,11 @@
-CMDS                            += node-exec stack-node-exec node-exec:% node-exec@% node-run node-run:% node-run@%
-node                            ?= node/node
+CMDARGS                         += node-exec stack-node-exec node-exec:% node-exec@% node-run node-run:% node-run@%
+node                            ?= node/certbot node/consul node/fabio node/registrator
 ENV_VARS                        += DOCKER_HOST_IFACE DOCKER_HOST_INET4 DOCKER_INTERNAL_DOCKER_HOST
 SETUP_LETSENCRYPT               ?=
 
 # target bootstrap-stack-node: Fire node-certbot node-ssl-certs
 .PHONY: bootstrap-stack-node
-bootstrap-stack-node: docker-network-create-$(DOCKER_NETWORK_PUBLIC) $(if $(SETUP_LETSENCRYPT),node-certbot$(if $(DEBUG),-staging)) node-ssl-certs
+bootstrap-stack-node: $(if $(SETUP_LETSENCRYPT),node-certbot$(if $(DEBUG),-staging)) node-ssl-certs
 
 # target node: Fire stack-node-up
 .PHONY: node

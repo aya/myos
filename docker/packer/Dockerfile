@@ -2,8 +2,8 @@ FROM alpine:latest as dist
 LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 
-ARG MACHINE="x86_64"
-ARG SYSTEM="Linux"
+ARG DOCKER_SYSTEM="Linux"
+ARG DOCKER_MACHINE="x86_64"
 
 RUN apk --no-cache add \
         ansible \
@@ -22,8 +22,8 @@ RUN apk --no-cache add \
 
 ARG PACKER_VERSION=1.8.3
 
-RUN { OS="$(echo ${SYSTEM} |awk '{print tolower($0)}')"; \
-    ARCH="$(echo ${MACHINE} |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"; \
+RUN { OS="$(echo ${DOCKER_SYSTEM} |awk '{print tolower($0)}')"; \
+    ARCH="$(echo ${DOCKER_MACHINE} |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"; \
     wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_${OS}_${ARCH}.zip \
      && wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS \
      && wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS.sig \

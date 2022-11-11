@@ -1,10 +1,10 @@
 FROM debian:bullseye as dist
 LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
+ARG DOCKER_MACHINE=x86_64
+ARG DOCKER_SYSTEM=Linux
 ARG GIT_AUTHOR_NAME
 ARG GIT_AUTHOR_EMAIL
-ARG SYSTEM=Linux
-ARG MACHINE=x86_64
 
 ENV GIT_AUTHOR_NAME=${GIT_AUTHOR_NAME}
 ENV GIT_AUTHOR_EMAIL=${GIT_AUTHOR_EMAIL}
@@ -41,12 +41,12 @@ RUN chmod +r /include.sh \
 
 ARG IPFS_VERSION=0.14.0
 
-RUN { OS="$(echo ${SYSTEM} |awk '{print tolower($0)}')"; \
-    ARCH="$(echo ${MACHINE})"; \
+RUN { OS="$(echo ${DOCKER_SYSTEM} |awk '{print tolower($0)}')"; \
+    ARCH="$(echo ${DOCKER_MACHINE})"; \
     wget -qO - https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.${OS}.${ARCH}.tar.xz \
      |tar --strip-components 1 -C /usr/local/bin -xJf - shellcheck-stable/shellcheck; } \
- && { OS="$(echo ${SYSTEM} |awk '{print tolower($0)}')"; \
-    ARCH="$(echo ${MACHINE} |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"; \
+ && { OS="$(echo ${DOCKER_SYSTEM} |awk '{print tolower($0)}')"; \
+    ARCH="$(echo ${DOCKER_MACHINE} |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"; \
     wget -qO - https://github.com/ipfs/kubo/releases/download/v${IPFS_VERSION}/kubo_v${IPFS_VERSION}_${OS}-${ARCH}.tar.gz \
      |tar --strip-components 1 -C /usr/local/bin -xzf - kubo/ipfs; } \
  && mkdir -p /usr/local/lib/shellspec \

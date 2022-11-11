@@ -1,9 +1,0 @@
-[Unit]
-Description=Call myos ansible-pull
-
-[Service]
-Type=oneshot
-ExecStart=make ansible-pull
-
-[Install]
-WantedBy=multi-user.target

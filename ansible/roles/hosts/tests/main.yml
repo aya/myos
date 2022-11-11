@@ -1,7 +1,0 @@
----
-# file: tests/main.yml
-
-- include: goss.yml
-  tags:
-    - tests
-
