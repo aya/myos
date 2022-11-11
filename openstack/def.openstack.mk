@@ -1,5 +1,6 @@
-CMDS                            += openstack
 ENV_VARS                        += OS_AUTH_URL OS_TENANT_ID OS_TENANT_NAME OS_USERNAME OS_PASSWORD OS_REGION_NAME OS_USER_DOMAIN_NAME OS_PROJECT_DOMAIN_NAME
+MAKECMDARGS                     += openstack
+
 ifneq ($(DEBUG),)
 OPENSTACK_ARGS                  += --debug
 endif
@@ -10,5 +11,5 @@ endif
 # function openstack: Call run openstack with arg 1
 define openstack
 	$(call INFO,openstack,$(1))
-	$(RUN) $(call run,openstack $(1),$(DOCKER_REPOSITORY)/)
+	$(call run,openstack $(1),$(DOCKER_REPOSITORY)/)
 endef

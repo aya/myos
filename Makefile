@@ -1,9 +1,13 @@
-include make/include.mk
+MYOS                                      ?= ../myos
+MYOS_REPOSITORY                           ?= $(patsubst %/$(APP),%/myos,$(APP_REPOSITORY))
+APP                                       ?= $(lastword $(subst /, ,$(APP_REPOSITORY)))
+APP_REPOSITORY                            ?= $(shell git config --get remote.origin.url 2>/dev/null)
+$(MYOS):
+	-@git clone $(MYOS_REPOSITORY) $(MYOS)
+-include $(MYOS)/make/include.mk
 
 ##
 # APP
-
-app-bootstrap: bootstrap-docker
 
 app-build: user install-build-config
 	$(call make,docker-compose-build docker-compose-up)
@@ -21,14 +25,3 @@ app-update-default: ENV_FILE := /etc/default/myos
 app-update-default: .env-update;
 
 app-tests: ansible-tests
-
-##
-# BOOTSTRAP
-
-# target bootstrap-docker: Install and configure docker
-.PHONY: bootstrap-docker
-bootstrap-docker: install-bin-docker setup-docker-group setup-binfmt setup-nfsd setup-sysctl
-
-# target bootstrap-stack: Call bootstrap target of each stack
-.PHONY: bootstrap-stack
-bootstrap-stack: docker-network-create $(foreach stack,$(STACK),bootstrap-stack-$(stack))

@@ -1,1 +1,0 @@
-newrelic                        ?= newrelic/php-daemon

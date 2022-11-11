@@ -1,7 +1,7 @@
-CMDS                            += packer
 DOCKER_RUN_OPTIONS_PACKER       ?= -it -p $(PACKER_SSH_PORT):$(PACKER_SSH_PORT) -p $(PACKER_VNC_PORT):$(PACKER_VNC_PORT) -v $(SSH_DIR):$(SSH_DIR)
 ENV_VARS                        += PACKER_CACHE_DIR PACKER_KEY_INTERVAL PACKER_LOG
 KVM_GID                         ?= $(call gid,kvm)
+MAKECMDARGS                     += packer
 PACKER_ARCH                     ?= $(PACKER_ALPINE_ARCH)
 PACKER_BOOT_WAIT                ?= 24s
 PACKER_BUILD_ARGS               ?= -on-error=cleanup $(foreach var,$(PACKER_BUILD_VARS),$(if $($(var)),-var $(var)='$($(var))'))
@@ -86,12 +86,12 @@ endif
 ## it needs SSH_PRIVATE_KEYS to get access without password to GIT_REPOSITORY
 ## it needs AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY when deploying to AWS
 define packer
-	$(RUN) $(call run,packer $(1),$(DOCKER_RUN_OPTIONS_PACKER) $(DOCKER_REPOSITORY)/)
+	$(call run,packer $(1),$(DOCKER_RUN_OPTIONS_PACKER) $(DOCKER_REPOSITORY)/)
 endef
 # function packer-qemu: Call run qemu-system-% for PACKER_QEMU_ARCH
 define packer-qemu
 	echo Running $(1)
-	$(RUN) $(call run,$(if $(DOCKER_RUN),packer,qemu-system-$(PACKER_QEMU_ARCH)) $(PACKER_QEMU_ARGS) -m 512m -drive file=$(1)$(comma)format=raw -net nic$(comma)model=virtio -net user$(comma)hostfwd=tcp:$(PACKER_SSH_ADDRESS):$(PACKER_SSH_PORT)-:22 -vnc $(PACKER_VNC_ADDRESS):$(subst 590,,$(PACKER_VNC_PORT)),$(DOCKER_RUN_OPTIONS_PACKER) --entrypoint=qemu-system-$(PACKER_QEMU_ARCH) $(DOCKER_REPOSITORY)/)
+	$(call run,$(if $(DOCKER_RUN),packer,qemu-system-$(PACKER_QEMU_ARCH)) $(PACKER_QEMU_ARGS) -m 512m -drive file=$(1)$(comma)format=raw -net nic$(comma)model=virtio -net user$(comma)hostfwd=tcp:$(PACKER_SSH_ADDRESS):$(PACKER_SSH_PORT)-:22 -vnc $(PACKER_VNC_ADDRESS):$(subst 590,,$(PACKER_VNC_PORT)),$(DOCKER_RUN_OPTIONS_PACKER) --entrypoint=qemu-system-$(PACKER_QEMU_ARCH) $(DOCKER_REPOSITORY)/)
 endef
 
 # function packer-build: Call packer build with arg 1, Add build infos to file PACKER_ISO_INFO

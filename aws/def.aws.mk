@@ -13,9 +13,9 @@ AWS_SECRET_ACCESS_KEY           := $(if $(AWS_CREDENTIALS),$(shell $(call conf,$
 AWS_SERVICE_NAME                ?= $(COMPOSE_SERVICE_NAME)
 AWS_SERVICE_VERSION             ?= $(BUILD_DATE)-$(VERSION)
 AWS_SNAP_DESCRIPTION            ?= $(AWS_SERVICE_NAME)-$(AWS_SERVICE_VERSION)-$(AWS_S3_FILENAME)
-CMDS                            += aws
 DOCKER_RUN_VOLUME               += -v $(HOME)/.aws:/home/$(USER)/.aws
 ENV_VARS                        += AWS_ACCESS_KEY_ID AWS_AMI_DESCRIPTION AWS_AMI_NAME AWS_DEFAULT_OUTPUT AWS_DEFAULT_REGION AWS_INSTANCE_ID AWS_PROFILE AWS_S3_BUCKET AWS_S3_KEY AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_SNAP_DESCRIPTION AWS_SNAP_ID
+MAKECMDARGS                     += aws
 
 # function aws: Call run aws with arg 1
 define aws

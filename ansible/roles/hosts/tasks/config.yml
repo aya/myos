@@ -5,7 +5,7 @@
   become: true
   with_items:
   - APP_NAME={{ lookup('env','ANSIBLE_APP_NAME') }}
-  - APP_TYPE={{ lookup('env','ANSIBLE_APP_TYPE') }}
+  - APP_LOAD={{ lookup('env','ANSIBLE_APP_LOAD') }}
   - MYOS={{ lookup('env','ANSIBLE_MYOS') }}
   lineinfile:
     path: /etc/default/myos

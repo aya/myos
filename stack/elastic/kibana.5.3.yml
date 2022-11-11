@@ -1,7 +1,0 @@
-version: '3.6'
-
-services:
-  kibana:
-    image: docker.elastic.co/kibana/kibana:5.3.3
-    environment:
-    - ELASTICSEARCH_URL="${ELASTICSEARCH_PROTOCOL}://${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}"
