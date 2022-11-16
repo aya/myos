@@ -35,7 +35,6 @@ services:
     - SERVICE_8500_TAGS=${NODE_CONSUL_SERVICE_8500_TAGS}
     - SERVICE_8600_IGNORE=true
     - SERVICE_ADDRESS=${DOCKER_HOST_INET4}
-    - SERVICE_CHECK_SCRIPT=docker-healthcheck ${DOCKER_HOST_INET4}
     network_mode: host
     restart: always
     volumes:

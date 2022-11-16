@@ -1,5 +1,5 @@
 CMDARGS                         += node-exec stack-node-exec node-exec:% node-exec@% node-run node-run:% node-run@%
-node                            ?= node/certbot node/consul node/fabio node/registrator
+node                            ?= node/autoheal node/certbot node/consul node/fabio node/registrator
 ENV_VARS                        += DOCKER_HOST_IFACE DOCKER_HOST_INET4 DOCKER_INTERNAL_DOCKER_HOST
 SETUP_LETSENCRYPT               ?=
 
