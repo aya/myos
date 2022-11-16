@@ -60,11 +60,17 @@ services:
     - SERVICE_4001_NAME=${NODE_COMPOSE_SERVICE_NAME}-ipfs-4001
     - SERVICE_5001_CHECK_TCP=true
     - SERVICE_5001_NAME=${NODE_COMPOSE_SERVICE_NAME}-ipfs-5001
-    - SERVICE_8080_CHECK_HTTP=${NODE_IPFS_SERVICE_8080_CHECK_TCP}
+    - SERVICE_8080_CHECK_HTTP=${NODE_IPFS_SERVICE_8080_CHECK_HTTP}
     - SERVICE_8080_NAME=${NODE_COMPOSE_SERVICE_NAME}-ipfs-8080
     - SERVICE_8080_TAGS=${NODE_IPFS_SERVICE_8080_TAGS}
     - SERVICE_8081_IGNORE=true
-    network_mode: host
+    networks:
+    - public
+    ports:
+    - 4001:4001/tcp
+    - 4001:4001/udp
+    - 5001:5001/tcp
+    - 8080:8080/tcp
     restart: always
     ulimits:
       nofile:

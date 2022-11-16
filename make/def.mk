@@ -16,7 +16,7 @@ CMD_APK_INSTALL                 ?= $(if $(shell type -p apk),apk --no-cache --up
 CMD_APK_REMOVE                  ?= $(if $(shell type -p apk),apk --no-cache del)
 CMD_APT_INSTALL                 ?= $(if $(shell type -p apt-get),apt-get update && apt-get -fy install)
 CMD_APT_REMOVE                  ?= $(if $(shell type -p apt-get),apt-get -fy remove)
-CMDARGS                         ?= app-%-run apps-install exec exec:% exec@% install-app run run:% run@%
+CMDARGS                         ?= apps-install install-app
 COLOR_BLUE                      ?= \033[01;34m
 COLOR_BROWN                     ?= \033[33m
 COLOR_CYAN                      ?= \033[36m
@@ -48,7 +48,7 @@ DRONE                           ?= false
 DRYRUN                          ?= false
 DRYRUN_RECURSIVE                ?= false
 ELAPSED_TIME                     = $(shell $(call TIME))
-ENV                             ?= local
+ENV                             ?= master
 ENV_ARGS                        ?= $(env_args)
 ENV_FILE                        ?= $(wildcard $(CONFIG)/$(ENV)/$(APP)/.env .env)
 ENV_LIST                        ?= $(shell ls .git/refs/heads/ 2>/dev/null)
@@ -177,7 +177,7 @@ INFO_FD := 2
 INFO = $(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)), \
   printf '${COLOR_INFO}$(APP)${COLOR_RESET}[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}]$(if $@, ${COLOR_VALUE}$@${COLOR_RESET}):${COLOR_RESET} ' >&$(INFO_FD) \
   $(if $(2), \
-    && printf 'Call ${COLOR_HIGHLIGHT}$(1)${COLOR_RESET}$(lbracket)' >&$(INFO_FD) \
+    && printf 'Calling ${COLOR_HIGHLIGHT}$(1)${COLOR_RESET}$(lbracket)' >&$(INFO_FD) \
     && $(or $(strip $(call PRINTF,$(2))),printf '$(2)') >&$(INFO_FD) \
     && printf '$(rbracket)' >&$(INFO_FD) \
     $(if $(3),&& printf ' ${COLOR_VALUE}in${COLOR_RESET} $(3)' >&$(INFO_FD)) \

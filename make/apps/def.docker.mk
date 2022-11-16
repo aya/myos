@@ -61,7 +61,7 @@ endif
 # function docker-build: Build docker image
 define docker-build
 	$(call INFO,docker-build,$(1)$(comma) $(2)$(comma) $(3))
-	$(eval path             := $(patsubst %/,%,$(1)))
+	$(eval path             := $(patsubst $(DOCKER_BUILD_DIR)/%,%,$(patsubst %/,%,$(1))))
 	$(eval service          := $(subst .,,$(call LOWERCASE,$(lastword $(subst /, ,$(path))))))
 	$(eval tag              := $(or $(2),$(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG)))
 	$(eval target           := $(subst ",,$(subst ',,$(or $(3),$(DOCKER_BUILD_TARGET)))))

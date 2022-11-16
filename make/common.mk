@@ -14,11 +14,19 @@ $(APP): myos-user
 app-%:
 	$(eval app     := $(subst -$(lastword $(subst -, ,$*)),,$*))
 	$(eval command := $(lastword $(subst -, ,$*)))
-	$(if $(filter app-$(command),$(.VARIABLES)), \
-	  $(call app-bootstrap,$(app)) \
-	  $(call app-$(command)) \
+	$(if $(wildcard $(RELATIVE)$(app)), \
+	  $(if $(filter app-$(command),$(.VARIABLES)), \
+	    $(call app-bootstrap,$(app)) \
+	    $(call app-$(command)) \
+		, \
+	    $(if $(wildcard $(RELATIVE)$*), \
+	      $(call app-bootstrap,$*) \
+	    , \
+	      $(call WARNING,Unable to find app command,$(command)) \
+	    ) \
+	  ) \
 	, \
-	  $(call app-bootstrap,$*) \
+	  $(call WARNING,Unable to find app,$(app),in dir,$(RELATIVE)$(app)) \
 	)
 
 # target app-required-install: Call app-install for each APP_REQUIRED

@@ -75,12 +75,13 @@ down: docker-compose-down ## Remove application dockers
 # target exec: Exec ARGS in docker SERVICE
 # on local host
 .PHONY: exec
+exec: SERVICE ?= $(DOCKER_SERVICE)
 exec: ## Exec command in docker SERVICE
-ifneq (,$(filter $(ENV),$(ENV_DEPLOY)))
-	$(RUN) $(call exec,$(ARGS))
-else
-	$(call make,docker-compose-exec,,ARGS)
-endif
+#ifneq (,$(filter $(ENV),$(ENV_DEPLOY)))
+#	$(RUN) $(call exec,$(ARGS))
+#else
+	$(call docker-compose-exec-sh,$(SERVICE),$(ARGS)) || true
+#endif
 
 # target exec@%: Exec ARGS in docker SERVICE of % ENV
 # on all remote hosts
@@ -144,12 +145,14 @@ restart: docker-compose-restart app-start ## Restart application
 # target run: Run command ARGS in a new docker SERVICE
 # on local host
 .PHONY: run
+run: SERVICE ?= $(DOCKER_SERVICE)
 run: ## Run a command in a new docker
-ifneq (,$(filter $(ENV),$(ENV_DEPLOY)))
-	$(call run,$(ARGS))
-else
-	$(call make,docker-compose-run,,ARGS)
-endif
+#ifneq (,$(filter $(ENV),$(ENV_DEPLOY)))
+#	$(call run,$(ARGS))
+#else
+	$(eval DOCKER_RUN_OPTIONS += -it)
+	$(call docker-compose,run $(DOCKER_COMPOSE_RUN_OPTIONS) $(SERVICE) $(ARGS))
+#endif
 
 # target run@%: Run command ARGS in a new docker SERVICE of % ENV
 # on all remote hosts

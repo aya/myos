@@ -100,3 +100,8 @@ ipfs config --json Gateway.HTTPHeaders "${IPFS_GATEWAY_HTTPHEADERS:-{
 ## REMOVE IPFS BOOTSTRAP for private usage
 [ ${IPFS_NETWORK:-public} = "public" ] || ipfs bootstrap rm --all
 [ ${IPFS_NETWORK:-public} = "private" ] && export LIBP2P_FORCE_PNET=1 ||:
+
+## ALLOW AUTO DISCOVERY ON DOCKER NETWORK
+ipfs config --bool Discovery.MDNS.Enabled true
+ipfs config --json Addresses.NoAnnounce "$(ipfs config Addresses.NoAnnounce |sed '/172.16.0.0/d')"
+ipfs config --json Swarm.AddrFilters "$(ipfs config Swarm.AddrFilters |sed '/172.16.0.0/d')"
