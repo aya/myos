@@ -94,11 +94,12 @@ define app-exec
 	$(if $(filter-out $(APP_DIR),$(1)),
 	  $(eval DOCKER_FILE    := $(wildcard $(1)/docker/*/Dockerfile $(1)/*/Dockerfile $(1)/Dockerfile))
 	)
+	$(eval args             := $(or $(2), $(ARGS)))
 	$(if $(DOCKER_FILE),
 	  $(foreach dockerfile,$(DOCKER_FILE),
 	    $(call app-docker,$(dockerfile))
 	    $(if $(shell docker ps -q -f name=$(DOCKER_NAME) 2>/dev/null),
-	      $(RUN) docker exec -it $(DOCKER_NAME) $(ARGS)
+	      $(RUN) docker exec -it $(DOCKER_NAME) $(args)
 	    ,
 	      $(call WARNING,Unable to find docker,$(DOCKER_NAME))
 	    )
@@ -113,7 +114,7 @@ define app-install
 	$(eval url              := $(or $(1), $(APP_REPOSITORY_URL)))
 	$(eval dir              := $(or $(2), $(RELATIVE)$(lastword $(subst /, ,$(url)))))
 	$(if $(wildcard $(dir)/.git),
-	  $(call INFO,app: $(url) already installed in dir: $(dir)),
+	  $(call INFO,app $(url) already installed in dir $(dir)),
 	  $(RUN) git clone $(QUIET) $(url) $(dir)
 	)
 endef
@@ -186,7 +187,11 @@ endef
 define app-up
 	$(call INFO,app-up,$(1)$(comma))
 	$(eval DOCKER_RUN_OPTIONS += -d)
-	$(call app-run,$(1))
+	$(if $(shell docker ps -q -f name=$(DOCKER_NAME) 2>/dev/null),
+	  $(call INFO,docker $(DOCKER_NAME) already running)
+	,
+	  $(call app-run,$(1))
+	)
 endef
 
 # function app-update: Run 'cd dir 1 && git pull' or Call app-install

@@ -1,6 +1,13 @@
 ##
 # SETUP
 
+# target setup-binfmt: Install binfmt abstraction layer
+.PHONY: setup-binfmt
+setup-binfmt:
+ifeq ($(SETUP_BINFMT),true)
+	$(call docker-run,--install $(SETUP_BINFMT_ARCH),--privileged tonistiigi/binfmt)
+endif
+
 # target setup-docker-group: Call ansible to add user in docker group if needed
 .PHONY: setup-docker-group
 setup-docker-group:
@@ -30,9 +37,14 @@ ifeq ($(SETUP_SYSCTL),true)
 	$(RUN) $(SUDO) sysctl -q -w $(SETUP_SYSCTL_CONFIG)
 endif
 
-# target setup-binfmt: Install binfmt abstraction layer
-.PHONY: setup-binfmt
-setup-binfmt:
-ifeq ($(SETUP_BINFMT),true)
-	$(call docker-run,--install $(SETUP_BINFMT_ARCH),--privileged tonistiigi/binfmt)
+# target setup-ufw: Install ufw-docker
+.PHONY: setup-ufw
+setup-ufw:
+ifeq ($(SETUP_UFW),true)
+	$(call app-install,$(SETUP_UFW_REPOSITORY))
+	$(call app-bootstrap,$(lastword $(subst /, ,$(SETUP_UFW_REPOSITORY))))
+	$(call app-build)
+	$(eval DOCKER_RUN_OPTIONS := --rm --cap-add NET_ADMIN -v /etc/ufw:/etc/ufw --network host)
+	$(call app-up)
+	$(call ufw-docker,install)
 endif

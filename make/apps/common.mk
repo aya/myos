@@ -12,7 +12,7 @@ bootstrap-app: install-bin-git
 
 # target bootstrap-docker: Install and configure docker
 .PHONY: bootstrap-docker
-bootstrap-docker: install-bin-docker setup-docker-group setup-binfmt setup-nfsd setup-sysctl
+bootstrap-docker: install-bin-docker setup-docker-group setup-binfmt setup-nfsd setup-sysctl setup-ufw
 
 # target bootstrap-stack: Call bootstrap target of each stack
 .PHONY: bootstrap-stack
