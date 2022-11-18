@@ -82,13 +82,15 @@ endef
 define docker-compose
 	$(call INFO,docker-compose,$(1))
 	$(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
-	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(NODE_COMPOSE_PROJECT_NAME),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER_COMPOSE_PROJECT_NAME),$(COMPOSE_PROJECT_NAME))) $(1)))
+	$(eval DOCKER_COMPOSE_PROJECT_NAME := $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(NODE_COMPOSE_PROJECT_NAME),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER_COMPOSE_PROJECT_NAME),$(COMPOSE_PROJECT_NAME))))
+	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(DOCKER_COMPOSE_PROJECT_NAME) $(1)))
 endef
 # function docker-compose-exec-sh: Run docker-compose-exec sh -c 'arg 2' in service 1
 define docker-compose-exec-sh
 	$(call INFO,docker-compose-exec-sh,$(1)$(comma) $(2))
 	$(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
-	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(NODE_COMPOSE_PROJECT_NAME),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER_COMPOSE_PROJECT_NAME),$(COMPOSE_PROJECT_NAME))) exec -T $(1) sh -c '$(2)'))
+	$(eval DOCKER_COMPOSE_PROJECT_NAME := $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(NODE_COMPOSE_PROJECT_NAME),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER_COMPOSE_PROJECT_NAME),$(COMPOSE_PROJECT_NAME))))
+	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(DOCKER_COMPOSE_PROJECT_NAME) exec -T $(1) sh -c '$(2)'))
 endef
 # function docker-push: Push docker image
 define docker-push

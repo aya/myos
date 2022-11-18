@@ -50,7 +50,7 @@ DRYRUN_RECURSIVE                ?= false
 ELAPSED_TIME                     = $(shell $(call TIME))
 ENV                             ?= master
 ENV_ARGS                        ?= $(env_args)
-ENV_FILE                        ?= $(wildcard $(CONFIG)/$(ENV)/$(APP)/.env .env)
+ENV_FILE                        ?= $(wildcard $(if $(filter-out myos,$(MYOS)),$(MONOREPO_DIR)/.env) $(CONFIG)/$(ENV)/$(APP)/.env .env)
 ENV_LIST                        ?= $(shell ls .git/refs/heads/ 2>/dev/null)
 ENV_RESET                       ?= false
 ENV_VARS                        ?= APP BRANCH DOMAIN ENV HOME HOSTNAME GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME GROUP MONOREPO MONOREPO_DIR TAG UID USER VERSION
@@ -251,7 +251,7 @@ define env-run
 endef
 
 # function make: Call make with predefined options and variables
-    # 1st arg: make command line (targets and arguments)
+	# 1st arg: make command line (targets and arguments)
 	# 2nd arg: directory to call make from
 	# 3rd arg: list of variables to pass to make (ENV by default)
 	# 4th arg: path to .env file with additional arguments to call make with (file must exist when calling make)

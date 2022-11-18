@@ -70,7 +70,7 @@ deploy: $(if $(filter $(ENV),$(ENV_DEPLOY)),deploy-localhost,deploy@$(ENV)) ## D
 # target down: Remove application dockers
 # on local host
 .PHONY: down
-down: docker-compose-down ## Remove application dockers
+down: docker-compose-down ufw-delete ## Remove application dockers
 
 # target exec: Exec ARGS in docker SERVICE
 # on local host
@@ -213,7 +213,7 @@ tests: app-tests ## Test application
 # target up: Create and start application dockers
 # on local host
 .PHONY: up
-up: docker-compose-up app-start ## Create application dockers
+up: docker-compose-up ufw-update app-start ## Create application dockers
 
 # target update app-update: Update application files
 # on local host
