@@ -66,16 +66,21 @@ define exec
 	$(call run,$(DOCKER_IMAGE) $(or $(1),$(SHELL)))
 endef
 else
-# function exec: Exec arg 1 in docker DOCKER_NAME
+# function exec: call docker-exec
 define exec
 	$(call INFO,exec,$(1))
-	$(RUN) docker exec $(DOCKER_ENV_ARGS) $(DOCKER_EXEC_OPTIONS) $(DOCKER_RUN_WORKDIR) $(DOCKER_NAME) $(or $(1),$(SHELL))
+	$(call docker-exec)
 endef
 endif
 # function run: Run docker run with arg 1 and docker repository 2
 ## attention: arg 2 should end with slash or space
 define run
 	$(call INFO,run,$(1)$(comma) $(2))
+	$(if $(DOCKER_RUN_NAME),
+	  $(if $(call docker-running,^$(DOCKER_RUN_NAME)$$),
+	    $(call ERROR,Found already running docker,$(DOCKER_RUN_NAME))
+		)
+	)
 	$(RUN) docker run $(DOCKER_ENV_ARGS) $(DOCKER_RUN_LABELS) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(DOCKER_SSH_AUTH) $(DOCKER_RUN_NAME) $(2)$(1)
 endef
 
@@ -85,20 +90,85 @@ SHELL                           := /bin/bash
 # function docker-run DOCKER=false: Run docker image 2 with arg 1
 define docker-run
 	$(call INFO,docker-run,$(1)$(comma) $(2))
+	$(if $(DOCKER_RUN_NAME),
+	  $(if $(call docker-running,^$(DOCKER_RUN_NAME)$$),
+	    $(call ERROR,Found already running docker,$(DOCKER_RUN_NAME))
+		)
+	)
 	$(RUN) docker run $(DOCKER_ENV_ARGS) $(DOCKER_RUN_LABELS) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(DOCKER_RUN_NAME) $(or $(2),$(DOCKER_IMAGE)) $(1)
 endef
 # function exec DOCKER=false: Call env-exec with arg 1 or SHELL
 define exec
 	$(call INFO,exec,$(1))
-	$(call env-exec,$(or $(1),$(SHELL)))
+	$(call env-exec,$(RUN) $(or $(1),$(SHELL)))
 endef
-# function run DOCKER=false: Call env-run with arg 1
+# function run DOCKER=false: Call exec with arg 1
 define run
 	$(call INFO,run,$(1))
-	$(call env-run,$(1))
+	$(call exec,$(1))
 endef
 
 endif
+
+# function docker-attach: Attach docker 1 or DOCKER_NAME
+define docker-attach
+	$(call INFO,docker-attach,$(1)$(comma))
+	$(eval attach          := $(or $(1),$(DOCKER_NAME)))
+	$(if $(call docker-running,^$(attach)$),
+	  $(RUN) docker attach $(attach)
+	, $(call ERROR,Unable to find docker,$(attach))
+	)
+endef
+
+# function docker-connect: Call docker-exec
+define docker-connect
+	$(call INFO,docker-connect,$(1)$(comma))
+	$(call docker-exec,$(DOCKER_SHELL))
+endef
+
+# function docker-exec: Exec arg 1 in docker DOCKER_NAME
+define docker-exec
+	$(call INFO,docker-exec,$(1))
+	$(if $(call docker-running,^$(DOCKER_NAME)$),
+	  $(RUN) docker exec $(DOCKER_ENV_ARGS) $(DOCKER_EXEC_OPTIONS) $(DOCKER_RUN_WORKDIR) $(DOCKER_NAME) $(or $(1),$(SHELL))
+	, $(call ERROR,Unable to find docker,$(DOCKER_NAME))
+	)
+endef
+
+# function docker-logs: Print logs of docker 1 or DOCKER_NAME
+define docker-logs
+	$(call INFO,docker-logs,$(1))
+	$(eval logs            := $(or $(1),$(DOCKER_NAME)))
+	$(if $(call docker-running,^$(logs)$),
+	  $(RUN) docker logs --follow --tail=100 $(logs)
+	, $(call ERROR,Unable to find docker,$(logs))
+	)
+endef
+
+# function docker-file: eval DOCKER_FILE in dir 1 or APP_DIR
+define docker-file
+	$(call INFO,docker-file,$(1)$(comma))
+	$(eval dir                    := $(or $(1),$(APP_DIR)))
+	$(eval DOCKER_FILE            := $(wildcard $(dir)/docker/*/Dockerfile $(dir)/*/Dockerfile $(dir)/Dockerfile))
+	$(if $(DOCKER_FILE),
+	, $(call ERROR,Unable to find a,Dockerfile,in dir,$(dir))
+	)
+endef
+
+# function docker-running: Print running dockers matching DOCKER_NAME
+define docker-running
+$(shell docker ps -q $(patsubst %,-f name=%,$(or $(1), ^$(DOCKER_NAME)$$, ^$)) 2>/dev/null)
+endef
+
+# function docker-rm: Remove docker 1
+define docker-rm
+	$(call INFO,docker-rm,$(1)$(comma))
+	$(eval rm              := $(or $(1),$(DOCKER_NAME)))
+	$(if $(call docker-running,^$(rm)$),
+		$(call WARNING,Removing running docker,$(rm))
+	)
+	$(RUN) docker rm -f $(rm)
+endef
 
 # function docker-volume-copy: Copy files from a docker volume to another
 define docker-volume-copy

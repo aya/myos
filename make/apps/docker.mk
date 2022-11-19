@@ -226,7 +226,7 @@ docker-run-%: docker-build-%
 	$(eval path            := $(patsubst %/,%,$*))
 	$(eval image           := $(DOCKER_REPOSITORY)/$(lastword $(subst /, ,$(path)))$(if $(findstring :,$*),,:$(DOCKER_IMAGE_TAG)))
 	$(eval image_id        := $(shell docker images -q $(image) 2>/dev/null))
-	$(call docker-run,$(RUN) $(command),$(if $(image_id),$(image),$(path)))
+	$(call docker-run,$(command),$(if $(image_id),$(image),$(path)))
 
 # target docker-tag: Call docker-tag for each SERVICES
 .PHONY: docker-tag

@@ -39,7 +39,7 @@ ssh-key:
 ifneq (,$(filter true,$(DRONE)))
 	$(call exec,sh -c '[ ! -d $(SSH_DIR) ] && mkdir -p $(SSH_DIR) && chown $(UID) $(SSH_DIR) && chmod 0700 $(SSH_DIR) ||:')
 endif
-	$(if $(SSH_KEY),$(eval export SSH_KEY ?= $(SSH_KEY)) $(call env-run,sh -c 'printf "$$SSH_KEY\n" > $(SSH_DIR)/$(COMPOSE_PROJECT_NAME)_id_rsa && chmod 0600 $(SSH_DIR)/$(COMPOSE_PROJECT_NAME)_id_rsa && chown $(UID) $(SSH_DIR)/$(COMPOSE_PROJECT_NAME)_id_rsa ||:'))
+	$(if $(SSH_KEY),$(eval export SSH_KEY ?= $(SSH_KEY)) $(call env-exec,sh -c 'printf "$$SSH_KEY\n" > $(SSH_DIR)/$(COMPOSE_PROJECT_NAME)_id_rsa && chmod 0600 $(SSH_DIR)/$(COMPOSE_PROJECT_NAME)_id_rsa && chown $(UID) $(SSH_DIR)/$(COMPOSE_PROJECT_NAME)_id_rsa ||:'))
 
 # target ssh-run: Call ssh-run make run SERVICE ARGS
 .PHONY: ssh-run

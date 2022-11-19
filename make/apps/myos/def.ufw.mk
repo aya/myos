@@ -7,14 +7,14 @@ ifeq ($(SETUP_UFW),true)
 define ufw
 	$(call INFO,ufw,$(1)$(comma))
 	$(call app-bootstrap,ufw-docker)
-	$(call app-exec,,ufw $(1))
+	$(call app-exec,,$(if $(DOCKER_RUN),,$(SUDO)) ufw $(1))
 endef
 
 # function ufw-docker: Exec command ufw-docker with args 1
 define ufw-docker
 	$(call INFO,ufw-docker,$(1)$(comma))
 	$(call app-bootstrap,ufw-docker)
-	$(call app-exec,,ufw-docker $(1))
+	$(call app-exec,,$(if $(DOCKER_RUN),,$(SUDO)) ufw-docker $(1))
 endef
 
 endif

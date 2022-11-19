@@ -10,5 +10,5 @@ endif
 # function openstack: Call run openstack with arg 1
 define openstack
 	$(call INFO,openstack,$(1))
-	$(RUN) $(call run,openstack $(1),$(DOCKER_REPOSITORY)/)
+	$(call run,openstack $(1),$(DOCKER_REPOSITORY)/)
 endef

@@ -7,8 +7,8 @@ quote                           ?= '
 lbracket                        ?= (
 rbracket                        ?= )
 APP                             ?= $(if $(wildcard .git),$(notdir $(CURDIR)))
+APP_LOAD                        ?= $(if $(SUBREPO),subrepo) $(if $(filter .,$(MYOS)),myos)
 APP_NAME                        ?= $(subst _,,$(subst -,,$(subst .,,$(call LOWERCASE,$(APP)))))
-APP_TYPE                        ?= $(if $(SUBREPO),subrepo) $(if $(filter .,$(MYOS)),myos)
 APPS                            ?= $(if $(MONOREPO),$(sort $(patsubst $(MONOREPO_DIR)/%/.git,%,$(wildcard $(MONOREPO_DIR)/*/.git))))
 APPS_NAME                       ?= $(foreach app,$(APPS),$(or $(shell awk -F '=' '$$1 == "APP" {print $$2}' $(or $(wildcard $(MONOREPO_DIR)/$(app)/.env),$(wildcard $(MONOREPO_DIR)/$(app)/.env.$(ENV)),$(MONOREPO_DIR)/$(app)/.env.dist) 2>/dev/null),$(app)))
 BRANCH                          ?= $(GIT_BRANCH)
@@ -238,16 +238,10 @@ define conf
 	done < "$(file)"
 endef
 
-# function env-exec: Exec arg 1 with custom env
+# function env-exec: Exec arg 1 with env
 define env-exec
 	$(call INFO,env-exec,$(1))
 	IFS=$$'\n'; env $(env_reset) $(env_args) $(1)
-endef
-
-# function env-run: Call env-exec with arg 1
-define env-run
-	$(call INFO,env-run,$(1))
-	$(call env-exec,$(or $(1),$(SHELL)))
 endef
 
 # function make: Call make with predefined options and variables

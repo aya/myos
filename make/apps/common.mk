@@ -1,6 +1,17 @@
 ##
 # COMMON
 
+# target attach: Exec ARGS in docker SERVICE
+# on local host
+.PHONY: attach
+attach: SERVICE ?= $(DOCKER_SERVICE)
+attach: ## Attach to docker SERVICE
+	$(eval attach          := $(COMPOSE_PROJECT_NAME)-$(SERVICE))
+	$(if $(call docker-running,^$(attach)-1$), \
+	  $(call docker-attach,$(attach)-1) \
+	, $(call docker-attach,$(attach)) \
+	)
+
 # target bootstrap: Configure system
 # on local host
 .PHONY: bootstrap app-bootstrap
