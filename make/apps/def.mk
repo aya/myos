@@ -19,7 +19,7 @@ APP_URL                         ?= $(APP_SCHEME)://$(APP_URI)
 CMDARGS                         += exec exec:% exec@% run run:% run@%
 CONTEXT                         += APP APPS BRANCH DOMAIN VERSION RELEASE
 CONTEXT_DEBUG                   += APP_DIR APP_URL APP_REPOSITORY APP_UPSTREAM_REPOSITORY ENV_DEPLOY
-ENV_DEPLOY                      ?= $(shell ls .git/refs/remotes/origin/ 2>/dev/null)
+ENV_DEPLOY                      ?= $(patsubst origin/%,%,$(shell git rev-parse --symbolic --remotes=origin |sed '/origin\/HEAD/d' 2>/dev/null))
 ENV_VARS                        += APP_DIR APP_DOMAIN APP_HOST APP_PATH APP_URL CONSUL_HTTP_TOKEN $(if $(filter true,$(MOUNT_NFS)),NFS_CONFIG)
 MOUNT_NFS                       ?= false
 NFS_CONFIG                      ?= addr=$(NFS_HOST),actimeo=3,intr,noacl,noatime,nocto,nodiratime,nolock,soft,rsize=32768,wsize=32768,tcp,rw,vers=3

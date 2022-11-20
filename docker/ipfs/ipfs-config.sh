@@ -37,10 +37,11 @@ ipfs config Addresses.Gateway "${IPFS_ADDRESSES_GATEWAY:-/ip4/${IPFS_ADDRESSES_G
 [ -n "${IPFS_ADDRESSES_NOANNOUNCE}" ] && ipfs config --json Addresses.NoAnnounce "${IPFS_ADDRESSES_NOANNOUNCE}"
 
 ## api http headers
-ipfs config --json API.HTTPHeaders "${IPFS_API_HTTPHEADERS:-{
+[ -n "${IPFS_API_HTTPHEADERS}${IPFS_API_HTTPHEADERS_ACA_CREDENTIALS}${IPFS_API_HTTPHEADERS_ACA_HEADERS}${IPFS_API_HTTPHEADERS_ACA_METHODS}${IPFS_API_HTTPHEADERS_ACA_ORIGIN}" ] \
+ && ipfs config --json API.HTTPHeaders "${IPFS_API_HTTPHEADERS:-{
 \"Access-Control-Allow-Credentials\": ${IPFS_API_HTTPHEADERS_ACA_CREDENTIALS:-null},
 \"Access-Control-Allow-Headers\": ${IPFS_API_HTTPHEADERS_ACA_HEADERS:-null},
-\"Access-Control-Allow-Methods\": ${IPFS_API_HTTPSHEADERS_ACA_METHODS:-null},
+\"Access-Control-Allow-Methods\": ${IPFS_API_HTTPHEADERS_ACA_METHODS:-null},
 \"Access-Control-Allow-Origin\": ${IPFS_API_HTTPHEADERS_ACA_ORIGIN:-null}
 }}"
 
@@ -63,11 +64,12 @@ ipfs config Datastore.StorageMax "$((diskSize * ${IPFS_DISK_USAGE_PERCENT:-50/10
 [ -n "${IPFS_EXPERIMENTAL_STRATEGICPROVIDING}" ] && ipfs config --json Experimental.StrategicProviding "${IPFS_EXPERIMENTAL_STRATEGICPROVIDING}"
 [ -n "${IPFS_EXPERIMENTAL_URLSTOREENABLED}" ] && ipfs config --json Experimental.UrlstoreEnabled "${IPFS_EXPERIMENTAL_URLSTOREENABLED}"
 
-## api http headers
-ipfs config --json Gateway.HTTPHeaders "${IPFS_GATEWAY_HTTPHEADERS:-{
-\"Access-Control-Allow-Credentials\": ${IPFS_GATEWAY_HTTPHEADERS_ACA_CREDENTIALS:-null},
+## gateway http headers
+[ -n "${IPFS_GATEWAY_HTTPHEADERS}${IPFS_GATEWAY_HTTPHEADERS_ACA_CREDENTIALS}${IPFS_GATEWAY_HTTPHEADERS_ACA_HEADERS}${IPFS_GATEWAY_HTTPHEADERS_ACA_METHODS}${IPFS_GATEWAY_HTTPHEADERS_ACA_ORIGIN}" ] \
+ && ipfs config --json Gateway.HTTPHeaders "${IPFS_GATEWAY_HTTPHEADERS:-{
+\"Access-Control-Allow-Credentials\": ${IPFS_GATEWAY_HTTPHEADERS_ACA_CREDENTIALS:-[ \"true\" ]},
 \"Access-Control-Allow-Headers\": ${IPFS_GATEWAY_HTTPHEADERS_ACA_HEADERS:-[ \"X-Requested-With\", \"Range\", \"User-Agent\" ]},
-\"Access-Control-Allow-Methods\": ${IPFS_GATEWAY_HTTPSHEADERS_ACA_METHODS:-[ \"GET\" ]},
+\"Access-Control-Allow-Methods\": ${IPFS_GATEWAY_HTTPHEADERS_ACA_METHODS:-[ \"GET\" ]},
 \"Access-Control-Allow-Origin\": ${IPFS_GATEWAY_HTTPHEADERS_ACA_ORIGIN:-[ \"*\" ]}
 }}"
 
