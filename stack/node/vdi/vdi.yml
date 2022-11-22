@@ -5,7 +5,7 @@ services:
     build:
       args:
       - DOCKER_BUILD_DIR=docker/x2go/xfce-debian
-      - SSH_PORT=${VDI_PORT:-22}
+      - SSH_PORT=${NODE_VDI_PORT:-22}
       context: ../..
       dockerfile: docker/x2go/xfce-debian/Dockerfile
     cap_add:
@@ -13,49 +13,47 @@ services:
     - NET_ADMIN # iptables
     - NET_RAW # iptables
     - SYS_ADMIN # ecryptfs
+    container_name: ${NODE_COMPOSE_PROJECT_NAME}-vdi
     cpus: 0.5
     environment:
     - DEBUG=${VDI_DEBUG:-}
-    - ECRYPTERS=${VDI_ECRYPTERS:-}
-    - LANG=${VDI_LANG:-}
-    - SSH_PORT=${VDI_PORT:-22}
-    - SSH_PUBLIC_HOSTS=${SSH_PUBLIC_HOSTS:-}
-    - SUDOERS=${VDI_SUDOERS:-}
-    - TZ=${VDI_TZ:-}
-    - USERS=${VDI_USERS:-}
-    image: ${DOCKER_REPOSITORY}/vdi:${DOCKER_IMAGE_TAG}
+    - ECRYPTERS=${NODE_VDI_ECRYPTERS:-}
+    - LANG=${NODE_VDI_LANG:-}
+    - SSH_PORT=${NODE_VDI_PORT:-22}
+    - SSH_AUTHORIZED_KEYS=${SSH_AUTHORIZED_KEYS:-}
+    - SSH_PUBLIC_HOSTS=${NODE_SSH_PUBLIC_HOSTS:-}
+    - SUDOERS=${NODE_VDI_SUDOERS:-}
+    - TZ=${NODE_VDI_TZ:-}
+    - USERS=${NODE_VDI_USERS:-}
+    image: ${NODE_DOCKER_REPOSITORY}/vdi:${DOCKER_IMAGE_TAG}
     networks:
-    - private
     - public
     ports:
-    - ${SSH_PORT}
+    - ${NODE_VDI_PORT:-22}:${SSH_PORT:-22}
     restart: unless-stopped
     security_opt:
     - apparmor=unconfined # ecryptfs
     - seccomp=unconfined # ecryptfs
     tty: true
     volumes:
-    - vdi-home:/home:delegated
-    - vdi-shared:/shared:cached
-    - vdi-shm:/dev/shm:delegated
+    - home:/home:delegated
+    - shared:/shared:cached
+    - shm:/dev/shm:delegated
 
 networks:
-  private:
-    external: true
-    name: ${DOCKER_NETWORK_PRIVATE}
   public:
     external: true
     name: ${DOCKER_NETWORK_PUBLIC}
 
 volumes:
-  vdi-home:
-  vdi-shared:
+  home:
+  shared:
     driver: local
     driver_opts:
       type: none
       device: /mnt/shared
       o: bind
-  vdi-shm:
+  shm:
     driver: local
     driver_opts:
       type: tmpfs

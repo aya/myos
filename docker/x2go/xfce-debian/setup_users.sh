@@ -2,7 +2,7 @@
 [ -n "${DEBUG}" ] && set -x
 set -eu
 
-for user in ${USERS:-${USERNAME}}; do
+for user in ${USERS:-${USER:-user}}; do
   id "${user}" > /dev/null 2>&1 || useradd -s /bin/bash "${user}"
   [ ! -d "/home/${user}" ] \
    && mkdir -p "/home/${user}" \
@@ -15,9 +15,9 @@ for user in ${USERS:-${USERNAME}}; do
   done
   usermod -a -G x2gouser "${user}"
   mkdir -p "/home/${user}/.ssh"
-  wget -qO "/home/${user}/.ssh/authorized_keys" "https://gitlab.com/${user}.keys" 2>/dev/null \
-   || wget -qO "/home/${user}/.ssh/authorized_keys" "https://github.com/${user}.keys" 2>/dev/null \
-   || echo "WARNING: Unable to fetch ssh public keys for user ${user}."
+  keys=$(su "${user}" /app/authorized_keys.sh 2>/dev/null) \
+   && echo "${keys}" > "/home/${user}/.ssh/authorized_keys" \
+   || echo "WARNING: Unable to fetch authorized keys for ssh user ${user}."
   chown "${user}" "/home/${user}/.ssh" "/home/${user}/.ssh/authorized_keys"
 done
 for sudoer in ${SUDOERS:-}; do
@@ -29,5 +29,5 @@ for ecrypter in ${ECRYPTERS:-}; do
   touch "/home/${ecrypter}/.ecryptfs/auto-umount"
   chown -R "${ecrypter}" "/home/${ecrypter}/.ecryptfs"
 done
-ln -s /app/setup_ecryptfs_sshagent.sh /etc/profile.d/
+cp /app/setup_ecryptfs_sshagent.sh /etc/profile.d/
 mkdir -p /shared && chmod 1777 /shared

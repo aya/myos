@@ -15,17 +15,18 @@ ufw-docker:
 
 # target ufw-docker: Call ufw and ufw-docker foreach service UFW_UPDATE
 .PHONY: ufw-update
-ufw-update:
+ufw-update: debug-UFW_UPDATE
+	$(eval name := $(DOCKER_COMPOSE_PROJECT_NAME))
 	$(foreach update,$(UFW_UPDATE), \
-	  $(foreach port,$(UFW_DOCKER_$(DOCKER_COMPOSE_PROJECT_NAME)-$(update)), \
-	    $(call ufw-docker,$(if $(UFW_DELETE),delete) allow $(DOCKER_COMPOSE_PROJECT_NAME)-$(update) $(port)) \
+	  $(foreach port,$(UFW_DOCKER_$(update)) $(UFW_DOCKER_$(name)-$(update)), \
+		  $(call ufw-docker,$(if $(UFW_DELETE),delete) allow $(name)-$(update) $(port) ||:) \
 	  ) \
-	  $(foreach port,$(UFW_UPDATE_$(DOCKER_COMPOSE_PROJECT_NAME)-$(update)), \
+	  $(foreach port,$(UFW_UPDATE_$(update)) $(UFW_UPDATE_$(name)-$(update)), \
 	    $(call ufw,$(if $(UFW_DELETE),delete) allow $(port)) \
 	  ) \
 	)
 
-## ex: ufw-node-up will update ufw rules for stack node
+## ex: ufw-node-update will update ufw rules for stack node
 .PHONY: stack-%
 ufw-%:
 	$(eval stack   := $(subst -$(lastword $(subst -, ,$*)),,$*))

@@ -5,7 +5,9 @@ services:
     build:
       args:
       - DOCKER_BUILD_DIR=docker/ipfs
+      - GID=${NODE_GID}
       - IPFS_VERSION=${IPFS_VERSION}
+      - UID=${NODE_UID}
       context: ../..
       dockerfile: docker/ipfs/Dockerfile
     command: daemon --agent-version-suffix=${NODE_COMPOSE_PROJECT_NAME} ${NODE_IPFS_DAEMON_ARGS}

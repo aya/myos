@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v0.9.9 - 2022-11-22
+
+* node name is `hostname`
+
 ## v0.9 - 2022-11-11
 
 * split make files in `myos` project and install files in `yaip` project

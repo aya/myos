@@ -10,9 +10,7 @@ if [ ! -f /app/.setup_done ]; then
   /app/setup_timezone.sh
 fi
 
-/app/setup_ecryptfs.sh /dev/shm
-# /shared encryption will not survive on restart
-/app/setup_ecryptfs.sh /shared
+/app/setup_ecryptfs.sh /dev/shm &
 /app/setup_users.sh
 
 ## Start-up our services manually (since Docker container will not invoke all init scripts).
@@ -50,6 +48,6 @@ if [ $# -eq 0 ]; then
   PID=$! && wait
 else
   # WARNING: cleanup is not called
-  exec /bin/bash -c "set -e && $*"
+  exec su ${USER:-root} /bin/bash -c "set -e && $*"
 fi
 cleanup

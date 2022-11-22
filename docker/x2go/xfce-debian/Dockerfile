@@ -26,9 +26,12 @@ RUN cp /usr/share/doc/libpam-script/examples/logscript /usr/share/libpam-script 
 WORKDIR /app
 COPY ${DOCKER_BUILD_DIR}/*.sh /app/
 
+ARG SSH_PORT=22
 CMD []
 ENTRYPOINT ["/app/run.sh"]
-HEALTHCHECK CMD timeout 1 bash -c "</dev/tcp/localhost/22" 2>/dev/null 
+EXPOSE ${SSH_PORT:-22}
+RUN echo "${SSH_PORT}" > /app/.ssh_port
+HEALTHCHECK CMD timeout 1 bash -c "</dev/tcp/localhost/$(cat /app/.ssh_port 2>/dev/null)" 2>/dev/null
 
 FROM dist as master
 ARG DOCKER_BUILD_DIR

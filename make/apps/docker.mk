@@ -115,8 +115,9 @@ docker-compose-up: docker-images-myos bootstrap-stack
 
 # target docker-images-myos: Call myos-docker-build-% target for each DOCKER_IMAGES_MYOS
 .PHONY: docker-images-myos
+docker-images-myos: MAKE_VARS += DOCKER_REPOSITORY STACK
 docker-images-myos:
-	$(foreach image,$(subst $(quote),,$(DOCKER_IMAGES_MYOS)),$(call make,myos-docker-build-$(image)))
+	$(foreach image,$(subst $(quote),,$(DOCKER_IMAGES_MYOS)),$(call make,docker-build-$(image),$(MYOS)))
 
 # target docker-images-rm: Call docker-image-rm-% target for DOCKER_REPOSITORY
 .PHONY: docker-images-rm

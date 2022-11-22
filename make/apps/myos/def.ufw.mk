@@ -7,6 +7,7 @@ ifeq ($(SETUP_UFW),true)
 define ufw
 	$(call INFO,ufw,$(1)$(comma))
 	$(call app-bootstrap,ufw-docker)
+	$(eval COMPOSE_PROJECT_NAME := $(NODE_COMPOSE_PROJECT_NAME))
 	$(call app-exec,,$(if $(DOCKER_RUN),,$(SUDO)) ufw $(1))
 endef
 
@@ -14,6 +15,7 @@ endef
 define ufw-docker
 	$(call INFO,ufw-docker,$(1)$(comma))
 	$(call app-bootstrap,ufw-docker)
+	$(eval COMPOSE_PROJECT_NAME := $(NODE_COMPOSE_PROJECT_NAME))
 	$(call app-exec,,$(if $(DOCKER_RUN),,$(SUDO)) ufw-docker $(1))
 endef
 
