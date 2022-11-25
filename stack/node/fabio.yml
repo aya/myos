@@ -35,10 +35,10 @@ services:
     - public
     restart: always
     volumes:
-    - myos:/etc/letsencrypt:ro
+    - node:/etc/letsencrypt:ro
 
 volumes:
-  myos:
+  node:
     external: true
     name: ${NODE_DOCKER_VOLUME}
 

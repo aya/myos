@@ -13,10 +13,10 @@ services:
     network_mode: host
     restart: always
     volumes:
-    - myos:/etc/letsencrypt
+    - node:/etc/letsencrypt
 
 volumes:
-  myos:
+  node:
     external: true
     name: ${NODE_DOCKER_VOLUME}
 

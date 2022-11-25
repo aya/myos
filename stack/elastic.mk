@@ -8,4 +8,4 @@ elastic                         ?= elastic/curator elastic/elasticsearch elastic
 # target elasticsearch-delete-%: delete elasticsearch index %
 .PHONY: elasticsearch-delete-%
 elasticsearch-delete-%:
-	docker ps |awk '$$NF ~ /myos_$(ENV)_elasticsearch/' |sed 's/^.*:\([0-9]*\)->9200\/tcp.*$$/\1/' |while read port; do echo -e "DELETE /$* HTTP/1.0\n\n" |nc localhost $$port; done
+	docker ps |awk '$$NF ~ /$(USER)-myos-$(ENV)-elasticsearch/' |sed 's/^.*:\([0-9]*\)->9200\/tcp.*$$/\1/' |while read port; do echo -e "DELETE /$* HTTP/1.0\n\n" |nc localhost $$port; done

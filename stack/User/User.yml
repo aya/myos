@@ -34,23 +34,23 @@ services:
     user: ${UID}:${GID}
     volumes:
     - ${HOME}:${HOME}:cached
-    - monorepo:${MONOREPO_DIR}:cached
-    - myos:/tmp/ssh-agent
+    - sources:${MONOREPO_DIR}:cached
+    - user:/tmp/ssh-agent
     working_dir: ${MONOREPO_DIR}
 
 volumes:
-  monorepo:
+  sources:
     driver: local
     driver_opts:
       type: none
       device: ${MONOREPO_DIR}
       o: bind
-    name: ${USER_COMPOSE_PROJECT_NAME}
-  myos:
+    name: ${USER}_sources
+  user:
     external: true
     name: ${USER_DOCKER_VOLUME}
 
 networks:
   private:
     external: true
-    name: ${DOCKER_NETWORK_PRIVATE}
+    name: ${DOCKER_NETWORK}

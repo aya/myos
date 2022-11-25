@@ -12,11 +12,11 @@ else
 COMPOSE_FILE_APP                ?= true
 endif
 COMPOSE_IGNORE_ORPHANS          ?= false
-COMPOSE_PROJECT_NAME            ?= $(subst .,,$(call LOWERCASE,$(USER)-$(APP_NAME)-$(ENV)$(addprefix -,$(subst /,,$(subst -,,$(APP_PATH))))))
-COMPOSE_SERVICE_NAME            ?= $(subst _,-,$(COMPOSE_PROJECT_NAME))
+COMPOSE_PROJECT_NAME            ?= $(if $(DOCKER_COMPOSE_PROJECT_NAME),$(DOCKER_COMPOSE_PROJECT_NAME),$(subst .,,$(call LOWERCASE,$(USER)-$(APP_NAME)-$(ENV)$(addprefix -,$(subst /,,$(subst -,,$(APP_PATH)))))))
+COMPOSE_SERVICE_NAME            ?= $(if $(DOCKER_COMPOSE_SERVICE_NAME),$(DOCKER_COMPOSE_SERVICE_NAME),$(subst _,-,$(COMPOSE_PROJECT_NAME)))
 COMPOSE_VERSION                 ?= 2.5.0
 CONTEXT                         += COMPOSE_FILE DOCKER_REPOSITORY
-CONTEXT_DEBUG                   += DOCKER_BUILD_TARGET DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_SERVICE DOCKER_SERVICES
+CONTEXT_DEBUG                   += DOCKER_BUILD_TARGET DOCKER_COMPOSE_PROJECT_NAME DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_SERVICE DOCKER_SERVICES
 DOCKER_AUTHOR                   ?= $(DOCKER_AUTHOR_NAME) <$(DOCKER_AUTHOR_EMAIL)>
 DOCKER_AUTHOR_EMAIL             ?= $(subst +git,+docker,$(GIT_AUTHOR_EMAIL))
 DOCKER_AUTHOR_NAME              ?= $(GIT_AUTHOR_NAME)
@@ -30,8 +30,9 @@ DOCKER_BUILD_TARGETS            ?= $(ENV_DEPLOY)
 DOCKER_BUILD_VARS               ?= APP BRANCH COMPOSE_VERSION DOCKER_GID DOCKER_MACHINE DOCKER_REPOSITORY DOCKER_SYSTEM GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME SSH_REMOTE_HOSTS USER VERSION
 DOCKER_COMPOSE                  ?= $(if $(DOCKER_RUN),docker/compose:$(COMPOSE_VERSION),$(or $(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'),docker-compose)) $(COMPOSE_ARGS)
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
-DOCKER_COMPOSE_PROJECT_NAME     ?= $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(NODE_COMPOSE_PROJECT_NAME),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER_COMPOSE_PROJECT_NAME),$(COMPOSE_PROJECT_NAME)))
+DOCKER_COMPOSE_PROJECT_NAME     ?= $(if $(filter node,$(firstword $(subst /, ,$(STACK)))),$(NODE_COMPOSE_PROJECT_NAME),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER_COMPOSE_PROJECT_NAME)))
 DOCKER_COMPOSE_RUN_OPTIONS      ?= --rm
+DOCKER_COMPOSE_SERVICE_NAME     ?= $(subst _,-,$(DOCKER_COMPOSE_PROJECT_NAME))
 DOCKER_COMPOSE_UP_OPTIONS       ?= -d
 DOCKER_IMAGE_TAG                ?= $(if $(filter true,$(DEPLOY)),$(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION)),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest))
 DOCKER_IMAGES                   ?= $(patsubst %/,%,$(patsubst docker/%,%,$(dir $(wildcard docker/*/Dockerfile))))
@@ -43,7 +44,7 @@ DOCKER_PLUGIN_S3FS_OPTIONS      ?= allow_other,nonempty,use_path_request_style,u
 DOCKER_PLUGIN_S3FS_SECRETKEY    ?= $(AWS_SECRET_ACCESS_KEY)
 DOCKER_PLUGIN_S3FS_REGION       ?= eu-west-1
 DOCKER_PLUGIN_VARS              ?= S3FS_ACCESSKEY S3FS_OPTIONS S3FS_SECRETKEY S3FS_REGION
-DOCKER_REGISTRY                 ?= my.os
+DOCKER_REGISTRY                 ?= $(DOMAIN)
 DOCKER_REGISTRY_USERNAME        ?= $(USER)
 DOCKER_REGISTRY_REPOSITORY      ?= $(addsuffix /,$(DOCKER_REGISTRY))$(subst $(USER),$(DOCKER_REGISTRY_USERNAME),$(DOCKER_REPOSITORY))
 DOCKER_REPOSITORY               ?= $(subst -,/,$(subst _,/,$(COMPOSE_PROJECT_NAME)))
@@ -83,13 +84,13 @@ endef
 define docker-compose
 	$(call INFO,docker-compose,$(1))
 	$(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
-	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(DOCKER_COMPOSE_PROJECT_NAME) $(1)))
+	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1)))
 endef
 # function docker-compose-exec-sh: Run docker-compose-exec sh -c 'arg 2' in service 1
 define docker-compose-exec-sh
 	$(call INFO,docker-compose-exec-sh,$(1)$(comma) $(2))
 	$(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
-	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(DOCKER_COMPOSE_PROJECT_NAME) exec -T $(1) sh -c '$(2)'))
+	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) exec -T $(1) sh -c '$(2)'))
 endef
 # function docker-push: Push docker image
 define docker-push

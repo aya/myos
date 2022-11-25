@@ -53,10 +53,10 @@ ENV_ARGS                        ?= $(env_args)
 ENV_FILE                        ?= $(wildcard $(if $(filter-out myos,$(MYOS)),$(MONOREPO_DIR)/.env) $(CONFIG)/$(ENV)/$(APP)/.env .env)
 ENV_LIST                        ?= $(shell ls .git/refs/heads/ 2>/dev/null)
 ENV_RESET                       ?= false
-ENV_VARS                        ?= APP BRANCH DOMAIN ENV HOME HOSTNAME GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME GROUP MONOREPO MONOREPO_DIR TAG UID USER VERSION
+ENV_VARS                        ?= APP BRANCH DOMAIN ENV HOME HOSTNAME GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME GROUP MAIL MONOREPO MONOREPO_DIR TAG UID USER VERSION
 GID                             ?= $(shell id -g 2>/dev/null)
 GIDS                            ?= $(shell id -G 2>/dev/null)
-GIT_AUTHOR_EMAIL                ?= $(or $(shell git config user.email 2>/dev/null),$(USER)@my.os)
+GIT_AUTHOR_EMAIL                ?= $(or $(shell git config user.email 2>/dev/null),$(USER)@$(DOMAIN))
 GIT_AUTHOR_NAME                 ?= $(or $(shell git config user.name 2>/dev/null),$(USER))
 GIT_BRANCH                      ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
 GIT_COMMIT                      ?= $(shell git rev-parse $(BRANCH) 2>/dev/null)
@@ -75,6 +75,7 @@ INSTALL                         ?= $(RUN) $(SUDO) $(subst &&,&& $(RUN) $(SUDO),$
 INSTALL_CMDS                    ?= APK_INSTALL APT_INSTALL
 $(foreach cmd,$(INSTALL_CMDS),$(if $(CMD_$(cmd)),$(eval INSTALL_CMD ?= $(CMD_$(cmd)))))
 LOG_LEVEL                       ?= $(if $(DEBUG),debug,$(if $(VERBOSE),info,error))
+MAIL                            ?= $(GIT_AUTHOR_EMAIL)
 MAKE_ARGS                       ?= $(foreach var,$(MAKE_VARS),$(if $($(var)),$(var)='$($(var))'))
 MAKE_SUBDIRS                    ?= $(if $(filter myos,$(MYOS)),monorepo,$(if $(APP),apps $(foreach type,$(APP_LOAD),$(if $(wildcard $(MAKE_DIR)/apps/$(type)),apps/$(type)))))
 MAKE_CMD_ARGS                   ?= $(foreach var,$(MAKE_CMD_VARS),$(var)='$($(var))')
@@ -151,6 +152,53 @@ printf '${COLOR_ERROR}ERROR:${COLOR_RESET} ${COLOR_INFO}$(APP)${COLOR_RESET}[${C
  && printf '\n' >&$(ERROR_FD) \
  && exit 2
 
+INFO_FD := 2
+# macro INFO: print colorized info
+INFO = $(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)), \
+  printf '${COLOR_INFO}$(APP)${COLOR_RESET}[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}]$(if $@, ${COLOR_VALUE}$@${COLOR_RESET}):${COLOR_RESET} ' >&$(INFO_FD) \
+  $(if $(2), \
+    && printf 'Calling ${COLOR_HIGHLIGHT}$(1)${COLOR_RESET}$(lbracket)' >&$(INFO_FD) \
+    && $(or $(strip $(call PRINTF,$(2))),printf '$(2)') >&$(INFO_FD) \
+    && printf '$(rbracket)' >&$(INFO_FD) \
+    $(if $(3),&& printf ' ${COLOR_VALUE}in${COLOR_RESET} $(3)' >&$(INFO_FD)) \
+  , \
+    && $(strip $(call PRINTF,$(1)) >&$(INFO_FD)) \
+  ) \
+ && printf '\n' >&$(INFO_FD) \
+))
+
+# macro RESU: Print USER associated to MAIL
+RESU = \
+$(if $(findstring @,$(MAIL)), \
+  $(eval user      := $(subst +,,$(subst -,,$(subst .,,$(call LOWERCASE,$(shell printf '$(MAIL)' |awk -F "@" '{print $$1}')))))) \
+  $(eval domain    := $(call LOWERCASE,$(call subst,_,,$(shell printf '$(MAIL)' |awk -F "@" '{print $$NF}')))) \
+  $(if $(domain), \
+    $(eval mail      := $(MAIL)) \
+    $(eval niamod    := $(subst $(space),_,$(strip $(call reverse,$(subst .,$(space),$(domain)))))) \
+    $(eval resu      := $(niamod)_$(user)) \
+    $(eval resu_path := $(subst _,/,$(niamod))/$(user)) \
+    $(resu) \
+  , $(USER) \
+  ) \
+, $(USER) \
+)
+
+# macro TIME: Print time elapsed since unixtime 1
+TIME = awk '{printf "%02d:%02d:%02d\n",int($$1/3600),int(($$1%3600)/60),int($$1%60)}' \
+	   <<< $(shell awk 'BEGIN {current=$(or $(2),$(MAKE_UNIXTIME_CURRENT)); start=$(or $(1),$(MAKE_UNIXTIME_START)); print (current  - start)}' 2>/dev/null)
+
+WARNING_FD := 2
+# macro WARNING: print colorized warning
+WARNING = \
+printf '${COLOR_WARNING}WARNING:${COLOR_RESET} ${COLOR_INFO}$(APP)${COLOR_RESET}[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}]$(if $@, ${COLOR_VALUE}$@${COLOR_RESET}):${COLOR_RESET} ' >&$(WARNING_FD) \
+  $(if $(2), \
+    && printf '$(1) ${COLOR_HIGHLIGHT}$(2)${COLOR_RESET}' >&$(WARNING_FD) \
+    $(if $(3),&& printf ' $(3)$(if $(4), ${COLOR_VALUE}$(4)${COLOR_RESET})' >&$(WARNING_FD)) \
+  , \
+    && $(strip $(call PRINTF,$(1)) >&$(WARNING_FD)) \
+  ) \
+ && printf '\n' >&$(WARNING_FD)
+
 # macro force: Run command 1 sine die
 ## it starts command 1 if it is not already running
 ## it returns never
@@ -172,42 +220,11 @@ force = $$(while true; do \
 # macro gid: Return GID of group 1
 gid = $(shell awk -F':' '$$1 == "$(1)" {print $$3}' /etc/group 2>/dev/null)
 
-INFO_FD := 2
-# macro INFO: print colorized info
-INFO = $(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)), \
-  printf '${COLOR_INFO}$(APP)${COLOR_RESET}[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}]$(if $@, ${COLOR_VALUE}$@${COLOR_RESET}):${COLOR_RESET} ' >&$(INFO_FD) \
-  $(if $(2), \
-    && printf 'Calling ${COLOR_HIGHLIGHT}$(1)${COLOR_RESET}$(lbracket)' >&$(INFO_FD) \
-    && $(or $(strip $(call PRINTF,$(2))),printf '$(2)') >&$(INFO_FD) \
-    && printf '$(rbracket)' >&$(INFO_FD) \
-    $(if $(3),&& printf ' ${COLOR_VALUE}in${COLOR_RESET} $(3)' >&$(INFO_FD)) \
-  , \
-    && $(strip $(call PRINTF,$(1)) >&$(INFO_FD)) \
-  ) \
- && printf '\n' >&$(INFO_FD) \
-))
-
 # macro pop: Return last word of string 1 according to separator 2
 pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
 
 # macro sed: Run sed script 1 on file 2
 sed = $(RUN) sed -i $(SED_SUFFIX) '$(1)' $(2)
-
-# macro TIME: Print time elapsed since unixtime 1
-TIME = awk '{printf "%02d:%02d:%02d\n",int($$1/3600),int(($$1%3600)/60),int($$1%60)}' \
-	   <<< $(shell awk 'BEGIN {current=$(or $(2),$(MAKE_UNIXTIME_CURRENT)); start=$(or $(1),$(MAKE_UNIXTIME_START)); print (current  - start)}' 2>/dev/null)
-
-WARNING_FD := 2
-# macro WARNING: print colorized warning
-WARNING = \
-printf '${COLOR_WARNING}WARNING:${COLOR_RESET} ${COLOR_INFO}$(APP)${COLOR_RESET}[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}]$(if $@, ${COLOR_VALUE}$@${COLOR_RESET}):${COLOR_RESET} ' >&$(WARNING_FD) \
-  $(if $(2), \
-    && printf '$(1) ${COLOR_HIGHLIGHT}$(2)${COLOR_RESET}' >&$(WARNING_FD) \
-    $(if $(3),&& printf ' $(3)$(if $(4), ${COLOR_VALUE}$(4)${COLOR_RESET})' >&$(WARNING_FD)) \
-  , \
-    && $(strip $(call PRINTF,$(1)) >&$(WARNING_FD)) \
-  ) \
- && printf '\n' >&$(WARNING_FD)
 
 # function conf: Extract variable=value line from configuration files
 ## it prints the line with variable 3 definition from block 2 in file 1

@@ -4,9 +4,9 @@ DOCKER_GID                      ?= $(call gid,docker)
 DOCKER_IMAGE                    ?= $(USER_DOCKER_IMAGE)
 DOCKER_MACHINE                  ?= $(shell docker run --rm alpine uname -m 2>/dev/null)
 DOCKER_NAME                     ?= $(USER_DOCKER_NAME)
-DOCKER_NETWORK                  ?= $(DOCKER_NETWORK_PRIVATE)
-DOCKER_NETWORK_PRIVATE          ?= $(USER_COMPOSE_PROJECT_NAME)
-DOCKER_NETWORK_PUBLIC           ?= $(NODE_COMPOSE_PROJECT_NAME)
+DOCKER_NETWORK                  ?= $(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER),$(DOCKER_NETWORK_PRIVATE))
+DOCKER_NETWORK_PRIVATE          ?= $(USER)-$(ENV)
+DOCKER_NETWORK_PUBLIC           ?= $(HOSTNAME)
 # DOCKER_RUN: if empty, run system command, else run it in a docker
 DOCKER_RUN                      ?= $(if $(filter-out false False FALSE,$(DOCKER)),$(DOCKER))
 DOCKER_RUN_LABELS               ?= $(patsubst %,-l %,$(DOCKER_LABELS))
@@ -16,18 +16,19 @@ DOCKER_RUN_OPTIONS              += --rm --network $(DOCKER_NETWORK)
 DOCKER_RUN_VOLUME               += -v /var/run/docker.sock:/var/run/docker.sock
 DOCKER_RUN_WORKDIR              ?= -w $(PWD)
 DOCKER_SYSTEM                   ?= $(shell docker run --rm alpine uname -s 2>/dev/null)
-ENV_VARS                        += DOCKER_MACHINE DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC DOCKER_SYSTEM NODE_COMPOSE_PROJECT_NAME NODE_COMPOSE_SERVICE_NAME NODE_DOCKER_REPOSITORY NODE_DOCKER_VOLUME NODE_GID NODE_UID USER_COMPOSE_PROJECT_NAME USER_COMPOSE_SERVICE_NAME USER_DOCKER_IMAGE USER_DOCKER_NAME USER_DOCKER_REPOSITORY USER_DOCKER_VOLUME
+ENV_VARS                        += DOCKER_MACHINE DOCKER_NETWORK DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC DOCKER_SYSTEM NODE_COMPOSE_PROJECT_NAME NODE_COMPOSE_SERVICE_NAME NODE_DOCKER_REPOSITORY NODE_DOCKER_VOLUME NODE_GID NODE_UID USER_COMPOSE_PROJECT_NAME USER_COMPOSE_SERVICE_NAME USER_DOCKER_IMAGE USER_DOCKER_NAME USER_DOCKER_REPOSITORY USER_DOCKER_VOLUME
 NODE_COMPOSE_PROJECT_NAME       ?= $(HOSTNAME)
 NODE_COMPOSE_SERVICE_NAME       ?= $(subst _,-,$(NODE_COMPOSE_PROJECT_NAME))
 NODE_DOCKER_REPOSITORY          ?= $(subst -,/,$(subst _,/,$(NODE_COMPOSE_PROJECT_NAME)))
 NODE_DOCKER_VOLUME              ?= $(NODE_COMPOSE_PROJECT_NAME)
 NODE_GID                        ?= 100
 NODE_UID                        ?= 123
-USER_COMPOSE_PROJECT_NAME       ?= $(USER)-$(ENV)
+RESU_DOCKER_REPOSITORY          ?= $(subst -,/,$(subst _,/,$(USER_COMPOSE_PROJECT_NAME)))
+USER_COMPOSE_PROJECT_NAME       ?= $(strip $(RESU))
 USER_COMPOSE_SERVICE_NAME       ?= $(subst _,-,$(USER_COMPOSE_PROJECT_NAME))
 USER_DOCKER_IMAGE               ?= $(USER_DOCKER_REPOSITORY):${DOCKER_IMAGE_TAG}
 USER_DOCKER_NAME                ?= $(USER_COMPOSE_PROJECT_NAME)
-USER_DOCKER_REPOSITORY          ?= $(subst -,/,$(subst _,/,$(USER_COMPOSE_PROJECT_NAME)))
+USER_DOCKER_REPOSITORY          ?= $(subst -,/,$(subst _,/,$(USER)))
 USER_DOCKER_VOLUME              ?= $(USER_COMPOSE_PROJECT_NAME)
 
 # https://github.com/docker/libnetwork/pull/2348
@@ -81,7 +82,7 @@ define run
 	$(if $(DOCKER_RUN_NAME),
 	  $(if $(call docker-running,^$(DOCKER_RUN_NAME)$$),
 	    $(call ERROR,Found already running docker,$(DOCKER_RUN_NAME))
-		)
+	  )
 	)
 	$(RUN) docker run $(DOCKER_ENV_ARGS) $(DOCKER_RUN_LABELS) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(DOCKER_SSH_AUTH) $(DOCKER_RUN_NAME) $(2)$(1)
 endef

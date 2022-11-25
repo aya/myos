@@ -31,19 +31,19 @@ services:
     - public
     restart: always
     volumes:
-    - monorepo:/Sources:cached
-    - myos:/tmp/ssh-agent:ro
+    - sources:/Sources:cached
+    - user:/tmp/ssh-agent:ro
     - /var/run/docker.sock:/var/run/docker.sock
 
 volumes:
-  monorepo:
+  sources:
     driver: local
     driver_opts:
       type: none
       device: ${MONOREPO_DIR}
       o: bind
     name: ${USER_COMPOSE_PROJECT_NAME}
-  myos:
+  user:
     external: true
     name: ${USER_DOCKER_VOLUME}
 
