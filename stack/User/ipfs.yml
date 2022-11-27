@@ -90,6 +90,7 @@ services:
 
 volumes:
   ipfs:
+    name: ${USER_DOCKER_VOLUME}_ipfs
 
 networks:
   private:

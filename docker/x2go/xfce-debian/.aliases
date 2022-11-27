@@ -1,0 +1,4 @@
+l='ls -CF'
+la='ls -A'
+ll='ls -l'
+vi='nvim'

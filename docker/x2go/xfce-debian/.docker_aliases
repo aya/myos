@@ -1,0 +1,3 @@
+alias ctop='docker run --rm -it -v /var/run/docker.sock:/var/run/docker.sock:ro quay.io/vektorlab/ctop:latest'
+alias shellcheck='docker run --rm -v "$PWD/mnt" koalaman/shellcheck:stable'
+alias trans='docker run -it soimort/translate-shell'

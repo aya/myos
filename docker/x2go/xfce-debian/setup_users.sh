@@ -8,11 +8,12 @@ for user in ${USERS:-${USER:-user}}; do
    && mkdir -p "/home/${user}" \
    && chown "${user}" "/home/${user}" \
    && chmod 0750 "/home/${user}"
-  for file in .bash_logout .bashrc .profile; do
-    [ ! -f "/home/${user}/${file}" ] \
+  for file in .aliases .bash_aliases .bash_profile .bashrc .dircolors_aliases .docker_aliases .profile .sh_aliases .sh_profile .shrc; do \
+    [ -f "/etc/skel/${file}" ] && [ ! -f "/home/${user}/${file}" ] \
      && cp "/etc/skel/${file}" "/home/${user}" \
      && chown "${user}" "/home/${user}/${file}"
   done
+  usermod -a -G docker   "${user}"
   usermod -a -G x2gouser "${user}"
   mkdir -p "/home/${user}/.ssh"
   keys=$(su "${user}" /app/authorized_keys.sh 2>/dev/null) \

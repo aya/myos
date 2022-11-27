@@ -20,12 +20,12 @@ services:
     container_name: ${USER_DOCKER_NAME}
     environment:
     - ENV=${ENV}
-    - RC_00_SOURCE=${USER_MYOS_RC_SOURCE}
-    - RC_01_PS1_SET=${USER_MYOS_RC_PS1_SET}
-    - RC_02_PROMPT_SET=${USER_MYOS_RC_PROMPT_SET}
-    - RC_03_SSH_ADD=${USER_MYOS_RC_SSH_ADD}
-    - RC_04_TMUX_ATTACH=${USER_MYOS_RC_TMUX_ATTACH}
-    - RC_05_SCREEN_ATTACH=${USER_MYOS_RC_SCREEN_ATTACH}
+    - RC_00_SOURCE=${USER_RC_SOURCE:-/etc/profile.d/rc_functions.sh}
+    - RC_01_PS1_SET=${USER_RC_PS1_SET:-true}
+    - RC_02_PROMPT_SET=${USER_RC_PROMPT_SET:-true}
+    - RC_03_SSH_ADD=${USER_RC_SSH_ADD:-true}
+    - RC_04_TMUX_ATTACH=${USER_RC_TMUX_ATTACH:-false}
+    - RC_05_SCREEN_ATTACH=${USER_RC_SCREEN_ATTACH:-true}
     - SHELL=${DOCKER_SHELL}
     image: ${USER_DOCKER_IMAGE}
     networks:

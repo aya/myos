@@ -5,7 +5,8 @@ services:
     build:
       args:
       - DOCKER_BUILD_DIR=docker/x2go/xfce-debian
-      - SSH_PORT=${VDI_PORT:-22}
+      - DOCKER_GID=${DOCKER_GID:-}
+      - SSH_PORT=${SSH_PORT:-22}
       context: ../..
       dockerfile: docker/x2go/xfce-debian/Dockerfile
     cap_add:
@@ -18,7 +19,7 @@ services:
     - DEBUG=${VDI_DEBUG:-}
     - ECRYPTERS=${VDI_ECRYPTERS:-}
     - LANG=${VDI_LANG:-}
-    - SSH_PORT=${VDI_PORT:-22}
+    - SSH_PORT=${SSH_PORT:-22}
     - SSH_PUBLIC_HOSTS=${SSH_PUBLIC_HOSTS:-}
     - SUDOERS=${VDI_SUDOERS:-}
     - TZ=${VDI_TZ:-}
@@ -28,7 +29,7 @@ services:
     - private
     - public
     ports:
-    - ${SSH_PORT}
+    - ${VDI_PORT}:${SSH_PORT}
     restart: unless-stopped
     security_opt:
     - apparmor=unconfined # ecryptfs

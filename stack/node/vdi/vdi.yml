@@ -5,7 +5,7 @@ services:
     build:
       args:
       - DOCKER_BUILD_DIR=docker/x2go/xfce-debian
-      - SSH_PORT=${NODE_VDI_PORT:-22}
+      - SSH_PORT=${NODE_SSH_PORT:-${SSH_PORT}}
       context: ../..
       dockerfile: docker/x2go/xfce-debian/Dockerfile
     cap_add:
@@ -17,14 +17,14 @@ services:
     cpus: 0.5
     environment:
     - DEBUG=${VDI_DEBUG:-}
-    - ECRYPTERS=${NODE_VDI_ECRYPTERS:-}
-    - LANG=${NODE_VDI_LANG:-}
-    - SSH_PORT=${NODE_VDI_PORT:-22}
+    - ECRYPTERS=${NODE_VDI_ECRYPTERS:-${USER}}
+    - LANG=${NODE_VDI_LANG:-C.UTF-8}
+    - SSH_PORT=${NODE_SSH_PORT:-${SSH_PORT}}
     - SSH_AUTHORIZED_KEYS=${SSH_AUTHORIZED_KEYS:-}
-    - SSH_PUBLIC_HOSTS=${NODE_SSH_PUBLIC_HOSTS:-}
-    - SUDOERS=${NODE_VDI_SUDOERS:-}
+    - SSH_PUBLIC_HOSTS=${NODE_SSH_PUBLIC_HOSTS:-${SSH_PUBLIC_HOSTS}}
+    - SUDOERS=${NODE_VDI_SUDOERS:-${USER}}
     - TZ=${NODE_VDI_TZ:-}
-    - USERS=${NODE_VDI_USERS:-}
+    - USERS=${NODE_VDI_USERS:-${USER}}
     image: ${NODE_DOCKER_REPOSITORY}/vdi:${DOCKER_IMAGE_TAG}
     networks:
     - public

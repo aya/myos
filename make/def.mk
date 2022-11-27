@@ -68,7 +68,7 @@ GIT_UPSTREAM_USER               ?= $(lastword $(subst /, ,$(call pop,$(MYOS_REPO
 GIT_USER                        ?= $(USER)
 GIT_VERSION                     ?= $(shell git describe --tags $(BRANCH) 2>/dev/null || git rev-parse $(BRANCH) 2>/dev/null)
 GROUP                           ?= $(shell id -ng 2>/dev/null)
-HOSTNAME                        ?= $(shell hostname 2>/dev/null |sed 's/\..*//')
+HOSTNAME                        ?= $(call LOWERCASE,$(shell hostname 2>/dev/null |sed 's/\..*//'))
 IGNORE_DRYRUN                   ?= false
 IGNORE_VERBOSE                  ?= false
 INSTALL                         ?= $(RUN) $(SUDO) $(subst &&,&& $(RUN) $(SUDO),$(INSTALL_CMD))
@@ -170,14 +170,16 @@ INFO = $(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)), \
 # macro RESU: Print USER associated to MAIL
 RESU = \
 $(if $(findstring @,$(MAIL)), \
-  $(eval user      := $(subst +,,$(subst -,,$(subst .,,$(call LOWERCASE,$(shell printf '$(MAIL)' |awk -F "@" '{print $$1}')))))) \
+  $(eval user      := $(subst +,,$(subst -,,$(call LOWERCASE,$(shell printf '$(MAIL)' |awk -F "@" '{print $$1}'))))) \
   $(eval domain    := $(call LOWERCASE,$(call subst,_,,$(shell printf '$(MAIL)' |awk -F "@" '{print $$NF}')))) \
   $(if $(domain), \
     $(eval mail      := $(MAIL)) \
-    $(eval niamod    := $(subst $(space),_,$(strip $(call reverse,$(subst .,$(space),$(domain)))))) \
-    $(eval resu      := $(niamod)_$(user)) \
-    $(eval resu_path := $(subst _,/,$(niamod))/$(user)) \
-    $(resu) \
+    $(eval niamod    := $(subst $(space),.,$(strip $(call reverse,$(subst ., ,$(domain)))))) \
+    $(eval resu      := $(subst $(space),.,$(strip $(call reverse,$(subst ., ,$(user)))))) \
+    $(eval resu_niamod := $(niamod).$(resu)) \
+    $(eval resu_path := $(subst .,/,$(resu_niamod))) \
+    $(eval user_domain := $(user).$(domain)) \
+    $(resu_niamod) \
   , $(USER) \
   ) \
 , $(USER) \

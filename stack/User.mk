@@ -2,7 +2,6 @@ CMDARGS                         += user-exec user-exec:% user-exec@% user-run us
 ENV_VARS                        += USER_DOMAIN user_domain
 USER_DOMAIN                     ?= $(USER).$(DOMAIN)
 User                            ?= $(patsubst stack/%,%,$(patsubst %.yml,%,$(wildcard stack/User/*.yml)))
-user_domain                     ?= $(user).$(domain)
 
 # target start-stack-User: Fire ssh-add
 .PHONY: start-stack-User
