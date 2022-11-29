@@ -5,14 +5,14 @@ services:
     build:
       args:
       - DOCKER_BUILD_DIR=docker/prometheus/alertmanager
-      - SLACK_WEBHOOK_ID=${ALERTMANAGER_SLACK_WEBHOOK_ID}
+      - SLACK_WEBHOOK_ID=${ALERTMANAGER_SLACK_WEBHOOK_ID:-https://hooks.slack.com/services/123456789/123456789/ABCDEFGHIJKLMNOPQRSTUVWX}
       context: ../..
       dockerfile: docker/prometheus/alertmanager/Dockerfile
     image: ${DOCKER_REPOSITORY}/alertmanager:${DOCKER_IMAGE_TAG}
     labels:
     - SERVICE_9093_CHECK_TCP=true
     - SERVICE_9093_NAME=${COMPOSE_SERVICE_NAME}-alertmanager-9093
-    - SERVICE_9093_TAGS=${ALERTMANAGER_SERVICE_9093_TAGS}
+    - SERVICE_9093_TAGS=${ALERTMANAGER_SERVICE_9093_TAGS:-}
     networks:
     - private
     - public

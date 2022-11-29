@@ -4,6 +4,6 @@ services:
   kibana:
     image: docker.elastic.co/kibana/kibana:7.7.1
     environment:
-    - ELASTICSEARCH_HOSTS="${ELASTICSEARCH_PROTOCOL}://${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}"
-    - KIBANA_INDEX=.kibana.${ENV}
-    - SERVER_NAME=kibana.${APP_DOMAIN}
+    - ELASTICSEARCH_HOSTS="${ELASTICSEARCH_PROTOCOL:-http}://${ELASTICSEARCH_HOST:-elasticsearch}:${ELASTICSEARCH_PORT:-9200}"
+    - KIBANA_INDEX=.kibana.${COMPOSE_SERVICE_NAME}
+    - SERVER_NAME=kibana.${APP_HOST}

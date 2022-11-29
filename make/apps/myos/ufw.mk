@@ -26,7 +26,7 @@ ufw-update: debug-UFW_UPDATE
 	  ) \
 	)
 
-## ex: ufw-node-update will update ufw rules for stack node
+## ex: ufw-host-update will update ufw rules for stack host
 .PHONY: stack-%
 ufw-%:
 	$(eval stack   := $(subst -$(lastword $(subst -, ,$*)),,$*))

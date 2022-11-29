@@ -13,11 +13,11 @@ services:
     environment:
     - ENV=${ENV}
     - MONOREPO_DIR=${MONOREPO_DIR}
-    - RC_01_PS1_SET=${RC_PS1_SET}
-    - RC_02_PROMPT_SET=${RC_PROMPT_SET}
-    - RC_03_SSH_ADD=${RC_SSH_ADD}
-    - RC_04_TMUX_ATTACH=${RC_TMUX_ATTACH}
-    - RC_05_SCREEN_ATTACH=${RC_SCREEN_ATTACH}
+    - RC_01_PS1_SET=${RC_PS1_SET:-true}
+    - RC_02_PROMPT_SET=${RC_PROMPT_SET:-false}
+    - RC_03_SSH_ADD=${RC_SSH_ADD:-false}
+    - RC_04_TMUX_ATTACH=${RC_TMUX_ATTACH:-false}
+    - RC_05_SCREEN_ATTACH=${RC_SCREEN_ATTACH:-false}
     - SHELL=${DOCKER_SHELL}
     - SSH_AUTH_SOCK=/tmp/ssh-agent/socket
     - WORKSPACE_DIR=/Sources

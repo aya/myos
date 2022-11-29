@@ -3,7 +3,7 @@ version: '3.6'
 services:
   mysql:
     environment:
-    - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-root}
     labels:
     - SERVICE_3306_NAME=${COMPOSE_SERVICE_NAME}-mysql-3306
     - SERVICE_CHECK_SCRIPT=docker-healthcheck $$SERVICE_IP

@@ -68,6 +68,7 @@ GIT_UPSTREAM_USER               ?= $(lastword $(subst /, ,$(call pop,$(MYOS_REPO
 GIT_USER                        ?= $(USER)
 GIT_VERSION                     ?= $(shell git describe --tags $(BRANCH) 2>/dev/null || git rev-parse $(BRANCH) 2>/dev/null)
 GROUP                           ?= $(shell id -ng 2>/dev/null)
+HOST                            ?= $(HOSTNAME).$(DOMAIN)
 HOSTNAME                        ?= $(call LOWERCASE,$(shell hostname 2>/dev/null |sed 's/\..*//'))
 IGNORE_DRYRUN                   ?= false
 IGNORE_VERBOSE                  ?= false

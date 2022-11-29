@@ -3,7 +3,7 @@ version: '3.6'
 services:
   apm-server:
     image: docker.elastic.co/apm/apm-server:7.4.2
-    command: -c apm-server.yml --strict.perms=false -e -E output.elasticsearch.hosts=["${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}"] -E output.elasticsearch.protocol=${ELASTICSEARCH_PROTOCOL} -E output.elasticsearch.username=${ELASTICSEARCH_USERNAME} -E output.elasticsearch.password=${ELASTICSEARCH_PASSWORD}
+    command: -c apm-server.yml --strict.perms=false -e -E output.elasticsearch.hosts=["${ELASTICSEARCH_HOST:-elasticsearch}:${ELASTICSEARCH_PORT:-9200}"] -E output.elasticsearch.protocol=${ELASTICSEARCH_PROTOCOL:-http} -E output.elasticsearch.username=${ELASTICSEARCH_USERNAME} -E output.elasticsearch.password=${ELASTICSEARCH_PASSWORD}
     labels:
     - SERVICE_8200_CHECK_HTTP=/
     - SERVICE_8200_NAME=${COMPOSE_SERVICE_NAME}-apm-server-8200
@@ -12,7 +12,6 @@ services:
       private:
         aliases:
         - apm.${DOCKER_NETWORK_PRIVATE}
-        - apm.elastic.${DOCKER_NETWORK_PRIVATE}
       public:
     ports:
     - 8200

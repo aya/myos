@@ -4,8 +4,8 @@ services:
   drone-gc:
     image: drone/gc:latest
     environment:
-    - GC_CACHE=20gb
-    - GC_INTERVAL=5m
+    - GC_CACHE=${DRONE_GC_CACHE:-20gb}
+    - GC_INTERVAL=${DRONE_GC_INTERVAL:-5m}
     networks:
     - private
     restart: always

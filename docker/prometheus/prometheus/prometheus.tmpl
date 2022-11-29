@@ -59,7 +59,7 @@ scrape_configs:
 
     static_configs:
       - targets:
-MONITORING_PRIMARY_TARGETS_BLACKBOX
+BLACKBOX_PRIMARY_TARGETS
 
     relabel_configs:
       - source_labels: [__address__]
@@ -89,7 +89,7 @@ MONITORING_PRIMARY_TARGETS_BLACKBOX
 
     static_configs:
       - targets:
-MONITORING_SECONDARY_TARGETS_BLACKBOX
+BLACKBOX_SECONDARY_TARGETS
 
     relabel_configs:
       - source_labels: [__address__]

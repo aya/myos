@@ -1,0 +1,11 @@
+version: '3.6'
+
+services:
+  autoheal:
+    container_name: ${HOST_COMPOSE_PROJECT_NAME}-autoheal
+    image: willfarrell/autoheal:latest
+    environment:
+    - AUTOHEAL_CONTAINER_LABEL=all
+    restart: always
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock

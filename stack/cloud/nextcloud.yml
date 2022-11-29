@@ -4,14 +4,14 @@ services:
   nextcloud:
     image: nextcloud:production-apache
     environment:
-    - MYSQL_DATABASE=${NEXTCLOUD_MYSQL_DATABASE}
-    - MYSQL_HOST=${NEXTCLOUD_MYSQL_HOST}
-    - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD}
-    - MYSQL_USER=${NEXTCLOUD_MYSQL_USER}
+    - MYSQL_DATABASE=${NEXTCLOUD_MYSQL_DATABASE:-nextcloud}
+    - MYSQL_HOST=${NEXTCLOUD_MYSQL_HOST:-mysql}
+    - MYSQL_PASSWORD=${NEXTCLOUD_MYSQL_PASSWORD:-nextcloud}
+    - MYSQL_USER=${NEXTCLOUD_MYSQL_USER:-nextcloud}
     labels:
     - SERVICE_80_CHECK_TCP=true
     - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME}-nextcloud-80
-    - SERVICE_80_TAGS=${NEXTCLOUD_SERVICE_80_TAGS}
+    - SERVICE_80_TAGS=${NEXTCLOUD_SERVICE_80_TAGS:-}
     networks:
     - private
     - public

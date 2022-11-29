@@ -4,4 +4,4 @@ services:
   kibana:
     image: docker.elastic.co/kibana/kibana:5.3.3
     environment:
-    - ELASTICSEARCH_URL="${ELASTICSEARCH_PROTOCOL}://${ELASTICSEARCH_HOST}:${ELASTICSEARCH_PORT}"
+    - ELASTICSEARCH_URL="${ELASTICSEARCH_PROTOCOL:-http}://${ELASTICSEARCH_HOST:-elasticsearch}:${ELASTICSEARCH_PORT:-9200}"

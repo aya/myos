@@ -1,1 +1,1 @@
-monitoring                      ?= grafana prometheus/alertmanager prometheus/blackbox-exporter prometheus/es-exporter prometheus/prometheus
+monitoring                      ?= grafana prometheus/alertmanager prometheus/blackbox prometheus/es-exporter prometheus/prometheus

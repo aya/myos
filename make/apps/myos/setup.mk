@@ -43,7 +43,7 @@ setup-ufw:
 ifeq ($(SETUP_UFW),true)
 	$(call app-install,$(SETUP_UFW_REPOSITORY))
 	$(call app-bootstrap,$(lastword $(subst /, ,$(SETUP_UFW_REPOSITORY))))
-	$(eval COMPOSE_PROJECT_NAME := $(NODE_COMPOSE_PROJECT_NAME))
+	$(eval COMPOSE_PROJECT_NAME := $(HOST_COMPOSE_PROJECT_NAME))
 	$(call app-build)
 	$(eval DOCKER_RUN_OPTIONS := --rm --cap-add NET_ADMIN -v /etc/ufw:/etc/ufw --network host)
 	$(call app-up)

@@ -1,0 +1,27 @@
+version: '3.6'
+
+services:
+  exporter-cadvisor:
+    container_name: ${HOST_COMPOSE_PROJECT_NAME}-exporter-cadvisor
+    hostname: ${HOSTNAME}
+    image: google/cadvisor:latest
+    labels:
+    - SERVICE_8080_CHECK_TCP=true
+    - SERVICE_8080_NAME=${HOST_COMPOSE_SERVICE_NAME}-exporter-cadvisor-8080
+    - SERVICE_8080_TAGS=${HOST_EXPORTER_CADVISOR_SERVICE_8080_TAGS}
+    - SERVICE_9200_IGNORE=true
+    networks:
+    - public
+    ports:
+    - 8080
+    restart: always
+    volumes:
+    - /:/rootfs:ro
+    - /sys:/sys:ro
+    - /var/lib/docker/:/var/lib/docker:ro
+    - /var/run:/var/run:rw
+
+networks:
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

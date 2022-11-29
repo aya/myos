@@ -9,10 +9,9 @@ docker-build: docker-images-myos
 # target docker-build-%: Call docker-build for each Dockerfile in docker/% folder
 .PHONY: docker-build-%
 docker-build-%:
-	if grep -q DOCKER_REPOSITORY docker/$*/Dockerfile 2>/dev/null; then $(eval DOCKER_BUILD_ARGS:=$(subst $(DOCKER_REPOSITORY),$(USER_DOCKER_REPOSITORY),$(DOCKER_BUILD_ARGS))) true; fi
 	$(if $(wildcard docker/$*/Dockerfile),$(call docker-build,docker/$*))
 	$(if $(findstring :,$*),$(eval DOCKER_FILE := $(wildcard docker/$(subst :,/,$*)/Dockerfile)),$(eval DOCKER_FILE := $(wildcard docker/$*/*/Dockerfile)))
-	$(foreach dockerfile,$(DOCKER_FILE),$(call docker-build,$(dir $(dockerfile)),$(DOCKER_REPOSITORY)/$(word 2,$(subst /, ,$(dir $(dockerfile)))):$(lastword $(subst /, ,$(dir $(dockerfile)))),"") && true)
+	$(foreach dockerfile,$(DOCKER_FILE),$(call docker-build,$(dir $(dockerfile)),$(DOCKER_REPOSITORY)/$(word 2,$(subst /, ,$(dir $(dockerfile)))):$(lastword $(subst /, ,$(dir $(dockerfile)))),""))
 
 # target docker-commit: Call docker-commit for each SERVICES
 .PHONY: docker-commit

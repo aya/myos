@@ -6,10 +6,10 @@ services:
     - drone
     environment:
     - DRONE_RPC_SECRET=${DRONE_RPC_SECRET}
-    - DRONE_RPC_HOST=drone
-    - DRONE_RPC_PROTO=http
-    - DRONE_RUNNER_CAPACITY=${DRONE_RUNNER_CAPACITY}
-    - DRONE_RUNNER_NAME=${HOSTNAME}
+    - DRONE_RPC_HOST=${DRONE_RPC_HOST:-drone}
+    - DRONE_RPC_PROTO=${DRONE_RPC_PROTO:-http}
+    - DRONE_RUNNER_CAPACITY=${DRONE_RUNNER_CAPACITY:-1}
+    - DRONE_RUNNER_NAME=${DRONE_RUNNER_NAME:-drone-runner}
     labels:
     - SERVICE_3000_IGNORE=true
     networks:

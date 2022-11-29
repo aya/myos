@@ -1,0 +1,30 @@
+version: '3.6'
+
+services:
+  exporter-node:
+    command:
+    - --collector.filesystem.ignored-mount-points
+    - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
+    - '--path.procfs=/host/proc'
+    - '--path.sysfs=/host/sys'
+    container_name: ${HOST_COMPOSE_PROJECT_NAME}-exporter-node
+    hostname: ${HOSTNAME}
+    image: prom/node-exporter:latest
+    labels:
+    - SERVICE_9100_CHECK_TCP=true
+    - SERVICE_9100_NAME=${HOST_COMPOSE_SERVICE_NAME}-exporter-node-9100
+    - SERVICE_9100_TAGS=${HOST_EXPORTER_HOST_SERVICE_9100_TAGS}
+    networks:
+    - public
+    ports:
+    - 9100
+    restart: always
+    volumes:
+    - /:/rootfs:ro
+    - /proc:/host/proc:ro
+    - /sys:/host/sys:ro
+
+networks:
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

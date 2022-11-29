@@ -101,10 +101,10 @@ exec@%: SERVICE ?= $(DOCKER_SERVICE)
 exec@%:
 	$(call make,ssh-exec,$(MYOS),APP ARGS SERVICE)
 
-# target force-%: Fire targets %, stack-user-% and stack-node-%
+# target force-%: Fire targets %, stack-user-% and stack-host-%
 # on local host
 .PHONY: force-%
-force-%: % stack-user-% stack-node-%;
+force-%: % stack-user-% stack-host-%;
 
 # target install app-install: Install application
 # on local host
@@ -177,7 +177,7 @@ run@%:
 .PHONY: scale
 scale: docker-compose-scale ## Scale SERVICE application to NUM dockers
 
-# target shutdown: remove application, node and user dockers
+# target shutdown: remove application, host and user dockers
 # on local host
 .PHONY: shutdown
 shutdown: force-down ## Shutdown all dockers
@@ -197,14 +197,14 @@ stack:
 # target stack-%: Call docker-compose-% target on STACK
 ## it splits % on dashes and extracts stack from the beginning and command from
 ## the last part of %
-## ex: stack-node-up will fire the docker-compose-up target in the node stack
+## ex: stack-host-up will fire the docker-compose-up target in the host stack
 .PHONY: stack-%
 stack-%:
 	$(eval stack   := $(subst -$(lastword $(subst -, ,$*)),,$*))
 	$(eval command := $(lastword $(subst -, ,$*)))
 	$(if $(findstring -,$*), \
 		$(if $(filter $(command),$(filter-out %-%,$(patsubst docker-compose-%,%,$(filter docker-compose-%,$(MAKE_TARGETS))))), \
-		$(call make,$(command) STACK="$(stack)",,ARGS COMPOSE_IGNORE_ORPHANS DOCKER_COMPOSE_PROJECT_NAME SERVICE User node)))
+		$(call make,$(command) STACK="$(stack)",,ARGS COMPOSE_IGNORE_ORPHANS DOCKER_COMPOSE_PROJECT_NAME SERVICE User host)))
 
 # target start app-start: Start application dockers
 # on local host

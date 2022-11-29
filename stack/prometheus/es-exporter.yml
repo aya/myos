@@ -7,12 +7,12 @@ services:
       - DOCKER_BUILD_DIR=docker/prometheus/es-exporter
       context: ../..
       dockerfile: docker/prometheus/es-exporter/Dockerfile
-    command: -e ${ES_EXPORTER_ELASTICSEARCH_URL}
+    command: -e ${ES_EXPORTER_ELASTICSEARCH_URL:-elasticsearch:9200}
     image: ${DOCKER_REPOSITORY}/es-exporter:${DOCKER_IMAGE_TAG}
     labels:
     - SERVICE_9206_CHECK_TCP=true
     - SERVICE_9206_NAME=${COMPOSE_SERVICE_NAME}-es-exporter-9206
-    - SERVICE_9206_TAGS=${ES_EXPORTER_SERVICE_9206_TAGS}
+    - SERVICE_9206_TAGS=${ES_EXPORTER_SERVICE_9206_TAGS:-}
     networks:
     - private
     - public

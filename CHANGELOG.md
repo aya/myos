@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.0-alpha - 2022-11-29
+
+* node is host
+
 ## v0.9.9 - 2022-11-22
 
 * node name is `hostname`
@@ -15,7 +19,6 @@ Beta release, welcome ipfs
 * add arm64 support
 * add ipfs stack
 * add x2go with ssh ecryptfs homedir
-* add zen stack
 * update docker-compose to v2.5.0
 
 ## v0.1-alpha - 2021-07-14
@@ -29,12 +32,10 @@ Public release, code is doc
 Initial import
 
 * import previous `infra` project
-* remove any reference to previous project
 * rename project to myos - make your own stack
 
 ## 2020
 
-* integration with drone.io
 * makefile can be included in any project
 * multi user/environment
 

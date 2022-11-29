@@ -15,6 +15,7 @@ APP_REQUIRED                    ?= $(APP_REPOSITORY)
 APP_SCHEME                      ?= https
 APP_UPSTREAM_REPOSITORY         ?= $(or $(shell git config --get remote.upstream.url 2>/dev/null),$(GIT_UPSTREAM_REPOSITORY))
 APP_URI                         ?= $(APP_HOST)/$(APP_PATH)
+APP_URIS                        ?= $(APP_URI)
 APP_URL                         ?= $(APP_SCHEME)://$(APP_URI)
 CMDARGS                         += exec exec:% exec@% run run:% run@%
 CONTEXT                         += APP APPS BRANCH DOMAIN VERSION RELEASE

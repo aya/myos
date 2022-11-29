@@ -8,14 +8,14 @@ services:
       context: ../..
       dockerfile: docker/elastic/curator/Dockerfile
     environment:
-    - DEPLOY=${DEPLOY}
-    - HOSTS=${ELASTICSEARCH_PROTOCOL}://${ELASTICSEARCH_HOST}
-    - LOGFORMAT=${CURATOR_LOGFORMAT}
-    - LOGLEVEL=${CURATOR_LOGLEVEL}
-    - MASTER_ONLY=${CURATOR_MASTER_ONLY}
-    - PORT=${ELASTICSEARCH_PORT}
-    - TIMEOUT=${CURATOR_TIMEOUT}
-    - USE_SSL=${CURATOR_USE_SSL}
+    - DEPLOY=${DEPLOY:-}
+    - HOSTS=${ELASTICSEARCH_PROTOCOL:-http}://${ELASTICSEARCH_HOST:-9200}
+    - LOGFORMAT=${CURATOR_LOGFORMAT:-default}
+    - LOGLEVEL=${CURATOR_LOGLEVEL:-INFO}
+    - MASTER_ONLY=${CURATOR_MASTER_ONLY:-False}
+    - PORT=${ELASTICSEARCH_PORT:-9200}
+    - TIMEOUT=${CURATOR_TIMEOUT:-30}
+    - USE_SSL=${CURATOR_USE_SSL:-False}
     networks:
     - private
     restart: always
