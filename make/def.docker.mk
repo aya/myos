@@ -9,13 +9,15 @@ DOCKER_NETWORK_PRIVATE          ?= $(USER)-$(ENV)
 DOCKER_NETWORK_PUBLIC           ?= $(HOSTNAME)
 # DOCKER_RUN: if empty, run system command, else run it in a docker
 DOCKER_RUN                      ?= $(if $(filter-out false False FALSE,$(DOCKER)),$(DOCKER))
+DOCKER_RUN_ENTRYPOINT           ?= $(patsubst %,--entrypoint=%,$(DOCKER_ENTRYPOINT))
 DOCKER_RUN_LABELS               ?= $(patsubst %,-l %,$(DOCKER_LABELS))
-# DOCKER_RUN_OPTIONS: default options of `docker run` command
-DOCKER_RUN_OPTIONS              += --rm --network $(DOCKER_NETWORK)
-# DOCKER_RUN_VOLUME: options -v of `docker run` command to mount additionnal volumes
-DOCKER_RUN_VOLUME               += -v /var/run/docker.sock:/var/run/docker.sock
-DOCKER_RUN_WORKDIR              ?= -w $(PWD)
+DOCKER_RUN_NETWORK              += --network $(DOCKER_NETWORK)
+DOCKER_RUN_OPTIONS              += --rm
+DOCKER_RUN_VOLUME               ?= $(patsubst %,-v %,$(DOCKER_VOLUME))
+DOCKER_RUN_WORKDIR              ?= $(if $(DOCKER_WORKDIR),-w $(DOCKER_WORKDIR))
 DOCKER_SYSTEM                   ?= $(shell docker run --rm alpine uname -s 2>/dev/null)
+DOCKER_VOLUME                   ?= /var/run/docker.sock:/var/run/docker.sock
+DOCKER_WORKDIR                  ?= $(PWD)
 ENV_VARS                        += DOCKER_MACHINE DOCKER_NETWORK DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC DOCKER_SYSTEM HOST_COMPOSE_PROJECT_NAME HOST_COMPOSE_SERVICE_NAME HOST_DOCKER_REPOSITORY HOST_DOCKER_VOLUME HOST_GID HOST_UID USER_COMPOSE_PROJECT_NAME USER_COMPOSE_SERVICE_NAME USER_DOCKER_IMAGE USER_DOCKER_NAME USER_DOCKER_REPOSITORY USER_DOCKER_VOLUME
 HOST_COMPOSE_PROJECT_NAME       ?= $(HOSTNAME)
 HOST_COMPOSE_SERVICE_NAME       ?= $(subst _,-,$(HOST_COMPOSE_PROJECT_NAME))
@@ -57,10 +59,10 @@ ifneq ($(DOCKER_RUN),)
 
 DOCKER_SSH_AUTH                 := -e SSH_AUTH_SOCK=/tmp/ssh-agent/socket -v $(USER_DOCKER_VOLUME):/tmp/ssh-agent
 
-# function docker-run: Run docker image 2 with arg 1
+# function docker-run: Run docker image 1 with arg 2
 define docker-run
 	$(call INFO,docker-run,$(1)$(comma) $(2))
-	$(call run,$(or $(2),$(DOCKER_IMAGE)) $(1))
+	$(call run,$(or $(1),$(DOCKER_IMAGE)) $(2))
 endef
 ifeq ($(DRONE), true)
 # function exec DRONE=true: Run DOCKER_IMAGE with arg 1
@@ -84,21 +86,21 @@ define run
 	    $(call ERROR,Found already running docker,$(DOCKER_RUN_NAME))
 	  )
 	)
-	$(RUN) docker run $(DOCKER_ENV_ARGS) $(DOCKER_RUN_LABELS) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(DOCKER_SSH_AUTH) $(DOCKER_RUN_NAME) $(2)$(1)
+	$(RUN) docker run $(DOCKER_ENV_ARGS) $(DOCKER_RUN_ENTRYPOINT) $(DOCKER_RUN_LABELS) $(DOCKER_RUN_NAME) $(DOCKER_RUN_NETWORK) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(DOCKER_SSH_AUTH) $(2)$(1)
 endef
 
 else
 
 SHELL                           := /bin/bash
-# function docker-run DOCKER=false: Run docker image 2 with arg 1
+# function docker-run DOCKER=false: Run docker image 1 with arg 2
 define docker-run
 	$(call INFO,docker-run,$(1)$(comma) $(2))
 	$(if $(DOCKER_RUN_NAME),
 	  $(if $(call docker-running,^$(DOCKER_RUN_NAME)$$),
 	    $(call ERROR,Found already running docker,$(DOCKER_RUN_NAME))
-		)
+	  )
 	)
-	$(RUN) docker run $(DOCKER_ENV_ARGS) $(DOCKER_RUN_LABELS) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(DOCKER_RUN_NAME) $(or $(2),$(DOCKER_IMAGE)) $(1)
+	$(RUN) docker run $(DOCKER_ENV_ARGS) $(DOCKER_RUN_ENTRYPOINT) $(DOCKER_RUN_LABELS) $(DOCKER_RUN_NAME) $(DOCKER_RUN_NETWORK) $(DOCKER_RUN_OPTIONS) $(DOCKER_RUN_VOLUME) $(DOCKER_RUN_WORKDIR) $(or $(1),$(DOCKER_IMAGE)) $(2)
 endef
 # function exec DOCKER=false: Call env-exec with arg 1 or SHELL
 define exec

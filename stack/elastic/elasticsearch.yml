@@ -35,6 +35,7 @@ services:
     volumes:
     - elasticsearch:/usr/share/elasticsearch/data
     restart: always
+
 volumes:
   elasticsearch:
 

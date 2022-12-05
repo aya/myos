@@ -118,10 +118,10 @@ docker-images-myos: MAKE_VARS += DOCKER_REPOSITORY STACK
 docker-images-myos:
 	$(foreach image,$(subst $(quote),,$(DOCKER_IMAGES_MYOS)),$(call make,docker-build-$(image),$(MYOS)))
 
-# target docker-images-rm: Call docker-image-rm-% target for DOCKER_REPOSITORY
+# target docker-images-rm: Remove docker images matching DOCKER_REPOSITORY
 .PHONY: docker-images-rm
 docker-images-rm:
-	$(call make,docker-images-rm-$(DOCKER_REPOSITORY)/)
+	docker images |awk '$$1 ~ /^$(subst /,\/,$(DOCKER_REPOSITORY)/)/ {print $$3}' |sort -u |while read image; do $(RUN) docker rmi -f $$image; done
 
 # target docker-images-rm-%: Remove docker images matching %
 .PHONY: docker-images-rm-%
@@ -226,7 +226,7 @@ docker-run-%: docker-build-%
 	$(eval path            := $(patsubst %/,%,$*))
 	$(eval image           := $(DOCKER_REPOSITORY)/$(lastword $(subst /, ,$(path)))$(if $(findstring :,$*),,:$(DOCKER_IMAGE_TAG)))
 	$(eval image_id        := $(shell docker images -q $(image) 2>/dev/null))
-	$(call docker-run,$(command),$(if $(image_id),$(image),$(path)))
+	$(call docker-run,$(if $(image_id),$(image),$(path)),$(command))
 
 # target docker-tag: Call docker-tag for each SERVICES
 .PHONY: docker-tag

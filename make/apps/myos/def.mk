@@ -1,7 +1,7 @@
-CMDARGS                         += ssh-run
 COMPOSE_IGNORE_ORPHANS          := true
 ENV_VARS                        += COMPOSE_IGNORE_ORPHANS MYOS_TAGS_JSON
 HOME                            ?= /home/$(USER)
+MAKECMDARGS                     += ssh-run
 MYOS_TAGS_VARS                  ?= env user
 MYOS_TAGS_ARGS                  ?= $(foreach var,$(filter $(MYOS_TAGS_VARS),$(MAKE_FILE_VARS)),$(if $($(var)),$(var)='$($(var))'))
 MYOS_TAGS_JSON                  ?= "{$(foreach var,$(filter $(MYOS_TAGS_VARS),$(MAKE_FILE_VARS)),$(if $($(var)), '$(var)': '$($(var))'$(comma))) }"

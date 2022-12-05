@@ -1,5 +1,6 @@
-CMDARGS                         += openstack
 ENV_VARS                        += OS_AUTH_URL OS_TENANT_ID OS_TENANT_NAME OS_USERNAME OS_PASSWORD OS_REGION_NAME OS_USER_DOMAIN_NAME OS_PROJECT_DOMAIN_NAME
+MAKECMDARGS                     += openstack
+
 ifneq ($(DEBUG),)
 OPENSTACK_ARGS                  += --debug
 endif

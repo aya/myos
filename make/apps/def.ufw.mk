@@ -1,4 +1,4 @@
-CMDARGS                         += ufw ufw-docker
+MAKECMDARGS                     += ufw ufw-docker
 UFW_UPDATE                      ?= $(or $(SERVICE),$(DOCKER_SERVICES))
 
 ifeq ($(SETUP_UFW),true)

@@ -156,7 +156,7 @@ restart: docker-compose-restart app-start ## Restart application
 # target run: Run command ARGS in a new docker SERVICE
 # on local host
 .PHONY: run
-run: SERVICE ?= $(DOCKER_SERVICE)
+run: SERVICE ?= $(or $(DOCKER_COMPOSE_SERVICE),$(DOCKER_SERVICE))
 run: ## Run a command in a new docker
 #ifneq (,$(filter $(ENV),$(ENV_DEPLOY)))
 #	$(call run,$(ARGS))

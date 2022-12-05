@@ -5,7 +5,7 @@
 .PHONY: setup-binfmt
 setup-binfmt:
 ifeq ($(SETUP_BINFMT),true)
-	$(call docker-run,--install $(SETUP_BINFMT_ARCH),--privileged tonistiigi/binfmt)
+	$(call docker-run,--privileged tonistiigi/binfmt,--install $(SETUP_BINFMT_ARCH))
 endif
 
 # target setup-docker-group: Call ansible to add user in docker group if needed
@@ -39,13 +39,13 @@ endif
 
 # target setup-ufw: Install ufw-docker
 .PHONY: setup-ufw
+setup-ufw: COMPOSE_PROJECT_NAME := $(HOST_COMPOSE_PROJECT_NAME)
+setup-ufw: DOCKER_RUN_OPTIONS := --rm -d --cap-add NET_ADMIN -v /etc/ufw:/etc/ufw $(if wildcard /etc/default/ufw,-v /etc/default/ufw:/etc/default/ufw) --network host
 setup-ufw:
 ifeq ($(SETUP_UFW),true)
 	$(call app-install,$(SETUP_UFW_REPOSITORY))
 	$(call app-bootstrap,$(lastword $(subst /, ,$(SETUP_UFW_REPOSITORY))))
-	$(eval COMPOSE_PROJECT_NAME := $(HOST_COMPOSE_PROJECT_NAME))
 	$(call app-build)
-	$(eval DOCKER_RUN_OPTIONS := --rm --cap-add NET_ADMIN -v /etc/ufw:/etc/ufw --network host)
 	$(call app-up)
 	$(call ufw-docker,install)
 endif

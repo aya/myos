@@ -1,7 +1,7 @@
-CMDARGS                         += packer
 DOCKER_RUN_OPTIONS_PACKER       ?= -it -p $(PACKER_SSH_PORT):$(PACKER_SSH_PORT) -p $(PACKER_VNC_PORT):$(PACKER_VNC_PORT) -v $(SSH_DIR):$(SSH_DIR)
 ENV_VARS                        += PACKER_CACHE_DIR PACKER_KEY_INTERVAL PACKER_LOG
 KVM_GID                         ?= $(call gid,kvm)
+MAKECMDARGS                     += packer
 PACKER_ARCH                     ?= $(PACKER_ALPINE_ARCH)
 PACKER_BOOT_WAIT                ?= 24s
 PACKER_BUILD_ARGS               ?= -on-error=cleanup $(foreach var,$(PACKER_BUILD_VARS),$(if $($(var)),-var $(var)='$($(var))'))

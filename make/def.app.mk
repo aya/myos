@@ -1,4 +1,4 @@
-CMDARGS                         += app-%-exec app-%-run
+MAKECMDARGS                     += app-%-exec app-%-run
 
 # function app-attach: Call docker-attach for each Dockerfile in dir 1
 define app-attach
@@ -128,7 +128,7 @@ define app-run
 	$(foreach dockerfile,$(DOCKER_FILE),
 	  $(call app-docker,$(dockerfile))
 	  $(if $(shell docker images -q $(DOCKER_IMAGE) 2>/dev/null),
-	    $(call docker-run,$(args))
+	    $(call docker-run,$(DOCKER_IMAGE),$(args))
 	  , $(call ERROR,Unable to find docker image,$(DOCKER_IMAGE))
 	  )
 	)

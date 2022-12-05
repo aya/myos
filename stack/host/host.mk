@@ -1,7 +1,7 @@
-CMDARGS                         += host-exec stack-host-exec host-exec:% host-exec@% host-run host-run:% host-run@%
-host                            ?= $(patsubst stack/%,%,$(patsubst %.yml,%,$(wildcard stack/host/*.yml)))
 ENV_VARS                        += DOCKER_HOST_IFACE DOCKER_HOST_INET4 DOCKER_INTERNAL_DOCKER_HOST
+MAKECMDARGS                     += host-exec stack-host-exec host-exec:% host-exec@% host-run host-run:% host-run@%
 SETUP_LETSENCRYPT               ?=
+host                            ?= $(patsubst stack/%,%,$(patsubst %.yml,%,$(wildcard stack/host/*.yml)))
 
 # target bootstrap-stack-host: Fire host-certbot host-ssl-certs
 .PHONY: bootstrap-stack-host

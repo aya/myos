@@ -1,5 +1,3 @@
-CMDARGS                         += docker-run docker-run-%
-COMPOSE_ARGS                    ?= --ansi auto
 COMPOSE_FILE                    ?= $(wildcard docker-compose.yml docker/docker-compose.yml $(foreach file,$(patsubst docker/docker-compose.%,%,$(basename $(wildcard docker/docker-compose.*.yml))),$(if $(filter true,$(COMPOSE_FILE_$(file)) $(COMPOSE_FILE_$(call UPPERCASE,$(file)))),docker/docker-compose.$(file).yml)))
 COMPOSE_FILE_$(ENV)             ?= true
 COMPOSE_FILE_DEBUG              ?= $(if $(DEBUG),true)
@@ -28,10 +26,13 @@ DOCKER_BUILD_TARGET             ?= $(if $(filter $(ENV),$(DOCKER_BUILD_TARGETS))
 DOCKER_BUILD_TARGET_DEFAULT     ?= master
 DOCKER_BUILD_TARGETS            ?= $(ENV_DEPLOY)
 DOCKER_BUILD_VARS               ?= APP BRANCH COMPOSE_VERSION DOCKER_GID DOCKER_MACHINE DOCKER_REPOSITORY DOCKER_SYSTEM GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME SSH_REMOTE_HOSTS USER VERSION
-DOCKER_COMPOSE                  ?= $(if $(DOCKER_RUN),docker/compose:$(COMPOSE_VERSION),$(or $(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'),docker-compose)) $(COMPOSE_ARGS)
+DOCKER_COMPOSE                  ?= $(or $(shell docker-compose --version 2>/dev/null |awk '$$4 != "v'"$(COMPOSE_VERSION)"'" {exit 1;}' && printf 'docker-compose\n'),$(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'))
+DOCKER_COMPOSE_ARGS             ?= --ansi=auto
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
 DOCKER_COMPOSE_PROJECT_NAME     ?= $(if $(filter host,$(firstword $(subst /, ,$(STACK)))),$(HOST_COMPOSE_PROJECT_NAME),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER_COMPOSE_PROJECT_NAME)))
-DOCKER_COMPOSE_RUN_OPTIONS      ?= --rm
+DOCKER_COMPOSE_RUN_ENTRYPOINT   ?= $(patsubst %,--entrypoint=%,$(DOCKER_COMPOSE_ENTRYPOINT))
+DOCKER_COMPOSE_RUN_OPTIONS      ?= --rm $(DOCKER_COMPOSE_RUN_ENTRYPOINT) $(DOCKER_COMPOSE_RUN_WORKDIR)
+DOCKER_COMPOSE_RUN_WORKDIR      ?= $(if $(DOCKER_COMPOSE_WORKDIR),-w $(DOCKER_COMPOSE_WORKDIR))
 DOCKER_COMPOSE_SERVICE_NAME     ?= $(subst _,-,$(DOCKER_COMPOSE_PROJECT_NAME))
 DOCKER_COMPOSE_UP_OPTIONS       ?= -d
 DOCKER_IMAGE_TAG                ?= $(if $(filter true,$(DEPLOY)),$(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION)),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest))
@@ -52,6 +53,7 @@ DOCKER_SERVICE                  ?= $(lastword $(DOCKER_SERVICES))
 DOCKER_SERVICES                 ?= $(eval IGNORE_DRYRUN := true)$(eval IGNORE_VERBOSE := true)$(shell $(call docker-compose,config --services) 2>/dev/null)$(eval IGNORE_DRYRUN := false)$(eval IGNORE_VERBOSE := false)
 DOCKER_SHELL                    ?= /bin/sh
 ENV_VARS                        += COMPOSE_PROJECT_NAME COMPOSE_SERVICE_NAME DOCKER_BUILD_TARGET DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_REPOSITORY DOCKER_SHELL
+MAKECMDARGS                     += docker-run docker-run-%
 
 ifeq ($(DRONE), true)
 APP_PATH_PREFIX                 := $(DRONE_BUILD_NUMBER)
@@ -83,14 +85,21 @@ endef
 # function docker-compose: Run docker-compose with arg 1
 define docker-compose
 	$(call INFO,docker-compose,$(1))
-	$(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
-	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1)))
+	$(if $(COMPOSE_FILE),
+	  $(if $(DOCKER_COMPOSE),
+	    $(call env-exec,$(RUN) $(DOCKER_COMPOSE) $(DOCKER_COMPOSE_ARGS) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
+	  , $(if $(DOCKER_RUN),
+	      $(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION))
+	      $(call docker-run,docker/compose:$(COMPOSE_VERSION) $(DOCKER_COMPOSE_ARGS),$(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
+	    , $(call env-exec,$(RUN) docker-compose $(DOCKER_COMPOSE_ARGS) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
+	    )
+	  )
+	)
 endef
 # function docker-compose-exec-sh: Run docker-compose-exec sh -c 'arg 2' in service 1
 define docker-compose-exec-sh
 	$(call INFO,docker-compose-exec-sh,$(1)$(comma) $(2))
-	$(if $(DOCKER_RUN),$(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION)))
-	$(if $(COMPOSE_FILE),$(call run,$(DOCKER_COMPOSE) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) exec -T $(1) sh -c '$(2)'))
+	$(call docker-compose,exec -T $(1) sh -c '$(2)')
 endef
 # function docker-push: Push docker image
 define docker-push

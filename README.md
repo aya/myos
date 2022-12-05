@@ -1,12 +1,12 @@
 # myos - Make Your Own Stack
 
-Docker paas based on docker compose files.
+Docker paas based on docker compose and make files.
 
 Make Your Own Stack provides common make targets to build and run docker projects.
 
 ## Disclaimer
 
-This is work in progress ;)
+This is beta software, use it at your own risks.
 
 ## Requirements
 
@@ -14,11 +14,13 @@ You need `docker`, `git` and `make`.
 
 ## Install
 
-* Include myos `include.mk` file adding the following lines to your project `Makefile` file.
+* Include MYOS file `make/include.mk` adding the following lines to your project file `Makefile`.
 
 ```
-MYOS                            ?= ../myos
-MYOS_REPOSITORY                 ?= https://github.com/aynicos/myos
+MYOS                                      ?= ../myos
+MYOS_REPOSITORY                           ?= $(patsubst %/$(APP),%/myos,$(APP_REPOSITORY))
+APP                                       ?= $(lastword $(subst /, ,$(APP_REPOSITORY)))
+APP_REPOSITORY                            ?= $(shell git config --get remote.origin.url 2>/dev/null)
 $(MYOS):
 	-@git clone $(MYOS_REPOSITORY) $(MYOS)
 -include $(MYOS)/make/include.mk
@@ -53,8 +55,8 @@ $ make host
 ```
 
 `make host` starts the stack `host` with docker host services :
-- consul (service discovery)
-- fabio (load balancer)
+- consul (service discovery) on host port 8500
+- fabio (load balancer) on host ports 80 and 443
 - registrator (docker/consul bridge)
 
 * Stop myos
@@ -89,10 +91,10 @@ Show called functions.
 $ make up VERBOSE=true
 ```
 
-* Show variable VARIABLE
+* Show variable USER
 
 ```shell
-$ make print-VARIABLE
+$ make print-USER
 ```
 
 #### Setup
@@ -156,6 +158,15 @@ $ docker volume rm $(hostname)
 $ make host SETUP_LETSENCRYPT=true
 ```
 
+* SETUP_UFW
+
+Control linux firewall rules with ufw.
+
+```
+$ echo SETUP_UFW=true >> .env
+$ make setup-ufw
+```
+
 ### Debug
 
 * Show docker compose yaml config
@@ -187,6 +198,9 @@ $ make doc
 $ make print-env_args
 ```
 
-## Status
+* Show user mail
 
-Beta software, use it at your own risks.
+```shell
+$ make print-MAIL
+```
+
