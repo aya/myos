@@ -9,10 +9,8 @@ start-stack-User: ssh-add
 
 # target user: Fire start-stack-User if DOCKER_RUN or fire start-stack-User
 .PHONY: User user
-User user: STACK := User
 User user: $(if $(DOCKER_RUN),stack-User-up,start-stack-User)
 
 # target User-% user-%; Fire target stack-User-%
 .PHONY: User-% user-%
-User-% user-%: STACK := User
 User-% user-%: stack-User-%;

@@ -1,2 +1,4 @@
 ENV_VARS                                  += HOST_PORTAINER_SERVICE_9000_TAGS
-HOST_PORTAINER_SERVICE_9000_TAGS          ?= urlprefix-portainer.${DOMAIN}/
+HOST_PORTAINER_SERVICE_URIS               ?= $(patsubst %,portainer.%,$(APP_URIS))
+HOST_PORTAINER_SERVICE_9000_TAGS          ?= $(call urlprefix,,$(HOST_PORTAINER_SERVICE_9000_URIS))
+HOST_PORTAINER_SERVICE_9000_URIS          ?= $(HOST_PORTAINER_SERVICE_URIS)

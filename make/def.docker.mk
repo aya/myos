@@ -4,7 +4,7 @@ DOCKER_GID                      ?= $(call gid,docker)
 DOCKER_IMAGE                    ?= $(USER_DOCKER_IMAGE)
 DOCKER_MACHINE                  ?= $(shell docker run --rm alpine uname -m 2>/dev/null)
 DOCKER_NAME                     ?= $(USER_DOCKER_NAME)
-DOCKER_NETWORK                  ?= $(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER),$(DOCKER_NETWORK_PRIVATE))
+DOCKER_NETWORK                  ?= $(if $(STACK_USER),$(USER),$(DOCKER_NETWORK_PRIVATE))
 DOCKER_NETWORK_PRIVATE          ?= $(USER)-$(ENV)
 DOCKER_NETWORK_PUBLIC           ?= $(HOSTNAME)
 # DOCKER_RUN: if empty, run system command, else run it in a docker
@@ -26,6 +26,8 @@ HOST_DOCKER_VOLUME              ?= $(HOST_COMPOSE_PROJECT_NAME)
 HOST_GID                        ?= 100
 HOST_UID                        ?= 123
 RESU_DOCKER_REPOSITORY          ?= $(subst -,/,$(subst _,/,$(USER_COMPOSE_PROJECT_NAME)))
+STACK_HOST                      ?= $(filter host,$(firstword $(subst /, ,$(STACK))))
+STACK_USER                      ?= $(filter User,$(firstword $(subst /, ,$(STACK))))
 USER_COMPOSE_PROJECT_NAME       ?= $(strip $(RESU))
 USER_COMPOSE_SERVICE_NAME       ?= $(subst _,-,$(subst .,-,$(USER_COMPOSE_PROJECT_NAME)))
 USER_DOCKER_IMAGE               ?= $(USER_DOCKER_REPOSITORY):${DOCKER_IMAGE_TAG}

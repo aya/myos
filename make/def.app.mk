@@ -52,7 +52,7 @@ define app-docker
 	  $(eval service        := $(or $(DOCKER_SERVICE),$(subst .,,$(call LOWERCASE,$(lastword $(subst /, ,$(patsubst %/Dockerfile,%,$(dockerfile)))))),undefined))
 	  $(eval docker         := ${COMPOSE_SERVICE_NAME}-$(service))
 	  $(eval DOCKER_IMAGE   := $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG))
-	  $(eval DOCKER_LABELS  := SERVICE_NAME=$(docker) SERVICE_TAGS=urlprefix-$(service).$(APP_DOMAIN)/$(APP_PATH))
+	  $(eval DOCKER_LABELS  := SERVICE_NAME=$(docker) SERVICE_TAGS=$(call urlprefix,$(APP_PATH),$(service).$(APP_HOST)/)
 	  $(eval DOCKER_NAME    := $(docker))
 	  $(eval DOCKER_RUN_NAME := --name $(DOCKER_NAME))
 	, $(call ERROR,Unable to find Dockerfile,$(dockerfile))

@@ -18,8 +18,8 @@ ufw-docker:
 ufw-update: debug-UFW_UPDATE
 	$(eval name := $(COMPOSE_PROJECT_NAME))
 	$(foreach UPDATE,$(call UPPERCASE,$(UFW_UPDATE)), \
-	  $(eval ufw_update := $($(if $(filter host,$(firstword $(subst /, ,$(STACK)))),HOST_)$(UPDATE)_UFW_UPDATE)) \
-	  $(eval ufw_docker := $($(if $(filter host,$(firstword $(subst /, ,$(STACK)))),HOST_)$(UPDATE)_UFW_DOCKER)) \
+	  $(eval ufw_update := $($(if $(STACK_HOST),HOST_)$(UPDATE)_UFW_UPDATE)) \
+	  $(eval ufw_docker := $($(if $(STACK_HOST),HOST_)$(UPDATE)_UFW_DOCKER)) \
 	  $(foreach port,$(ufw_docker), \
 	    $(call ufw-docker,$(if $(UFW_DELETE),delete) allow $(name)-$(call LOWERCASE,$(UPDATE)) $(port) ||:) \
 	  ) \

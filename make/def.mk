@@ -3,8 +3,9 @@
 comma                           ?= ,
 dollar                          ?= $
 dquote                          ?= "
-quote                           ?= '
 lbracket                        ?= (
+percent                         ?= %
+quote                           ?= '
 rbracket                        ?= )
 APP                             ?= $(if $(wildcard .git),$(notdir $(CURDIR)))
 APP_LOAD                        ?= $(if $(SUBREPO),subrepo) $(if $(filter .,$(MYOS)),myos)
@@ -169,8 +170,8 @@ INFO = $(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)), \
 ))
 
 # macro RESU: Print USER associated to MAIL
-RESU = \
-$(if $(findstring @,$(MAIL)), \
+RESU = $(strip \
+ $(if $(findstring @,$(MAIL)), \
   $(eval user      := $(subst +,,$(subst -,,$(call LOWERCASE,$(shell printf '$(MAIL)' |awk -F "@" '{print $$1}'))))) \
   $(eval domain    := $(call LOWERCASE,$(call subst,_,,$(shell printf '$(MAIL)' |awk -F "@" '{print $$NF}')))) \
   $(if $(domain), \
@@ -183,9 +184,9 @@ $(if $(findstring @,$(MAIL)), \
     $(resu_niamod) \
   , $(USER) \
   ) \
-, $(USER) \
+ , $(USER) \
+ ) \
 )
-
 # macro TIME: Print time elapsed since unixtime 1
 TIME = awk '{printf "%02d:%02d:%02d\n",int($$1/3600),int(($$1%3600)/60),int($$1%60)}' \
 	   <<< $(shell awk 'BEGIN {current=$(or $(2),$(MAKE_UNIXTIME_CURRENT)); start=$(or $(1),$(MAKE_UNIXTIME_START)); print (current  - start)}' 2>/dev/null)

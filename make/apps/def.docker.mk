@@ -18,7 +18,7 @@ CONTEXT_DEBUG                   += DOCKER_BUILD_TARGET DOCKER_COMPOSE_PROJECT_NA
 DOCKER_AUTHOR                   ?= $(DOCKER_AUTHOR_NAME) <$(DOCKER_AUTHOR_EMAIL)>
 DOCKER_AUTHOR_EMAIL             ?= $(subst +git,+docker,$(GIT_AUTHOR_EMAIL))
 DOCKER_AUTHOR_NAME              ?= $(GIT_AUTHOR_NAME)
-DOCKER_BUILD_ARGS               ?= $(if $(filter true,$(DOCKER_BUILD_NO_CACHE)),--pull --no-cache) $(foreach var,$(DOCKER_BUILD_VARS),$(if $($(var)),--build-arg $(var)='$($(var))')) --build-arg GID='$(if $(filter host,$(firstword $(subst /, ,$(STACK)))),$(HOST_GID),$(GID))' --build-arg UID='$(if $(filter host,$(firstword $(subst /, ,$(STACK)))),$(HOST_UID),$(UID))'
+DOCKER_BUILD_ARGS               ?= $(if $(filter true,$(DOCKER_BUILD_NO_CACHE)),--pull --no-cache) $(foreach var,$(DOCKER_BUILD_VARS),$(if $($(var)),--build-arg $(var)='$($(var))')) --build-arg GID='$(if $(STACK_HOST),$(HOST_GID),$(GID))' --build-arg UID='$(if $(STACK_HOST),$(HOST_UID),$(UID))'
 DOCKER_BUILD_CACHE              ?= true
 DOCKER_BUILD_LABEL              ?= $(foreach var,$(filter $(BUILD_LABEL_VARS),$(MAKE_FILE_VARS)),$(if $($(var)),--label $(var)='$($(var))'))
 DOCKER_BUILD_NO_CACHE           ?= false
@@ -29,7 +29,7 @@ DOCKER_BUILD_VARS               ?= APP BRANCH COMPOSE_VERSION DOCKER_GID DOCKER_
 DOCKER_COMPOSE                  ?= $(or $(shell docker-compose --version 2>/dev/null |awk '$$4 != "v'"$(COMPOSE_VERSION)"'" {exit 1;}' && printf 'docker-compose\n'),$(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'))
 DOCKER_COMPOSE_ARGS             ?= --ansi=auto
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
-DOCKER_COMPOSE_PROJECT_NAME     ?= $(if $(filter host,$(firstword $(subst /, ,$(STACK)))),$(HOST_COMPOSE_PROJECT_NAME),$(if $(filter User,$(firstword $(subst /, ,$(STACK)))),$(USER_COMPOSE_PROJECT_NAME)))
+DOCKER_COMPOSE_PROJECT_NAME     ?= $(if $(STACK_HOST),$(HOST_COMPOSE_PROJECT_NAME),$(if $(STACK_USER),$(USER_COMPOSE_PROJECT_NAME)))
 DOCKER_COMPOSE_RUN_ENTRYPOINT   ?= $(patsubst %,--entrypoint=%,$(DOCKER_COMPOSE_ENTRYPOINT))
 DOCKER_COMPOSE_RUN_OPTIONS      ?= --rm $(DOCKER_COMPOSE_RUN_ENTRYPOINT) $(DOCKER_COMPOSE_RUN_WORKDIR)
 DOCKER_COMPOSE_RUN_WORKDIR      ?= $(if $(DOCKER_COMPOSE_WORKDIR),-w $(DOCKER_COMPOSE_WORKDIR))

@@ -13,7 +13,7 @@ services:
     labels:
     - SERVICE_9100_CHECK_TCP=true
     - SERVICE_9100_NAME=${HOST_COMPOSE_SERVICE_NAME}-exporter-node-9100
-    - SERVICE_9100_TAGS=${HOST_EXPORTER_HOST_SERVICE_9100_TAGS}
+    - SERVICE_9100_TAGS=${HOST_EXPORTER_NODE_SERVICE_9100_TAGS}
     networks:
     - public
     ports:
