@@ -29,16 +29,21 @@ NFS_CONFIG                      ?= addr=$(NFS_HOST),actimeo=3,intr,noacl,noatime
 NFS_HOST                        ?= host.docker.internal
 SERVICES                        ?= $(DOCKER_SERVICES)
 
-patsublist = $(patsubst $(1),$(2),$(firstword $(3)))$(foreach pat,$(wordlist 2,16,$(3)),$(comma)$(space)$(patsubst $(1),$(2),$(pat)))
-urlprefix  = $(call patsublist,%,urlprefix-%$(1),$(or $(2),$(APP_URIS)))
-urlprefixs = $(call urlprefix,$(1))$(foreach prefix,$(subst $(space),$(dollar),$(2)) $(subst $(space),$(dollar),$(3)) $(subst $(space),$(dollar),$(4)),$(comma)$(space)$(call subst,$(dollar),$(space),$(call urlprefix,$(prefix))))
+tagprefix  = $(call urlprefix,$(or $($(call UPPERCASE,$(1)_SERVICE_$(2)_PATH)),$($(call UPPERCASE,$(1)_SERVICE_PATH))),$(or $($(call UPPERCASE,$(1)_SERVICE_$(2)_OPTS)),$($(call UPPERCASE,$(1)_SERVICE_OPTS)),$(call envprefix,$(1),$(2),auth proto)),$(or $(foreach env,$(3),$($(call UPPERCASE,$(1)_SERVICE_$(2)_$(env)))),$($(call UPPERCASE,$(1)_SERVICE_$(2)_URIS)),$(call uriprefix,$(1),$(2))))
+envprefix  = $(foreach env,$(3),$(if $($(call UPPERCASE,$(1)_SERVICE_$(2)_$(env))),$(env)=$($(call UPPERCASE,$(1)_SERVICE_$(2)_$(env)))))
+patsublist = $(patsubst $(1),$(2),$(firstword $(3)))$(foreach pattern,$(wordlist 2,16,$(3)),$(comma)$(patsubst $(1),$(2),$(pattern)))
+servicenvs = $(foreach env,$(call UPPERCASE,$($(1)_SERVICE_$(2)_ENVS)),$(if $(3),$($(1)_SERVICE_$(env)_$(3)),$($(1)_SERVICE_$(2)_$(env))))
+uriprefix  = $(foreach svc,$(1),$(patsubst %,$(addsuffix .,$(or $($(call UPPERCASE,$(svc)_SERVICE_$(2)_NAME)),$($(call UPPERCASE,$(svc)_SERVICE_NAME)),$(svc)))%,$(APP_URIS)))
+url_suffix = *
+urlprefix  = $(strip $(call patsublist,%,urlprefix-%$(1)$(url_suffix) $(2),$(or $(3),$(APP_URIS))))
+urlprefixs = $(strip $(call urlprefix,$(firstword $(1)),$(wordlist 2,16,$(1)))$(foreach prefix,$(subst $(space),$(dollar),$(2)) $(subst $(space),$(dollar),$(3)) $(subst $(space),$(dollar),$(4)),$(comma)$(call subst,$(dollar),$(space),$(call urlprefix,$(firstword $(prefix)),$(wordlist 2,16,$(prefix))))))
 ## urlprefix tests (x APP_URI)
 # $(call urlprefix)
-# urlprefix-app.domain/
-# $(call urlprefix,admin)
-# urlprefix-app.domain/admin
+# urlprefix-app.domain/*
+# $(call urlprefix,admin/)
+# urlprefix-app.domain/admin/*
 # $(call urlprefix,:443/ proto=https,$(APP_HOST))
-# urlprefix-app.domain:443/ proto=https
+# urlprefix-app.domain:443/* proto=https
 ## urlprefixs tests (x prefix)
-# $(call urlprefixs,admin strip=/admin,images)
-# urlprefix-app.domain/admin strip=/admin, urlprefix-app.domain/images
+# $(call urlprefixs,admin strip=/admin,images/)
+# urlprefix-app.domain/admin* strip=/admin,urlprefix-app.domain/images/*

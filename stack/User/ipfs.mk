@@ -1,7 +1,7 @@
 ENV_VARS                                  += USER_IPFS_API_HTTPHEADERS_ACA_ORIGIN USER_IPFS_SERVICE_5001_TAGS USER_IPFS_SERVICE_8080_TAGS
 USER_IPFS_API_HTTPHEADERS_ACA_ORIGIN      ?= [$(call patsublist,%,"https://%",$(USER_IPFS_SERVICE_8080_URIS))]
-USER_IPFS_SERVICE_URIS                    ?= $(patsubst %,ipfs.%,$(patsubst %,$(RESU).%,$(DOMAIN))/)
-USER_IPFS_SERVICE_5001_TAGS               ?= $(filter %.localhost/api,$(call urlprefix,api,$(USER_IPFS_SERVICE_5001_URIS)))
-USER_IPFS_SERVICE_5001_URIS               ?= $(USER_IPFS_SERVICE_URIS)
-USER_IPFS_SERVICE_8080_TAGS               ?= $(call urlprefix,,$(USER_IPFS_SERVICE_8080_URIS))
-USER_IPFS_SERVICE_8080_URIS               ?= $(USER_IPFS_SERVICE_URIS)
+USER_IPFS_SERVICE_NAME                    ?= ipfs
+USER_IPFS_SERVICE_5001_PATH               ?= api/
+USER_IPFS_SERVICE_5001_TAGS               ?= $(strip $(filter %.localhost/api/$(url_suffix),$(call tagprefix,USER_IPFS,5001)) $(if $(call servicenvs,USER_IPFS,5001,URIS),$(call urlprefix,$(USER_IPFS_SERVICE_5001_PATH),,$(call servicenvs,USER_IPFS,5001,URIS))))
+USER_IPFS_SERVICE_5001_URIS               ?= $(call uriprefix,ipfs)
+USER_IPFS_SERVICE_8080_TAGS               ?= $(call tagprefix,USER_IPFS,8080)

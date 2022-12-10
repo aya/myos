@@ -1,11 +1,11 @@
 ENV_VARS                        += DOCKER_HOST_IFACE DOCKER_HOST_INET4 DOCKER_INTERNAL_DOCKER_HOST
 MAKECMDARGS                     += host-exec stack-host-exec host-exec:% host-exec@% host-run host-run:% host-run@%
 SETUP_LETSENCRYPT               ?=
-host                            ?= $(patsubst stack/%,%,$(patsubst %.yml,%,$(wildcard stack/host/*.yml)))
+host                            ?= host/consul host/fabio host/registrator
 
 # target bootstrap-stack-host: Fire host-certbot host-ssl-certs
 .PHONY: bootstrap-stack-host
-bootstrap-stack-host: $(if $(SETUP_LETSENCRYPT),host-certbot$(if $(DEBUG),-staging)) host-ssl-certs
+bootstrap-stack-host: $(if $(SETUP_CERTBOT),host-certbot) host-ssl-certs
 
 # target host: Fire stack-host-up
 .PHONY: host
@@ -18,41 +18,48 @@ host-%: stack-host-%;
 # target host-ssl-certs: Create invalid ${DOMAIN} certificate files with openssl
 .PHONY: host-ssl-certs
 host-ssl-certs:
-	docker run --rm --mount source=$(HOST_DOCKER_VOLUME),target=/certs alpine \
-	 [ -f /certs/live/$(DOMAIN)/fullchain.pem -a -f /certs/live/$(DOMAIN)/privkey.pem ] \
-	|| $(RUN) docker run --rm \
-	 -e DOMAIN=$(DOMAIN) \
-	 --mount source=$(HOST_DOCKER_VOLUME),target=/certs \
-	 alpine sh -c "\
-	  apk --no-cache add openssl \
-	  && mkdir -p /certs/live/${DOMAIN} \
-	  && { [ -f /certs/live/${DOMAIN}/privkey.pem ] || openssl genrsa -out /certs/live/${DOMAIN}/privkey.pem 2048; } \
-	  && openssl req -key /certs/live/${DOMAIN}/privkey.pem -out /certs/live/${DOMAIN}/cert.pem \
-	   -addext extendedKeyUsage=serverAuth \
-	   -addext subjectAltName=DNS:${DOMAIN},DNS:*.${DOMAIN} \
-	   -subj \"/C=/ST=/L=/O=/CN=${DOMAIN}\" \
-	   -x509 -days 365 \
-	  && rm -f /certs/live/${DOMAIN}/fullchain.pem \
-	  && ln -s cert.pem /certs/live/${DOMAIN}/fullchain.pem \
-	 "
+	$(RUN) docker run --rm \
+	  -e DOMAIN='$(DOMAIN)' \
+	  --mount source=$(HOST_DOCKER_VOLUME),target=/host \
+	  alpine sh -c "mkdir -p /host/htpasswd && chmod 700 /host/htpasswd \
+	    ; mkdir -p /host/certs && chmod 0700 /host/certs \
+	    ; [ -f /host/htpasswd/default.htpasswd ] \
+	    || echo "default:{PLAIN}$(shell head -c 15 /dev/random |base64)" > /host/htpasswd/default.htpasswd \
+	    ; for domain in ${DOMAIN}; do \
+	      [ -f /host/live/\$${domain}/fullchain.pem -a -f /host/live/\$${domain}/privkey.pem ] \
+	      && openssl x509 -in /host/live/\$${domain}/fullchain.pem -noout -issuer 2>/dev/null |grep -iqv staging \
+	      && cp -L /host/live/\$${domain}/fullchain.pem /host/certs/\$${domain}-cert.pem \
+	      && cp -L /host/live/\$${domain}/privkey.pem /host/certs/\$${domain}-key.pem \
+	      ; if [ ! -f /host/certs/\$${domain}-cert.pem -o ! -f /host/certs/\$${domain}-key.pem ]; then \
+	        apk --no-cache add openssl \
+	        && { [ -f /host/certs/\$${domain}-priv.pem ] || openssl genrsa -out /host/certs/\$${domain}-key.pem 2048; } \
+	        && openssl req -key /host/certs/\$${domain}-key.pem -out /host/certs/\$${domain}-cert.pem \
+	         -addext extendedKeyUsage=serverAuth \
+	         -addext subjectAltName=DNS:\$${domain},DNS:*.\$${domain} \
+	         -subj \"/C=/ST=/L=/O=/CN=\$${domain}\" \
+	         -x509 -days 365 \
+	      ; fi \
+	    ; done \
+	  "
 
 # target host-certbot: Create ${DOMAIN} certificate files with letsencrypt
 .PHONY: host-certbot
 host-certbot: host-docker-build-certbot
-	docker run --rm --mount source=$(HOST_DOCKER_VOLUME),target=/certs alpine \
-	 [ -f /certs/live/$(DOMAIN)/cert.pem -a -f /certs/live/$(DOMAIN)/privkey.pem ] \
-	|| $(RUN) docker run --rm \
-	 --mount source=$(HOST_DOCKER_VOLUME),target=/etc/letsencrypt/ \
-	 --mount source=$(HOST_DOCKER_VOLUME),target=/var/log/letsencrypt/ \
-	 -e DOMAIN=$(DOMAIN) \
-	 --network host \
-	 $(HOST_DOCKER_REPOSITORY)/certbot \
-	  --non-interactive --agree-tos --email hostmaster@$(DOMAIN) certonly \
-	  --preferred-challenges dns --authenticator dns-standalone \
-	  --dns-standalone-address=0.0.0.0 \
-	  --dns-standalone-port=53 \
-	  -d ${DOMAIN} \
-	  -d *.${DOMAIN}
+	$(foreach domain,$(DOMAIN), \
+	  $(RUN) docker run --rm \
+	   -e DOMAIN=$(domain) \
+	   --mount source=$(HOST_DOCKER_VOLUME),target=/etc/letsencrypt/ \
+	   --mount source=$(HOST_DOCKER_VOLUME),target=/var/log/letsencrypt/ \
+	   --network host \
+	   $(HOST_DOCKER_REPOSITORY)/certbot \
+	    --dns-standalone-address=0.0.0.0 \
+	    --dns-standalone-port=53 \
+	    --non-interactive --agree-tos --email hostmaster@$(domain) certonly \
+	    --preferred-challenges dns --authenticator dns-standalone \
+	    -d $(domain) \
+	    -d *.$(domain) \
+	  && \
+	) true
 
 # target host-certbot-certificates: List letsencrypt certificates
 .PHONY: host-certbot-certificates
@@ -67,21 +74,22 @@ host-certbot-renew: host-docker-build-certbot
 # target host-certbot-staging: Create staging ${DOMAIN} certificate files with letsencrypt
 .PHONY: host-certbot-staging
 host-certbot-staging: host-docker-build-certbot
-	docker run --rm --mount source=$(HOST_DOCKER_VOLUME),target=/certs alpine \
-	 [ -f /certs/live/$(DOMAIN)/cert.pem -a -f /certs/live/$(DOMAIN)/privkey.pem ] \
-	|| $(RUN) docker run --rm \
-	 --mount source=$(HOST_DOCKER_VOLUME),target=/etc/letsencrypt/ \
-	 --mount source=$(HOST_DOCKER_VOLUME),target=/var/log/letsencrypt/ \
-	 -e DOMAIN=$(DOMAIN) \
-	 --network host \
-	 $(HOST_DOCKER_REPOSITORY)/certbot \
-	  --non-interactive --agree-tos --email hostmaster@$(DOMAIN) certonly \
-	  --preferred-challenges dns --authenticator dns-standalone \
-	  --dns-standalone-address=0.0.0.0 \
-	  --dns-standalone-port=53 \
-	  --staging \
-	  -d ${DOMAIN} \
-	  -d *.${DOMAIN}
+	$(foreach domain,$(DOMAIN), \
+	  $(RUN) docker run --rm \
+	   -e DOMAIN=$(domain) \
+	   --mount source=$(HOST_DOCKER_VOLUME),target=/etc/letsencrypt/ \
+	   --mount source=$(HOST_DOCKER_VOLUME),target=/var/log/letsencrypt/ \
+	   --network host \
+	   $(HOST_DOCKER_REPOSITORY)/certbot \
+	    --dns-standalone-address=0.0.0.0 \
+	    --dns-standalone-port=53 \
+	    --non-interactive --agree-tos --email hostmaster@$(domain) certonly \
+	    --preferred-challenges dns --authenticator dns-standalone \
+	    --staging \
+	    -d $(domain) \
+	    -d *.$(domain) \
+	  && \
+	) true
 
 # target host-docker-build-%: Build % docker
 .PHONY: host-docker-build-%

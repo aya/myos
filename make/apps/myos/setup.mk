@@ -40,7 +40,8 @@ endif
 # target setup-ufw: Install ufw-docker
 .PHONY: setup-ufw
 setup-ufw: COMPOSE_PROJECT_NAME := $(HOST_COMPOSE_PROJECT_NAME)
-setup-ufw: DOCKER_RUN_OPTIONS := --rm -d --cap-add NET_ADMIN -v /etc/ufw:/etc/ufw $(if wildcard /etc/default/ufw,-v /etc/default/ufw:/etc/default/ufw) --network host
+setup-ufw: DOCKER_RUN_NETWORK   :=
+setup-ufw: DOCKER_RUN_OPTIONS   := --rm -d --cap-add NET_ADMIN -v /etc/ufw:/etc/ufw $(if wildcard /etc/default/ufw,-v /etc/default/ufw:/etc/default/ufw) --network host
 setup-ufw:
 ifeq ($(SETUP_UFW),true)
 	$(call app-install,$(SETUP_UFW_REPOSITORY))

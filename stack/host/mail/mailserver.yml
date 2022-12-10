@@ -131,7 +131,6 @@ services:
     - SERVICE_4190_CHECK_TCP=true
     - SERVICE_4190_NAME=${HOST_COMPOSE_SERVICE_NAME}-mailserver-4190
     networks:
-    - private
     - public
     ports:
     - "25:25"
@@ -158,9 +157,6 @@ volumes:
     name: ${HOST_DOCKER_VOLUME}
 
 networks:
-  private:
-    external: true
-    name: ${DOCKER_NETWORK_PRIVATE}
   public:
     external: true
     name: ${DOCKER_NETWORK_PUBLIC}

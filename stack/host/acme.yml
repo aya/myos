@@ -1,0 +1,38 @@
+version: '3.6'
+
+services:
+  acme:
+    depends_on:
+    - nginx
+    environment:
+    - ACME_CA_URI=${HOST_ACME_CA_URI:-https://acme-v02.api.letsencrypt.org/directory}
+    - ACME_POST_HOOK=${HOST_ACME_POST_HOOK:-}
+    - ACME_PRE_HOOK=${HOST_ACME_PRE_HOOK:-}
+    - DEFAULT_EMAIL=${HOST_ACME_DEFAULT_EMAIL:-${DEFAULT_EMAIL:-${MAIL:-acme@localhost}}}
+    - LETSENCRYPT_SINGLE_DOMAIN_CERTS=${HOST_ACME_LETSENCRYPT_SINGLE_DOMAIN_CERTS:-true}
+    - LETSENCRYPT_TEST=${HOST_ACME_LETSENCRYPT_TEST:-}
+    image: pinidh/acme-companion:latest
+    networks:
+    - public
+    restart: unless-stopped
+    volumes_from:
+    - nginx
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - acme:/etc/acme.sh
+    - certs:/etc/nginx/certs
+    - html:/usr/share/nginx/html
+    - host:/host
+
+volumes:
+  acme:
+  certs:
+  html:
+  host:
+    external: true
+    name: ${HOST_DOCKER_VOLUME}
+
+networks:
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

@@ -1,0 +1,20 @@
+version: '3.6'
+
+services:
+  php:
+    image: php:fpm-alpine
+    environment:
+    - VIRTUAL_HOST=php
+    - VIRTUAL_PROTO=fastcgi
+    networks:
+    - public
+    volumes:
+    - www:/var/www
+
+volumes:
+  www:
+
+networks:
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC}

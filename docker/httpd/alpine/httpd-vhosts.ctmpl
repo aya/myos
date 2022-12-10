@@ -1,5 +1,5 @@
-{{ $serverName := printf "%s.%s.%s" (env "APP") (env "ENV") (env "USER") }}
-{{ $serviceName := printf "%s-%s-%s-php-9000" (env "USER") (env "ENV") (env "APP") }}
+{{ $serverName := printf "%s.%s.%s" (env "ENV") (env "APP") (env "USER") }}
+{{ $serviceName := printf "%s-%s-%s-php-9000" (env "USER") (env "APP") (env "ENV") }}
 <VirtualHost *:80>
     ServerAdmin support+apache@asycn.io
     DocumentRoot "/var/www/web"

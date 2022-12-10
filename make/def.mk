@@ -107,7 +107,6 @@ SUDO                            ?= $(if $(filter-out 0,$(UID)),$(shell type -p s
 TAG                             ?= $(GIT_TAG)
 UID                             ?= $(shell id -u 2>/dev/null)
 USER                            ?= $(shell id -nu 2>/dev/null)
-VERBOSE                         ?= $(if $(DEBUG),true)
 VERSION                         ?= $(GIT_VERSION)
 
 ifneq ($(DEBUG),)
@@ -172,8 +171,8 @@ INFO = $(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)), \
 # macro RESU: Print USER associated to MAIL
 RESU = $(strip \
  $(if $(findstring @,$(MAIL)), \
-  $(eval user      := $(subst +,,$(subst -,,$(call LOWERCASE,$(shell printf '$(MAIL)' |awk -F "@" '{print $$1}'))))) \
-  $(eval domain    := $(call LOWERCASE,$(call subst,_,,$(shell printf '$(MAIL)' |awk -F "@" '{print $$NF}')))) \
+  $(eval user      := $(call LOWERCASE,$(subst +,.,$(subst _,.,$(shell printf '$(MAIL)' |awk -F "@" '{print $$1}'))))) \
+  $(eval domain    := $(call LOWERCASE,$(subst +,.,$(subst _,.,$(shell printf '$(MAIL)' |awk -F "@" '{print $$NF}'))))) \
   $(if $(domain), \
     $(eval mail      := $(MAIL)) \
     $(eval niamod    := $(subst $(space),.,$(strip $(call reverse,$(subst ., ,$(domain)))))) \

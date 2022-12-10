@@ -12,7 +12,7 @@ services:
       dockerfile: docker/fabio/Dockerfile
     container_name: ${HOST_COMPOSE_PROJECT_NAME}-fabio
     image: ${HOST_DOCKER_REPOSITORY}/fabio:${DOCKER_IMAGE_TAG}
-    command: -registry.backend "consul" -registry.consul.addr "consul:8500" -registry.consul.token "${HOST_CONSUL_HTTP_TOKEN}" -proxy.addr ":80,:443;cs=local" -proxy.cs "cs=local;type=file;cert=/etc/letsencrypt/live/${DOMAIN}/fullchain.pem;key=/etc/letsencrypt/live/${DOMAIN}/privkey.pem"
+    command: -proxy.addr ":80,:443;cs=certs" -proxy.auth "name=default;type=basic;file=/host/htpasswd/default.htpasswd;" -proxy.cs "cs=local;type=file;cert=/host/live/${DOMAIN}/fullchain.pem;key=/host/live/${DOMAIN}/privkey.pem,cs=certs;type=path;cert=/host/certs" -proxy.matcher "glob" -registry.backend "consul" -registry.consul.addr "consul:8500" -registry.consul.token "${HOST_CONSUL_HTTP_TOKEN}"
     depends_on:
     - consul
     extra_hosts:
@@ -35,7 +35,7 @@ services:
     - public
     restart: always
     volumes:
-    - host:/etc/letsencrypt:ro
+    - host:/host:ro
 
 volumes:
   host:

@@ -1,6 +1,6 @@
 ENV_VARS                                  += NEXTCLOUD_MYSQL_DATABASE NEXTCLOUD_MYSQL_USER NEXTCLOUD_SERVICE_80_TAGS
-NEXTCLOUD_SERVICE_URIS                    ?= $(patsubst %,nextcloud.%,$(APP_URIS))
-NEXTCLOUD_SERVICE_80_TAGS                 ?= $(call urlprefix,,$(NEXTCLOUD_SERVICE_80_URIS))
-NEXTCLOUD_SERVICE_80_URIS                 ?= $(NEXTCLOUD_SERVICE_URIS)
-NEXTCLOUD_MYSQL_DATABASE                  ?= $(COMPOSE_SERVICE_NAME)-nextcloud
+NEXTCLOUD_SERVICE_NAME                    ?= nextcloud
+NEXTCLOUD_SERVICE_80_NAME                 ?= $(NEXTCLOUD_SERVICE_NAME)
+NEXTCLOUD_SERVICE_80_TAGS                 ?= $(call tagprefix,nextcloud,80)
+NEXTCLOUD_MYSQL_DATABASE                  ?= $(COMPOSE_SERVICE_NAME)-$(NEXTCLOUD_SERVICE_NAME)
 NEXTCLOUD_MYSQL_USER                      ?= $(NEXTCLOUD_MYSQL_DATABASE)

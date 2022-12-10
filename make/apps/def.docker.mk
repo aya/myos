@@ -26,7 +26,7 @@ DOCKER_BUILD_TARGET             ?= $(if $(filter $(ENV),$(DOCKER_BUILD_TARGETS))
 DOCKER_BUILD_TARGET_DEFAULT     ?= master
 DOCKER_BUILD_TARGETS            ?= $(ENV_DEPLOY)
 DOCKER_BUILD_VARS               ?= APP BRANCH COMPOSE_VERSION DOCKER_GID DOCKER_MACHINE DOCKER_REPOSITORY DOCKER_SYSTEM GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME SSH_REMOTE_HOSTS USER VERSION
-DOCKER_COMPOSE                  ?= $(or $(shell docker-compose --version 2>/dev/null |awk '$$4 != "v'"$(COMPOSE_VERSION)"'" {exit 1;}' && printf 'docker-compose\n'),$(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'))
+DOCKER_COMPOSE                  ?= $(or $(shell docker-compose --version 2>/dev/null |awk '$$4 != "v'"$(COMPOSE_VERSION)"'" {exit 1} END {if (NR == 0) exit 1}' && printf 'docker-compose\n'),$(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'))
 DOCKER_COMPOSE_ARGS             ?= --ansi=auto
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
 DOCKER_COMPOSE_PROJECT_NAME     ?= $(if $(STACK_HOST),$(HOST_COMPOSE_PROJECT_NAME),$(if $(STACK_USER),$(USER_COMPOSE_PROJECT_NAME)))

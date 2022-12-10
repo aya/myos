@@ -1,0 +1,55 @@
+version: '3.6'
+
+services:
+  nginx:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/nginx
+      context: ../..
+      dockerfile: docker/nginx/Dockerfile
+    environment:
+    - DEFAULT_HOST=${NGINX_DEFAULT_HOST:-${NGINX_VIRTUAL_HOST:-localhost}}
+    - LETSENCRYPT_HOST=${NGINX_LETSENCRYPT_HOST:-${NGINX_VIRTUAL_HOST:-}}
+    - LETSENCRYPT_EMAIL=${NGINX_LETSENCRYPT_EMAIL:-${MAIL:-nginx@localhost}}
+    - VIRTUAL_HOST=${NGINX_VIRTUAL_HOST:-localhost}
+    image: ${DOCKER_REPOSITORY:-nginx}/nginx:${DOCKER_IMAGE_TAG:-latest}
+    labels:
+    - SERVICE_80_CHECK_TCP=${NGINX_SERVICE_80_CHECK_TCP:-true}
+    - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME:-docker}-nginx-80
+    - SERVICE_80_TAGS=${NGINX_SERVICE_80_TAGS:-urlprefix-localhost:80/*}
+    - SERVICE_443_CHECK_TCP=${NGINX_SERVICE_443_CHECK_TCP:-true}
+    - SERVICE_443_NAME=${COMPOSE_SERVICE_NAME:-docker}-nginx-443
+    - SERVICE_443_TAGS=${NGINX_SERVICE_443_TAGS:-urlprefix-localhost:443/* proto=https tlsskipverify=true}
+    networks:
+    - private
+    - public
+    ports:
+    - 80
+    - 443
+    restart: unless-stopped
+    volumes:
+    - /var/run/docker.sock:/tmp/docker.sock:ro
+    - certs:/etc/nginx/certs
+    - html:/usr/share/nginx/html
+    - log:/var/log/nginx
+    - vhost:/etc/nginx/vhost.d
+
+volumes:
+  certs:
+  html:
+  log:
+  vhost:
+  www:
+    driver: local
+    driver_opts:
+      type: none
+      device: ${MONOREPO_DIR}
+      o: bind
+
+networks:
+  private:
+    external: true
+    name: ${DOCKER_NETWORK_PRIVATE:-docker}
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC:-localhost}
