@@ -6,7 +6,7 @@ services:
     - NET_ADMIN
     container_name: ${HOST_COMPOSE_PROJECT_NAME}-mailserver
     cpus: 0.5
-    domainname: ${DOMAIN}
+    domainname: ${DOMAINNAME}
     environment:
     - OVERRIDE_HOSTNAME=${HOST_MAILSERVER_OVERRIDE_HOSTNAME:-}
     - DMS_DEBUG=${HOST_MAILSERVER_DMS_DEBUG:-0}

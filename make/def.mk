@@ -43,7 +43,8 @@ CONTEXT                         ?= ENV $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#
 CONTEXT_DEBUG                   ?= MAKEFILE_LIST DOCKER_ENV_ARGS ENV_ARGS APPS GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME MAKE_DIR MAKE_SUBDIRS MAKE_CMD_ARGS MAKE_ENV_ARGS UID USER
 DEBUG                           ?= 
 DOCKER                          ?= $(shell type -p docker)
-DOMAIN                          ?= localhost
+DOMAIN                          ?= $(or $(shell dnsdomainname 2>/dev/null),$(shell hostname -d 2>/dev/null),$(shell hostname -f | sed -n 's/[^\.]*\.\([^/ ]*\).*/\1/p'), localhost)
+DOMAINNAME                      ?= $(firstword $(DOMAIN))
 DRONE                           ?= false
 DRYRUN                          ?= false
 DRYRUN_RECURSIVE                ?= false
@@ -53,10 +54,10 @@ ENV_ARGS                        ?= $(env_args)
 ENV_FILE                        ?= $(wildcard $(if $(filter-out myos,$(MYOS)),$(MONOREPO_DIR)/.env) $(CONFIG)/$(ENV)/$(APP)/.env .env)
 ENV_LIST                        ?= $(shell ls .git/refs/heads/ 2>/dev/null)
 ENV_RESET                       ?= false
-ENV_VARS                        ?= APP BRANCH DOMAIN ENV HOME HOSTNAME GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME GROUP MAIL MONOREPO MONOREPO_DIR TAG UID USER VERSION
+ENV_VARS                        ?= APP BRANCH DOMAIN DOMAINNAME ENV HOME HOSTNAME GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME GROUP MAIL MONOREPO MONOREPO_DIR TAG UID USER VERSION
 GID                             ?= $(shell id -g 2>/dev/null)
 GIDS                            ?= $(shell id -G 2>/dev/null)
-GIT_AUTHOR_EMAIL                ?= $(or $(shell git config user.email 2>/dev/null),$(USER)@$(DOMAIN))
+GIT_AUTHOR_EMAIL                ?= $(or $(shell git config user.email 2>/dev/null),$(USER)@$(DOMAINNAME))
 GIT_AUTHOR_NAME                 ?= $(or $(shell git config user.name 2>/dev/null),$(USER))
 GIT_BRANCH                      ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
 GIT_COMMIT                      ?= $(shell git rev-parse $(BRANCH) 2>/dev/null)
@@ -68,7 +69,7 @@ GIT_UPSTREAM_USER               ?= $(lastword $(subst /, ,$(call pop,$(MYOS_REPO
 GIT_USER                        ?= $(USER)
 GIT_VERSION                     ?= $(shell git describe --tags $(BRANCH) 2>/dev/null || git rev-parse $(BRANCH) 2>/dev/null)
 GROUP                           ?= $(shell id -ng 2>/dev/null)
-HOST                            ?= $(HOSTNAME).$(DOMAIN)
+HOST                            ?= $(patsubst %,$(HOSTNAME).%,$(DOMAIN))
 HOSTNAME                        ?= $(call LOWERCASE,$(shell hostname 2>/dev/null |sed 's/\..*//'))
 IGNORE_DRYRUN                   ?= false
 IGNORE_VERBOSE                  ?= false
@@ -171,21 +172,22 @@ INFO = $(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)), \
 # macro RESU: Print USER associated to MAIL
 RESU = $(strip \
  $(if $(findstring @,$(MAIL)), \
-  $(eval user      := $(call LOWERCASE,$(subst +,.,$(subst _,.,$(shell printf '$(MAIL)' |awk -F "@" '{print $$1}'))))) \
-  $(eval domain    := $(call LOWERCASE,$(subst +,.,$(subst _,.,$(shell printf '$(MAIL)' |awk -F "@" '{print $$NF}'))))) \
+  $(eval user          := $(call LOWERCASE,$(subst +,.,$(subst _,.,$(shell printf '$(MAIL)' |awk -F "@" '{print $$1}'))))) \
+  $(eval domain        := $(call LOWERCASE,$(subst +,.,$(subst _,.,$(shell printf '$(MAIL)' |awk -F "@" '{print $$NF}'))))) \
   $(if $(domain), \
-    $(eval mail      := $(MAIL)) \
-    $(eval niamod    := $(subst $(space),.,$(strip $(call reverse,$(subst ., ,$(domain)))))) \
-    $(eval resu      := $(subst $(space),.,$(strip $(call reverse,$(subst ., ,$(user)))))) \
-    $(eval resu_niamod := $(niamod).$(resu)) \
-    $(eval resu_path := $(subst .,/,$(resu_niamod))) \
-    $(eval user_domain := $(user).$(domain)) \
-    $(resu_niamod) \
+    $(eval mail        := $(call LOWERCASE,$(subst +,.,$(subst _,.,$(MAIL))))) \
+    $(eval niamod      := $(subst $(space),.,$(strip $(call reverse,$(subst ., ,$(domain)))))) \
+    $(eval resu        := $(subst $(space),.,$(strip $(call reverse,$(subst ., ,$(user)))))) \
+    $(eval resu.niamod := $(niamod).$(resu)) \
+    $(eval resu.path   := $(subst .,/,$(resu_niamod))) \
+    $(eval user.domain := $(user).$(domain)) \
+    $(user.domain) \
   , $(USER) \
   ) \
  , $(USER) \
  ) \
 )
+
 # macro TIME: Print time elapsed since unixtime 1
 TIME = awk '{printf "%02d:%02d:%02d\n",int($$1/3600),int(($$1%3600)/60),int($$1%60)}' \
 	   <<< $(shell awk 'BEGIN {current=$(or $(2),$(MAKE_UNIXTIME_CURRENT)); start=$(or $(1),$(MAKE_UNIXTIME_START)); print (current  - start)}' 2>/dev/null)

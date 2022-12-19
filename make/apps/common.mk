@@ -27,7 +27,7 @@ bootstrap-docker: install-bin-docker setup-docker-group setup-binfmt setup-nfsd 
 
 # target bootstrap-stack: Call bootstrap target of each stack
 .PHONY: bootstrap-stack
-bootstrap-stack: docker-network debug-STACK $(foreach stack,$(STACK),bootstrap-stack-$(subst /,-,$(stack)) debug-$(stack))
+bootstrap-stack: docker-network debug-STACK $(foreach stack,$(STACK),bootstrap-stack-$(subst /,-,$(firstword $(subst :, ,$(stack)))) debug-$(firstword $(subst :, ,$(stack))))
 
 # target build: Build application docker images to run
 # on local host

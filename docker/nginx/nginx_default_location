@@ -1,19 +1,6 @@
 index index.php index.html index.htm;
 try_files $uri $uri/ index.php$uri =404;
 
-location ~ ^(.+\.php)(.*)$ {
-  fastcgi_param PATH_INFO       $fastcgi_path_info;
-  fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-  fastcgi_pass  php;
-  fastcgi_split_path_info       ^(.+\.php)(.*)$;
-  include fastcgi_params;
-  try_files $uri index.php =404;
-}
-
 location ~ /\.ht {
   deny all;
-}
-
-location ~ /ip(f|n)s {
-  proxy_pass http://$host:8080;
 }

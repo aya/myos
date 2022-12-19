@@ -9,23 +9,26 @@ services:
       context: ../..
       dockerfile: docker/consul/Dockerfile
     container_name: ${HOST_COMPOSE_PROJECT_NAME}-consul
-    image: ${HOST_DOCKER_REPOSITORY}/consul:${DOCKER_IMAGE_TAG}
+    domainname: ${DOMAINNAME}
     environment:
-      CONSUL_BIND_INTERFACE: '${DOCKER_HOST_IFACE}'
-      CONSUL_CLIENT_INTERFACE: '${DOCKER_HOST_IFACE}'
-      CONSUL_HTTP_TOKEN: '${HOST_CONSUL_HTTP_TOKEN}'
+      CONSUL_BIND_INTERFACE: '${DOCKER_HOST_IFACE:-eth0}'
+      CONSUL_CLIENT_INTERFACE: '${DOCKER_HOST_IFACE:-eth0}'
+      CONSUL_HTTP_TOKEN: '${HOST_CONSUL_HTTP_TOKEN:-01234567-89ab-cdef-0123-456789abcdef}'
       CONSUL_LOCAL_CONFIG: '{ "log_level": "warn"
                             , "enable_script_checks": true
                             , "acl": { "enabled": true
                                      , "default_policy": "deny"
                                      , "down_policy": "extend-cache"
                                      , "enable_token_persistence": true
-                                     , "tokens": { "initial_management": "${HOST_CONSUL_ACL_TOKENS_MASTER}"
-                                                 , "agent": "${HOST_CONSUL_HTTP_TOKEN}"
+                                     , "tokens": { "initial_management": "${HOST_CONSUL_ACL_TOKENS_MASTER:-01234567-89ab-cdef-0123-456789abcdef}"
+                                                 , "agent": "${HOST_CONSUL_HTTP_TOKEN:-01234567-89ab-cdef-0123-456789abcdef}"
                                                  }
                                      }
                             }'
+    extra_hosts:
+    - ${HOSTNAME}.${DOMAINNAME} ${HOSTNAME}:${DOCKER_HOST_INET4}
     hostname: ${HOSTNAME}
+    image: ${HOST_DOCKER_REPOSITORY}/consul:${DOCKER_IMAGE_TAG}
     labels:
     - SERVICE_8300_IGNORE=true
     - SERVICE_8301_IGNORE=true

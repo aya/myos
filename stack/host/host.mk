@@ -26,13 +26,13 @@ host-ssl-certs:
 	    ; [ -f /host/htpasswd/default.htpasswd ] \
 	    || echo "default:{PLAIN}$(shell head -c 15 /dev/random |base64)" > /host/htpasswd/default.htpasswd \
 	    ; for domain in ${DOMAIN}; do \
-	      [ -f /host/live/\$${domain}/fullchain.pem -a -f /host/live/\$${domain}/privkey.pem ] \
+	      [ -f /host/live/\$${domain}/privkey.pem ] \
 	      && openssl x509 -in /host/live/\$${domain}/fullchain.pem -noout -issuer 2>/dev/null |grep -iqv staging \
 	      && cp -L /host/live/\$${domain}/fullchain.pem /host/certs/\$${domain}-cert.pem \
 	      && cp -L /host/live/\$${domain}/privkey.pem /host/certs/\$${domain}-key.pem \
-	      ; if [ ! -f /host/certs/\$${domain}-cert.pem -o ! -f /host/certs/\$${domain}-key.pem ]; then \
+	      ; if [ ! -f /host/certs/\$${domain}-key.pem ]; then \
 	        apk --no-cache add openssl \
-	        && { [ -f /host/certs/\$${domain}-priv.pem ] || openssl genrsa -out /host/certs/\$${domain}-key.pem 2048; } \
+	        && openssl genrsa -out /host/certs/\$${domain}-key.pem 2048 \
 	        && openssl req -key /host/certs/\$${domain}-key.pem -out /host/certs/\$${domain}-cert.pem \
 	         -addext extendedKeyUsage=serverAuth \
 	         -addext subjectAltName=DNS:\$${domain},DNS:*.\$${domain} \

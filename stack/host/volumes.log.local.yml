@@ -4,5 +4,6 @@ volumes:
   log:
     driver: local
     driver_opts:
-      type: none
       device: /var/log
+      o: bind
+      type: none

@@ -7,17 +7,19 @@ services:
       - DOCKER_BUILD_DIR=docker/fabio
       - DOCKER_MACHINE=${DOCKER_MACHINE}
       - DOCKER_SYSTEM=${DOCKER_SYSTEM}
-      - FABIO_VERSION=1.6.2
+      - FABIO_VERSION=${HOST_FABIO_VERSION:-${FABIO_VERSION:-1.6.0}}
       context: ../..
       dockerfile: docker/fabio/Dockerfile
+    command: -log.level "${HOST_FABIO_LOG_LEVEL:-INFO}" -proxy.addr "${HOST_FABIO_PROXY_ADDR:-:80,:443;cs=certs}" -proxy.auth "${HOST_FABIO_PROXY_AUTH:-name=default;type=basic;file=/host/htpasswd/default.htpasswd}" -proxy.cs "${HOST_FABIO_PROXY_CS:-cs=local;type=file;cert=/host/live/localhost/fullchain.pem;key=/host/live/localhost/privkey.pem,cs=certs;type=path;cert=/host/certs}" -proxy.matcher "${HOST_FABIO_PROXY_MATCHER:-glob}" -registry.backend "${HOST_FABIO_REGISTRY_BACKEND:-consul}" -registry.consul.addr "${HOST_FABIO_REGISTRY_CONSUL_ADDR:-consul:8500}" -registry.consul.token "${HOST_CONSUL_HTTP_TOKEN:-01234567-89ab-cdef-0123-456789abcdef}"
     container_name: ${HOST_COMPOSE_PROJECT_NAME}-fabio
-    image: ${HOST_DOCKER_REPOSITORY}/fabio:${DOCKER_IMAGE_TAG}
-    command: -proxy.addr ":80,:443;cs=certs" -proxy.auth "name=default;type=basic;file=/host/htpasswd/default.htpasswd;" -proxy.cs "cs=local;type=file;cert=/host/live/${DOMAIN}/fullchain.pem;key=/host/live/${DOMAIN}/privkey.pem,cs=certs;type=path;cert=/host/certs" -proxy.matcher "glob" -registry.backend "consul" -registry.consul.addr "consul:8500" -registry.consul.token "${HOST_CONSUL_HTTP_TOKEN}"
+    domainname: ${DOMAINNAME}
     depends_on:
     - consul
     extra_hosts:
     - consul:${DOCKER_INTERNAL_DOCKER_HOST}
+    - ${HOSTNAME}.${DOMAINNAME} ${HOSTNAME}:${DOCKER_HOST_INET4}
     hostname: ${HOSTNAME}
+    image: ${HOST_DOCKER_REPOSITORY}/fabio:${DOCKER_IMAGE_TAG}
     labels:
     - SERVICE_80_CHECK_TCP=true
     - SERVICE_80_NAME=${HOST_COMPOSE_SERVICE_NAME}-fabio-80
@@ -27,12 +29,7 @@ services:
     - SERVICE_9998_NAME=${HOST_COMPOSE_SERVICE_NAME}-fabio-9998
     - SERVICE_9998_TAGS=${HOST_FABIO_SERVICE_9998_TAGS}
     - SERVICE_9999_IGNORE=true
-    ports:
-    - 80:80/tcp
-    - 443:443/tcp
-    - 9998/tcp
-    networks:
-    - public
+    network_mode: host
     restart: always
     volumes:
     - host:/host:ro
@@ -41,8 +38,3 @@ volumes:
   host:
     external: true
     name: ${HOST_DOCKER_VOLUME}
-
-networks:
-  public:
-    external: true
-    name: ${DOCKER_NETWORK_PUBLIC}

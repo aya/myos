@@ -33,7 +33,7 @@ services:
     restart: unless-stopped
     volumes:
     - /var/run/docker.sock:/tmp/docker.sock:ro
-    - certs:/etc/nginx/certs:ro
+    - certs:/etc/nginx/certs
     - html:/usr/share/nginx/html
     - htpasswd:/etc/nginx/htpasswd
     - log:/var/log/nginx

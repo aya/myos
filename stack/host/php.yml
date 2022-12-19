@@ -2,10 +2,10 @@ version: '3.6'
 
 services:
   php:
-    image: php:fpm-alpine
     environment:
     - VIRTUAL_HOST=php
     - VIRTUAL_PROTO=fastcgi
+    image: php:fpm-alpine
     networks:
     - public
     volumes:

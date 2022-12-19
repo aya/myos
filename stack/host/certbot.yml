@@ -9,6 +9,11 @@ services:
       dockerfile: docker/certbot/Dockerfile
     command: start
     container_name: ${HOST_COMPOSE_PROJECT_NAME}-certbot
+    domainname: ${DOMAINNAME}
+    extra_hosts:
+    - consul:${DOCKER_INTERNAL_DOCKER_HOST}
+    - ${HOSTNAME}.${DOMAINNAME} ${HOSTNAME}:${DOCKER_HOST_INET4}
+    hostname: ${HOSTNAME}
     image: ${HOST_DOCKER_REPOSITORY}/certbot:${DOCKER_IMAGE_TAG}
     network_mode: host
     restart: always

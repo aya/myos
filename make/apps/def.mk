@@ -29,11 +29,11 @@ NFS_CONFIG                      ?= addr=$(NFS_HOST),actimeo=3,intr,noacl,noatime
 NFS_HOST                        ?= host.docker.internal
 SERVICES                        ?= $(DOCKER_SERVICES)
 
-tagprefix  = $(call urlprefix,$(or $($(call UPPERCASE,$(1)_SERVICE_$(2)_PATH)),$($(call UPPERCASE,$(1)_SERVICE_PATH))),$(or $($(call UPPERCASE,$(1)_SERVICE_$(2)_OPTS)),$($(call UPPERCASE,$(1)_SERVICE_OPTS)),$(call envprefix,$(1),$(2),auth proto)),$(or $(foreach env,$(3),$($(call UPPERCASE,$(1)_SERVICE_$(2)_$(env)))),$($(call UPPERCASE,$(1)_SERVICE_$(2)_URIS)),$(call uriprefix,$(1),$(2))))
+tagprefix  = $(call urlprefix,$(or $($(call UPPERCASE,$(1)_SERVICE_$(2)_PATH)),$($(call UPPERCASE,$(1)_SERVICE_PATH))),$(or $($(call UPPERCASE,$(1)_SERVICE_$(2)_OPTS)),$($(call UPPERCASE,$(1)_SERVICE_OPTS)),$(call envprefix,$(1),$(2),allow auth deny preprend proto register strip)),$(or $(foreach env,$(3),$($(call UPPERCASE,$(1)_SERVICE_$(2)_$(env)))),$($(call UPPERCASE,$(1)_SERVICE_$(2)_URIS)),$(call uriprefix,$(1),$(2))))
 envprefix  = $(foreach env,$(3),$(if $($(call UPPERCASE,$(1)_SERVICE_$(2)_$(env))),$(env)=$($(call UPPERCASE,$(1)_SERVICE_$(2)_$(env)))))
 patsublist = $(patsubst $(1),$(2),$(firstword $(3)))$(foreach pattern,$(wordlist 2,16,$(3)),$(comma)$(patsubst $(1),$(2),$(pattern)))
 servicenvs = $(foreach env,$(call UPPERCASE,$($(1)_SERVICE_$(2)_ENVS)),$(if $(3),$($(1)_SERVICE_$(env)_$(3)),$($(1)_SERVICE_$(2)_$(env))))
-uriprefix  = $(foreach svc,$(1),$(patsubst %,$(addsuffix .,$(or $($(call UPPERCASE,$(svc)_SERVICE_$(2)_NAME)),$($(call UPPERCASE,$(svc)_SERVICE_NAME)),$(svc)))%,$(APP_URIS)))
+uriprefix  = $(foreach svc,$(1),$(patsubst %,$(addsuffix .,$(or $($(call UPPERCASE,$(svc)_SERVICE_$(2)_NAME)),$($(call UPPERCASE,$(svc)_SERVICE_NAME)),$(svc)))%,$(or $(3),$(APP_URIS))))
 url_suffix = *
 urlprefix  = $(strip $(call patsublist,%,urlprefix-%$(1)$(url_suffix) $(2),$(or $(3),$(APP_URIS))))
 urlprefixs = $(strip $(call urlprefix,$(firstword $(1)),$(wordlist 2,16,$(1)))$(foreach prefix,$(subst $(space),$(dollar),$(2)) $(subst $(space),$(dollar),$(3)) $(subst $(space),$(dollar),$(4)),$(comma)$(call subst,$(dollar),$(space),$(call urlprefix,$(firstword $(prefix)),$(wordlist 2,16,$(prefix))))))
