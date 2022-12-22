@@ -1,0 +1,7 @@
+ENV_VARS                                  += HOST_APACHE_PHP5_SERVICE_80_TAGS HOST_APACHE_PHP5_VIRTUAL_ROOT
+HOST_APACHE_PHP5_SERVICE_HOST             ?= $(subst $(comma),$(space),$(HOST_APACHE_PHP5_VIRTUAL_HOST))
+HOST_APACHE_PHP5_SERVICE_PATH             ?= /
+HOST_APACHE_PHP5_SERVICE_80_HOST          ?= $(HOST_APACHE_PHP5_SERVICE_HOST)
+HOST_APACHE_PHP5_SERVICE_80_TAGS          ?= $(call tagprefix,HOST_APACHE_PHP5,80,host)
+HOST_APACHE_PHP5_VIRTUAL_HOST             ?= $(subst $(space),$(comma),$(APP_HOST))
+HOST_APACHE_PHP5_VIRTUAL_ROOT             ?= %-1/%-2/%-3

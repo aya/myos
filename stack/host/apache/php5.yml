@@ -1,0 +1,36 @@
+version: '3.6'
+
+services:
+  apache-php5:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/apache/php5
+      context: ../..
+      dockerfile: docker/apache/php5/Dockerfile
+    domainname: ${DOMAINNAME}
+    environment:
+    - DOCUMENT_ROOT=${HOST_APACHE_PHP5_DOCUMENT_ROOT:-/web/html}
+    - VIRTUAL_ROOT=${HOST_APACHE_PHP5_VIRTUAL_ROOT:-%0}
+    hostname: ${HOSTNAME}
+    image: ${DOCKER_REPOSITORY:-apache-php5}/apache-php5:${DOCKER_IMAGE_TAG:-latest}
+    labels:
+    - SERVICE_80_CHECK_HTTP=${HOST_APACHE_PHP5_SERVICE_80_CHECK_HTTP:-/}
+    - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME:-docker}-apache-php5-80
+    - SERVICE_80_TAGS=${HOST_APACHE_PHP5_SERVICE_80_TAGS:-urlprefix-localhost/*}
+    networks:
+    - public
+    ports:
+    - 80
+    restart: unless-stopped
+    volumes:
+    - backup:/backup
+    - web:/web
+
+volumes:
+  backup:
+  web:
+
+networks:
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC:-localhost}

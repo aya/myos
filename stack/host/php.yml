@@ -1,18 +1,18 @@
 version: '3.6'
 
 services:
+  nginx:
+    environment:
+    - DEFAULT_LOCATION_PHP=true
   php:
+    depends_on:
+    - nginx
     environment:
     - VIRTUAL_HOST=php
     - VIRTUAL_PROTO=fastcgi
     image: php:fpm-alpine
     networks:
     - public
-    volumes:
-    - www:/var/www
-
-volumes:
-  www:
 
 networks:
   public:

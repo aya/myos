@@ -39,7 +39,7 @@ docker-compose-config:
 docker-compose-connect: SERVICE ?= $(DOCKER_SERVICE)
 docker-compose-connect: DOCKER_RUN_OPTIONS += -it
 docker-compose-connect:
-	$(call docker-compose,exec $(SERVICE) $(DOCKER_SHELL)) || true
+	$(call docker-compose,exec $(SERVICE) $(DOCKER_SHELL))
 
 # target docker-compose-down: Call docker-compose rm SERVICE or docker-compose down
 .PHONY: docker-compose-down
@@ -51,7 +51,7 @@ docker-compose-down:
 .PHONY: docker-compose-exec
 docker-compose-exec: SERVICE ?= $(DOCKER_SERVICE)
 docker-compose-exec:
-	$(call docker-compose-exec-sh,$(SERVICE),$(ARGS)) || true
+	$(call docker-compose-exec-sh,$(SERVICE),$(ARGS))
 
 # target docker-compose-logs: Call docker-compose logs SERVICE
 .PHONY: docker-compose-logs

@@ -1,4 +1,4 @@
-ENV_VARS                        += USER_DOMAIN user_domain
+ENV_VARS                        += USER_DOMAIN USER_HOST user_domain
 MAKECMDARGS                     += user-exec user-exec:% user-exec@% user-run user-run:% user-run@%
 USER_DOMAIN                     ?= $(patsubst %,$(USER).%,$(DOMAIN))
 USER_HOST                       ?= $(patsubst %,$(USER).%,$(HOST))$(USER_HOST_LB)

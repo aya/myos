@@ -1,0 +1,17 @@
+version: '3.6'
+
+services:
+  apache-php5:
+    environment:
+    - DOCUMENT_ROOT=/var/www
+    volumes:
+    - www:/var/www
+  nginx:
+    volumes:
+    - www:/var/www
+  php:
+    volumes:
+    - www:/var/www
+
+volumes:
+  www:

@@ -1,0 +1,3 @@
+location ~ /ip(f|n)s {
+  proxy_pass http://$host:8080;
+}

@@ -7,8 +7,13 @@ services:
       - DOCKER_BUILD_DIR=docker/nginx
       context: ../..
       dockerfile: docker/nginx/Dockerfile
+    domainname: ${DOMAINNAME}
     environment:
-    - DEFAULT_HOST=${HOST_NGINX_DEFAULT_HOST:-localhost}
+    - DEFAULT=${HOST_NGINX_DEFAULT:-default}
+    - DEFAULT_HOST=${HOST_NGINX_DEFAULT_HOST:-}
+    - DEFAULT_LOCATION=${HOST_NGINX_DEFAULT_LOCATION:-}
+    - DEFAULT_LOCATION_PHP=${HOST_NGINX_DEFAULT_LOCATION_PHP:-}
+    - DEFAULT_LOCATION_IPFS=${HOST_NGINX_DEFAULT_LOCATION_IPFS:-}
     - LETSENCRYPT_HOST=${HOST_NGINX_LETSENCRYPT_HOST:-${HOST_NGINX_VIRTUAL_HOST:-}}
     - LETSENCRYPT_EMAIL=${HOST_NGINX_LETSENCRYPT_EMAIL:-${DEFAULT_EMAIL:-${MAIL:-nginx@localhost}}}
     - LETSENCRYPT_SINGLE_DOMAIN_CERTS=${HOST_NGINX_LETSENCRYPT_SINGLE_DOMAIN_CERTS:-true}
@@ -17,6 +22,7 @@ services:
     - VIRTUAL_HOST=${HOST_NGINX_VIRTUAL_HOST:-localhost}
     - VIRTUAL_PATH=${HOST_NGINX_VIRTUAL_PATH:-/}
     - VIRTUAL_PROTO=${HOST_NGINX_VIRTUAL_PROTO:-local}
+    hostname: ${HOSTNAME}
     image: ${DOCKER_REPOSITORY:-nginx}/nginx:${DOCKER_IMAGE_TAG:-latest}
     labels:
     - SERVICE_80_CHECK_TCP=${HOST_NGINX_SERVICE_80_CHECK_TCP:-true}
@@ -38,7 +44,6 @@ services:
     - htpasswd:/etc/nginx/htpasswd
     - log:/var/log/nginx
     - vhost:/etc/nginx/vhost.d
-    - www:/var/www
 
 volumes:
   certs:
@@ -46,7 +51,6 @@ volumes:
   htpasswd:
   log:
   vhost:
-  www:
 
 networks:
   public:
