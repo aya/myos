@@ -1,18 +1,22 @@
 ENV_VARS                        += USER_DOMAIN USER_HOST user_domain
 MAKECMDARGS                     += user-exec user-exec:% user-exec@% user-run user-run:% user-run@%
 USER_DOMAIN                     ?= $(patsubst %,$(USER).%,$(DOMAIN))
+USER_HOME                       ?= $(shell cd ~ && pwd -P)
 USER_HOST                       ?= $(patsubst %,$(USER).%,$(HOST))$(USER_HOST_LB)
-USER_HOST_RESU                  ?= $(patsubst %,$(RESU).%,$(USER_HOST))
 USER_HOST_LB                    ?= $(if $(USER_LB),$(space)$(HOST)$(if $(HOST_LB),$(space)$(DOMAIN)),$(if $(HOST_LB),$(space)$(USER_DOMAIN)))
 USER_PATH                       ?= $(USER_PATH_PREFIX)
-USER_PATH_RESU                  ?= $(USER_PATH)$(RESU)/
 USER_URIS                       ?= $(patsubst %,%/$(USER_PATH),$(USER_HOST))
 
 ifneq ($(RESU),)
-ifeq ($(USER_RESU_HOST),true)
-USER_HOST                       := $(USER_HOST_RESU)
-else ifeq ($(USER_RESU_PATH),true)
-USER_PATH                       := $(USER_PATH_RESU)
+ifeq ($(RESU_HOME),mail)
+USER_HOME                       := /home/$(mail)
+else ifeq ($(RESU_HOME),dns)
+USER_HOME                       := /dns/$(resu.path)
+endif
+ifeq ($(RESU_HOST),true)
+USER_HOST                       := $(patsubst %,$(RESU).%,$(USER_HOST))
+else ifeq ($(RESU_PATH),true)
+USER_PATH                       := $(USER_PATH)$(RESU)/
 endif
 endif
 

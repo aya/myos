@@ -230,6 +230,7 @@ up: docker-compose-up ufw-update app-start ## Create application dockers
 # on local host
 .PHONY: update app-update
 update: update-app app-update ## Update application files
+	git pull
 
 # target upgrade app-upgrade: Upgrade application
 # on local host

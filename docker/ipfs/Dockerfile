@@ -3,6 +3,7 @@ FROM ipfs/kubo:v${IPFS_VERSION} as dist
 LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 
+RUN sed -i 's!repo="$IPFS_PATH"!repo="$IPFS_PATH" \&\& mkdir -p "$IPFS_PATH" \&\& chown ipfs:users $(dirname "$IPFS_PATH") \&\& chown ipfs:users "$IPFS_PATH"!' /usr/local/bin/start_ipfs
 COPY ${DOCKER_BUILD_DIR}/*.sh /container-init.d/
 RUN chmod +rx /container-init.d/*.sh
 

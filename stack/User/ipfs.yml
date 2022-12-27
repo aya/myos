@@ -45,6 +45,7 @@ services:
     - IPFS_IPNS_USEPUBSUB=${USER_IPFS_IPNS_USEPUBSUB:-true}
     - IPFS_LOGGING=${USER_IPFS_LOGGING:-error}
     - IPFS_NETWORK=${USER_IPFS_NETWORK:-private}
+    - IPFS_PATH=${USER_IPFS_PATH:-~/.ipfs}
     - IPFS_PROFILE=${USER_IPFS_PROFILE:-${IPFS_PROFILE}}
     - IPFS_PUBSUB_ENABLE=${USER_IPFS_PUBSUB_ENABLE:-true}
     - IPFS_PUBSUB_ROUTER=${USER_IPFS_PUBSUB_ROUTER:-gossipsub}
@@ -87,11 +88,12 @@ services:
         soft: 65536
         hard: 65536
     volumes:
-    - ipfs:/data/ipfs:delegated
+    - host:/home:delegated
 
 volumes:
-  ipfs:
-    name: ${USER_DOCKER_VOLUME}_ipfs
+  host:
+    external: true
+    name: ${HOST_DOCKER_VOLUME}_home
 
 networks:
   private:

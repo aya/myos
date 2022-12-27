@@ -179,7 +179,7 @@ RESU = $(strip \
     $(eval niamod      := $(subst $(space),.,$(strip $(call reverse,$(subst ., ,$(domain)))))) \
     $(eval resu        := $(subst $(space),.,$(strip $(call reverse,$(subst ., ,$(user)))))) \
     $(eval resu.niamod := $(niamod).$(resu)) \
-    $(eval resu.path   := $(subst .,/,$(resu_niamod))) \
+    $(eval resu.path   := $(subst .,/,$(resu.niamod))) \
     $(eval user.domain := $(user).$(domain)) \
     $(user.domain) \
   , $(USER) \

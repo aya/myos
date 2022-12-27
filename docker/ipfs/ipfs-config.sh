@@ -8,7 +8,8 @@ set -e
 
 # set ipfs peer id
 [ -n "${IPFS_IDENTITY_PEERID}" ] && [ -n "${IPFS_IDENTITY_PRIVKEY}" ] \
- && sed -i 's/"PeerID":.*/"PeerID": "'"${IPFS_IDENTITY_PEERID}"'",/;s/"PrivKey":.*/"PrivKey": "'"${IPFS_IDENTITY_PRIVKEY}"'"/' "${IPFS_PATH}/config"
+ && sed -i 's/"PeerID":.*/"PeerID": "'"${IPFS_IDENTITY_PEERID}"'",/;s/"PrivKey":.*/"PrivKey": "'"${IPFS_IDENTITY_PRIVKEY}"'"/' "${IPFS_PATH}/config" \
+ || true
 
 ## ipfs client needs API address
 # search for ip address of $(hostname).${IPFS_ADDRESSES_API_DOMAIN}
