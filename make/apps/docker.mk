@@ -221,6 +221,7 @@ docker-run:
 
 # target docker-run-%: Call docker-run with image % and command ARGS
 .PHONY: docker-run-%
+docker-run-%: DOCKER_RUN_OPTIONS += -it
 docker-run-%: docker-build-%
 	$(eval command         := $(ARGS))
 	$(eval path            := $(patsubst %/,%,$*))
