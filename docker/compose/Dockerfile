@@ -10,7 +10,7 @@ ARG DOCKER_SYSTEM=Linux
 RUN apk update \
  && apk add --no-cache ca-certificates \
  && OS="$(echo ${DOCKER_SYSTEM} |awk '{print tolower($0)}')"; \
-    ARCH="$(echo ${DOCKER_MACHINE})"; \
+    ARCH="$(echo ${DOCKER_MACHINE} |awk '/armv7l/ {print "armv7"}')"; \
     wget -qO /usr/bin/docker-compose ${COMPOSE_REMOTE}/releases/download/v${COMPOSE_VERSION}/docker-compose-${OS}-${ARCH} \
  && chmod +x /usr/bin/docker-compose
 

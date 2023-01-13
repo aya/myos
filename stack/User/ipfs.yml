@@ -88,10 +88,10 @@ services:
         soft: 65536
         hard: 65536
     volumes:
-    - host:/home:delegated
+    - home:/home:delegated
 
 volumes:
-  host:
+  home:
     external: true
     name: ${HOST_DOCKER_VOLUME}_home
 

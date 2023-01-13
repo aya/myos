@@ -136,7 +136,7 @@ define docker-stack-update
 	$(eval name             := $(firstword $(subst :, ,$(stack))))
 	$(eval version          := $(or $(2),$(if $(findstring :,$(stack)),$(lastword $(subst :, ,$(stack))),latest)))
 	$(eval path             := $(patsubst %/,%,$(or $(3),$(if $(findstring /,$(1)),$(if $(wildcard stack/$(1) stack/$(1).yml),stack/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard stack/$(1).yml),$(dir $(1)),$(1))),$(dir $(1)))),stack/$(name))))
-	$(eval COMPOSE_FILE     += $(wildcard $(path)/$(name).yml $(path)/$(name).$(ENV).yml $(path)/$(name).$(ENV).$(version).yml $(path)/$(name).$(version).yml))
+	$(eval COMPOSE_FILE     += $(wildcard $(foreach file,$(name) $(name).$(ENV) $(name).$(ENV).$(version) $(name).$(version),$(path)/$(file).yml)))
 	$(eval COMPOSE_FILE     := $(strip $(COMPOSE_FILE)))
 	$(if $(wildcard $(path)/.env.dist),$(call .env,,$(path)/.env.dist,$(wildcard $(CONFIG)/$(ENV)/$(APP)/.env $(path)/.env.$(ENV) .env)))
 endef
