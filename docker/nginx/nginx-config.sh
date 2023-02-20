@@ -4,7 +4,7 @@ set -eu
 ##
 # CONFIG
 
-sed -i 's/fastcgi_param * SERVER_SOFTWARE *.*/fastcgi_param  SERVER_SOFTWARE    nginx;/' /etc/nginx/fastcgi_params
+sed -i 's/fastcgi_param * SERVER_SOFTWARE *.*/fastcgi_param  SERVER_SOFTWARE    nstix;/' /etc/nginx/fastcgi_params
 
 ##
 # DEFAULT

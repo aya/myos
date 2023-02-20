@@ -1,11 +1,6 @@
 version: '3.6'
 
 services:
-  apache-php5:
-    environment:
-    - DOCUMENT_ROOT=/dns
-    volumes:
-    - dns:/dns
   nginx:
     environment:
     - DEFAULT=default_dns
