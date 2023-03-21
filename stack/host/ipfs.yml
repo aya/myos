@@ -61,6 +61,8 @@ services:
     - IPFS_SWARM_RELAYCLIENT_ENABLED=${HOST_IPFS_SWARM_RELAYCLIENT_ENABLED:-}
     - IPFS_SWARM_RELAYSERVICE_ENABLED=${HOST_IPFS_SWARM_RELAYSERVICE_ENABLED:-}
     - IPFS_SWARM_TRANSPORTS_NETWORK_RELAY=${HOST_IPFS_SWARM_TRANSPORTS_NETWORK_RELAY:-}
+    healthcheck:
+      timeout: 5s
     image: ${HOST_DOCKER_REPOSITORY}/ipfs:${DOCKER_IMAGE_TAG}
     labels:
     - SERVICE_4001_CHECK_TCP=true
@@ -73,27 +75,15 @@ services:
     - SERVICE_8080_NAME=${HOST_COMPOSE_SERVICE_NAME}-ipfs-8080
     - SERVICE_8080_TAGS=${HOST_IPFS_SERVICE_8080_TAGS:-}
     - SERVICE_8081_IGNORE=true
-    networks:
-    - public
-    ports:
-    - 4001:4001/tcp
-    - 4001:4001/udp
-    - 5001:5001/tcp
-    - 8080:8080/tcp
+    network_mode: host
     restart: always
     ulimits:
       nofile:
         soft: 65536
         hard: 65536
     volumes:
-    - home:/home:delegated
     - ipfs:/data/ipfs:delegated
 
 volumes:
-  home:
   ipfs:
 
-networks:
-  public:
-    external: true
-    name: ${DOCKER_NETWORK_PUBLIC}

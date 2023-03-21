@@ -3,6 +3,14 @@
 ufw:
 	$(call ufw,$(ARGS))
 
+# target ufw-bootstrap: Eval ufw-docker app variables
+ufw-bootstrap:
+	$(call app-bootstrap,$(lastword $(subst /, ,$(SETUP_UFW_REPOSITORY))))
+
+# target ufw-build: Build ufw-docker docker
+ufw-build:
+	$(call app-build)
+
 # target ufw-delete: Fire ufw-update UFW_DELETE=true
 .PHONY: ufw-delete
 ufw-delete: UFW_DELETE := true
@@ -13,7 +21,18 @@ ufw-delete: ufw-update
 ufw-docker:
 	$(call ufw-docker,$(ARGS))
 
-# target ufw-docker: Call ufw and ufw-docker foreach service UFW_UPDATE
+# target ufw-install: Download ufw-docker application
+ufw-install:
+	$(call app-install,$(SETUP_UFW_REPOSITORY))
+
+# target ufw-up: Start ufw-docker docker
+ufw-up: COMPOSE_PROJECT_NAME := $(HOST_COMPOSE_PROJECT_NAME)
+ufw-up: DOCKER_RUN_NETWORK   :=
+ufw-up: DOCKER_RUN_OPTIONS   := --rm -d --cap-add NET_ADMIN -v /etc/ufw:/etc/ufw $(if wildcard /etc/default/ufw,-v /etc/default/ufw:/etc/default/ufw) --network host
+ufw-up:
+	$(call app-up)
+
+# target ufw-update: Call ufw and ufw-docker foreach service UFW_UPDATE
 .PHONY: ufw-update
 ufw-update: debug-UFW_UPDATE
 	$(eval name := $(COMPOSE_PROJECT_NAME))
@@ -28,8 +47,9 @@ ufw-update: debug-UFW_UPDATE
 	  ) \
 	)
 
+# target ufw-%: Call ufw target for specific stack
 ## ex: ufw-host-update will update ufw rules for stack host
-.PHONY: stack-%
+.PHONY: ufw-%
 ufw-%:
 	$(eval stack   := $(subst -$(lastword $(subst -, ,$*)),,$*))
 	$(eval command := $(lastword $(subst -, ,$*)))

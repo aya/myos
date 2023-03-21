@@ -39,14 +39,7 @@ endif
 
 # target setup-ufw: Install ufw-docker
 .PHONY: setup-ufw
-setup-ufw: COMPOSE_PROJECT_NAME := $(HOST_COMPOSE_PROJECT_NAME)
-setup-ufw: DOCKER_RUN_NETWORK   :=
-setup-ufw: DOCKER_RUN_OPTIONS   := --rm -d --cap-add NET_ADMIN -v /etc/ufw:/etc/ufw $(if wildcard /etc/default/ufw,-v /etc/default/ufw:/etc/default/ufw) --network host
-setup-ufw:
+setup-ufw: ufw-install ufw-bootstrap ufw-build ufw-up
 ifeq ($(SETUP_UFW),true)
-	$(call app-install,$(SETUP_UFW_REPOSITORY))
-	$(call app-bootstrap,$(lastword $(subst /, ,$(SETUP_UFW_REPOSITORY))))
-	$(call app-build)
-	$(call app-up)
 	$(call ufw-docker,install)
 endif

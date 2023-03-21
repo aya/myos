@@ -6,9 +6,7 @@ services:
     - DEFAULT=default_dns
     volumes:
     - dns:/dns
-  php:
-    volumes:
-    - dns:/dns
 
 volumes:
   dns:
+

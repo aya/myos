@@ -6,12 +6,7 @@ services:
     - DOCUMENT_ROOT=/var/www
     volumes:
     - www:/var/www
-  nginx:
-    volumes:
-    - www:/var/www
-  php:
-    volumes:
-    - www:/var/www
 
 volumes:
   www:
+
