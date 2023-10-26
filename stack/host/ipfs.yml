@@ -86,4 +86,3 @@ services:
 
 volumes:
   ipfs:
-

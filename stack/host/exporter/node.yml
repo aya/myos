@@ -23,8 +23,3 @@ services:
     - /:/rootfs:ro
     - /proc:/host/proc:ro
     - /sys:/host/sys:ro
-
-networks:
-  public:
-    external: true
-    name: ${DOCKER_NETWORK_PUBLIC}

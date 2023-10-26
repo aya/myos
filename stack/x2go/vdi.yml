@@ -40,14 +40,6 @@ services:
     - vdi-shared:/shared:cached
     - vdi-shm:/dev/shm:delegated
 
-networks:
-  private:
-    external: true
-    name: ${DOCKER_NETWORK_PRIVATE}
-  public:
-    external: true
-    name: ${DOCKER_NETWORK_PUBLIC}
-
 volumes:
   vdi-home:
   vdi-shared:

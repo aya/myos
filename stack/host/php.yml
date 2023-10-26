@@ -14,8 +14,3 @@ services:
     networks:
     - public
     restart: always
-
-networks:
-  public:
-    external: true
-    name: ${DOCKER_NETWORK_PUBLIC}

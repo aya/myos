@@ -12,11 +12,3 @@ services:
     ports:
     - 5601
     restart: always
-
-networks:
-  private:
-    external: true
-    name: ${DOCKER_NETWORK_PRIVATE}
-  public:
-    external: true
-    name: ${DOCKER_NETWORK_PUBLIC}

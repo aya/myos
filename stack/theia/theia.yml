@@ -46,11 +46,3 @@ volumes:
   user:
     external: true
     name: ${USER_DOCKER_VOLUME}
-
-networks:
-  private:
-    external: true
-    name: ${DOCKER_NETWORK_PRIVATE}
-  public:
-    external: true
-    name: ${DOCKER_NETWORK_PUBLIC}

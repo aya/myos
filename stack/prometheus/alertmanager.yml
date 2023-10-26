@@ -19,11 +19,3 @@ services:
     ports:
     - 9093
     restart: always
-
-networks:
-  private:
-    external: true
-    name: ${DOCKER_NETWORK_PRIVATE}
-  public:
-    external: true
-    name: ${DOCKER_NETWORK_PUBLIC}

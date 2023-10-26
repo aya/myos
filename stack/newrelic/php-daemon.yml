@@ -12,8 +12,3 @@ services:
     ports:
     - 31339
     restart: always
-
-networks:
-  private:
-    external: true
-    name: ${DOCKER_NETWORK_PRIVATE}

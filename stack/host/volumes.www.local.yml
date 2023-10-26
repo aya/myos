@@ -1,9 +1,0 @@
-version: '3.6'
-
-volumes:
-  www:
-    driver: local
-    driver_opts:
-      device: /var/www
-      o: bind
-      type: none

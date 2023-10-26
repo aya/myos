@@ -17,8 +17,3 @@ services:
     restart: always
     volumes:
     - /var/run/docker.sock:/var/run/docker.sock
-
-networks:
-  private:
-      external: true
-      name: ${DOCKER_NETWORK_PRIVATE}

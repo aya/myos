@@ -17,8 +17,3 @@ services:
 
 volumes:
   mysql:
-
-networks:
-  private:
-    external: true
-    name: ${DOCKER_NETWORK_PRIVATE}

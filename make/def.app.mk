@@ -16,7 +16,7 @@ define app-bootstrap
 	$(eval APP              := $(or $(1), $(APP)))
 	$(eval APP_DIR          := $(or $(2), $(RELATIVE)$(APP)))
 	$(eval APP_NAME         := $(or $(3),$(subst -,,$(subst .,,$(call LOWERCASE,$(APP))))))
-	$(eval COMPOSE_FILE     := $(wildcard $(APP_DIR)/docker-compose.yml $(APP_DIR)/docker-compose.$(ENV).yml $(APP_DIR)/docker/docker-compose.yml $(foreach file,$(patsubst $(APP_DIR)/docker/docker-compose.%,%,$(basename $(wildcard $(APP_DIR)/docker/docker-compose.*.yml))),$(if $(filter true,$(COMPOSE_FILE_$(file)) $(COMPOSE_FILE_$(call UPPERCASE,$(file)))),$(APP_DIR)/docker/docker-compose.$(file).yml))))
+	$(eval COMPOSE_FILE     := $(STACK_MYOS_FILE) $(wildcard $(APP_DIR)/docker-compose.yml $(APP_DIR)/docker-compose.$(ENV).yml $(APP_DIR)/docker/docker-compose.yml $(foreach file,$(patsubst $(APP_DIR)/docker/docker-compose.%,%,$(basename $(wildcard $(APP_DIR)/docker/docker-compose.*.yml))),$(if $(filter true,$(COMPOSE_FILE_$(file)) $(COMPOSE_FILE_$(call UPPERCASE,$(file)))),$(APP_DIR)/docker/docker-compose.$(file).yml))))
 	$(eval DOCKER_BUILD_DIR := $(APP_DIR))
 	$(if $(wildcard $(APP_DIR)/.env.dist), $(call .env,$(APP_DIR)/.env,$(APP_DIR)/.env.dist))
 	$(if $(wildcard $(APP_DIR)/.env.example), $(call .env,$(APP_DIR)/.env,$(APP_DIR)/.env.example))
@@ -31,6 +31,12 @@ define app-build
 	  $(call app-docker,$(dockerfile))
 	  $(call docker-build, $(dir $(dockerfile)), $(DOCKER_IMAGE), "" )
 	)
+endef
+
+# function app-config: Call docker-compose config with each docker-compose.yml in dir 1
+define app-config
+	$(call INFO,app-config,$(1)$(comma))
+	$(call docker-compose,config)
 endef
 
 # function app-connect: Call docker exec $(DOCKER_SHELL) for each Dockerfile in dir 1

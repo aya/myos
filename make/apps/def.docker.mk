@@ -1,4 +1,4 @@
-COMPOSE_FILE                    ?= $(wildcard docker-compose.yml docker/docker-compose.yml $(foreach file,$(patsubst docker/docker-compose.%,%,$(basename $(wildcard docker/docker-compose.*.yml))),$(if $(filter true,$(COMPOSE_FILE_$(file)) $(COMPOSE_FILE_$(call UPPERCASE,$(file)))),docker/docker-compose.$(file).yml)))
+COMPOSE_FILE                    ?= $(STACK_MYOS_FILE) $(wildcard docker-compose.yml docker/docker-compose.yml $(foreach file,$(patsubst docker/docker-compose.%,%,$(basename $(wildcard docker/docker-compose.*.yml))),$(if $(filter true,$(COMPOSE_FILE_$(file)) $(COMPOSE_FILE_$(call UPPERCASE,$(file)))),docker/docker-compose.$(file).yml)))
 COMPOSE_FILE_$(ENV)             ?= true
 COMPOSE_FILE_DEBUG              ?= $(if $(DEBUG),true)
 COMPOSE_FILE_MYOS               ?= true
@@ -135,8 +135,8 @@ define docker-stack-update
 	$(eval stack            := $(patsubst %.yml,%,$(notdir $(1))))
 	$(eval name             := $(firstword $(subst :, ,$(stack))))
 	$(eval version          := $(or $(2),$(if $(findstring :,$(stack)),$(lastword $(subst :, ,$(stack))),latest)))
-	$(eval path             := $(patsubst %/,%,$(or $(3),$(if $(findstring /,$(1)),$(if $(wildcard stack/$(1) stack/$(1).yml),stack/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard stack/$(1).yml),$(dir $(1)),$(1))),$(dir $(1)))),stack/$(name))))
-	$(eval COMPOSE_FILE     += $(wildcard $(foreach file,$(name) $(name).$(ENV) $(name).$(ENV).$(version) $(name).$(version),$(path)/$(file).yml)))
+	$(eval path             := $(patsubst %/,%,$(or $(3),$(if $(findstring /,$(1)),$(if $(wildcard stack/$(1) stack/$(1).yml),stack/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard stack/$(1).yml),$(dir $(1)),$(1))),$(if $(wildcard stack/$(stackz)/$(1) stack/$(stackz)/$(1).yml),stack/$(stackz)/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard stack/$(stackz)/$(1).yml),$(dir $(1)),$(1))),$(dir $(1))))),$(firstword $(wildcard stack/$(stackz)/$(name) stack/$(stackz) stack/$(name))))))
+	$(eval COMPOSE_FILE     += $(wildcard $(foreach file,$(name) $(name).$(ENV) $(name).$(ENV).$(version) $(name).$(version) $(foreach env,$(COMPOSE_FILE_ENV),$(name).$(env)),$(path)/$(file).yml)))
 	$(eval COMPOSE_FILE     := $(strip $(COMPOSE_FILE)))
 	$(if $(wildcard $(path)/.env.dist),$(call .env,,$(path)/.env.dist,$(wildcard $(CONFIG)/$(ENV)/$(APP)/.env $(path)/.env.$(ENV) .env)))
 endef

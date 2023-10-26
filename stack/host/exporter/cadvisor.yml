@@ -20,8 +20,3 @@ services:
     - /sys:/sys:ro
     - /var/lib/docker/:/var/lib/docker:ro
     - /var/run:/var/run:rw
-
-networks:
-  public:
-    external: true
-    name: ${DOCKER_NETWORK_PUBLIC}

@@ -94,11 +94,3 @@ volumes:
   home:
     external: true
     name: ${HOST_DOCKER_VOLUME}_home
-
-networks:
-  private:
-    external: true
-    name: ${DOCKER_NETWORK}
-  public:
-    external: true
-    name: ${DOCKER_NETWORK_PUBLIC}

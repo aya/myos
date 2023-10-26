@@ -1,9 +1,0 @@
-version: '3.6'
-
-volumes:
-  dns:
-    driver: local
-    driver_opts:
-      device: /dns
-      o: bind
-      type: none
