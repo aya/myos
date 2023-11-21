@@ -90,7 +90,7 @@ MAKE_OLDFILE                    ?= $@
 MAKE_TARGETS                    ?= $(filter-out $(.VARIABLES),$(shell $(MAKE) -qp 2>/dev/null |awk -F':' '/^[a-zA-Z0-9][^$$\#\/\t=]*:([^=]|$$)/ {print $$1}' 2>/dev/null |sort -u))
 MAKE_UNIXTIME_START             := $(shell date -u +'%s' 2>/dev/null)
 MAKE_UNIXTIME_CURRENT            = $(shell date -u "+%s" 2>/dev/null)
-MAKE_VARS                       ?= ENV
+MAKE_VARS                       ?= ENV DOCKER_COMPOSE DOCKER_MACHINE DOCKER_SYSTEM
 MAKECMDARGS                     ?= apps-install install-app
 MONOREPO                        ?= $(if $(filter myos,$(MYOS)),$(notdir $(CURDIR)),$(if $(APP),$(notdir $(realpath $(CURDIR)/..))))
 MONOREPO_DIR                    ?= $(if $(MONOREPO),$(if $(filter myos,$(MYOS)),$(realpath $(CURDIR)),$(if $(APP),$(realpath $(CURDIR)/..))))
@@ -126,13 +126,13 @@ endif
 
 # Guess OS
 ifeq ($(OSTYPE),cygwin)
-SYSTEM                          := cygwin
+SYSTEM                          ?= cygwin
 else ifeq ($(OS),Windows_NT)
-SYSTEM                          := Windows_NT
+SYSTEM                          ?= Windows_NT
 else
-SYSTEM                          := $(shell uname -s 2>/dev/null)
+SYSTEM                          ?= $(shell uname -s 2>/dev/null)
 endif
-MACHINE                         := $(shell uname -m 2>/dev/null)
+MACHINE                         ?= $(shell uname -m 2>/dev/null)
 
 ifeq ($(SYSTEM),Darwin)
 SED_SUFFIX                      := ''
