@@ -4,7 +4,7 @@ DOCKER_GID                      ?= $(call gid,docker)
 DOCKER_IMAGE                    ?= $(USER_DOCKER_IMAGE)
 DOCKER_MACHINE                  ?= $(shell docker run --rm alpine uname -m 2>/dev/null)
 DOCKER_NAME                     ?= $(USER_DOCKER_NAME)
-DOCKER_NETWORK                  ?= $(if $(STACK_USER),$(USER),$(DOCKER_NETWORK_PRIVATE))
+DOCKER_NETWORK                  ?= $(if $(USER_STACK),$(USER),$(DOCKER_NETWORK_PRIVATE))
 DOCKER_NETWORK_PRIVATE          ?= $(USER)-$(ENV)
 DOCKER_NETWORK_PUBLIC           ?= $(HOSTNAME)
 # DOCKER_RUN: if empty, run system command, else run it in a docker
@@ -25,17 +25,17 @@ HOST_DOCKER_REPOSITORY          ?= $(subst -,/,$(subst _,/,$(HOST_COMPOSE_PROJEC
 HOST_DOCKER_VOLUME              ?= $(HOST_COMPOSE_PROJECT_NAME)
 HOST_GID                        ?= 100
 HOST_UID                        ?= 123
+HOST_STACK                      ?= $(filter host,$(firstword $(subst /, ,$(STACK))))
+MYOS_STACK                      ?= $(MYOS)/stack/myos
+MYOS_STACK_FILE                 ?= $(wildcard $(MYOS_STACK)/networks.yml $(MYOS_STACK)/*.$(ENV).yml)
 RESU_DOCKER_REPOSITORY          ?= $(subst -,/,$(USER_COMPOSE_PROJECT_NAME))
-STACK_HOST                      ?= $(filter host,$(firstword $(subst /, ,$(STACK))))
-STACK_MYOS                      ?= $(MYOS)/stack/myos
-STACK_MYOS_FILE                 ?= $(wildcard $(STACK_MYOS)/networks.yml $(STACK_MYOS)/*.$(ENV).yml)
-STACK_USER                      ?= $(filter User,$(firstword $(subst /, ,$(STACK))))
 USER_COMPOSE_PROJECT_NAME       ?= $(subst .,-,$(RESU))
 USER_COMPOSE_SERVICE_NAME       ?= $(USER_COMPOSE_PROJECT_NAME)
 USER_DOCKER_IMAGE               ?= $(USER_DOCKER_REPOSITORY):${DOCKER_IMAGE_TAG}
 USER_DOCKER_NAME                ?= $(USER_COMPOSE_PROJECT_NAME)
 USER_DOCKER_REPOSITORY          ?= $(subst -,/,$(subst _,/,$(USER)))
 USER_DOCKER_VOLUME              ?= $(USER_COMPOSE_PROJECT_NAME)
+USER_STACK                      ?= $(filter User,$(firstword $(subst /, ,$(STACK))))
 
 # https://github.com/docker/libnetwork/pull/2348
 ifeq ($(SYSTEM),Darwin)

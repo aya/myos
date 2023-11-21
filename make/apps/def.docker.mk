@@ -1,4 +1,4 @@
-COMPOSE_FILE                    ?= $(STACK_MYOS_FILE) $(wildcard docker-compose.yml docker/docker-compose.yml $(foreach file,$(patsubst docker/docker-compose.%,%,$(basename $(wildcard docker/docker-compose.*.yml))),$(if $(filter true,$(COMPOSE_FILE_$(file)) $(COMPOSE_FILE_$(call UPPERCASE,$(file)))),docker/docker-compose.$(file).yml)))
+COMPOSE_FILE                    ?= $(MYOS_STACK_FILE) $(wildcard docker-compose.yml docker/docker-compose.yml $(foreach file,$(patsubst docker/docker-compose.%,%,$(basename $(wildcard docker/docker-compose.*.yml))),$(if $(filter true,$(COMPOSE_FILE_$(file)) $(COMPOSE_FILE_$(call UPPERCASE,$(file)))),docker/docker-compose.$(file).yml)))
 COMPOSE_FILE_$(ENV)             ?= true
 COMPOSE_FILE_DEBUG              ?= $(if $(DEBUG),true)
 COMPOSE_FILE_MYOS               ?= true
@@ -18,7 +18,7 @@ CONTEXT_DEBUG                   += DOCKER_BUILD_TARGET DOCKER_COMPOSE_PROJECT_NA
 DOCKER_AUTHOR                   ?= $(DOCKER_AUTHOR_NAME) <$(DOCKER_AUTHOR_EMAIL)>
 DOCKER_AUTHOR_EMAIL             ?= $(subst +git,+docker,$(GIT_AUTHOR_EMAIL))
 DOCKER_AUTHOR_NAME              ?= $(GIT_AUTHOR_NAME)
-DOCKER_BUILD_ARGS               ?= $(if $(filter true,$(DOCKER_BUILD_NO_CACHE)),--pull --no-cache) $(foreach var,$(DOCKER_BUILD_VARS),$(if $($(var)),--build-arg $(var)='$($(var))')) --build-arg GID='$(if $(STACK_HOST),$(HOST_GID),$(GID))' --build-arg UID='$(if $(STACK_HOST),$(HOST_UID),$(UID))'
+DOCKER_BUILD_ARGS               ?= $(if $(filter true,$(DOCKER_BUILD_NO_CACHE)),--pull --no-cache) $(foreach var,$(DOCKER_BUILD_VARS),$(if $($(var)),--build-arg $(var)='$($(var))')) --build-arg GID='$(if $(HOST_STACK),$(HOST_GID),$(GID))' --build-arg UID='$(if $(HOST_STACK),$(HOST_UID),$(UID))'
 DOCKER_BUILD_CACHE              ?= true
 DOCKER_BUILD_LABEL              ?= $(foreach var,$(filter $(BUILD_LABEL_VARS),$(MAKE_FILE_VARS)),$(if $($(var)),--label $(var)='$($(var))'))
 DOCKER_BUILD_NO_CACHE           ?= false
@@ -29,7 +29,7 @@ DOCKER_BUILD_VARS               ?= APP BRANCH COMPOSE_VERSION DOCKER_GID DOCKER_
 DOCKER_COMPOSE                  ?= $(or $(shell docker-compose --version 2>/dev/null |awk '$$4 != "v'"$(COMPOSE_VERSION)"'" {exit 1} END {if (NR == 0) exit 1}' && printf 'docker-compose\n'),$(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'))
 DOCKER_COMPOSE_ARGS             ?= --ansi=auto
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
-DOCKER_COMPOSE_PROJECT_NAME     ?= $(if $(STACK_HOST),$(HOST_COMPOSE_PROJECT_NAME),$(if $(STACK_USER),$(USER_COMPOSE_PROJECT_NAME)))
+DOCKER_COMPOSE_PROJECT_NAME     ?= $(if $(HOST_STACK),$(HOST_COMPOSE_PROJECT_NAME),$(if $(USER_STACK),$(USER_COMPOSE_PROJECT_NAME)))
 DOCKER_COMPOSE_RUN_ENTRYPOINT   ?= $(patsubst %,--entrypoint=%,$(DOCKER_COMPOSE_ENTRYPOINT))
 DOCKER_COMPOSE_RUN_OPTIONS      ?= --rm $(DOCKER_COMPOSE_RUN_ENTRYPOINT) $(DOCKER_COMPOSE_RUN_WORKDIR)
 DOCKER_COMPOSE_RUN_WORKDIR      ?= $(if $(DOCKER_COMPOSE_WORKDIR),-w $(DOCKER_COMPOSE_WORKDIR))
