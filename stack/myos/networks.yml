@@ -1,0 +1,7 @@
+networks:
+  private:
+    external: true
+    name: ${DOCKER_NETWORK_PRIVATE:-docker}
+  public:
+    external: true
+    name: ${DOCKER_NETWORK_PUBLIC:-localhost}
