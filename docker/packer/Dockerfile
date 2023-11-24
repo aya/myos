@@ -22,17 +22,16 @@ RUN apk --no-cache add \
 
 ARG PACKER_VERSION=1.8.3
 
-RUN { OS="$(echo ${DOCKER_SYSTEM} |awk '{print tolower($0)}')"; \
-    ARCH="$(echo ${DOCKER_MACHINE} |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}')"; \
-    wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_${OS}_${ARCH}.zip \
-     && wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS \
-     && wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS.sig \
-     && GNUPGHOME="./.gnupg" gpg --batch --recv-keys C874011F0AB405110D02105534365D9472D7468F \
-     && GNUPGHOME="./.gnupg" gpg --batch --verify packer_${PACKER_VERSION}_SHA256SUMS.sig packer_${PACKER_VERSION}_SHA256SUMS \
-     && grep packer_${PACKER_VERSION}_${OS}_${ARCH}.zip packer_${PACKER_VERSION}_SHA256SUMS |sha256sum -c - \
-     && unzip "packer_${PACKER_VERSION}_${OS}_${ARCH}.zip" -d /usr/local/bin \
-     && rm -f "packer_${PACKER_VERSION}_${OS}_${ARCH}.zip" packer_${PACKER_VERSION}_SHA256SUMS.sig packer_${PACKER_VERSION}_SHA256SUMS ./.gnupg \
-    ; }
+RUN OS="$(echo ${DOCKER_SYSTEM} |awk '{print tolower($0)}')" \
+ && ARCH="$(echo ${DOCKER_MACHINE} |awk '{print /x86_64/ ? "amd64" : /arch64/ ? "arm64" : /armv(6|7)/ ? "arm" : $0}')" \
+ && wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_${OS}_${ARCH}.zip \
+ && wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS \
+ && wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_SHA256SUMS.sig \
+ && GNUPGHOME="./.gnupg" gpg --batch --recv-keys C874011F0AB405110D02105534365D9472D7468F \
+ && GNUPGHOME="./.gnupg" gpg --batch --verify packer_${PACKER_VERSION}_SHA256SUMS.sig packer_${PACKER_VERSION}_SHA256SUMS \
+ && grep packer_${PACKER_VERSION}_${OS}_${ARCH}.zip packer_${PACKER_VERSION}_SHA256SUMS |sha256sum -c - \
+ && unzip "packer_${PACKER_VERSION}_${OS}_${ARCH}.zip" -d /usr/local/bin \
+ && rm -rf "packer_${PACKER_VERSION}_${OS}_${ARCH}.zip" packer_${PACKER_VERSION}_SHA256SUMS.sig packer_${PACKER_VERSION}_SHA256SUMS ./.gnupg
 
 ENTRYPOINT ["/usr/local/bin/packer"]
 

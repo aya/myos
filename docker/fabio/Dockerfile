@@ -5,13 +5,13 @@ ARG DOCKER_BUILD_DIR
 ARG DOCKER_MACHINE=x86_64
 ARG DOCKER_SYSTEM=Linux
 ARG FABIO_REMOTE=https://github.com/fabiolb/fabio
-ARG FABIO_VERSION=1.6.0
+ARG FABIO_VERSION=1.6.3
 
 RUN apk update \
  && apk add --no-cache ca-certificates \
- && OS="$(echo ${DOCKER_SYSTEM} |awk '{print tolower($0)}')"; \
-    ARCH="$(echo ${DOCKER_MACHINE} |awk '/x86_64/ {print "amd64"}; /aarch64/ {print "arm64"}; /armv7/ {print "arm"};')"; \
-    wget -qO /usr/bin/fabio ${FABIO_REMOTE}/releases/download/v${FABIO_VERSION}/fabio-${FABIO_VERSION}-${OS}_${ARCH} \
+ && OS="$(echo ${DOCKER_SYSTEM} |awk '{print tolower($0)}')" \
+ && ARCH="$(echo ${DOCKER_MACHINE} |awk '{print /x86_64/ ? "amd64" : /arch64/ ? "arm64" : /armv(6|7)/ ? "arm" : $0}')" \
+ && wget -qO /usr/bin/fabio ${FABIO_REMOTE}/releases/download/v${FABIO_VERSION}/fabio-${FABIO_VERSION}-${OS}_${ARCH} \
  && chmod +x /usr/bin/fabio
 
 EXPOSE 9998 9999
