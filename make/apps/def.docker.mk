@@ -1,7 +1,6 @@
-COMPOSE_FILE                    ?= $(wildcard docker-compose.yml docker/docker-compose.yml $(foreach file,$(patsubst docker/docker-compose.%,%,$(basename $(wildcard docker/docker-compose.*.yml))),$(if $(filter true,$(COMPOSE_FILE_$(file)) $(COMPOSE_FILE_$(call UPPERCASE,$(file)))),docker/docker-compose.$(file).yml)) $(MYOS_STACK_FILE))
-COMPOSE_FILE_$(ENV)             ?= true
 COMPOSE_FILE_DEBUG              ?= $(if $(DEBUG),true)
-COMPOSE_FILE_MYOS               ?= true
+COMPOSE_FILE_DNS                ?= false
+COMPOSE_FILE_HOME               ?= false
 COMPOSE_FILE_NFS                ?= $(MOUNT_NFS)
 COMPOSE_FILE_SSH                ?= true
 ifneq ($(SUBREPO),)
@@ -9,6 +8,8 @@ COMPOSE_FILE_SUBREPO            ?= true
 else
 COMPOSE_FILE_APP                ?= true
 endif
+COMPOSE_FILE_SUFFIX             ?= $(foreach suffix,$(call LOWERCASE,$(filter-out SUFFIX,$(patsubst COMPOSE_FILE_%,%,$(filter COMPOSE_FILE_%,$(MAKE_FILE_VARS))))),$(if $(filter-out false False FALSE,$(COMPOSE_FILE_$(call UPPERCASE,$(suffix)))),$(suffix)))
+COMPOSE_FILE_WWW                ?= false
 COMPOSE_IGNORE_ORPHANS          ?= false
 COMPOSE_PROJECT_NAME            ?= $(if $(DOCKER_COMPOSE_PROJECT_NAME),$(DOCKER_COMPOSE_PROJECT_NAME),$(subst .,,$(call LOWERCASE,$(USER)-$(APP_NAME)-$(ENV)$(addprefix -,$(subst /,,$(subst -,,$(APP_PATH)))))))
 COMPOSE_SERVICE_NAME            ?= $(if $(DOCKER_COMPOSE_SERVICE_NAME),$(DOCKER_COMPOSE_SERVICE_NAME),$(subst _,-,$(COMPOSE_PROJECT_NAME)))
@@ -62,6 +63,15 @@ DOCKER_COMPOSE_DOWN_OPTIONS     := --rmi all -v
 DOCKER_COMPOSE_UP_OPTIONS       := -d --build
 endif
 
+# function compose-file: Search compose files to load
+define compose-file
+	$(call INFO,compose-file,$(1)$(comma) $(2)$(comma) $(3)$(comma) $(4))
+	$(eval path             := $(or $(1),. ./docker))
+	$(eval name             := $(or $(2),docker-compose))
+	$(eval suffix           := $(or $(3),$(COMPOSE_FILE_SUFFIX)))
+	$(eval extension        := $(or $(4),yml yaml))
+	$(eval COMPOSE_FILE     += $(wildcard $(foreach e,$(extension),$(foreach n,$(name),$(foreach p,$(path),$(p)/$(n).$(e) $(p)/$(n).$(ENV).$(e) $(foreach s,$(suffix),$(p)/$(n).$(s).$(e) $(p)/$(n).$(s).$(ENV).$(e)))))))
+endef
 # function docker-build: Build docker image
 define docker-build
 	$(call INFO,docker-build,$(1)$(comma) $(2)$(comma) $(3))
@@ -136,8 +146,7 @@ define docker-stack-update
 	$(eval name             := $(firstword $(subst :, ,$(stack))))
 	$(eval version          := $(or $(2),$(if $(findstring :,$(stack)),$(lastword $(subst :, ,$(stack))),latest)))
 	$(eval path             := $(patsubst %/,%,$(or $(3),$(if $(findstring /,$(1)),$(if $(wildcard stack/$(1) stack/$(1).yml),stack/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard stack/$(1).yml),$(dir $(1)),$(1))),$(if $(wildcard stack/$(stackz)/$(1) stack/$(stackz)/$(1).yml),stack/$(stackz)/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard stack/$(stackz)/$(1).yml),$(dir $(1)),$(1))),$(dir $(1))))),$(firstword $(wildcard stack/$(stackz)/$(name) stack/$(stackz) stack/$(name))))))
-	$(eval COMPOSE_FILE     += $(wildcard $(foreach file,$(name) $(name).$(ENV) $(name).$(ENV).$(version) $(name).$(version) $(foreach env,$(COMPOSE_FILE_ENV),$(name).$(env)),$(path)/$(file).yml)))
-	$(eval COMPOSE_FILE     := $(strip $(COMPOSE_FILE)))
+	$(call compose-file,$(path),$(name),$(COMPOSE_FILE_SUFFIX) $(version))
 	$(if $(wildcard $(path)/.env.dist),$(call .env,,$(path)/.env.dist,$(wildcard $(CONFIG)/$(ENV)/$(APP)/.env $(path)/.env.$(ENV) .env)))
 endef
 # function docker-tag: Tag docker image

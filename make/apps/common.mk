@@ -192,7 +192,9 @@ ssh@%:
 ## it updates COMPOSE_FILE with all .yml files of the current stack
 .PHONY: stack
 stack:
+	$(call compose-file)
 	$(foreach stackz,$(STACK),$(call docker-stack,$(stackz)))
+	$(call compose-file,$(MYOS_STACK),$(MYOS_STACK_FILE))
 
 # target stack-%: Call docker-compose-% target on STACK
 ## it splits % on dashes and extracts stack from the beginning and command from
