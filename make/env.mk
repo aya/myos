@@ -2,8 +2,9 @@
 # ENV
 
 # target .env: Update file .env
-## it updates file .env when file .env.dist is newer
-.env: .env.dist
+## it updates file .env
+.PHONY: .env
+.env:
 	$(call .env,,,$(wildcard $(CONFIG)/$(ENV)/$(APP)/.env .env.$(ENV)))
 
 # target .env-clean: Remove file .env
@@ -40,16 +41,18 @@ SHELL:=/bin/bash
 
 # function .env: Call .env_update function
 ## it sets .env, .env.dist and .env.ENV files paths
-## it calls .env_update function if .env.dist file exists
+## it calls .env_update function if .env.dist exists and is newer than .env
+## of when file .env does not exist
 	# 1st arg: path to .env file to update, default to .env
 	# 2nd arg: path to .env.dist file, default to .env.dist
 	# 3rd arg: path to .env override files, default to .env.$(ENV)
 define .env
 	$(call INFO,.env,$(1)$(comma) $(2)$(comma) $(3))
 	$(eval env_file:=$(or $(1),.env))
-	$(eval env_dist:=$(or $(2),$(env_file).dist))
-	$(eval env_over:=$(or $(wildcard $(3)),$(wildcard $(env_file).$(ENV))))
-	$(if $(wildcard $(env_dist)), $(call .env_update))
+	$(eval env_dists:=$(wildcard $(or $(2),$(env_file).dist)))
+	$(eval env_over:=$(wildcard $(or $(3),$(env_file).$(ENV))))
+	$(if $(FORCE)$(filter $(env_file),$(call newer,$(env_file) $(env_dists) $(env_over))),
+	 ,$(foreach env_dist,$(env_dists),$(call .env_update)))
 endef
 
 # function .env_update: Update .env file with values from .env.dist

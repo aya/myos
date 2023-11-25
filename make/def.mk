@@ -225,6 +225,12 @@ force = $$(while true; do \
 # macro gid: Return GID of group 1
 gid = $(shell awk -F':' '$$1 == "$(1)" {print $$3}' /etc/group 2>/dev/null)
 
+# macro newer: Return the newest file
+newer = $(shell stat -c '%Y %n' $(1) $(2) $(if $(DEBUG),,2>/dev/null) |sort -n |tail -n1 |awk '{print $$2}')
+
+# older newer: Return the oldest file
+older = $(shell stat -c '%Y %n' $(1) $(2) $(if $(DEBUG),,2>/dev/null) |sort -n |head -n1 |awk '{print $$2}')
+
 # macro pop: Return last word of string 1 according to separator 2
 pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
 

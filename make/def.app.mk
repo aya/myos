@@ -22,9 +22,7 @@ define app-bootstrap
 	$(eval COMPOSE_PROJECT_NAME := $(if $(DOCKER_COMPOSE_PROJECT_NAME),$(DOCKER_COMPOSE_PROJECT_NAME),$(subst .,,$(call LOWERCASE,$(USER)-$(APP_NAME)-$(ENV)$(addprefix -,$(subst /,,$(subst -,,$(APP_PATH))))))))
 	$(eval COMPOSE_SERVICE_NAME := $(if $(DOCKER_COMPOSE_SERVICE_NAME),$(DOCKER_COMPOSE_SERVICE_NAME),$(subst _,-,$(COMPOSE_PROJECT_NAME))))
 	$(eval DOCKER_BUILD_DIR := $(APP_DIR))
-	$(if $(wildcard $(APP_DIR)/.env.dist), $(call .env,$(APP_DIR)/.env,$(APP_DIR)/.env.dist))
-	$(if $(wildcard $(APP_DIR)/.env.example), $(call .env,$(APP_DIR)/.env,$(APP_DIR)/.env.example))
-	$(if $(wildcard $(APP_DIR)/.env.sample), $(call .env,$(APP_DIR)/.env,$(APP_DIR)/.env.sample))
+	$(call .env,$(APP_DIR)/.env,$(APP_DIR)/.env.dist $(APP_DIR)/.env.example $(APP_DIR)/.env.sample)
 endef
 
 # function app-build: Call docker-build for each Dockerfile in dir 1

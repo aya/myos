@@ -5,6 +5,7 @@
 #
 ################################################################################
 # source : https://raw.githubusercontent.com/buildroot/buildroot/master/support/misc/utils.mk
+# customized for myos
 
 # Strip quotes and then whitespaces
 qstrip = $(strip $(subst ",,$(1)))
@@ -14,6 +15,8 @@ qstrip = $(strip $(subst ",,$(1)))
 comma := ,
 empty :=
 space := $(empty) $(empty)
+tab := $(empty)	$(empty)
+escape := $(shell printf '\x1b')
 
 # make 4.3:
 # https://lwn.net/Articles/810071/
@@ -69,6 +72,7 @@ reverse = $(if $(1),$(call reverse,$(wordlist 2,$(words $(1)),$(1))) $(firstword
 # and in rules. Particularly useful for VCS version strings, that can contain
 # slashes, colons (OK in filenames but not in rules), and spaces.
 sanitize = $(subst $(space),_,$(subst :,_,$(subst /,_,$(strip $(1)))))
+# customized for myos: slugify macro cleans up strings so it can be used as url
 slugify = $(subst $(space),,$(subst :,,$(subst /,,$(subst .,,$(1)))))
 
 # MESSAGE Macro -- display a message in bold type
@@ -86,9 +90,17 @@ finddirclauses = $(call notfirstword,$(patsubst %,-o -path '$(1)/%',$(2)))
 # notfirstword(wordlist): returns all but the first word in wordlist
 notfirstword = $(wordlist 2,$(words $(1)),$(1))
 
-# build a comma-separated list of quoted items, from a space-separated
+# build a comma-separated list of items, from a space-separated
+# list of items:   a b c d  -->  a, b, c, d
+make-comma-list = $(subst $(space),$(comma)$(space),$(strip $(1)))
+
+# build a comma-separated list of double-quoted items, from a space-separated
 # list of unquoted items:   a b c d  -->  "a", "b", "c", "d"
-make-comma-list = $(subst $(space),$(comma)$(space),$(patsubst %,"%",$(strip $(1))))
+make-dq-comma-list = $(call make-comma-list,$(patsubst %,"%",$(strip $(1))))
+
+# build a comma-separated list of single-quoted items, from a space-separated
+# list of unquoted items:   a b c d  -->  'a', 'b', 'c', 'd'
+make-sq-comma-list = $(call make-comma-list,$(patsubst %,'%',$(strip $(1))))
 
 # Needed for the foreach loops to loop over the list of hooks, so that
 # each hook call is properly separated by a newline.
@@ -124,10 +136,10 @@ QUOTE = '
 # (that's why the single-quotes are escaped they way they are, above,
 # and why the dollar sign is not escaped) to printf(1). A trailing
 # newline is apended, too.
-# Note: Removing the apended trailing newline for custom needs
 #
 # Note: leading or trailing spaces are *not* stripped.
 #
+# customized for myos: Removing the trailing newline
 define PRINTF
 	printf '$(subst $(sep),\n,\
 		$(subst $(PERCENT),$(PERCENT)$(PERCENT),\
