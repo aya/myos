@@ -18,7 +18,7 @@ contexts: $(foreach var,$(CONTEXT),context-$(var))
 
 # target context-% print-%: Print % value
 .PHONY: context-% print-%
-context-% print-%:
+context-% print-%: stack
 	@printf "${COLOR_HIGHLIGHT}%-37s${COLOR_RESET}" $*
 	@printf "${COLOR_VALUE}"
 	@$(call PRINTF,$($*))

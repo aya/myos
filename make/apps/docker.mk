@@ -8,59 +8,59 @@ docker-build: docker-images-myos
 
 # target docker-build-%: Call docker-build for each Dockerfile in docker/% folder
 .PHONY: docker-build-%
-docker-build-%:
+docker-build-%: stack
 	$(if $(wildcard docker/$*/Dockerfile),$(call docker-build,docker/$*))
 	$(if $(findstring :,$*),$(eval DOCKER_FILE := $(wildcard docker/$(subst :,/,$*)/Dockerfile)),$(eval DOCKER_FILE := $(wildcard docker/$*/*/Dockerfile)))
 	$(foreach dockerfile,$(DOCKER_FILE),$(call docker-build,$(dir $(dockerfile)),$(DOCKER_REPOSITORY)/$(word 2,$(subst /, ,$(dir $(dockerfile)))):$(lastword $(subst /, ,$(dir $(dockerfile)))),""))
 
 # target docker-commit: Call docker-commit for each SERVICES
 .PHONY: docker-commit
-docker-commit:
+docker-commit: stack
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-commit,$(service)))
 
 # target docker-commit-%: Call docker-commit with tag % for each SERVICES
 .PHONY: docker-commit-%
-docker-commit-%:
+docker-commit-%: stack
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-commit,$(service),,,$*))
 
 # target docker-compose-build: Fire docker-images-myos, Call docker-compose build SERVICE
 .PHONY: docker-compose-build
 docker-compose-build: DOCKER_RUN_OPTIONS += -it
-docker-compose-build: docker-images-myos
+docker-compose-build: docker-images-myos stack
 	$(call docker-compose,build $(DOCKER_BUILD_ARGS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-config: Call docker-compose config
 .PHONY: docker-compose-config
-docker-compose-config:
+docker-compose-config: stack
 	$(call docker-compose,config)
 
 # target docker-compose-connect: Call docker-compose exec SERVICE DOCKER_SHELL
 .PHONY: docker-compose-connect
 docker-compose-connect: SERVICE ?= $(DOCKER_SERVICE)
 docker-compose-connect: DOCKER_RUN_OPTIONS += -it
-docker-compose-connect:
+docker-compose-connect: stack
 	$(call docker-compose,exec $(SERVICE) $(DOCKER_SHELL))
 
 # target docker-compose-down: Call docker-compose rm SERVICE or docker-compose down
 .PHONY: docker-compose-down
 docker-compose-down: DOCKER_RUN_OPTIONS += -it
-docker-compose-down:
+docker-compose-down: stack
 	$(if $(filter $(SERVICE),$(SERVICES)),$(call docker-compose,rm -fs $(SERVICE)),$(call docker-compose,down $(DOCKER_COMPOSE_DOWN_OPTIONS) ||:))
 
 # target docker-compose-exec: Call docker-compose-exec SERVICE ARGS
 .PHONY: docker-compose-exec
 docker-compose-exec: SERVICE ?= $(DOCKER_SERVICE)
-docker-compose-exec:
+docker-compose-exec: stack
 	$(call docker-compose-exec-sh,$(SERVICE),$(ARGS))
 
 # target docker-compose-logs: Call docker-compose logs SERVICE
 .PHONY: docker-compose-logs
-docker-compose-logs:
+docker-compose-logs: stack
 	$(call docker-compose,logs $(DOCKER_COMPOSE_LOGS_OPTIONS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-ps: Call docker-compose ps
 .PHONY: docker-compose-ps
-docker-compose-ps:
+docker-compose-ps: stack
 	$(call docker-compose,ps)
 
 # target docker-compose-rebuild: Call docker-compose-build target with DOCKER_BUILD_NO_CACHE=true
@@ -74,42 +74,42 @@ docker-compose-recreate: docker-compose-rm docker-compose-up
 
 # target docker-compose-restart: Call docker-compose restart SERVICE
 .PHONY: docker-compose-restart
-docker-compose-restart:
+docker-compose-restart: stack
 	$(call docker-compose,restart $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-rm: Call docker-compose rm SERVICE
 .PHONY: docker-compose-rm
 docker-compose-rm: DOCKER_RUN_OPTIONS += -it
-docker-compose-rm:
+docker-compose-rm: stack
 	$(call docker-compose,rm -fs $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-run: Call docker-compose run SERVICE ARGS
 .PHONY: docker-compose-run
 docker-compose-run: SERVICE ?= $(DOCKER_SERVICE)
 docker-compose-run: DOCKER_RUN_OPTIONS += -it
-docker-compose-run:
+docker-compose-run: stack
 	$(call docker-compose,run $(DOCKER_COMPOSE_RUN_OPTIONS) $(SERVICE) $(ARGS))
 
 # target docker-compose-scale: Call docker-compose up --scale SERVICE=NUM
 .PHONY: docker-compose-scale
 docker-compose-scale: SERVICE ?= $(DOCKER_SERVICE)
-docker-compose-scale:
+docker-compose-scale: stack
 	$(call docker-compose,up $(DOCKER_COMPOSE_UP_OPTIONS) --scale $(SERVICE)=$(NUM))
 
 # target docker-compose-start: Call docker-compose start SERVICE
 .PHONY: docker-compose-start
-docker-compose-start:
+docker-compose-start: stack
 	$(call docker-compose,start $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-stop: Call docker-compose stop SERVICE
 .PHONY: docker-compose-stop
-docker-compose-stop:
+docker-compose-stop: stack
 	$(call docker-compose,stop $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-up: Fire docker-image-myos, Call docker-compose up SERVICE
 .PHONY: docker-compose-up
 docker-compose-up: DOCKER_RUN_OPTIONS += -it
-docker-compose-up: docker-images-myos bootstrap-stack
+docker-compose-up: docker-images-myos bootstrap-stack stack
 	$(call docker-compose,up $(DOCKER_COMPOSE_UP_OPTIONS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-images-myos: Call myos-docker-build-% target for each DOCKER_IMAGES_MYOS
@@ -178,7 +178,7 @@ docker-plugin-install:
 
 # target docker-push: Call docker-push for each SERVICES
 .PHONY: docker-push
-docker-push:
+docker-push: stack
 ifneq ($(filter $(DEPLOY),true),)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-push,$(service)))
 else
@@ -187,7 +187,7 @@ endif
 
 # target docker-push-%: Call docker-push with tag % for each SERVICES
 .PHONY: docker-push-%
-docker-push-%:
+docker-push-%: stack
 ifneq ($(filter $(DEPLOY),true),)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-push,$(service),,$*))
 else
@@ -231,7 +231,7 @@ docker-run-%: docker-build-%
 
 # target docker-tag: Call docker-tag for each SERVICES
 .PHONY: docker-tag
-docker-tag:
+docker-tag: stack
 ifneq ($(filter $(DEPLOY),true),)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-tag,$(service)))
 else
@@ -240,7 +240,7 @@ endif
 
 # target docker-tag-%: Call docker-tag with target tag % for each SERVICES
 .PHONY: docker-tag-%
-docker-tag-%:
+docker-tag-%: stack
 ifneq ($(filter $(DEPLOY),true),)
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-tag,$(service),,,,$*))
 else

@@ -1,9 +1,9 @@
-DOCKER_DIR                      ?= *
+DOCKER_DIR                      ?= docker
 DOCKER_ENV_ARGS                 ?= $(docker_env_args)
 DOCKER_EXEC_OPTIONS             ?=
 DOCKER_GID                      ?= $(call gid,docker)
 DOCKER_IMAGE                    ?= $(USER_DOCKER_IMAGE)
-DOCKER_MACHINE                  ?= $(shell docker run --rm alpine uname -m 2>/dev/null)
+DOCKER_MACHINE                  := $(shell docker run --rm alpine uname -m 2>/dev/null)
 DOCKER_NAME                     ?= $(USER_DOCKER_NAME)
 DOCKER_NETWORK                  ?= $(if $(USER_STACK),$(USER),$(DOCKER_NETWORK_PRIVATE))
 DOCKER_NETWORK_PRIVATE          ?= $(USER)-$(ENV)
@@ -16,7 +16,7 @@ DOCKER_RUN_NETWORK              += --network $(DOCKER_NETWORK)
 DOCKER_RUN_OPTIONS              += --rm
 DOCKER_RUN_VOLUME               ?= $(patsubst %,-v %,$(DOCKER_VOLUME))
 DOCKER_RUN_WORKDIR              ?= $(if $(DOCKER_WORKDIR),-w $(DOCKER_WORKDIR))
-DOCKER_SYSTEM                   ?= $(shell docker run --rm alpine uname -s 2>/dev/null)
+DOCKER_SYSTEM                   := $(shell docker run --rm alpine uname -s 2>/dev/null)
 DOCKER_VOLUME                   ?= /var/run/docker.sock:/var/run/docker.sock
 DOCKER_WORKDIR                  ?= $(PWD)
 ENV_VARS                        += DOCKER_MACHINE DOCKER_NETWORK DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC DOCKER_SYSTEM HOST_COMPOSE_PROJECT_NAME HOST_COMPOSE_SERVICE_NAME HOST_DOCKER_REPOSITORY HOST_DOCKER_VOLUME HOST_GID HOST_UID USER_COMPOSE_PROJECT_NAME USER_COMPOSE_SERVICE_NAME USER_DOCKER_IMAGE USER_DOCKER_NAME USER_DOCKER_REPOSITORY USER_DOCKER_VOLUME
@@ -165,9 +165,14 @@ define docker-file
 	)
 endef
 
+# function docker-exited: Print exited dockers matching DOCKER_NAME
+define docker-exited
+$(shell docker ps -q -f status=exited $(patsubst %,-f name=%,$(or $(1), ^$(DOCKER_NAME)$$, ^$)) 2>/dev/null)
+endef
+
 # function docker-running: Print running dockers matching DOCKER_NAME
 define docker-running
-$(shell docker ps -q $(patsubst %,-f name=%,$(or $(1), ^$(DOCKER_NAME)$$, ^$)) 2>/dev/null)
+$(shell docker ps -q -f status=running $(patsubst %,-f name=%,$(or $(1), ^$(DOCKER_NAME)$$, ^$)) 2>/dev/null)
 endef
 
 # function docker-rm: Remove docker 1
@@ -178,6 +183,29 @@ define docker-rm
 		$(call WARNING,Removing running docker,$(rm))
 	)
 	$(RUN) docker rm -f $(rm)
+endef
+
+# function docker-start: Start docker 1
+define docker-start
+	$(call INFO,docker-start,$(1)$(comma))
+	$(eval start            := $(or $(1),$(DOCKER_NAME)))
+	$(if $(call docker-running,^$(start)$),
+	  $(call WARNING,docker,$(start),is already running)
+	, $(if $(call docker-exited,^$(start)$),
+	    $(RUN) docker start $(start)
+	  , $(call WARNING,Unable to find docker,$(start),in state exited)
+	  )
+	)
+endef
+
+# function docker-stop: Stop docker 1
+define docker-stop
+	$(call INFO,docker-stop,$(1)$(comma))
+	$(eval stop            := $(or $(1),$(DOCKER_NAME)))
+	$(if $(call docker-running,^$(stop)$),
+	  $(RUN) docker stop $(stop)
+	, $(call WARNING,docker,$(stop),is not running)
+	)
 endef
 
 # function docker-volume-copy: Copy files from a docker volume to another

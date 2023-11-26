@@ -78,7 +78,7 @@ INSTALL_CMDS                    ?= APK_INSTALL APT_INSTALL
 $(foreach cmd,$(INSTALL_CMDS),$(if $(CMD_$(cmd)),$(eval INSTALL_CMD ?= $(CMD_$(cmd)))))
 LOG_LEVEL                       ?= $(if $(DEBUG),debug,$(if $(VERBOSE),info,error))
 MAIL                            ?= $(GIT_AUTHOR_EMAIL)
-MAKE_ARGS                       ?= $(foreach var,$(MAKE_VARS),$(if $($(var)),$(var)='$($(var))'))
+MAKE_ARGS                        = $(foreach var,$(MAKE_VARS),$(if $($(var)),$(var)='$($(var))'))
 MAKE_SUBDIRS                    ?= $(if $(filter myos,$(MYOS)),monorepo,$(if $(APP),apps $(foreach type,$(APP_LOAD),$(if $(wildcard $(MAKE_DIR)/apps/$(type)),apps/$(type)))))
 MAKE_CMD_ARGS                   ?= $(foreach var,$(MAKE_CMD_VARS),$(var)='$($(var))')
 MAKE_CMD_VARS                   ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter command\ line,$(origin $(var))),$(var))))
@@ -90,7 +90,7 @@ MAKE_OLDFILE                    ?= $@
 MAKE_TARGETS                    ?= $(filter-out $(.VARIABLES),$(shell $(MAKE) -qp 2>/dev/null |awk -F':' '/^[a-zA-Z0-9][^$$\#\/\t=]*:([^=]|$$)/ {print $$1}' 2>/dev/null |sort -u))
 MAKE_UNIXTIME_START             := $(shell date -u +'%s' 2>/dev/null)
 MAKE_UNIXTIME_CURRENT            = $(shell date -u "+%s" 2>/dev/null)
-MAKE_VARS                       ?= ENV DOCKER_COMPOSE DOCKER_MACHINE DOCKER_SYSTEM
+MAKE_VARS                       := ENV COMPOSE_FILE DOCKER_COMPOSE DOCKER_MACHINE DOCKER_SERVICES DOCKER_SYSTEM
 MAKECMDARGS                     ?= apps-install install-app
 MONOREPO                        ?= $(if $(filter myos,$(MYOS)),$(notdir $(CURDIR)),$(if $(APP),$(notdir $(realpath $(CURDIR)/..))))
 MONOREPO_DIR                    ?= $(if $(MONOREPO),$(if $(filter myos,$(MYOS)),$(realpath $(CURDIR)),$(if $(APP),$(realpath $(CURDIR)/..))))

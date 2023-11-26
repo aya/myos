@@ -27,9 +27,10 @@ DOCKER_BUILD_TARGET             ?= $(if $(filter $(ENV),$(DOCKER_BUILD_TARGETS))
 DOCKER_BUILD_TARGET_DEFAULT     ?= master
 DOCKER_BUILD_TARGETS            ?= $(ENV_DEPLOY)
 DOCKER_BUILD_VARS               ?= APP BRANCH COMPOSE_VERSION DOCKER_GID DOCKER_MACHINE DOCKER_REPOSITORY DOCKER_SYSTEM GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME SSH_REMOTE_HOSTS USER VERSION
-DOCKER_COMPOSE                  ?= $(or $(shell docker-compose --version 2>/dev/null |awk '$$4 != "v'"$(COMPOSE_VERSION)"'" {exit 1} END {if (NR == 0) exit 1}' && printf 'docker-compose\n'),$(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'))
+DOCKER_COMPOSE                  := $(or $(shell docker-compose --version 2>/dev/null |awk '$$4 != "v'"$(COMPOSE_VERSION)"'" {exit 1} END {if (NR == 0) exit 1}' && printf 'docker-compose\n'),$(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'))
 DOCKER_COMPOSE_ARGS             ?= --ansi=auto
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
+DOCKER_COMPOSE_FILE             ?= docker-compose
 DOCKER_COMPOSE_LOGS_OPTIONS     ?= --follow --tail=100
 DOCKER_COMPOSE_PROJECT_NAME     ?= $(if $(HOST_STACK),$(HOST_COMPOSE_PROJECT_NAME),$(if $(USER_STACK),$(USER_COMPOSE_PROJECT_NAME)))
 DOCKER_COMPOSE_RUN_ENTRYPOINT   ?= $(patsubst %,--entrypoint=%,$(DOCKER_COMPOSE_ENTRYPOINT))
@@ -64,11 +65,11 @@ DOCKER_COMPOSE_DOWN_OPTIONS     := --rmi all -v
 DOCKER_COMPOSE_UP_OPTIONS       := -d --build
 endif
 
-# function compose-file: Search compose files to load
+# function compose-file: Search compose files to update variable COMPOSE_FILE
 define compose-file
 	$(call INFO,compose-file,$(1)$(comma) $(2)$(comma) $(3)$(comma) $(4))
-	$(eval path             := $(or $(1),. ./docker))
-	$(eval name             := $(or $(2),docker-compose))
+	$(eval path             := $(or $(1),. $(APP_DOCKER_DIR)))
+	$(eval name             := $(or $(2),$(DOCKER_COMPOSE_FILE)))
 	$(eval suffix           := $(or $(3),$(COMPOSE_FILE_SUFFIX)))
 	$(eval extension        := $(or $(4),yml yaml))
 	$(eval COMPOSE_FILE     += $(wildcard $(foreach e,$(extension),$(foreach n,$(name),$(foreach p,$(path),$(p)/$(n).$(e) $(p)/$(n).$(ENV).$(e) $(foreach s,$(suffix),$(p)/$(n).$(s).$(e) $(p)/$(n).$(s).$(ENV).$(e)))))))

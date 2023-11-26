@@ -23,7 +23,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
-  embeddings-job:
+  pipeline-job:
     environment:
       APP_DATABASE_URL: postgresql://${BIONICGPT_DB_APP_USER:-ft_application}:${BIONICGPT_DB_APP_PASSWORD:-testpassword}@db:5432/${BIONICGPT_DB_POSTGRES_DB:-finetuna}?sslmode=disable
 

@@ -10,13 +10,20 @@ $(APP): myos-user
 # target app-%: Call app-$(command) for APP in APP_DIR
 ## it splits % on dashes and extracts app from the beginning and command from the last part of %
 ## ex: app-foo-build will call app-build for app foo in ../foo
+## it includes apps/$(app)/*.mk file and hydrates APP_* variables
+## ex: APP_REPOSITORY_URL is set with value from variable $(APP)_REPOSITORY_URL
 .PHONY: app-%
 app-%:
 	$(eval COMPOSE_FILE     :=)
 	$(eval STACK            :=)
-	$(eval app     := $(subst -$(lastword $(subst -, ,$*)),,$*))
-	$(eval command := $(lastword $(subst -, ,$*)))
-	$(eval include $(wildcard apps/$(app).mk apps/$(app)/$(app).mk)) \
+	$(eval app              := $(subst -$(lastword $(subst -, ,$*)),,$*))
+	$(eval command          := $(lastword $(subst -, ,$*)))
+	$(eval include $(wildcard apps/def.mk apps/$(app).mk apps/$(app)/*.mk))
+	$(foreach var,$(filter $(call UPPERCASE,$(app))_%,$(MAKE_FILE_VARS)), \
+	  $(if $(filter $(subst $(call UPPERCASE,$(app))_,APP_,$(var)),$(MAKE_FILE_VARS)), \
+	    $(eval $(subst $(call UPPERCASE,$(app))_,APP_,$(var)) := $($(var))) \
+	  ) \
+	)
 	$(if $(wildcard $(RELATIVE)$(app)), \
 	  $(if $(filter app-$(command),$(.VARIABLES)), \
 	    $(call app-bootstrap,$(app)) \
@@ -29,7 +36,7 @@ app-%:
 	    ) \
 	  ) \
 	, \
-	  $(if $(wildcard apps/$(app).mk apps/$(app)/$(app).mk), \
+	  $(if $($(call UPPERCASE,$(APP))_REPOSITORY_URL), \
 	    $(call app-install) \
 	    $(call app-bootstrap) \
 	   ,$(call WARNING,Unable to find app,$(app),in dir,$(RELATIVE)$(app)) \

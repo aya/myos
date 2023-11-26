@@ -1,4 +1,5 @@
 APP_DIR                         ?= $(CURDIR)
+APP_DOCKER_DIR                  ?= $(DOCKER_DIR)
 APP_DOMAIN                      ?= $(patsubst %,$(APP_DOMAIN_PREFIX)%,$(DOMAIN))
 APP_DOMAIN_PREFIX               ?= $(if $(HOST_STACK),,$(addsuffix .,$(filter-out $(ENV_DEPLOY),$(ENV)))$(USER).)
 APP_HOST                        ?= $(patsubst %,$(APP_HOST_PREFIX)%,$(APP_DOMAIN))$(if $(HOST_LB),$(space)$(APP_DOMAIN))
@@ -19,6 +20,7 @@ APP_UPSTREAM_REPOSITORY         ?= $(or $(shell git config --get remote.upstream
 APP_URI                         ?= $(patsubst %,%/$(APP_PATH),$(APP_HOST))
 APP_URIS                        ?= $(APP_URI)
 APP_URL                         ?= $(patsubst %,$(APP_SCHEME)://%,$(APP_URI))
+APP_VERSION                     ?= $(VERSION)
 CONTEXT                         += APP APPS BRANCH DOMAIN VERSION RELEASE
 CONTEXT_DEBUG                   += APP_DIR APP_URL APP_REPOSITORY APP_UPSTREAM_REPOSITORY ENV_DEPLOY
 ENV_DEPLOY                      ?= $(patsubst origin/%,%,$(shell git rev-parse --symbolic --remotes=origin |sed '/origin\/HEAD/d' 2>/dev/null))
