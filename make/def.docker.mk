@@ -1,3 +1,4 @@
+DOCKER_DIR                      ?= *
 DOCKER_ENV_ARGS                 ?= $(docker_env_args)
 DOCKER_EXEC_OPTIONS             ?=
 DOCKER_GID                      ?= $(call gid,docker)
@@ -158,7 +159,7 @@ endef
 define docker-file
 	$(call INFO,docker-file,$(1)$(comma))
 	$(eval dir                    := $(or $(1),$(APP_DIR)))
-	$(eval DOCKER_FILE            := $(wildcard $(dir)/docker/*/Dockerfile $(dir)/*/Dockerfile $(dir)/Dockerfile))
+	$(eval DOCKER_FILE            := $(wildcard $(dir)/$(DOCKER_DIR)/*/Dockerfile $(dir)/$(DOCKER_DIR)/Dockerfile $(dir)/Dockerfile))
 	$(if $(DOCKER_FILE),
 	, $(call ERROR,Unable to find a,Dockerfile,in dir,$(dir))
 	)

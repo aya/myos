@@ -12,8 +12,11 @@ $(APP): myos-user
 ## ex: app-foo-build will call app-build for app foo in ../foo
 .PHONY: app-%
 app-%:
+	$(eval COMPOSE_FILE     :=)
+	$(eval STACK            :=)
 	$(eval app     := $(subst -$(lastword $(subst -, ,$*)),,$*))
 	$(eval command := $(lastword $(subst -, ,$*)))
+	$(eval include $(wildcard apps/$(app).mk apps/$(app)/$(app).mk)) \
 	$(if $(wildcard $(RELATIVE)$(app)), \
 	  $(if $(filter app-$(command),$(.VARIABLES)), \
 	    $(call app-bootstrap,$(app)) \
@@ -26,7 +29,11 @@ app-%:
 	    ) \
 	  ) \
 	, \
-	  $(call WARNING,Unable to find app,$(app),in dir,$(RELATIVE)$(app)) \
+	  $(if $(wildcard apps/$(app).mk apps/$(app)/$(app).mk), \
+	    $(call app-install) \
+	    $(call app-bootstrap) \
+	   ,$(call WARNING,Unable to find app,$(app),in dir,$(RELATIVE)$(app)) \
+	  ) \
 	)
 
 # target app-required-install: Call app-install for each APP_REQUIRED

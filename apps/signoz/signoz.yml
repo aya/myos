@@ -1,0 +1,6 @@
+services:
+  frontend:
+    labels:
+    - SERVICE_3301_CHECK_HTTP=${SIGNOZ_SERVICE_3301_CHECK_HTTP:-/}
+    - SERVICE_3301_NAME=${COMPOSE_SERVICE_NAME:-signoz}-frontend-3301
+    - SERVICE_3301_TAGS=${SIGNOZ_FRONTEND_SERVICE_3301_TAGS:-urlprefix-localhost/signoz/*}

@@ -1,0 +1,47 @@
+services:
+
+  app:
+    environment:
+      APP_DATABASE_URL: postgresql://${BIONICGPT_DB_APP_USER:-ft_application}:${BIONICGPT_DB_APP_PASSWORD:-testpassword}@db:5432/${BIONICGPT_DB_POSTGRES_DB:-finetuna}?sslmode=disable
+
+  barricade:
+    environment:
+      SECRET_KEY: ${BIONICGPT_BARRICADE_SECRET_KEY:-190a5bf4b3cbb6c0991967ab1c48ab30790af876720f1835cbbf3820f4f5d949}
+      DATABASE_URL: postgresql://${BIONICGPT_DB_POSTGRES_USER:-postgres}:${BIONICGPT_DB_POSTGRES_PASSWORD:-testpassword}@db:5432/${BIONICGPT_DB_POSTGRES_DB:-finetuna}?sslmode=disable
+
+  db:
+    environment:
+      POSTGRES_PASSWORD: ${BIONICGPT_DB_POSTGRES_PASSWORD:-testpassword}
+      POSTGRES_USER: ${BIONICGPT_DB_POSTGRES_USER:-postgres}
+      POSTGRES_DB: ${BIONICGPT_DB_POSTGRES_DB:-finetuna}
+      PGDATA: /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${BIONICGPT_DB_POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  embeddings-job:
+    environment:
+      APP_DATABASE_URL: postgresql://${BIONICGPT_DB_APP_USER:-ft_application}:${BIONICGPT_DB_APP_PASSWORD:-testpassword}@db:5432/${BIONICGPT_DB_POSTGRES_DB:-finetuna}?sslmode=disable
+
+  envoy:
+    labels:
+    - SERVICE_7700_CHECK_HTTP=${BIONICGPT_ENVOY_SERVICE_7700_CHECK_HTTP:-/auth/sign_in}
+    - SERVICE_7700_NAME=${COMPOSE_SERVICE_NAME:-bionicgpt}-envoy-7700
+    - SERVICE_7700_TAGS=${BIONICGPT_ENVOY_SERVICE_7700_TAGS:-urlprefix-localhost/bionicgpt/*}
+
+  llm-api:
+    networks:
+      default:
+        aliases:
+        - local-ai
+
+  migrations:
+    environment:
+      DATABASE_URL: postgresql://${BIONICGPT_DB_POSTGRES_USER:-postgres}:${BIONICGPT_DB_POSTGRES_PASSWORD:-testpassword}@db:5432/${BIONICGPT_DB_POSTGRES_DB:-finetuna}?sslmode=disable
+
+volumes:
+  pgdata:

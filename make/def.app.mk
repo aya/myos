@@ -16,12 +16,13 @@ define app-bootstrap
 	$(eval APP              := $(or $(1), $(APP)))
 	$(eval APP_DIR          := $(or $(2), $(RELATIVE)$(APP)))
 	$(eval APP_NAME         := $(or $(3),$(subst -,,$(subst .,,$(call LOWERCASE,$(APP))))))
-	$(eval COMPOSE_FILE     :=)
-	$(call compose-file,$(APP_DIR) $(APP_DIR)/docker apps/$(APP),docker-compose $(APP))
-	$(call compose-file,$(MYOS_STACK),$(MYOS_STACK_FILE))
 	$(eval COMPOSE_PROJECT_NAME := $(if $(DOCKER_COMPOSE_PROJECT_NAME),$(DOCKER_COMPOSE_PROJECT_NAME),$(subst .,,$(call LOWERCASE,$(USER)-$(APP_NAME)-$(ENV)$(addprefix -,$(subst /,,$(subst -,,$(APP_PATH))))))))
 	$(eval COMPOSE_SERVICE_NAME := $(if $(DOCKER_COMPOSE_SERVICE_NAME),$(DOCKER_COMPOSE_SERVICE_NAME),$(subst _,-,$(COMPOSE_PROJECT_NAME))))
 	$(eval DOCKER_BUILD_DIR := $(APP_DIR))
+	$(call compose-file,$(APP_DIR) $(APP_DIR)/$(or $(APP_DOCKER_DIR),$(DOCKER_DIR)),docker-compose)
+	$(call compose-file,apps apps/$(APP),$(APP))
+	$(foreach stackz,$(STACK),$(call docker-stack,$(stackz)))
+	$(call compose-file,$(MYOS_STACK),$(MYOS_STACK_FILE))
 	$(call .env,$(APP_DIR)/.env,$(APP_DIR)/.env.dist $(APP_DIR)/.env.example $(APP_DIR)/.env.sample)
 endef
 
@@ -70,7 +71,7 @@ endef
 # function app-down: Call docker rm for each Dockerfile in dir 1
 define app-down
 	$(call INFO,app-down,$(1)$(comma))
-	$(if $(filter-out $(MYOS_STACK_FILE),$(COMPOSE_FILE)),$(call docker-compose,down -v),
+	$(if $(filter-out $(MYOS_STACK_FILE),$(COMPOSE_FILE)),$(call docker-compose,down $(DOCKER_COMPOSE_DOWN_OPTIONS)),
 	$(call docker-file,$(1))
 	$(foreach dockerfile,$(DOCKER_FILE),
 	  $(call app-docker,$(dockerfile))
@@ -92,18 +93,18 @@ endef
 # function app-install: Run 'git clone url 1 dir 2'
 define app-install
 	$(call INFO,app-install,$(1)$(comma) $(2))
-	$(eval url              := $(or $(1), $(APP_REPOSITORY_URL)))
+	$(eval url              := $(or $(1), $(REPOSITORY_URL), $(APP_REPOSITORY_URL)))
 	$(eval dir              := $(or $(2), $(RELATIVE)$(lastword $(subst /, ,$(url)))))
 	$(if $(wildcard $(dir)/.git),
 	  $(call INFO,app $(url) already installed in dir $(dir))
-	, $(RUN) git clone $(QUIET) $(url) $(dir)
+	, $(RUN) git clone $(QUIET) $(url) $(dir) && if [ -n "$(APP_VERSION)" ]; then cd $(dir) && git reset --hard $(QUIET) "$(APP_VERSION)"; fi
 	)
 endef
 
 # function app-logs: Call docker logs $(ARGS) for each Dockerfile in dir 1
 define app-logs
 	$(call INFO,app-logs,$(1)$(comma) $(2))
-	$(if $(filter-out $(MYOS_STACK_FILE),$(COMPOSE_FILE)),$(call docker-compose,logs),
+	$(if $(filter-out $(MYOS_STACK_FILE),$(COMPOSE_FILE)),$(call docker-compose,logs $(DOCKER_COMPOSE_LOGS_OPTIONS)),
 	$(call docker-file,$(1))
 	$(foreach dockerfile,$(DOCKER_FILE),
 	  $(call app-docker,$(dockerfile))
@@ -148,7 +149,7 @@ endef
 define app-up
 	$(call INFO,app-up,$(1)$(comma))
 	$(eval DOCKER_RUN_OPTIONS += -d)
-	$(if $(filter-out $(MYOS_STACK_FILE),$(COMPOSE_FILE)),$(call docker-compose,up),
+	$(if $(filter-out $(MYOS_STACK_FILE),$(COMPOSE_FILE)),$(call docker-compose,up $(DOCKER_COMPOSE_UP_OPTIONS)),
 	$(if $(shell docker ps -q -f name=$(DOCKER_NAME) 2>/dev/null),
 	  $(call INFO,docker $(DOCKER_NAME) already running)
 	, $(call app-run,$(1))
@@ -158,10 +159,10 @@ endef
 # function app-update: Run 'cd dir 1 && git pull' or Call app-install
 define app-update
 	$(call INFO,app-update,$(1)$(comma) $(2))
-	$(eval url              := $(or $(1), $(APP_REPOSITORY_URL)))
+	$(eval url              := $(or $(1), $(REPOSITORY_URL), $(APP_REPOSITORY_URL)))
 	$(eval dir              := $(or $(2), $(APP_DIR)))
 	$(if $(wildcard $(dir)/.git),
-	  $(RUN) sh -c 'cd $(dir) && git pull $(QUIET)'
+	  $(RUN) sh -c 'cd $(dir) && git pull $(QUIET) && if [ -n "$(APP_VERSION)" ]; then git reset --hard $(QUIET) "$(APP_VERSION)"; fi'
 	, $(call app-install,$(url),$(dir))
 	)
 endef

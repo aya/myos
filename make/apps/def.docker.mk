@@ -30,6 +30,7 @@ DOCKER_BUILD_VARS               ?= APP BRANCH COMPOSE_VERSION DOCKER_GID DOCKER_
 DOCKER_COMPOSE                  ?= $(or $(shell docker-compose --version 2>/dev/null |awk '$$4 != "v'"$(COMPOSE_VERSION)"'" {exit 1} END {if (NR == 0) exit 1}' && printf 'docker-compose\n'),$(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'))
 DOCKER_COMPOSE_ARGS             ?= --ansi=auto
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
+DOCKER_COMPOSE_LOGS_OPTIONS     ?= --follow --tail=100
 DOCKER_COMPOSE_PROJECT_NAME     ?= $(if $(HOST_STACK),$(HOST_COMPOSE_PROJECT_NAME),$(if $(USER_STACK),$(USER_COMPOSE_PROJECT_NAME)))
 DOCKER_COMPOSE_RUN_ENTRYPOINT   ?= $(patsubst %,--entrypoint=%,$(DOCKER_COMPOSE_ENTRYPOINT))
 DOCKER_COMPOSE_RUN_OPTIONS      ?= --rm $(DOCKER_COMPOSE_RUN_ENTRYPOINT) $(DOCKER_COMPOSE_RUN_WORKDIR)

@@ -56,7 +56,7 @@ docker-compose-exec:
 # target docker-compose-logs: Call docker-compose logs SERVICE
 .PHONY: docker-compose-logs
 docker-compose-logs:
-	$(call docker-compose,logs -f --tail=100 $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
+	$(call docker-compose,logs $(DOCKER_COMPOSE_LOGS_OPTIONS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-ps: Call docker-compose ps
 .PHONY: docker-compose-ps

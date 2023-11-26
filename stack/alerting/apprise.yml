@@ -1,0 +1,35 @@
+version: '3.6'
+
+services:
+  apprise:
+    image: caronc/apprise:latest
+    environment:
+    - APPRISE_STATELESS_URLS
+    - APPRISE_CONFIG_LOCK=${APPRISE_CONFIG_LOCK:-true}
+    labels:
+    - SERVICE_8000_CHECK_HTTP=${APPRISE_SERVICE_8000_CHECK_HTTP:-/}
+    - SERVICE_8000_NAME=${COMPOSE_SERVICE_NAME:-alerting}-apprise-8000
+    - SERVICE_8000_TAGS=${APPRISE_SERVICE_8000_TAGS:-urlprefix-localhost/apprise/*}
+    networks:
+    - public
+    restart: always
+    volumes:
+    - apprise:/config
+
+  apprise-webhook:
+    image: zzeneg/apprise-webhook
+    environment:
+    - APPRISE_URL=http://apprise:8000/notify
+    - TEMPLATE=alertmanager
+    labels:
+    # - SERVICE_3000_CHECK_HTTP=${APPRISE_WEBHOOK_SERVICE_3000_CHECK_HTTP:-/}
+    # - SERVICE_3000_CHECK_HTTP_METHOD=${APPRISE_WEBHOOK_SERVICE_3000_CHECK_HTTP_METHOD:-POST}
+    - SERVICE_3000_CHECK_TCP=${APPRISE_WEBHOOK_SERVICE_3000_CHECK_TCP:-true}
+    - SERVICE_3000_NAME=${COMPOSE_SERVICE_NAME:-alerting}-webhook-3000
+    - SERVICE_3000_TAGS=${APPRISE_WEBHOOK_SERVICE_3000_TAGS:-urlprefix-localhost/webhook/*}
+    networks:
+    - public
+    restart: always
+
+volumes:
+  apprise:
