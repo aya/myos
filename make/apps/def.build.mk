@@ -3,7 +3,7 @@ BUILD_DATE                      ?= $(shell TZ=UTC date "+%Y%m%dT%H%M%SZ" 2>/dev/
 BUILD_DESCRIPTION               ?= Lot of Love
 BUILD_DOCUMENTATION             ?= $(APP_REPOSITORY_URL)$(if $(wildcard README.md),/blob/$(COMMIT)/README.md)
 BUILD_ENV_VARS                  ?= APP BRANCH BUILD_DATE BUILD_STATUS COMMIT DEPLOY_HOOK_URL ENV UID USER VERSION
-BUILD_LABEL_VARS                ?= org.label-schema.% org.opencontainers.% os.my.%
+BUILD_LABEL_VARS                ?= org.opencontainers.% os.my.%
 BUILD_LABEL_ARGS                ?= $(foreach var,$(filter $(BUILD_LABEL_VARS),$(MAKE_FILE_VARS)),$(if $($(var)),$(var)='$($(var))'))
 BUILD_LICENSE                   ?= GPL-3.0
 BUILD_NAME                      ?= $(COMPOSE_SERVICE_NAME)-$(BUILD_SERVICE)
