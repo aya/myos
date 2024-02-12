@@ -94,7 +94,7 @@ host-certbot-staging: host-docker-build-certbot
 # target host-docker-build-%: Build % docker
 .PHONY: host-docker-build-%
 host-docker-build-%:
-	$(call docker-build,docker/$*,host/$*:$(DOCKER_IMAGE_TAG))
+	$(call docker-build,docker/$*,$(HOST_DOCKER_REPOSITORY)/$*:$(DOCKER_IMAGE_TAG))
 
 # target host-docker-rebuild-%: Rebuild % docker
 .PHONY: host-docker-rebuild-%
