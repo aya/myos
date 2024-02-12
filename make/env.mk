@@ -83,7 +83,7 @@ endef
 	  # add variables definition to the .env file
 define .env_update
 	$(call INFO,.env_update,$(env_file)$(comma) $(env_dist)$(comma) $(env_over))
-	touch $(env_file) $(if $(VERBOSE)$(DEBUG),,2> /dev/null)
+	touch $(env_file) $(if $(VERBOSE)$(DEBUG),,2> /dev/null) ||:
 	printenv \
 	  |awk -F '=' 'NR == FNR { if($$1 !~ /^(#|$$)/) { A[$$1]; next } } !($$1 in A)' - $(env_dist) \
 	  |cat $(env_over) - \
@@ -101,5 +101,5 @@ define .env_update
 	      awk '{while(match($$0,"[$$]{[^}]*}")) {var=substr($$0,RSTART+2,RLENGTH-3);gsub("[$$]{"var"}",ENVIRON[var])} print}') \
 	  |sed -e /^$$/d -e /^#/d \
 	  |sort \
-	  >> $(env_file);
+	  >> $(env_file) $(if $(VERBOSE)$(DEBUG),,2> /dev/null) ||:;
 endef

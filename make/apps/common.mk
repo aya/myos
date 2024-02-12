@@ -200,7 +200,7 @@ stack:
 ## the last part of %
 ## ex: stack-host-up will fire the docker-compose-up target in the host stack
 .PHONY: stack-%
-stack-%: stack
+stack-%:
 	$(eval stack   := $(subst -$(lastword $(subst -, ,$*)),,$*))
 	$(eval command := $(lastword $(subst -, ,$*)))
 	$(if $(findstring -,$*), \

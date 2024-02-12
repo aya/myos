@@ -1,0 +1,76 @@
+# This is a minimal docker-compose.yml template for running a Duniter instance
+# For more detailed examples, look at docker/compose folder
+
+version: "3.5"
+
+services:
+
+#   duniter-oracle:
+#     entrypoint: docker-distance-entrypoint
+#     environment:
+#       ORACLE_RPC_URL: "ws://duniter-v2s:9944"
+#       ORACLE_RESULT_DIR: "/var/lib/duniter/chains/${DUNITER_V2S_DUNITER_CHAIN_NAME:-gdev}/distance/"
+#       ORACLE_EXECUTION_INTERVAL: "1800"
+#       ORACLE_MAX_DEPTH: "5"
+#       ORACLE_LOG_LEVEL: "info"
+#     image: duniter/duniter-v2s-gdev:latest
+#     networks:
+#     - private
+#     restart: always
+#     volumes:
+#       - duniter-v2s-data:/var/lib/duniter
+
+  duniter-ui:
+    environment:
+    - WS_URL=${DUNITER_UI_WS_URL:-duniter-v2s:9944}
+    image: jacogr/polkadot-js-apps:latest
+    labels:
+    - SERVICE_80_CHECK_HTTP=${DUNITER_UI_SERVICE_80_CHECK_HTTP:-/}
+    - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME}-duniter-ui-80
+    - SERVICE_80_TAGS=${DUNITER_UI_SERVICE_80_TAGS:-urlprefix-gdev.localhost/ui/*}
+    networks:
+    - private
+    ports:
+    - 80
+    restart: always
+
+  duniter-v2s:
+    environment:
+    - DUNITER_CHAIN_NAME=${DUNITER_V2S_DUNITER_CHAIN_NAME:-gdev}
+#     - DUNITER_LISTEN_ADDR=${DUNITER_V2S_DUNITER_LISTEN_ADDR:-/ip4/0.0.0.0/tcp/30333/ws}
+    - DUNITER_NODE_NAME=${DUNITER_V2S_DUNITER_NODE_NAME:-duniter_local}
+    - DUNITER_PRUNING_PROFILE=${DUNITER_V2S_DUNITER_PRUNING_PROFILE:-default}
+#     - DUNITER_PUBLIC_ADDR=${DUNITER_V2S_DUNITER_PUBLIC_ADDR:-/dns/localhost/tcp/30333/ws}
+    - DUNITER_VALIDATOR=${DUNITER_V2S_DUNITER_VALIDATOR:-false}
+    image: duniter/duniter-v2s-gdev:latest
+    labels:
+#     - SERVICE_9615_CHECK_HTTP=${DUNITER_V2S_SERVICE_9615_CHECK_HTTP:-/}
+#     - SERVICE_9615_NAME=${COMPOSE_SERVICE_NAME}-duniter-v2s-9615
+#     - SERVICE_9615_TAGS=${DUNITER_V2S_SERVICE_9615_TAGS:-urlprefix-gdev.localhost/metrics/*}
+#     - SERVICE_9933_CHECK_HTTP=${DUNITER_V2S_SERVICE_9933_CHECK_HTTP:-/}
+#     - SERVICE_9933_CHECK_HTTP_METHOD=${DUNITER_V2S_SERVICE_9933_CHECK_HTTP_METHOD:-POST}
+#     - SERVICE_9933_NAME=${COMPOSE_SERVICE_NAME}-duniter-v2s-9933
+#     - SERVICE_9933_TAGS=${DUNITER_V2S_SERVICE_9933_TAGS:-urlprefix-gdev.localhost/http/*}
+    - SERVICE_9944_CHECK_TCP=true
+    - SERVICE_9944_NAME=${COMPOSE_SERVICE_NAME}-duniter-v2s-9944
+    - SERVICE_9944_TAGS=${DUNITER_V2S_SERVICE_9944_TAGS:-urlprefix-gdev.localhost/ws/*}
+    - SERVICE_30333_CHECK_TCP=true
+    - SERVICE_30333_NAME=${COMPOSE_SERVICE_NAME}-duniter-v2s-30333
+    - SERVICE_30333_TAGS=${DUNITER_V2S_SERVICE_30333_TAGS:-urlprefix-gdev.localhost/*}
+    networks:
+    - private
+    ports:
+    # telemetry
+    - 9615
+    # rpc
+    - 9933
+    # rpc-ws
+    - 9944
+    # p2p
+    - 30333
+    volumes:
+    - duniter-v2s-data:/var/lib/duniter
+    restart: always
+
+volumes:
+  duniter-v2s-data:
