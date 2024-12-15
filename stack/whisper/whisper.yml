@@ -1,0 +1,69 @@
+version: "3.9"
+
+services:
+  whisper-asr:
+    image: onerahmet/openai-whisper-asr-webservice:v1.1.1
+    environment:
+      ASR_MODEL: ${WHISPER_MODEL-large}
+    volumes:
+      - whisper-cache:/root/.cache/whisper
+    restart: unless-stopped
+    expose:
+      - 9000
+    networks:
+    - private
+
+  whisper-translate:
+    image: libretranslate/libretranslate:latest
+    restart: unless-stopped
+    command: --disable-web-ui --debug
+    environment:
+      LT_DISABLE_WEB_UI: True
+      LT_DEBUG: True
+    expose:
+      - 5000
+    networks:
+    - private
+
+  whisper-backend:
+    image: pluja/web-whisper-backend:latest
+    environment:
+      UPLOAD_DIR: /app/uploads
+      ASR_ENDPOINT: whisper-asr:9000
+      LT_ENDPOINT: whisper-translate:5000
+    volumes:
+      - whisper-data:/app/db
+      - whisper-files:/app/uploads
+    restart: unless-stopped
+    expose:
+      - 3000
+    networks:
+    - private
+
+  whisper-frontend:
+    image: pluja/web-whisper-frontend:latest
+    restart: unless-stopped
+    expose:
+      - 5173
+    networks:
+    - private
+
+  whisper-proxy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    labels:
+      SERVICE_80_CHECK_HTTP: /
+      SERVICE_80_NAME: ${COMPOSE_SERVICE_NAME}-proxy-80
+      SERVICE_80_TAGS: urlprefix-transcript.asycn.io/*
+    ports:
+      - 80
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+    networks:
+    - private
+    - public
+
+volumes:
+  whisper-cache:
+  whisper-data:
+  whisper-files:

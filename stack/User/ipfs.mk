@@ -10,5 +10,6 @@ USER_IPFS_SERVICE_5001_TAGS_PROXY_TCP     ?= $(call patsublist,%,urlprefix-% pro
 USER_IPFS_SERVICE_5001_TAGS_URIS          ?= $(strip $(if $(call servicenvs,USER_IPFS,5001,URIS),$(call urlprefix,$(USER_IPFS_SERVICE_5001_PATH),,$(call servicenvs,USER_IPFS,5001,URIS))))
 USER_IPFS_SERVICE_5001_URIS               ?= $(call uriprefix,USER_IPFS,5001,$(USER_URIS))
 USER_IPFS_SERVICE_8080_OPTS               ?= $(patsubst %/,%,$(if $(USER_PATH),strip=/$(USER_PATH)))
+USER_IPFS_SERVICE_8080_PATH               ?= ipfs/
 USER_IPFS_SERVICE_8080_TAGS               ?= $(call tagprefix,USER_IPFS,8080)
 USER_IPFS_SERVICE_8080_URIS               ?= $(call uriprefix,USER_IPFS,8080,$(USER_URIS))

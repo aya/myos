@@ -63,6 +63,8 @@ services:
     - IPFS_SWARM_TRANSPORTS_NETWORK_RELAY=${USER_IPFS_SWARM_TRANSPORTS_NETWORK_RELAY:-}
     - LETSENCRYPT_HOST=${USER_IPFS_LETSENCRYPT_HOST}
     image: ${USER_DOCKER_REPOSITORY}/ipfs:${DOCKER_IMAGE_TAG}
+    healthcheck:
+      timeout: 55s
     labels:
     - SERVICE_4001_CHECK_TCP=true
     - SERVICE_4001_NAME=${USER_COMPOSE_SERVICE_NAME}-ipfs-4001
@@ -88,9 +90,9 @@ services:
         soft: 65536
         hard: 65536
     volumes:
+    - dns:/dns:delegated
     - home:/home:delegated
 
 volumes:
+  dns:
   home:
-    external: true
-    name: ${HOST_DOCKER_VOLUME}_home
