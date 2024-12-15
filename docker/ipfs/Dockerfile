@@ -1,5 +1,5 @@
-ARG IPFS_VERSION=0.24.0
-FROM ipfs/kubo:v${IPFS_VERSION} as dist
+ARG IPFS_VERSION=0.32.1
+FROM ipfs/kubo:v${IPFS_VERSION} AS dist
 LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
 
@@ -10,7 +10,7 @@ RUN chmod +rx /container-init.d/*.sh
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD ipfs --api=$(cat $IPFS_PATH/api) dag stat /ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn || exit 1
 
-FROM dist as master
+FROM dist AS master
 ARG DOCKER_BUILD_DIR
 ARG UID
 ENV UID=${UID}
