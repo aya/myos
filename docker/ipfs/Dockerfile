@@ -1,4 +1,4 @@
-ARG IPFS_VERSION=0.14.0
+ARG IPFS_VERSION=0.24.0
 FROM ipfs/kubo:v${IPFS_VERSION} as dist
 LABEL maintainer aynic.os <support+docker@asycn.io>
 ARG DOCKER_BUILD_DIR
@@ -6,6 +6,9 @@ ARG DOCKER_BUILD_DIR
 RUN sed -i 's!repo="$IPFS_PATH"!repo="$IPFS_PATH" \&\& mkdir -p "$IPFS_PATH" \&\& chown ipfs:users $(dirname "$IPFS_PATH") \&\& chown ipfs:users "$IPFS_PATH"!' /usr/local/bin/start_ipfs
 COPY ${DOCKER_BUILD_DIR}/*.sh /container-init.d/
 RUN chmod +rx /container-init.d/*.sh
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD ipfs --api=$(cat $IPFS_PATH/api) dag stat /ipfs/QmUNLLsPACCz1vLxQVkXqqLX5R1X345qqfHbsf67hvA3Nn || exit 1
 
 FROM dist as master
 ARG DOCKER_BUILD_DIR

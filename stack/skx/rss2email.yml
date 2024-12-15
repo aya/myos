@@ -1,0 +1,21 @@
+version: "3.8"
+services:
+  rss2email:
+    command: daemon -verbose ${RSS2EMAIL_EMAIL:-${MAIL}}
+    entrypoint: rss2email
+    working_dir: /app
+    user: app
+    environment:
+    - TZ=UTC
+    - SMTP_USERNAME=${RSS2EMAIL_SMTP_USERNAME:-}
+    - SMTP_PASSWORD=${RSS2EMAIL_PASSWORD:-}
+    - SMTP_HOST=smtp
+    - SMTP_PORT=587
+    restart: unless-stopped
+    image: ghcr.io/skx/rss2email:master
+    volumes:
+    - rss2email-data:/app/.rss2email
+
+volumes:
+  rss2email-data:
+
