@@ -136,6 +136,11 @@ MACHINE                         ?= $(shell uname -m 2>/dev/null)
 
 ifeq ($(SYSTEM),Darwin)
 SED_SUFFIX                      := ''
+STAT_FORMAT_ARG                 := -f
+STAT_FORMAT_FILE                := '%a %N'
+else
+STAT_FORMAT_ARG                 := -c
+STAT_FORMAT_FILE                := '%Y %n'
 endif
 
 # include .env files
@@ -226,10 +231,10 @@ force = $$(while true; do \
 gid = $(shell awk -F':' '$$1 == "$(1)" {print $$3}' /etc/group 2>/dev/null)
 
 # macro newer: Return the newest file
-newer = $(shell stat -c '%Y %n' $(1) $(2) $(if $(DEBUG),,2>/dev/null) |sort -n |tail -n1 |awk '{print $$2}')
+newer = $(shell stat $(STAT_FORMAT_ARG) $(STAT_FORMAT_FILE) $(1) $(2) $(if $(DEBUG),,2>/dev/null) |sort -n |tail -n1 |awk '{print $$2}')
 
 # older newer: Return the oldest file
-older = $(shell stat -c '%Y %n' $(1) $(2) $(if $(DEBUG),,2>/dev/null) |sort -n |head -n1 |awk '{print $$2}')
+older = $(shell stat $(STAT_FORMAT_ARG) $(STAT_FORMAT_FILE) $(1) $(2) $(if $(DEBUG),,2>/dev/null) |sort -n |head -n1 |awk '{print $$2}')
 
 # macro pop: Return last word of string 1 according to separator 2
 pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
