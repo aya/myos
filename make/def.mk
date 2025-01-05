@@ -242,6 +242,12 @@ pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
 # macro sed: Run sed script 1 on file 2
 sed = $(RUN) sed -i $(SED_SUFFIX) '$(1)' $(2)
 
+# macro verle: Return true when version 1 <= 2
+verle = [ -n "$(1)" ] && [ "$(1)" = "$(shell echo -e "$(1)\n$(2)" |sort -V |head -n1)" ]
+
+# macro verlt: Return true when version 1 < 2
+verlt = [ "$(1)" = "$(2)" ] && return 1 || $(call verlte,$(1),$(2))
+
 # function conf: Extract variable=value line from configuration files
 ## it prints the line with variable 3 definition from block 2 in file 1
 define conf
