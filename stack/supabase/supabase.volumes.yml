@@ -1,0 +1,31 @@
+services:
+  db:
+    volumes: !override
+      - db-data:/var/lib/postgresql/data
+      - db-config:/etc/postgres-custom
+  functions:
+    volumes: !override
+      - functions-cache:/root/.cache
+      - functions-home:/home/deno/functions
+  imgproxy:
+    volumes: !override
+      - storage-data:/var/lib/storage
+  kong:
+    volumes: !override
+      - kong-home:/home/kong
+  storage:
+    volumes: !override
+      - storage-data:/var/lib/storage
+  vector:
+    volumes: !override
+      - vector-config:/etc/vector:ro
+      - ${DOCKER_SOCKET_LOCATION:-/var/run/docker.sock}:/var/run/docker.sock:ro
+
+volumes:
+  db-config:
+  db-data:
+  functions-cache:
+  functions-home:
+  kong-home:
+  storage-data:
+  vector-config:
