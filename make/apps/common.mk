@@ -32,7 +32,7 @@ bootstrap-stack: docker-network debug-STACK $(foreach stack,$(STACK),bootstrap-s
 # target build: Build application docker images to run
 # on local host
 .PHONY: build
-build: docker-compose-build ## Build application docker images
+build: docker-stack-build ## Build application docker images
 
 # target build@%: Build application docker images of % ENV
 # on local host
@@ -50,22 +50,24 @@ build@%: myos-user
 # target clean: Clean application and docker images
 # on local host
 .PHONY: clean app-clean
-clean: app-clean docker-rm docker-images-rm docker-volume-rm .env-clean ## Clean application and docker stuffs
+clean: DOCKER_COMPOSE_DOWN_OPTIONS += --rmi all --volumes
+clean: app-clean docker-stack-down $(foreach stack,$(STACK),docker-image-rm-$(STACK)) .env-clean ## Clean application and docker stuffs
 
 # target clean@%: Clean deployed application and docker images of % ENV
 # on local host
 .PHONY: clean@%
-clean@%: docker-rm docker-image-rm docker-volume-rm;
+clean@%: DOCKER_COMPOSE_DOWN_OPTIONS += --rmi all --volumes
+clean@%: docker-stack-down;
 
 # target config: View application docker compose file
 # on local host
 .PHONY: config
-config: docker-compose-config ## View application docker compose file
+config: docker-stack-config ## View application docker compose file
 
 # target connect: Connect to docker SERVICE
 # on local host
 .PHONY: connect
-connect: docker-compose-connect ## Connect to docker SERVICE
+connect: docker-stack-connect ## Connect to docker SERVICE
 
 # target connect@%: Connect to docker SERVICE of % ENV
 # on first remote host
@@ -81,13 +83,14 @@ deploy: $(if $(filter $(ENV),$(ENV_DEPLOY)),deploy-localhost,deploy@$(ENV)) ## D
 # target down: Remove application dockers
 # on local host
 .PHONY: down
-down: docker-compose-down ufw-delete ## Remove application dockers
+down: docker-stack-down ufw-delete ## Remove application dockers
 
 # target exec: Exec ARGS in docker SERVICE
 # on local host
 .PHONY: exec
 exec: SERVICE ?= $(DOCKER_SERVICE)
-exec: ## Exec command in docker SERVICE
+exec: APP_NAME := $(subst _,,$(subst -,,$(subst .,,$(call LOWERCASE,$(firstword $(subst /, ,$(STACK)))))))
+exec: stack ## Exec command in docker SERVICE
 #ifneq (,$(filter $(ENV),$(ENV_DEPLOY)))
 #	$(RUN) $(call exec,$(ARGS))
 #else
@@ -98,7 +101,7 @@ exec: ## Exec command in docker SERVICE
 # on all remote hosts
 .PHONY: exec@%
 exec@%: SERVICE ?= $(DOCKER_SERVICE)
-exec@%:
+exec@%: stack
 	$(call make,ssh-exec,$(MYOS),APP ARGS SERVICE)
 
 # target force-%: Fire targets %, stack-user-% and stack-host-%
@@ -114,17 +117,17 @@ install: bootstrap app-install ## Install application
 # target logs: Display application dockers logs
 # on local host
 .PHONY: logs
-logs: docker-compose-logs ## Display application dockers logs
+logs: docker-stack-logs ## Display application dockers logs
 
 # target ps: List application dockers
 # on local host
 .PHONY: ps
-ps: docker-compose-ps ## List application dockers
+ps: docker-stack-ps ## List application dockers
 
 # target rebuild: Rebuild application docker images
 # on local host
 .PHONY: rebuild
-rebuild: docker-compose-rebuild ## Rebuild application dockers images
+rebuild: docker-stack-rebuild ## Rebuild application dockers images
 
 # target rebuild@%: Rebuild application docker images
 # on local host
@@ -135,7 +138,7 @@ rebuild@%:
 # target recreate: Recreate application dockers
 # on local host
 .PHONY: recreate
-recreate: docker-compose-recreate app-start ## Recreate application dockers
+recreate: docker-stack-recreate app-start ## Recreate application dockers
 
 # target reinstall: Fire clean, Call .env target, Call install target
 # on local host
@@ -151,13 +154,14 @@ release: release-create ## Create release VERSION
 # target restart: Restart application dockers
 # on local host
 .PHONY: restart
-restart: docker-compose-restart app-start ## Restart application
+restart: docker-stack-restart app-start ## Restart application
 
 # target run: Run command ARGS in a new docker SERVICE
 # on local host
 .PHONY: run
 run: SERVICE ?= $(or $(DOCKER_COMPOSE_SERVICE),$(DOCKER_SERVICE))
-run: ## Run a command in a new docker
+run: APP_NAME := $(subst _,,$(subst -,,$(subst .,,$(call LOWERCASE,$(firstword $(subst /, ,$(STACK)))))))
+run: stack ## Run a command in a new docker
 #ifneq (,$(filter $(ENV),$(ENV_DEPLOY)))
 #	$(call run,$(ARGS))
 #else
@@ -175,7 +179,7 @@ run@%:
 # target scale: Scale SERVICE application to NUM dockers
 # on local host
 .PHONY: scale
-scale: docker-compose-scale ## Scale SERVICE application to NUM dockers
+scale: docker-stack-scale ## Scale SERVICE application to NUM dockers
 
 # target shutdown: remove application, host and user dockers
 # on local host
@@ -212,12 +216,12 @@ stack-%:
 # target start app-start: Start application dockers
 # on local host
 .PHONY: start app-start
-start: docker-compose-start ## Start application dockers
+start: docker-stack-start ## Start application dockers
 
 # target stop: Stop application dockers
 # on local host
 .PHONY: stop
-stop: docker-compose-stop ## Stop application dockers
+stop: docker-stack-stop ## Stop application dockers
 
 # target tests app-tests: Test application
 # on local host
@@ -227,7 +231,7 @@ tests: app-tests ## Test application
 # target up: Create and start application dockers
 # on local host
 .PHONY: up
-up: docker-compose-up ufw-update app-start ## Create application dockers
+up: docker-stack-up ufw-update app-start ## Create application dockers
 
 # target update app-update: Update application files
 # on local host

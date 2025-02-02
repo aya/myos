@@ -6,6 +6,11 @@ DOCKER_IMAGE                    ?= $(USER_DOCKER_IMAGE)
 DOCKER_MACHINE                  ?= $(shell docker run --rm alpine uname -m 2>/dev/null)
 DOCKER_NAME                     ?= $(USER_DOCKER_NAME)
 DOCKER_NETWORK                  ?= $(if $(USER_STACK),$(USER),$(DOCKER_NETWORK_PRIVATE))
+# https://github.com/moby/libnetwork/issues/2093
+# network interface are attached ordered by name
+# default should be first to prevent cross stack
+# connections to other services with same name
+DOCKER_NETWORK_DEFAULT          ?= _$(COMPOSE_PROJECT_NAME)
 DOCKER_NETWORK_PRIVATE          ?= $(USER)-$(ENV)
 DOCKER_NETWORK_PUBLIC           ?= $(HOSTNAME)
 # DOCKER_RUN: if empty, run system command, else run it in a docker
@@ -16,15 +21,16 @@ DOCKER_RUN_NETWORK              += --network $(DOCKER_NETWORK)
 DOCKER_RUN_OPTIONS              += --rm
 DOCKER_RUN_VOLUME               ?= $(patsubst %,-v %,$(DOCKER_VOLUME))
 DOCKER_RUN_WORKDIR              ?= $(if $(DOCKER_WORKDIR),-w $(DOCKER_WORKDIR))
+DOCKER_SOCKET_LOCATION          ?= /var/run/docker.sock
 DOCKER_SYSTEM                   ?= $(shell docker run --rm alpine uname -s 2>/dev/null)
-DOCKER_VOLUME                   ?= /var/run/docker.sock:/var/run/docker.sock
+DOCKER_VOLUME                   ?= $(DOCKER_SOCKET_LOCATION):/var/run/docker.sock
 DOCKER_WORKDIR                  ?= $(PWD)
-ENV_VARS                        += DOCKER_MACHINE DOCKER_NETWORK DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC DOCKER_SYSTEM HOST_COMPOSE_PROJECT_NAME HOST_COMPOSE_SERVICE_NAME HOST_DOCKER_REPOSITORY HOST_DOCKER_VOLUME HOST_GID HOST_UID USER_COMPOSE_PROJECT_NAME USER_COMPOSE_SERVICE_NAME USER_DOCKER_IMAGE USER_DOCKER_NAME USER_DOCKER_REPOSITORY USER_DOCKER_VOLUME
+ENV_VARS                        += DOCKER_MACHINE DOCKER_NETWORK DOCKER_NETWORK_DEFAULT DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC DOCKER_SOCKET_LOCATION DOCKER_SYSTEM HOST_COMPOSE_PROJECT_NAME HOST_COMPOSE_SERVICE_NAME HOST_DOCKER_REPOSITORY HOST_DOCKER_VOLUME HOST_GID HOST_UID USER_COMPOSE_PROJECT_NAME USER_COMPOSE_SERVICE_NAME USER_DOCKER_IMAGE USER_DOCKER_NAME USER_DOCKER_REPOSITORY USER_DOCKER_VOLUME
 HOST_COMPOSE_PROJECT_NAME       ?= $(HOSTNAME)
 HOST_COMPOSE_SERVICE_NAME       ?= $(subst _,-,$(HOST_COMPOSE_PROJECT_NAME))
 HOST_DOCKER_REPOSITORY          ?= $(subst -,/,$(subst _,/,$(HOST_COMPOSE_PROJECT_NAME)))
 HOST_DOCKER_VOLUME              ?= $(HOST_COMPOSE_PROJECT_NAME)
-HOST_GID                        ?= 100
+HOST_GID                        ?= $(HOST_UID)
 HOST_UID                        ?= 123
 HOST_STACK                      ?= $(filter host,$(firstword $(subst /, ,$(STACK))))
 MYOS_STACK                      ?= $(MYOS)/stack/myos

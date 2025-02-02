@@ -18,7 +18,7 @@ services:
     volumes_from:
     - nginx
     volumes:
-    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - ${DOCKER_SOCKET_LOCATION}:/var/run/docker.sock:ro
     - acme:/etc/acme.sh
     - certs:/etc/nginx/certs
     - html:/usr/share/nginx/html

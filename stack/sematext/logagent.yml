@@ -20,4 +20,4 @@ services:
     - 514
     restart: always
     volumes:
-    - /var/run/docker.sock:/tmp/docker.sock
+    - ${DOCKER_SOCKET_LOCATION}:/tmp/docker.sock

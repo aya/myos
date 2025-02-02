@@ -28,7 +28,7 @@ services:
     - 443
     restart: unless-stopped
     volumes:
-    - /var/run/docker.sock:/tmp/docker.sock:ro
+    - ${DOCKER_SOCKET_LOCATION}:/tmp/docker.sock:ro
     - certs:/etc/nginx/certs
     - html:/usr/share/nginx/html
     - log:/var/log/nginx

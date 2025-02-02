@@ -11,7 +11,7 @@
 ## it removes file .env
 .PHONY: .env-clean
 .env-clean:
-	$(RUN) rm -$(if $(FORCE),f,i) .env || true
+	$(RUN) rm -$(if $(FORCE),f,i) $(ENV_FILE) || true
 
 # target .env-update: Update file ENV_FILE
 ## it updates file ENV_FILE with missing values from file ENV_DIST
@@ -51,8 +51,8 @@ define .env
 	$(eval env_file:=$(or $(1),.env))
 	$(eval env_dists:=$(wildcard $(or $(2),$(env_file).dist)))
 	$(eval env_over:=$(wildcard $(or $(3),$(env_file).$(ENV))))
-	$(if $(FORCE)$(filter $(env_file),$(call newer,$(env_file) $(env_dists) $(env_over))),
-	 ,$(foreach env_dist,$(env_dists),$(call .env_update)))
+	$(if $(FORCE)$(call newenv,$(env_file),$(env_dists) $(env_over))$(if $(wildcard $(env_file)),,FORCE),
+	  $(foreach env_dist,$(env_dists),$(call .env_update)))
 endef
 
 # function .env_update: Update .env file with values from .env.dist
