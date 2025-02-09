@@ -175,7 +175,7 @@ INFO = $(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)), \
 ))
 
 # macro base64t: Print trimed base64 encoded string from $1
-base64t = $(shell echo -en '$(1)' |openssl enc -A -base64 |sed 's/+/-/g;s|/|_|g;s/=*$$//;')
+base64t = $(shell echo -n '$(1)' |openssl enc -A -base64 |sed 's/+/-/g;s|/|_|g;s/=*$$//;')
 
 # macro hs256: Print hmac sha256 digest from string $1 with key $2
 hs256 = $(shell echo -n '$(1)' |openssl dgst -sha256 -binary -hmac '$(2)')
@@ -195,7 +195,7 @@ JWT = $(strip \
       $(eval b64_payload := $(call base64t,$(payload))) \
       $(eval b64_signature := $(call base64t,$(call hs256,$(b64_header).$(b64_payload),$(secret)))) \
       $(eval b64_signature := $(call b64_hs256,$(b64_header).$(b64_payload),$(secret))) \
-      $(if $(DEBUG),$(header) - $(payload) - $(secret)) \
+      $(if $(DEBUG),$(header) - $(payload) - $(secret) --- ) \
       $(b64_header).$(b64_payload).$(b64_signature))
 
 # macro RESU: Print USER associated to MAIL
