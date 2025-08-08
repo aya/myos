@@ -25,7 +25,7 @@ APP_URL                         ?= $(patsubst %,$(APP_SCHEME)://%,$(APP_URI))
 APP_VERSION                     ?= $(VERSION)
 CONTEXT                         += APP APPS BRANCH DOMAIN VERSION RELEASE
 CONTEXT_DEBUG                   += APP_DIR APP_URL APP_REPOSITORY APP_UPSTREAM_REPOSITORY ENV_DEPLOY
-ENV_DEPLOY                      ?= $(patsubst origin/%,%,$(shell git rev-parse --symbolic --remotes=origin |sed '/origin\/HEAD/d' 2>/dev/null))
+ENV_DEPLOY                      ?= $(patsubst origin/%,%,$(shell git rev-parse --symbolic --remotes=origin 2>/dev/null |sed '/origin\/HEAD/d'))
 ENV_VARS                        += APP_DIR APP_DOMAIN APP_HOST APP_PATH APP_URL CONSUL_HTTP_TOKEN $(if $(filter true,$(MOUNT_NFS)),NFS_CONFIG)
 MAKECMDARGS                     += exec exec:% exec@% run run:% run@%
 MOUNT_NFS                       ?= false
