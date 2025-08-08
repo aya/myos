@@ -5,7 +5,8 @@
 # on local host
 .PHONY: build-env
 build-env: SERVICE ?= $(DOCKER_SERVICE)
-build-env: bootstrap
+build-env: APP_NAME := $(subst _,,$(subst -,,$(subst .,,$(call LOWERCASE,$(firstword $(subst /, ,$(STACK)))))))
+build-env: bootstrap stack
 	$(call docker-compose-exec-sh,$(SERVICE), \
 		rm -f .env \
 		&& make .env ENV=$(ENV) \
@@ -25,7 +26,8 @@ build-init:
 # on local host
 .PHONY: build-shared
 build-shared: SERVICE ?= $(DOCKER_SERVICE)
-build-shared: bootstrap
+build-shared: APP_NAME := $(subst _,,$(subst -,,$(subst .,,$(call LOWERCASE,$(firstword $(subst /, ,$(STACK)))))))
+build-shared: bootstrap stack
 	$(call docker-compose-exec-sh,$(SERVICE), \
 		mkdir -p /$(notdir $(SHARED)) \
 		&& $(foreach folder,$(SHARED_FOLDERS), \

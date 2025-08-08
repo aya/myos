@@ -33,7 +33,7 @@ services:
     volumes:
     - sources:/Sources:cached
     - user:/tmp/ssh-agent:ro
-    - /var/run/docker.sock:/var/run/docker.sock
+    - ${DOCKER_SOCKET_LOCATION}:/var/run/docker.sock
 
 volumes:
   sources:

@@ -1,7 +1,10 @@
 # target ufw: Call ufw ARGS
+
 .PHONY: ufw
 ufw:
 	$(call ufw,$(ARGS))
+
+ifeq ($(SETUP_UFW),true)
 
 # target ufw-bootstrap: Eval ufw-docker app variables
 ufw-bootstrap:
@@ -33,7 +36,7 @@ ufw-install:
 
 # target ufw-up: Start ufw-docker docker
 ufw-up: DOCKER_RUN_NETWORK   :=
-ufw-up: DOCKER_RUN_OPTIONS   := --restart always -d --cap-add NET_ADMIN -v /etc/ufw:/etc/ufw $(if wildcard /etc/default/ufw,-v /etc/default/ufw:/etc/default/ufw) --network host
+ufw-up: DOCKER_RUN_OPTIONS   := --restart always -d --cap-add NET_ADMIN -v /etc/ufw:/etc/ufw $(if $(wildcard /etc/default/ufw),-v /etc/default/ufw:/etc/default/ufw) --network host
 ufw-up:
 	$(call app-up)
 
@@ -65,3 +68,5 @@ ufw-%:
 	    $(call make,ufw-$(command) STACK="$(stack)") \
 	  ) \
 	)
+
+endif

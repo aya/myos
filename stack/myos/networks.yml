@@ -1,4 +1,6 @@
 networks:
+  default:
+    name: ${DOCKER_NETWORK_DEFAULT:-_default}
   private:
     external: true
     name: ${DOCKER_NETWORK_PRIVATE:-docker}

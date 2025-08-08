@@ -1,9 +1,9 @@
 ##
 # DOCKER
 
-# target docker-build: Fire docker-images-myos, Call docker-build-% target for each DOCKER_IMAGES
+# target docker-build: Fire docker-image-myos, Call docker-build-% target for each DOCKER_IMAGES
 .PHONY: docker-build
-docker-build: docker-images-myos
+docker-build: docker-image-myos
 	$(foreach image,$(or $(SERVICE),$(DOCKER_IMAGES)),$(call make,docker-build-$(image)))
 
 # target docker-build-%: Call docker-build for each Dockerfile in docker/% folder
@@ -23,10 +23,10 @@ docker-commit: stack
 docker-commit-%: stack
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-commit,$(service),,,$*))
 
-# target docker-compose-build: Fire docker-images-myos, Call docker-compose build SERVICE
+# target docker-compose-build: Fire docker-image-myos, Call docker-compose build SERVICE
 .PHONY: docker-compose-build
 docker-compose-build: DOCKER_RUN_OPTIONS += -it
-docker-compose-build: docker-images-myos stack
+docker-compose-build: docker-image-myos stack
 	$(call docker-compose,build $(DOCKER_BUILD_ARGS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-config: Call docker-compose config
@@ -109,37 +109,38 @@ docker-compose-stop: stack
 # target docker-compose-up: Fire docker-image-myos, Call docker-compose up SERVICE
 .PHONY: docker-compose-up
 docker-compose-up: DOCKER_RUN_OPTIONS += -it
-docker-compose-up: docker-images-myos bootstrap-stack stack
+docker-compose-up: docker-image-myos bootstrap-stack stack
 	$(call docker-compose,up $(DOCKER_COMPOSE_UP_OPTIONS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
-# target docker-images-myos: Call myos-docker-build-% target for each DOCKER_IMAGES_MYOS
-.PHONY: docker-images-myos
-docker-images-myos: MAKE_VARS += DOCKER_REPOSITORY STACK
-docker-images-myos:
-	$(foreach image,$(subst $(quote),,$(DOCKER_IMAGES_MYOS)),$(call make,docker-build-$(image),$(MYOS)))
+# target docker-image-myos: Call myos-docker-build-% target for each MYOS_DOCKER_IMAGES
+.PHONY: docker-image-myos
+docker-image-myos: MAKE_VARS += DOCKER_REPOSITORY STACK
+docker-image-myos:
+	$(foreach image,$(subst $(quote),,$(MYOS_DOCKER_IMAGES)),$(call make,docker-build-$(image),$(MYOS)))
 
-# target docker-images-rm: Remove docker images matching DOCKER_REPOSITORY
-.PHONY: docker-images-rm
-docker-images-rm:
-	docker images |awk '$$1 ~ /^$(subst /,\/,$(DOCKER_REPOSITORY)/)/ {print $$3}' |sort -u |while read image; do $(RUN) docker rmi -f $$image; done
+# target docker-image-rm: Remove docker images matching DOCKER_REPOSITORY
+.PHONY: docker-image-rm
+docker-image-rm:
+	docker image ls |awk '$$1 ~ /^$(subst /,\/,$(DOCKER_REPOSITORY)/)/ {print $$3}' |sort -u |while read image; do $(RUN) docker rmi -f $$image; done
 
-# target docker-images-rm-%: Remove docker images matching %
-.PHONY: docker-images-rm-%
-docker-images-rm-%:
-	docker images |awk '$$1 ~ /^$(subst /,\/,$*)/ {print $$3}' |sort -u |while read image; do $(RUN) docker rmi -f $$image; done
+# target docker-image-rm-%: Remove docker images matching %
+.PHONY: docker-image-rm-%
+docker-image-rm-%:
+	$(foreach image,$(or $($(call UPPERCASE,$*)_DOCKER_IMAGES),$*), \
+	  docker image ls |awk '$$1 ~ /^$(subst /,\/,$(firstword $(subst :, ,$(image))))/ {print $$3}' |sort -u |while read image; do $(RUN) docker rmi -f $$image; done;)
 
 # target docker-login: Run 'docker login'
 .PHONY: docker-login
 docker-login: myos-user
 	$(RUN) docker login
 
-# target docker-network: Fire docker-network-create-% for DOCKER_NETWORK and DOCKER_NETWORK_PUBLIC
+# target docker-network: Fire docker-network-create
 .PHONY: docker-network
-docker-network: docker-network-create docker-network-create-$(DOCKER_NETWORK_PUBLIC)
+docker-network: docker-network-create
 
-# target docker-network-create: Fire docker-network-create-% for DOCKER_NETWORK
+# target docker-network-create: Fire docker-network-create-% for DOCKER_NETWORK_PRIVATE and DOCKER_NETWORK_PUBLIC
 .PHONY: docker-network-create
-docker-network-create: docker-network-create-$(DOCKER_NETWORK)
+docker-network-create: docker-network-create-$(DOCKER_NETWORK_PRIVATE) docker-network-create-$(DOCKER_NETWORK_PUBLIC)
 
 # target docker-network-create-%: Run 'docker network create %'
 .PHONY: docker-network-create-%
@@ -150,9 +151,9 @@ docker-network-create-%:
 		 ||: ; \
 	fi
 
-# target docker-network-rm: Fire docker-network-rm-% for DOCKER_NETWORK
+# target docker-network-rm: Fire docker-network-rm-% for DOCKER_NETWORK_PRIVATE and DOCKER_NETWORK_PUBLIC
 .PHONY: docker-network-rm
-docker-network-rm: docker-network-rm-$(DOCKER_NETWORK)
+docker-network-rm: docker-network-rm-$(DOCKER_NETWORK_PRIVATE) docker-network-rm-$(DOCKER_NETWORK_PUBLIC)
 
 # target docker-network-rm-%: Run 'docker network rm %'
 .PHONY: docker-network-rm-%
@@ -226,8 +227,14 @@ docker-run-%: docker-build-%
 	$(eval command         := $(ARGS))
 	$(eval path            := $(patsubst %/,%,$*))
 	$(eval image           := $(DOCKER_REPOSITORY)/$(lastword $(subst /, ,$(path)))$(if $(findstring :,$*),,:$(DOCKER_IMAGE_TAG)))
-	$(eval image_id        := $(shell docker images -q $(image) 2>/dev/null))
+	$(eval image_id        := $(shell docker image ls -q $(image) 2>/dev/null))
 	$(call docker-run,$(if $(image_id),$(image),$(path)),$(command))
+
+# target docker-stack-%: Call docker-compose-% target for each STACK
+.PHONY: docker-stack-%
+docker-stack-%: MAKE_VARS += DOCKER_COMPOSE_DOWN_OPTIONS
+docker-stack-%:
+	$(foreach stack, $(STACK), $(call make,docker-compose-$* STACK=$(stack) APP_NAME=$(subst _,,$(subst -,,$(subst .,,$(call LOWERCASE,$(firstword $(subst /, ,$(stack)))))))))
 
 # target docker-tag: Call docker-tag for each SERVICES
 .PHONY: docker-tag

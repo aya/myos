@@ -76,7 +76,7 @@ IGNORE_VERBOSE                  ?= false
 INSTALL                         ?= $(RUN) $(SUDO) $(subst &&,&& $(RUN) $(SUDO),$(INSTALL_CMD))
 INSTALL_CMDS                    ?= APK_INSTALL APT_INSTALL
 $(foreach cmd,$(INSTALL_CMDS),$(if $(CMD_$(cmd)),$(eval INSTALL_CMD ?= $(CMD_$(cmd)))))
-LOG_LEVEL                       ?= $(if $(DEBUG),debug,$(if $(VERBOSE),info,error))
+LOG_LEVEL                       := $(or $(if $(DEBUG),debug),$(if $(VERBOSE),info),error)
 MAIL                            ?= $(GIT_AUTHOR_EMAIL)
 MAKE_ARGS                        = $(foreach var,$(MAKE_VARS),$(if $($(var)),$(var)='$($(var))'))
 MAKE_SUBDIRS                    ?= $(if $(filter myos,$(MYOS)),monorepo,$(if $(APP),apps $(foreach type,$(APP_LOAD),$(if $(wildcard $(MAKE_DIR)/apps/$(type)),apps/$(type)))))
@@ -90,7 +90,7 @@ MAKE_OLDFILE                    ?= $@
 MAKE_TARGETS                    ?= $(filter-out $(.VARIABLES),$(shell $(MAKE) -qp 2>/dev/null |awk -F':' '/^[a-zA-Z0-9][^$$\#\/\t=]*:([^=]|$$)/ {print $$1}' 2>/dev/null |sort -u))
 MAKE_UNIXTIME_START             := $(shell date -u +'%s' 2>/dev/null)
 MAKE_UNIXTIME_CURRENT            = $(shell date -u "+%s" 2>/dev/null)
-MAKE_VARS                       := ENV COMPOSE_FILE DOCKER_COMPOSE DOCKER_MACHINE DOCKER_SERVICES DOCKER_SYSTEM
+MAKE_VARS                       := ENV COMPOSE_FILE DOCKER_COMPOSE DOCKER_SERVICES
 MAKECMDARGS                     ?= apps-install install-app
 MONOREPO                        ?= $(if $(filter myos,$(MYOS)),$(notdir $(CURDIR)),$(if $(APP),$(notdir $(realpath $(CURDIR)/..))))
 MONOREPO_DIR                    ?= $(if $(MONOREPO),$(if $(filter myos,$(MYOS)),$(realpath $(CURDIR)),$(if $(APP),$(realpath $(CURDIR)/..))))
@@ -136,6 +136,11 @@ MACHINE                         ?= $(shell uname -m 2>/dev/null)
 
 ifeq ($(SYSTEM),Darwin)
 SED_SUFFIX                      := ''
+STAT_FORMAT_ARG                 := -f
+STAT_FORMAT_FILE                := '%a %N'
+else
+STAT_FORMAT_ARG                 := -c
+STAT_FORMAT_FILE                := '%Y %n'
 endif
 
 # include .env files
@@ -168,6 +173,30 @@ INFO = $(if $(VERBOSE),$(if $(filter-out true,$(IGNORE_VERBOSE)), \
   ) \
  && printf '\n' >&$(INFO_FD) \
 ))
+
+# macro base64t: Print trimed base64 encoded string from $1
+base64t = $(shell echo -n '$(1)' |openssl enc -A -base64 |sed 's/+/-/g;s|/|_|g;s/=*$$//;')
+
+# macro hs256: Print hmac sha256 digest from string $1 with key $2
+hs256 = $(shell echo -n '$(1)' |openssl dgst -sha256 -binary -hmac '$(2)')
+b64_hs256 = $(shell echo -n '$(1)' |openssl dgst -sha256 -binary -hmac '$(2)' |base64 |sed 's/+/-/g;s|/|_|g;s/=*$$//;')
+
+# macro rs256: Print sha256 digest from string $1 signed by key $2
+rs256 = $(shell echo -n '$(1)' |openssl dgst -sha256 -binary -sign '$(2)')
+
+JWT_HEADER = {"alg":"HS256","typ":"JWT"}
+
+# macro JWT: Print Json Web Token for header $1 payload $2 and key $3
+JWT = $(strip \
+      $(eval header := $(or $(1),$(JWT_HEADER))) \
+      $(eval payload := $(or $(2),$(JWT_PAYLOAD))) \
+      $(eval secret := $(or $(3),$(JWT_SECRET))) \
+      $(eval b64_header := $(call base64t,$(header))) \
+      $(eval b64_payload := $(call base64t,$(payload))) \
+      $(eval b64_signature := $(call base64t,$(call hs256,$(b64_header).$(b64_payload),$(secret)))) \
+      $(eval b64_signature := $(call b64_hs256,$(b64_header).$(b64_payload),$(secret))) \
+      $(if $(DEBUG),$(header) - $(payload) - $(secret) --- ) \
+      $(b64_header).$(b64_payload).$(b64_signature))
 
 # macro RESU: Print USER associated to MAIL
 RESU = $(strip \
@@ -222,20 +251,29 @@ force = $$(while true; do \
  && $(RUN) $(1) || sleep 1; done \
 )
 
-# macro gid: Return GID of group 1
+# macro gid: Return GID of group $1
 gid = $(shell awk -F':' '$$1 == "$(1)" {print $$3}' /etc/group 2>/dev/null)
 
+# macro newenv: Return VAR from file $2 that does not exist in file $1, matching on VAR= part of lines
+newenv = $(shell awk -F'=' 'NR == FNR {if($$1 !~ /^(\#|$$)/) { A[$$1]; next }} !($$1 in A) {if($$1 !~ /^(\#|$$)/) { print $$1 }}' $(1) $(2) 2>/dev/null)
+
 # macro newer: Return the newest file
-newer = $(shell stat -c '%Y %n' $(1) $(2) $(if $(DEBUG),,2>/dev/null) |sort -n |tail -n1 |awk '{print $$2}')
+newer = $(shell stat $(STAT_FORMAT_ARG) $(STAT_FORMAT_FILE) $(1) $(2) $(if $(DEBUG),,2>/dev/null) |sort -n |tail -n1 |awk '{print $$2}')
 
 # older newer: Return the oldest file
-older = $(shell stat -c '%Y %n' $(1) $(2) $(if $(DEBUG),,2>/dev/null) |sort -n |head -n1 |awk '{print $$2}')
+older = $(shell stat $(STAT_FORMAT_ARG) $(STAT_FORMAT_FILE) $(1) $(2) $(if $(DEBUG),,2>/dev/null) |sort -n |head -n1 |awk '{print $$2}')
 
 # macro pop: Return last word of string 1 according to separator 2
 pop = $(patsubst %$(or $(2),/)$(lastword $(subst $(or $(2),/), ,$(1))),%,$(1))
 
 # macro sed: Run sed script 1 on file 2
 sed = $(RUN) sed -i $(SED_SUFFIX) '$(1)' $(2)
+
+# macro verle: Return true when version 1 <= 2
+verle = [ -n "$(1)" ] && [ "$(1)" = "$(shell echo -e "$(1)\n$(2)" |sort -V |head -n1)" ]
+
+# macro verlt: Return true when version 1 < 2
+verlt = [ "$(1)" = "$(2)" ] && return 1 || $(call verlte,$(1),$(2))
 
 # function conf: Extract variable=value line from configuration files
 ## it prints the line with variable 3 definition from block 2 in file 1

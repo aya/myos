@@ -1,8 +1,6 @@
 MAKECMDARGS                     += ufw ufw-docker
 UFW_UPDATE                      ?= $(or $(SERVICE),$(DOCKER_SERVICES))
 
-ifeq ($(SETUP_UFW),true)
-
 # function ufw: Exec command ufw with args 1
 define ufw
 	$(call INFO,ufw,$(1)$(comma))
@@ -18,5 +16,3 @@ define ufw-docker
 	$(eval DOCKER_COMPOSE_PROJECT_NAME := $(HOST_COMPOSE_PROJECT_NAME))
 	$(call app-exec,,$(if $(DOCKER_RUN),,$(SUDO)) ufw-docker $(1))
 endef
-
-endif

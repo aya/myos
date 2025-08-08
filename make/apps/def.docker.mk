@@ -1,6 +1,8 @@
 COMPOSE_FILE_DEBUG              ?= $(if $(DEBUG),true)
 COMPOSE_FILE_DNS                ?= false
 COMPOSE_FILE_HOME               ?= false
+COMPOSE_FILE_LABELS             ?= true
+COMPOSE_FILE_NETWORKS           ?= true
 COMPOSE_FILE_NFS                ?= $(MOUNT_NFS)
 COMPOSE_FILE_SSH                ?= true
 ifneq ($(SUBREPO),)
@@ -8,14 +10,16 @@ COMPOSE_FILE_SUBREPO            ?= true
 else
 COMPOSE_FILE_APP                ?= true
 endif
-COMPOSE_FILE_SUFFIX             ?= $(foreach suffix,$(call LOWERCASE,$(filter-out SUFFIX,$(patsubst COMPOSE_FILE_%,%,$(filter COMPOSE_FILE_%,$(MAKE_FILE_VARS))))),$(if $(filter-out false False FALSE,$(COMPOSE_FILE_$(call UPPERCASE,$(suffix)))),$(suffix)))
+COMPOSE_FILE_SUFFIX             ?= $(foreach suffix,$(call LOWERCASE,$(filter-out SUFFIX,$(patsubst COMPOSE_FILE_%,%,$(filter COMPOSE_FILE_%,$(MAKE_CMD_VARS) $(MAKE_ENV_VARS) $(MAKE_FILE_VARS))))),$(if $(filter-out false False FALSE,$(COMPOSE_FILE_$(call UPPERCASE,$(suffix)))),$(suffix) $(foreach service,$(filter-out true True TRUE,$(COMPOSE_FILE_$(call UPPERCASE,$(suffix)))),$(suffix).$(service))))
+COMPOSE_FILE_VOLUMES            ?= true
 COMPOSE_FILE_WWW                ?= false
 COMPOSE_IGNORE_ORPHANS          ?= false
 COMPOSE_PROJECT_NAME            ?= $(if $(DOCKER_COMPOSE_PROJECT_NAME),$(DOCKER_COMPOSE_PROJECT_NAME),$(subst .,,$(call LOWERCASE,$(USER)-$(APP_NAME)-$(ENV)$(addprefix -,$(subst /,,$(subst -,,$(APP_PATH)))))))
 COMPOSE_SERVICE_NAME            ?= $(if $(DOCKER_COMPOSE_SERVICE_NAME),$(DOCKER_COMPOSE_SERVICE_NAME),$(subst _,-,$(COMPOSE_PROJECT_NAME)))
-COMPOSE_VERSION                 ?= 2.5.0
+COMPOSE_VERSION                 ?= 2.24.4
 CONTEXT                         += COMPOSE_FILE DOCKER_REPOSITORY
 CONTEXT_DEBUG                   += DOCKER_BUILD_TARGET DOCKER_COMPOSE_PROJECT_NAME DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_SERVICE DOCKER_SERVICES
+DOCKER_ARGS                     ?= --log-level=$(LOG_LEVEL)
 DOCKER_AUTHOR                   ?= $(DOCKER_AUTHOR_NAME) <$(DOCKER_AUTHOR_EMAIL)>
 DOCKER_AUTHOR_EMAIL             ?= $(subst +git,+docker,$(GIT_AUTHOR_EMAIL))
 DOCKER_AUTHOR_NAME              ?= $(GIT_AUTHOR_NAME)
@@ -27,7 +31,7 @@ DOCKER_BUILD_TARGET             ?= $(if $(filter $(ENV),$(DOCKER_BUILD_TARGETS))
 DOCKER_BUILD_TARGET_DEFAULT     ?= master
 DOCKER_BUILD_TARGETS            ?= $(ENV_DEPLOY)
 DOCKER_BUILD_VARS               ?= APP BRANCH COMPOSE_VERSION DOCKER_GID DOCKER_MACHINE DOCKER_REPOSITORY DOCKER_SYSTEM GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME SSH_REMOTE_HOSTS USER VERSION
-DOCKER_COMPOSE                  := $(or $(shell docker-compose --version 2>/dev/null |awk '$$4 != "v'"$(COMPOSE_VERSION)"'" {exit 1} END {if (NR == 0) exit 1}' && printf 'docker-compose\n'),$(shell docker compose >/dev/null 2>&1 && printf 'docker compose\n'))
+DOCKER_COMPOSE                  ?= $(or $(shell $(call verle,$(COMPOSE_VERSION),$(shell docker compose version --short 2>/dev/null)) && printf 'docker $(DOCKER_ARGS) compose\n'),$(shell $(call verle,$(COMPOSE_VERSION),$(shell docker-compose version --short 2>/dev/null)) && printf 'docker-compose\n'))
 DOCKER_COMPOSE_ARGS             ?= --ansi=auto
 DOCKER_COMPOSE_DOWN_OPTIONS     ?=
 DOCKER_COMPOSE_FILE             ?= docker-compose
@@ -38,7 +42,7 @@ DOCKER_COMPOSE_RUN_OPTIONS      ?= --rm $(DOCKER_COMPOSE_RUN_ENTRYPOINT) $(DOCKE
 DOCKER_COMPOSE_RUN_WORKDIR      ?= $(if $(DOCKER_COMPOSE_WORKDIR),-w $(DOCKER_COMPOSE_WORKDIR))
 DOCKER_COMPOSE_SERVICE_NAME     ?= $(subst _,-,$(DOCKER_COMPOSE_PROJECT_NAME))
 DOCKER_COMPOSE_UP_OPTIONS       ?= -d
-DOCKER_IMAGE_TAG                ?= $(if $(filter true,$(DEPLOY)),$(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION)),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest))
+DOCKER_IMAGE_TAG                ?= $(if $(filter true,$(DEPLOY)),$(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION)),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),$(ENV)))
 DOCKER_IMAGES                   ?= $(patsubst %/,%,$(patsubst docker/%,%,$(dir $(wildcard docker/*/Dockerfile))))
 DOCKER_PLUGIN                   ?= rexray/s3fs:latest
 DOCKER_PLUGIN_ARGS              ?= $(foreach var,$(DOCKER_PLUGIN_VARS),$(if $(DOCKER_PLUGIN_$(var)),$(var)='$(DOCKER_PLUGIN_$(var))'))
@@ -72,7 +76,7 @@ define compose-file
 	$(eval name             := $(or $(2),$(DOCKER_COMPOSE_FILE)))
 	$(eval suffix           := $(or $(3),$(COMPOSE_FILE_SUFFIX)))
 	$(eval extension        := $(or $(4),yml yaml))
-	$(eval COMPOSE_FILE     += $(wildcard $(foreach e,$(extension),$(foreach n,$(name),$(foreach p,$(path),$(p)/$(n).$(e) $(p)/$(n).$(ENV).$(e) $(foreach s,$(suffix),$(p)/$(n).$(s).$(e) $(p)/$(n).$(s).$(ENV).$(e)))))))
+	$(eval COMPOSE_FILE     += $(wildcard $(foreach e,$(extension),$(foreach n,$(name),$(foreach p,$(path),$(p)/$(n).$(e) $(p)/$(n).$(ENV).$(e) $(p)/$(ENV)/$(n).$(e) $(p)/$(ENV)/$(n).$(ENV).$(e) $(foreach s,$(suffix),$(p)/$(n).$(s).$(e) $(p)/$(n).$(s).$(ENV).$(e)))))))
 endef
 # function docker-build: Build docker image
 define docker-build
@@ -95,6 +99,7 @@ define docker-commit
 	$(RUN) docker commit $(container) $(repository):$(tag)
 endef
 # function docker-compose: Run docker-compose with arg 1
+# TODO: accept $2 COMPOSE_FILE and remove stack from prereq
 define docker-compose
 	$(call INFO,docker-compose,$(1))
 	$(if $(COMPOSE_FILE),
@@ -148,7 +153,7 @@ define docker-stack-update
 	$(eval name             := $(firstword $(subst :, ,$(stack))))
 	$(eval version          := $(or $(2),$(if $(findstring :,$(stack)),$(lastword $(subst :, ,$(stack))),latest)))
 	$(eval path             := $(patsubst %/,%,$(or $(3),$(if $(findstring /,$(1)),$(if $(wildcard stack/$(1) stack/$(1).yml),stack/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard stack/$(1).yml),$(dir $(1)),$(1))),$(if $(wildcard stack/$(stackz)/$(1) stack/$(stackz)/$(1).yml),stack/$(stackz)/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard stack/$(stackz)/$(1).yml),$(dir $(1)),$(1))),$(dir $(1))))),$(firstword $(wildcard stack/$(stackz)/$(name) stack/$(stackz) stack/$(name))))))
-	$(call compose-file,$(path),$(name),$(COMPOSE_FILE_SUFFIX) $(version))
+	$(call compose-file,$(path),docker-compose $(name),$(COMPOSE_FILE_SUFFIX) $(version))
 	$(if $(wildcard $(path)/.env.dist),$(call .env,,$(path)/.env.dist,$(wildcard $(CONFIG)/$(ENV)/$(APP)/.env $(path)/.env.$(ENV) .env)))
 endef
 # function docker-tag: Tag docker image

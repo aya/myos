@@ -11,7 +11,7 @@
 ## it removes file .env
 .PHONY: .env-clean
 .env-clean:
-	$(RUN) rm -$(if $(FORCE),f,i) .env || true
+	$(RUN) rm -$(if $(FORCE),f,i) $(ENV_FILE) || true
 
 # target .env-update: Update file ENV_FILE
 ## it updates file ENV_FILE with missing values from file ENV_DIST
@@ -51,8 +51,8 @@ define .env
 	$(eval env_file:=$(or $(1),.env))
 	$(eval env_dists:=$(wildcard $(or $(2),$(env_file).dist)))
 	$(eval env_over:=$(wildcard $(or $(3),$(env_file).$(ENV))))
-	$(if $(FORCE)$(filter $(env_file),$(call newer,$(env_file) $(env_dists) $(env_over))),
-	 ,$(foreach env_dist,$(env_dists),$(call .env_update)))
+	$(if $(FORCE)$(call newenv,$(env_file),$(env_dists) $(env_over))$(if $(wildcard $(env_file)),,FORCE),
+	  $(foreach env_dist,$(env_dists),$(call .env_update)))
 endef
 
 # function .env_update: Update .env file with values from .env.dist
@@ -74,10 +74,11 @@ endef
 	    # create a new (empty if ENV_RESET is true) environment with env.args
 	      # read environment variables and keep only those existing in .env.dist
 	      # add .env overrides variables definition
-	      # add .env.dist variables definition
+	      # add .env.dist variables definition when variable value is not the variable name itself
 	      # remove empty lines or comments
 	      # remove duplicate variables
 	    # replace variables in stdin with their value from the new environment
+	    # eval and replace commands in stdin with their result
 	  # remove residual empty lines or comments
 	  # sort alphabetically
 	  # add variables definition to the .env file
@@ -95,10 +96,11 @@ define .env_update
 	    env $(env_reset) $(env.args) \
 	      $$(env |awk -F '=' 'NR == FNR { if($$1 !~ /^(#|$$)/) { A[$$1]; next } } ($$1 in A)' $(env_dist) - \
 	        |cat - $(env_over) \
-	        |cat - $(env_dist) \
+	        |cat - $(env_dist) |awk -F '=' '{ if(match($$0,"[$$]{[^}]*}")) {var=substr($$0,RSTART+2,RLENGTH-3);if(var!=$$1) print} else print}' \
 	        |sed -e /^$$/d -e /^#/d \
 	        |awk -F '=' '!seen[$$1]++') \
-	      awk '{while(match($$0,"[$$]{[^}]*}")) {var=substr($$0,RSTART+2,RLENGTH-3);gsub("[$$]{"var"}",ENVIRON[var])} print}') \
+	      awk '{while(match($$0,"[$$]{[^}]*}")) {var=substr($$0,RSTART+2,RLENGTH-3);if("$${"var"}"!=ENVIRON[var]){gsub("[$$]{"var"}",ENVIRON[var])}else{gsub("[$$]{"var"}","")}}; \
+	            while(match($$0,"[$$]\\([^\\)]*\\)")) {cmd=substr($$0,RSTART+2,RLENGTH-3);cmd|getline var;gsub("[$$]\\([^\\)]*\\)",var);close(cmd)} print}') \
 	  |sed -e /^$$/d -e /^#/d \
 	  |sort \
 	  >> $(env_file) $(if $(VERBOSE)$(DEBUG),,2> /dev/null) ||:;
