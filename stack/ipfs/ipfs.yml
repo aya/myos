@@ -9,7 +9,7 @@ services:
       - UID=${UID}
       context: ../..
       dockerfile: docker/ipfs/Dockerfile
-    command: daemon --agent-version-suffix=${COMPOSE_PROJECT_NAME} ${IPFS_DAEMON_ARGS:---migrate}
+    command: daemon --agent-version-suffix=${COMPOSE_PROJECT_NAME} ${IPFS_DAEMON_ARGS:---migrate=true}
     cpus: 0.5
     environment:
     - DEBUG=${DEBUG:-}

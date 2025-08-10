@@ -137,7 +137,7 @@ ipfs config Datastore.StorageMax "$((diskSize * ${IPFS_DATASTORE_DISKUSAGE:-50}/
 [ -n "${IPFS_REPROVIDER_STRATEGY}" ] && ipfs config Reprovider.Strategy "${IPFS_REPROVIDER_STRATEGY}"
 
 ## routing
-[ -n "${IPFS_ROUTING_TYPE}" ] && ipfs config --json Routing.Type "${IPFS_ROUTING_TYPE}"
+[ -n "${IPFS_ROUTING_TYPE}" ] && ipfs config Routing.Type "${IPFS_ROUTING_TYPE}"
 [ -n "${IPFS_ROUTING_ACCELERATEDDHTCLIENT}" ] && ipfs config --json Routing.AcceleratedDHTClient "${IPFS_ROUTING_ACCELERATEDDHTCLIENT}"
 [ -n "${IPFS_ROUTING_LOOPBACKADDRESSESONLANDHT}" ] && ipfs config --bool Routing.LoopbackAddressesOnLanDHT "${IPFS_ROUTING_LOOPBACKADDRESSESONLANDHT}"
 [ -n "${IPFS_ROUTING_METHODS}" ] && ipfs config --json Routing.Methods "${IPFS_ROUTING_METHODS}"

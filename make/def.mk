@@ -195,7 +195,6 @@ JWT = $(strip \
       $(eval b64_payload := $(call base64t,$(payload))) \
       $(eval b64_signature := $(call base64t,$(call hs256,$(b64_header).$(b64_payload),$(secret)))) \
       $(eval b64_signature := $(call b64_hs256,$(b64_header).$(b64_payload),$(secret))) \
-      $(if $(DEBUG),$(header) - $(payload) - $(secret) --- ) \
       $(b64_header).$(b64_payload).$(b64_signature))
 
 # macro RESU: Print USER associated to MAIL

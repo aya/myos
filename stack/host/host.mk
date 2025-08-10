@@ -51,7 +51,7 @@ host-certbot: host-docker-build-certbot
 	   --mount source=$(HOST_DOCKER_VOLUME),target=/etc/letsencrypt/ \
 	   --mount source=$(HOST_DOCKER_VOLUME),target=/var/log/letsencrypt/ \
 	   --network host \
-	   $(HOST_DOCKER_REPOSITORY)/certbot \
+	   $(HOST_DOCKER_REPOSITORY)/certbot:$(DOCKER_IMAGE_TAG) \
 	    --dns-standalone-address=0.0.0.0 \
 	    --dns-standalone-port=53 \
 	    --non-interactive --agree-tos --email hostmaster@$(domain) certonly \
@@ -64,12 +64,12 @@ host-certbot: host-docker-build-certbot
 # target host-certbot-certificates: List letsencrypt certificates
 .PHONY: host-certbot-certificates
 host-certbot-certificates: host-docker-build-certbot
-	docker run --rm --mount source=$(HOST_DOCKER_VOLUME),target=/etc/letsencrypt/ $(HOST_DOCKER_REPOSITORY)/certbot certificates
+	docker run --rm --mount source=$(HOST_DOCKER_VOLUME),target=/etc/letsencrypt/ $(HOST_DOCKER_REPOSITORY)/certbot:$(DOCKER_IMAGE_TAG) certificates
 
 # target host-certbot-renew: Renew letsencrypt certificates
 .PHONY: host-certbot-renew
 host-certbot-renew: host-docker-build-certbot
-	docker run --rm --mount source=$(HOST_DOCKER_VOLUME),target=/etc/letsencrypt/ --network host $(HOST_DOCKER_REPOSITORY)/certbot renew
+	docker run --rm --mount source=$(HOST_DOCKER_VOLUME),target=/etc/letsencrypt/ --network host $(HOST_DOCKER_REPOSITORY)/certbot:$(DOCKER_IMAGE_TAG) renew
 
 # target host-certbot-staging: Create staging ${DOMAIN} certificate files with letsencrypt
 .PHONY: host-certbot-staging
@@ -80,7 +80,7 @@ host-certbot-staging: host-docker-build-certbot
 	   --mount source=$(HOST_DOCKER_VOLUME),target=/etc/letsencrypt/ \
 	   --mount source=$(HOST_DOCKER_VOLUME),target=/var/log/letsencrypt/ \
 	   --network host \
-	   $(HOST_DOCKER_REPOSITORY)/certbot \
+	   $(HOST_DOCKER_REPOSITORY)/certbot:$(DOCKER_IMAGE_TAG) \
 	    --dns-standalone-address=0.0.0.0 \
 	    --dns-standalone-port=53 \
 	    --non-interactive --agree-tos --email hostmaster@$(domain) certonly \

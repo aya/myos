@@ -10,7 +10,7 @@ services:
       - UID=${HOST_UID}
       context: ../..
       dockerfile: docker/ipfs/Dockerfile
-    command: daemon --agent-version-suffix=${HOST_COMPOSE_PROJECT_NAME} ${HOST_IPFS_DAEMON_ARGS:---migrate}
+    command: daemon --agent-version-suffix=${HOST_COMPOSE_PROJECT_NAME} ${HOST_IPFS_DAEMON_ARGS:---migrate=true}
     container_name: ${HOST_COMPOSE_PROJECT_NAME}-ipfs
     cpus: 0.5
     environment:
