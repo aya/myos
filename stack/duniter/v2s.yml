@@ -5,73 +5,70 @@ version: "3.5"
 
 services:
 
-#   duniter-oracle:
-#     entrypoint: docker-distance-entrypoint
-#     environment:
-#       ORACLE_RPC_URL: "ws://duniter-v2s:9944"
-#       ORACLE_RESULT_DIR: "/var/lib/duniter/chains/${DUNITER_V2S_DUNITER_CHAIN_NAME:-gdev}/distance/"
-#       ORACLE_EXECUTION_INTERVAL: "1800"
-#       ORACLE_MAX_DEPTH: "5"
-#       ORACLE_LOG_LEVEL: "info"
-#     image: duniter/duniter-v2s-gdev:latest
-#     networks:
-#     - private
-#     restart: always
-#     volumes:
-#       - duniter-v2s-data:/var/lib/duniter
-
-  duniter-ui:
+  oracle:
+    entrypoint: docker-distance-entrypoint
     environment:
-    - WS_URL=${DUNITER_UI_WS_URL:-ws://duniter-v2s:9944}
-    image: jacogr/polkadot-js-apps:latest
+      ORACLE_RPC_URL: "ws://v2s:9944"
+      ORACLE_RESULT_DIR: "/var/lib/duniter/chains/${DUNITER_V2S_DUNITER_CHAIN_NAME:-gtest}/distance/"
+      ORACLE_EXECUTION_INTERVAL: "1800"
+      ORACLE_MAX_DEPTH: "5"
+      ORACLE_LOG_LEVEL: "info"
+    image: duniter/duniter-v2s-gtest-1100:1000-0.12.0-amd64
+    labels:
+    - SERVICE_9615_IGNORE=true
+    - SERVICE_9944_IGNORE=true
+    - SERVICE_30333_IGNORE=true
+    networks:
+    - private
+    restart: always
+    volumes:
+    - v2s-data:/var/lib/duniter
+
+  ui:
+    environment:
+    - WS_URL=${DUNITER_UI_WS_URL:-ws://v2s:9944}
+    image: duniter/duniter-portal:latest
     labels:
     - SERVICE_80_CHECK_HTTP=${DUNITER_UI_SERVICE_80_CHECK_HTTP:-/}
-    - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME}-duniter-ui-80
-    - SERVICE_80_TAGS=${DUNITER_UI_SERVICE_80_TAGS:-urlprefix-gdev.localhost/ui/*}
+    - SERVICE_80_NAME=${COMPOSE_SERVICE_NAME}-ui-80
+    - SERVICE_80_TAGS=${DUNITER_UI_SERVICE_80_TAGS:-urlprefix-gtest.localhost/*}
     networks:
     - private
     ports:
     - 80
     restart: always
 
-  duniter-v2s:
+  v2s:
     environment:
-    - DUNITER_CHAIN_NAME=${DUNITER_V2S_DUNITER_CHAIN_NAME:-gdev}
+    - DUNITER_CHAIN_NAME=${DUNITER_V2S_DUNITER_CHAIN_NAME:-gtest}
     - DUNITER_LISTEN_ADDR=${DUNITER_V2S_DUNITER_LISTEN_ADDR:-/ip4/0.0.0.0/tcp/30333/ws}
-    - DUNITER_NODE_NAME=${DUNITER_V2S_DUNITER_NODE_NAME:-duniter_local}
+    - DUNITER_NODE_NAME=${DUNITER_V2S_DUNITER_NODE_NAME:-duniter_gtest_local}
     - DUNITER_PRUNING_PROFILE=${DUNITER_V2S_DUNITER_PRUNING_PROFILE:-default}
-    - DUNITER_PUBLIC_ADDR=${DUNITER_V2S_DUNITER_PUBLIC_ADDR:-/dns/duniter-v2s/tcp/30333/ws}
+    - DUNITER_PUBLIC_ADDR=${DUNITER_V2S_DUNITER_PUBLIC_ADDR:-/dns/duniter.localhost/tcp/30333/ws}
     - DUNITER_PUBLIC_RPC=${DUNITER_V2S_DUNITER_PUBLIC_RPC:-}
     - DUNITER_VALIDATOR=${DUNITER_V2S_DUNITER_VALIDATOR:-false}
-    image: duniter/duniter-v2s-gdev-800:900-0.9.2
+    image: duniter/duniter-v2s-gtest-1100:1000-0.12.0-amd64
     labels:
-#     - SERVICE_9615_CHECK_HTTP=${DUNITER_V2S_SERVICE_9615_CHECK_HTTP:-/}
-#     - SERVICE_9615_NAME=${COMPOSE_SERVICE_NAME}-duniter-v2s-9615
-#     - SERVICE_9615_TAGS=${DUNITER_V2S_SERVICE_9615_TAGS:-urlprefix-gdev.localhost/metrics/*}
-#     - SERVICE_9933_CHECK_HTTP=${DUNITER_V2S_SERVICE_9933_CHECK_HTTP:-/}
-#     - SERVICE_9933_CHECK_HTTP_METHOD=${DUNITER_V2S_SERVICE_9933_CHECK_HTTP_METHOD:-POST}
-#     - SERVICE_9933_NAME=${COMPOSE_SERVICE_NAME}-duniter-v2s-9933
-#     - SERVICE_9933_TAGS=${DUNITER_V2S_SERVICE_9933_TAGS:-urlprefix-gdev.localhost/http/*}
+    - SERVICE_9615_CHECK_TCP=true
+    - SERVICE_9615_NAME=${COMPOSE_SERVICE_NAME}-v2s-9615
+    - SERVICE_9615_TAGS=${DUNITER_V2S_SERVICE_9615_TAGS:-urlprefix-gtest.localhost/metrics/*}
     - SERVICE_9944_CHECK_TCP=true
-    - SERVICE_9944_NAME=${COMPOSE_SERVICE_NAME}-duniter-v2s-9944
-    - SERVICE_9944_TAGS=${DUNITER_V2S_SERVICE_9944_TAGS:-urlprefix-gdev.localhost/ws/*}
+    - SERVICE_9944_NAME=${COMPOSE_SERVICE_NAME}-v2s-9944
+    - SERVICE_9944_TAGS=${DUNITER_V2S_SERVICE_9944_TAGS:-urlprefix-gtest.localhost/ws/*}
     - SERVICE_30333_CHECK_TCP=true
-    - SERVICE_30333_NAME=${COMPOSE_SERVICE_NAME}-duniter-v2s-30333
-    - SERVICE_30333_TAGS=${DUNITER_V2S_SERVICE_30333_TAGS:-urlprefix-gdev.localhost/*}
+    - SERVICE_30333_NAME=${COMPOSE_SERVICE_NAME}-v2s-30333
     networks:
     - private
     ports:
     # telemetry
     - 9615
-    # rpc
-    - 9933
     # rpc-ws
     - 9944
     # p2p
     - 30333
     volumes:
-    - duniter-v2s-data:/var/lib/duniter
+    - v2s-data:/var/lib/duniter
     restart: always
 
 volumes:
-  duniter-v2s-data:
+  v2s-data:

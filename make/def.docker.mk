@@ -36,6 +36,7 @@ HOST_STACK                      ?= $(filter host,$(firstword $(subst /, ,$(STACK
 MYOS_STACK                      ?= $(MYOS)/stack/myos
 MYOS_STACK_FILE                 ?= networks volumes
 RESU_DOCKER_REPOSITORY          ?= $(subst -,/,$(USER_COMPOSE_PROJECT_NAME))
+STACK                           ?= $(APP)
 USER_COMPOSE_PROJECT_NAME       ?= $(subst .,-,$(RESU))
 USER_COMPOSE_SERVICE_NAME       ?= $(USER_COMPOSE_PROJECT_NAME)
 USER_DOCKER_IMAGE               ?= $(USER_DOCKER_REPOSITORY):${DOCKER_IMAGE_TAG}

@@ -24,7 +24,7 @@ fi
     for docker in $(curl --disable --fail --show-error --silent --unix-socket "${DOCKER_SOCK}" http://localhost/containers/json |jq -r '.[].Id'); do
       # print "health_status id name ip_address health_output" for each docker
       curl --disable --fail --show-error --silent --unix-socket "${DOCKER_SOCK}" "http://localhost/containers/${docker}/json" \
-       |jq -r '[.State.Health.Status, .Id, .Name, .NetworkSettings.IPAddress, .State.Health.Log[0].Output] |@tsv'
+       |jq -r '[.State.Health.Status, .Id, .Name, .NetworkSettings.Networks[].IPAddress, .State.Health.Log[0].Output] |@tsv'
               # shorten id: .Id |capture("(?<id>.{12})").id
     # print "health_status" and "health_output" for line matching $1
     done |awk -F '\t' '/\<'"$1"'\>/ {print $1 | "cat >&3; exec 3>&-"; print $NF | "cat >&4";}'
