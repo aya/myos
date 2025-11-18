@@ -1,0 +1,8 @@
+# https://github.com/woodpecker-ci/woodpecker/blob/main/docs/docs/30-administration/10-configuration/10-server.md
+woodpecker                                ?= woodpeckerci/woodpecker-server woodpeckerci/woodpecker-agent
+ENV_VARS                                  += WOODPECKER_ADMIN WOODPECKER_HOST WOODPECKER_SERVICE_8000_TAGS
+WOODPECKER_ADMIN                          ?= $(GIT_USER)
+WOODPECKER_HOST                           ?= $(APP_SCHEME)://$(WOODPECKER_SERVICE_NAME).$(firstword $(APP_HOST))
+WOODPECKER_SERVICE_NAME                   ?= woodpecker
+WOODPECKER_SERVICE_8000_NAME              ?= $(WOODPECKER_SERVICE_NAME)
+WOODPECKER_SERVICE_8000_TAGS              ?= $(call tagprefix,woodpecker,8000)
