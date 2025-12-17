@@ -1,7 +1,5 @@
 # myos - Make Your Own Stack
 
-Docker paas based on docker compose and make files.
-
 Make Your Own Stack provides common make targets to build and run docker projects.
 
 ## Disclaimer
@@ -18,9 +16,9 @@ You need `docker`, `git` and `make`.
 
 ```
 MYOS                                      ?= ../myos
-MYOS_REPOSITORY                           ?= $(patsubst %/$(APP),%/myos,$(APP_REPOSITORY))
-APP                                       ?= $(lastword $(subst /, ,$(APP_REPOSITORY)))
-APP_REPOSITORY                            ?= $(shell git config --get remote.origin.url 2>/dev/null)
+MYOS_REPOSITORY                           ?= $(patsubst %/$(THIS),%/myos,$(THIS_REPOSITORY))
+THIS                                      ?= $(lastword $(subst /, ,$(THIS_REPOSITORY)))
+THIS_REPOSITORY                           ?= $(shell git config --get remote.origin.url 2>/dev/null)
 $(MYOS):
 	-@git clone $(MYOS_REPOSITORY) $(MYOS)
 -include $(MYOS)/make/include.mk

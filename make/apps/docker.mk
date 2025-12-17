@@ -234,7 +234,9 @@ docker-run-%: docker-build-%
 .PHONY: docker-stack-%
 docker-stack-%: MAKE_VARS += DOCKER_COMPOSE_DOWN_OPTIONS
 docker-stack-%:
-	$(foreach stack, $(STACK), $(call make,docker-compose-$* STACK=$(stack) APP_NAME=$(subst _,,$(subst -,,$(subst .,,$(call LOWERCASE,$(firstword $(subst /, ,$(stack)))))))))
+	$(if $(filter-out myos,$(filter $(APP),$(STACK))), \
+	  $(call make,app-$(APP)-$*) \
+	, $(foreach stack, $(STACK), $(call make,docker-compose-$* STACK=$(stack) APP_NAME=$(subst _,,$(subst -,,$(subst .,,$(call LOWERCASE,$(firstword $(subst /, ,$(stack))))))))))
 
 # target docker-tag: Call docker-tag for each SERVICES
 .PHONY: docker-tag
