@@ -8,8 +8,8 @@ percent                         ?= %
 quote                           ?= '
 rbracket                        ?= )
 APP                             ?= $(if $(wildcard .git),$(notdir $(CURDIR)))
-APP_LOAD                        ?= $(if $(SUBREPO),subrepo) $(if $(filter .,$(MYOS)),myos)
 APP_NAME                        ?= $(subst _,,$(subst -,,$(subst .,,$(call LOWERCASE,$(APP)))))
+APP_TYPE                        ?= $(if $(SUBREPO),subrepo) $(if $(filter .,$(MYOS)),myos)
 APPS                            ?= $(if $(MONOREPO),$(sort $(patsubst $(MONOREPO_DIR)/%/.git,%,$(wildcard $(MONOREPO_DIR)/*/.git))))
 APPS_NAME                       ?= $(foreach app,$(APPS),$(or $(shell awk -F '=' '$$1 == "APP" {print $$2}' $(or $(wildcard $(MONOREPO_DIR)/$(app)/.env),$(wildcard $(MONOREPO_DIR)/$(app)/.env.$(ENV)),$(MONOREPO_DIR)/$(app)/.env.dist) 2>/dev/null),$(app)))
 BRANCH                          ?= $(GIT_BRANCH)
@@ -43,7 +43,7 @@ CONTEXT                         ?= ENV $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#
 CONTEXT_DEBUG                   ?= MAKEFILE_LIST DOCKER_ENV_ARGS ENV_ARGS APPS GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME MAKE_DIR MAKE_SUBDIRS MAKE_CMD_ARGS MAKE_ENV_ARGS UID USER
 DEBUG                           ?= 
 DOCKER                          ?= $(shell type -p docker)
-DOMAIN                          ?= $(or $(shell dnsdomainname 2>/dev/null),$(shell hostname -d 2>/dev/null),$(shell hostname -f | sed -n 's/[^\.]*\.\([^/ ]*\).*/\1/p'), localhost)
+DOMAIN                          ?= $(or $(filter-out local,$(or $(shell dnsdomainname 2>/dev/null),$(shell hostname -d 2>/dev/null),$(shell hostname -f | sed -n 's/[^\.]*\.\([^/ ]*\).*/\1/p'))), localhost)
 DOMAINNAME                      ?= $(firstword $(DOMAIN))
 DRONE                           ?= false
 DRYRUN                          ?= false
@@ -79,13 +79,13 @@ $(foreach cmd,$(INSTALL_CMDS),$(if $(CMD_$(cmd)),$(eval INSTALL_CMD ?= $(CMD_$(c
 LOG_LEVEL                       := $(or $(if $(DEBUG),debug),$(if $(VERBOSE),info),error)
 MAIL                            ?= $(GIT_AUTHOR_EMAIL)
 MAKE_ARGS                        = $(foreach var,$(MAKE_VARS),$(if $($(var)),$(var)='$($(var))'))
-MAKE_SUBDIRS                    ?= $(if $(filter myos,$(MYOS)),monorepo,$(if $(APP),apps $(foreach type,$(APP_LOAD),$(if $(wildcard $(MAKE_DIR)/apps/$(type)),apps/$(type)))))
+MAKE_SUBDIRS                    ?= $(if $(filter myos,$(MYOS)),monorepo,$(if $(APP),apps $(foreach type,$(APP_TYPE),$(if $(wildcard $(MAKE_DIR)/apps/$(type)),apps/$(type)))))
 MAKE_CMD_ARGS                   ?= $(foreach var,$(MAKE_CMD_VARS),$(var)='$($(var))')
 MAKE_CMD_VARS                   ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter command\ line,$(origin $(var))),$(var))))
 MAKE_ENV_ARGS                   ?= $(foreach var,$(filter $(ENV_VARS),$(MAKE_ENV_VARS)),$(var)='$($(var))')
 MAKE_ENV_VARS                   ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter environment,$(origin $(var))),$(var))))
 MAKE_FILE_ARGS                  ?= $(foreach var,$(filter $(ENV_VARS),$(MAKE_FILE_VARS)),$(var)='$($(var))')
-MAKE_FILE_VARS                  ?= $(strip $(foreach var, $(filter-out .VARIABLES,$(.VARIABLES)), $(if $(filter file,$(origin $(var))),$(var))))
+MAKE_FILE_VARS                  ?= $(sort $(foreach var, $(filter-out .VARIABLES COLOR_% MAKE_FILE_VARS,$(.VARIABLES)), $(if $(filter file,$(origin $(var))),$(var))))
 MAKE_OLDFILE                    ?= $@
 MAKE_TARGETS                    ?= $(filter-out $(.VARIABLES),$(shell $(MAKE) -qp 2>/dev/null |awk -F':' '/^[a-zA-Z0-9][^$$\#\/\t=]*:([^=]|$$)/ {print $$1}' 2>/dev/null |sort -u))
 MAKE_UNIXTIME_START             := $(shell date -u +'%s' 2>/dev/null)
@@ -187,7 +187,7 @@ rs256 = $(shell echo -n '$(1)' |openssl dgst -sha256 -binary -sign '$(2)')
 JWT_HEADER = {"alg":"HS256","typ":"JWT"}
 
 # macro JWT: Print Json Web Token for header $1 payload $2 and key $3
-JWT = $(strip \
+JWT := $(strip \
       $(eval header := $(or $(1),$(JWT_HEADER))) \
       $(eval payload := $(or $(2),$(JWT_PAYLOAD))) \
       $(eval secret := $(or $(3),$(JWT_SECRET))) \
@@ -307,6 +307,13 @@ endef
 define env-exec
 	$(call INFO,env-exec,$(1))
 	IFS=$$'\n'; env $(env_reset) $(env_args) $(1)
+endef
+
+# function env-vars: Extract variables from file 1 to update variable ENV_VARS
+define env-vars
+	$(call INFO,env-vars,$(1))
+	$(eval file             := $(wildcard $(or $(1),$(COMPOSE_FILE))))
+	$(if $(file),$(eval ENV_VARS         := $(sort $(ENV_VARS) $(shell sed 's/\$$\$$//g' $(file) | grep -oE '\$$\{?[A-Z0-9_]+' | tr -d '{}$$'))))
 endef
 
 # function make: Call make with predefined options and variables

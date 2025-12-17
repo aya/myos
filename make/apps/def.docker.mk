@@ -152,9 +152,10 @@ define docker-stack-update
 	$(eval stack            := $(patsubst %.yml,%,$(notdir $(1))))
 	$(eval name             := $(firstword $(subst :, ,$(stack))))
 	$(eval version          := $(or $(2),$(if $(findstring :,$(stack)),$(lastword $(subst :, ,$(stack))),latest)))
-	$(eval path             := $(patsubst %/,%,$(or $(3),$(if $(findstring /,$(1)),$(if $(wildcard stack/$(1) stack/$(1).yml),stack/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard stack/$(1).yml),$(dir $(1)),$(1))),$(if $(wildcard stack/$(stackz)/$(1) stack/$(stackz)/$(1).yml),stack/$(stackz)/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard stack/$(stackz)/$(1).yml),$(dir $(1)),$(1))),$(dir $(1))))),$(firstword $(wildcard stack/$(stackz)/$(name) stack/$(stackz) stack/$(name))))))
+	$(eval path             := $(patsubst %/,%,$(or $(3),$(foreach stack_dir,$(STACK_DIR),$(if $(findstring /,$(1)),$(if $(wildcard $(stack_dir)/$(1) $(stack_dir)/$(1).yml),$(stack_dir)/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard $(stack_dir)/$(1).yml),$(dir $(1)),$(1))),$(if $(wildcard $(stack_dir)/$(stackz)/$(1) $(stack_dir)/$(stackz)/$(1).yml),$(stack_dir)/$(stackz)/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard $(stack_dir)/$(stackz)/$(1).yml),$(dir $(1)),$(1))),$(dir $(1)))))),$(foreach stack_dir,$(STACK_DIR),$(firstword $(wildcard $(stack_dir)/$(stackz)/$(name) $(stack_dir)/$(stackz) $(stack_dir)/$(name)))))))
 	$(call compose-file,$(path),docker-compose $(name),$(COMPOSE_FILE_SUFFIX) $(version))
 	$(if $(wildcard $(path)/.env.dist),$(call .env,,$(path)/.env.dist,$(wildcard $(CONFIG)/$(ENV)/$(APP)/.env $(path)/.env.$(ENV) .env)))
+	$(call env-vars,$(COMPOSE_FILE))
 endef
 # function docker-tag: Tag docker image
 define docker-tag

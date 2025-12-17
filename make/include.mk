@@ -21,6 +21,6 @@ include $(filter-out $(wildcard $(MAKE_FILE) $(MAKE_FIRST) $(MAKE_LATEST)),$(wil
 ## it includes $(MAKE_DIR)/$(MAKE_SUBDIRS)/*.mk
 include $(foreach subdir,$(MAKE_SUBDIRS),$(filter-out $(wildcard $(MAKE_DIR)/$(subdir)/def.mk $(MAKE_DIR)/$(subdir)/def.*.mk),$(wildcard $(MAKE_DIR)/$(subdir)/*.mk)))
 ## if not in $(MYOS) nor $(MONOREPO), it includes *.mk */*.mk, else stack/*.mk if in $(MYOS)
-include $(if $(filter-out myos,$(MYOS)),$(if $(filter-out .,$(MYOS)),$(filter-out $(wildcard def.mk def.*.mk */def.mk */def.*.mk),$(wildcard *.mk */*.mk)),$(wildcard stack/*.mk stack/*/*.mk)))
+include $(if $(filter-out myos,$(MYOS)),$(if $(filter-out .,$(MYOS)),$(filter-out $(wildcard def.mk def.*.mk */def.mk */def.*.mk),$(wildcard *.mk */*.mk)),$(foreach stack_dir,$(STACK_DIR),$(wildcard $(stack_dir)/*.mk $(stack_dir)/*/*.mk))))
 ## it includes $(MAKE_LATEST)
 include $(wildcard $(MAKE_LATEST))
