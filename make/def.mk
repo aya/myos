@@ -55,7 +55,6 @@ ENV_ARGS                        ?= $(env_args)
 ENV_FILE                        ?= $(wildcard $(if $(filter-out myos,$(MYOS)),$(MONOREPO_DIR)/.env) $(CONFIG)/$(ENV)/$(APP)/.env .env)
 ENV_LIST                        ?= $(shell ls .git/refs/heads/ 2>/dev/null)
 ENV_RESET                       ?= false
-ENV_VARS                        ?= APP BRANCH DOMAIN DOMAINNAME ENV HOME HOSTNAME GID GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME GROUP MAIL MONOREPO MONOREPO_DIR TAG UID USER VERSION
 GID                             ?= $(shell id -g 2>/dev/null)
 GIDS                            ?= $(shell id -G 2>/dev/null)
 GIT_AUTHOR_EMAIL                ?= $(or $(shell git config user.email 2>/dev/null),$(USER)@$(DOMAINNAME))
@@ -323,6 +322,7 @@ define env-vars
 	$(call INFO,env-vars,$(1))
 	$(eval file             := $(wildcard $(or $(1),$(COMPOSE_FILE))))
 	$(if $(file),$(eval ENV_VARS         := $(sort $(ENV_VARS) $(shell sed 's/\$$\$$//g' $(file) | grep -oE '\$$\{?[A-Z0-9_]+' | tr -d '{}$$'))))
+	$(call debug,ENV_VARS)
 endef
 
 # function make: Call make with predefined options and variables

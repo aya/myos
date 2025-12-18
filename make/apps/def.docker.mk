@@ -59,7 +59,6 @@ DOCKER_REPOSITORY               ?= $(subst -,/,$(subst _,/,$(COMPOSE_PROJECT_NAM
 DOCKER_SERVICE                  ?= $(lastword $(DOCKER_SERVICES))
 DOCKER_SERVICES                 ?= $(eval IGNORE_DRYRUN := true)$(eval IGNORE_VERBOSE := true)$(shell $(call docker-compose,config --services) 2>/dev/null)$(eval IGNORE_DRYRUN := false)$(eval IGNORE_VERBOSE := false)
 DOCKER_SHELL                    ?= /bin/sh
-ENV_VARS                        += COMPOSE_PROJECT_NAME COMPOSE_SERVICE_NAME DOCKER_BUILD_TARGET DOCKER_IMAGE_TAG DOCKER_REGISTRY DOCKER_REPOSITORY DOCKER_SHELL
 MAKECMDARGS                     += docker-run docker-run-%
 
 ifeq ($(DRONE), true)

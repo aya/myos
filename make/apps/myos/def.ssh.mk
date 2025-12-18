@@ -1,5 +1,4 @@
 DOCKER_BUILD_VARS               += $(SSH_ENV_VARS)
-ENV_VARS                        += $(SSH_ENV_VARS)
 SSH_AUTHORIZED_KEYS             ?= $(SSH_GITHUB_AUTHORIZED_KEYS)
 SSH_BASTION_HOSTNAME            ?= 
 SSH_BASTION_USERNAME            ?= $(SSH_USER)

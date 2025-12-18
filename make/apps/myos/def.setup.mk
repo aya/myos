@@ -1,4 +1,3 @@
-ENV_VARS                        += SETUP_SYSCTL_CONFIG
 SETUP_BINFMT                    ?= false
 SETUP_BINFMT_ARCH               ?= all
 SETUP_NFSD                      ?= false
