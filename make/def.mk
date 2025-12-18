@@ -20,6 +20,7 @@ CMD_APT_REMOVE                  ?= $(if $(shell type -p apt-get),apt-get -fy rem
 COLOR_BLUE                      ?= \033[01;34m
 COLOR_BROWN                     ?= \033[33m
 COLOR_CYAN                      ?= \033[36m
+COLOR_DEBUG                     ?= $(COLOR_BLUE)
 COLOR_DGRAY                     ?= \033[30m
 COLOR_ERROR                     ?= $(COLOR_RED)
 COLOR_GRAY                      ?= \033[37m
@@ -146,7 +147,15 @@ endif
 # include .env files
 include $(wildcard $(ENV_FILE))
 
-ERROR_FD := 2
+DEBUG_FD := 2
+# macro debug: print variable content when DEBUG
+debug = $(if $(DEBUG), \
+ printf '${COLOR_INFO}$(APP)${COLOR_RESET}[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}]$(if $@, ${COLOR_VALUE}$@${COLOR_RESET}):${COLOR_RESET} ' >&$(DEBUG_FD) \
+ $(foreach variable,$(1),&& printf '${COLOR_DEBUG}$(variable):${COLOR_RESET} ${COLOR_VALUE}$($(variable))${COLOR_RESET}, ' >&$(DEBUG_FD)) \
+ && printf '\n' >&$(DEBUG_FD) \
+)
+
+ ERROR_FD := 2
 # macro ERROR: print colorized warning
 ERROR = \
 printf '${COLOR_ERROR}ERROR:${COLOR_RESET} ${COLOR_INFO}$(APP)${COLOR_RESET}[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}]$(if $@, ${COLOR_VALUE}$@${COLOR_RESET}):${COLOR_RESET} ' >&$(ERROR_FD) \

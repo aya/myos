@@ -4,7 +4,9 @@
 # target $(APP): Call app-update
 .PHONY: $(APP)
 $(APP): APP_DIR := $(RELATIVE)$(APP)
-$(APP): myos-user
+$(APP) $(APP_DIR):
+	echo APP: $(APP)
+	echo APP_DIR: $(APP_DIR)
 	$(call app-update)
 
 # target app-%: Call app-$(command) for APP in APP_DIR
@@ -13,12 +15,14 @@ $(APP): myos-user
 ## it includes apps/$(app)/*.mk file and hydrates APP_* variables
 ## ex: APP_REPOSITORY_URL is set with value from variable $(APP)_REPOSITORY_URL
 .PHONY: app-%
-app-%:
+app-%: APP_DIR := $(RELATIVE)$(APP)
+app-%: $(APP_DIR)
+	$(eval APP_REPOSITORY_URL     :=)
 	$(eval COMPOSE_FILE     :=)
 	$(eval STACK            :=)
 	$(eval app              := $(subst -$(lastword $(subst -, ,$*)),,$*))
 	$(eval command          := $(lastword $(subst -, ,$*)))
-	$(eval include $(wildcard apps/def.mk apps/$(app).mk apps/$(app)/*.mk))
+	$(eval include $(wildcard $(foreach stack_dir,$(STACK_DIR),$(stack_dir)/$(app).mk $(stack_dir)/$(app)/*.mk)))
 	$(foreach var,$(filter $(call UPPERCASE,$(app))_%,$(MAKE_FILE_VARS)), \
 	  $(if $(filter $(subst $(call UPPERCASE,$(app))_,APP_,$(var)),$(MAKE_FILE_VARS)), \
 	    $(eval $(subst $(call UPPERCASE,$(app))_,APP_,$(var)) := $($(var))) \
@@ -36,7 +40,7 @@ app-%:
 	    ) \
 	  ) \
 	, \
-	  $(if $($(call UPPERCASE,$(APP))_REPOSITORY_URL), \
+	  $(if $(APP_REPOSITORY_URL), \
 	    $(call app-install) \
 	    $(call app-bootstrap) \
 	   ,$(call WARNING,Unable to find app,$(app),in dir,$(RELATIVE)$(app)) \
@@ -110,17 +114,17 @@ endif
 
 # target update-remote-%: fetch git remote %
 .PHONY: update-remote-%
-update-remote-%: myos-user
+update-remote-%:
 	$(RUN) git fetch --prune --tags $*
 
 # target update-remotes: fetch all git remotes
 .PHONY: update-remotes
-update-remotes: myos-user
+update-remotes:
 	$(RUN) git fetch --all --prune --tags
 
 # target update-upstream: fetch git remote upstream
 .PHONY: update-upstream
-update-upstream: myos-user .git/refs/remotes/upstream/master
+update-upstream: .git/refs/remotes/upstream/master
 	$(RUN) git fetch --prune --tags upstream
 
 # target .git/refs/remotes/upstream/master: add git upstream APP_UPSTREAM_REPOSITORY

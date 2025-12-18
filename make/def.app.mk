@@ -23,10 +23,9 @@ define app-bootstrap
 	$(eval COMPOSE_SERVICE_NAME := $(or $(DOCKER_COMPOSE_SERVICE_NAME),$(subst _,-,$(COMPOSE_PROJECT_NAME))))
 	$(eval DOCKER_BUILD_DIR := $(APP_DIR))
 	$(call compose-file,$(APP_DIR) $(APP_DIR)/$(or $(APP_DOCKER_DIR),$(DOCKER_DIR)),docker-compose)
-	$(call compose-file,apps apps/$(APP),$(APP))
-	$(eval APP_COMPOSE_FILE ?= $(COMPOSE_FILE))
-	$(foreach stackz,$(or $(DOCKER_STACK),$(STACK)),$(call docker-stack,$(stackz)))
 	$(call compose-file,$(MYOS_STACK),$(MYOS_STACK_FILE))
+	$(eval APP_COMPOSE_FILE ?= $(COMPOSE_FILE))
+	$(call docker-stack,$(APP))
 	$(call .env,$(APP_DIR)/.env,$(APP_DIR)/.env.dist $(APP_DIR)/.env.example $(APP_DIR)/.env.sample)
 endef
 

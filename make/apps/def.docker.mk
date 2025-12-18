@@ -77,6 +77,7 @@ define compose-file
 	$(eval suffix           := $(or $(3),$(COMPOSE_FILE_SUFFIX)))
 	$(eval extension        := $(or $(4),yml yaml))
 	$(eval COMPOSE_FILE     += $(wildcard $(foreach e,$(extension),$(foreach n,$(name),$(foreach p,$(path),$(p)/$(n).$(e) $(p)/$(n).$(ENV).$(e) $(p)/$(ENV)/$(n).$(e) $(p)/$(ENV)/$(n).$(ENV).$(e) $(foreach s,$(suffix),$(p)/$(n).$(s).$(e) $(p)/$(n).$(s).$(ENV).$(e)))))))
+	$(call debug,COMPOSE_FILE)
 endef
 # function docker-build: Build docker image
 define docker-build

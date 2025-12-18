@@ -22,7 +22,6 @@ APP_SCHEME                      ?= http
 APP_UPSTREAM_REPOSITORY         ?= $(or $(shell git config --get remote.upstream.url 2>/dev/null),$(GIT_UPSTREAM_REPOSITORY))
 APP_URI                         ?= $(patsubst %,%/$(APP_PATH),$(APP_HOST))
 APP_URL                         ?= $(patsubst %,$(APP_SCHEME)://%,$(APP_URI))
-APP_VERSION                     ?= $(VERSION)
 CONTEXT                         += APP APPS BRANCH DOMAIN VERSION RELEASE
 CONTEXT_DEBUG                   += APP_DIR APP_URL APP_REPOSITORY APP_UPSTREAM_REPOSITORY ENV_DEPLOY
 ENV_DEPLOY                      ?= $(patsubst origin/%,%,$(shell git rev-parse --symbolic --remotes=origin 2>/dev/null |sed '/origin\/HEAD/d'))
