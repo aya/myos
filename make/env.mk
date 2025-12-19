@@ -18,7 +18,6 @@
 ## it can override ENV_DIST with values from file ENV_OVER
 .PHONY: .env-update
 .env-update:
-	$(call INFO,.env-update,$(ENV_FILE)$(comma) $(ENV_DIST)$(comma) $(ENV_OVER))
 	$(foreach env_file,$(ENV_FILE),$(call .env,$(env_file),$(or $(ENV_DIST),$(env_file).dist),$(ENV_OVER)))
 
 # include .env file
@@ -28,16 +27,16 @@ ifneq (,$(filter true,$(ENV_RESET)))
 env_reset := -i
 endif
 
-docker.env.args  = $(foreach var,$(ENV_VARS),$(if $($(var)),-e $(var)='$($(var))'))
-docker.env.dist ?= $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A) {print "-e "$$0}' .env.dist - 2>/dev/null)
-docker.env.file ?= $(patsubst %,--env-file %,$(wildcard $(ENV_FILE)))
-docker_env_args  = $(docker.env.args) $(docker.env.dist) $(docker.env.file)
-env.args         = $(foreach var,$(ENV_VARS),$(if $($(var)),$(var)='$($(var))'))
-env.dist        ?= $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A)' .env.dist - 2>/dev/null)
-env.file        ?= $(shell cat $(or $(ENV_FILE),/dev/null) 2>/dev/null |sed '/^[ \t]*$$/d;/^[ \t]*\#/d;s/='\''/=/;s/'\''$$//;s/='\"'/=/;s/'\"'$$//;s/=/='\''/;s/$$/'\''/;')
-env_args         = $(env.args) $(env.dist) $(env.file)
+docker.env.args                  = $(foreach var,$(ENV_VARS),$(if $($(var)),-e $(var)='$($(var))'))
+docker.env.dist                 ?= $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A) {print "-e "$$0}' .env.dist - 2>/dev/null)
+docker.env.file                 ?= $(patsubst %,--env-file %,$(wildcard $(ENV_FILE)))
+docker_env_args                  = $(docker.env.args) $(docker.env.dist) $(docker.env.file)
+env.args                         = $(foreach var,$(ENV_VARS),$(if $($(var)),$(var)='$($(var))'))
+env.dist                        ?= $(shell printenv |awk -F '=' 'NR == FNR { if($$1 !~ /^(\#|$$)/) { A[$$1]; next } } ($$1 in A)' .env.dist - 2>/dev/null)
+env.file                        ?= $(shell cat $(or $(ENV_FILE),/dev/null) 2>/dev/null |sed '/^[ \t]*$$/d;/^[ \t]*\#/d;s/='\''/=/;s/'\''$$//;s/='\"'/=/;s/'\"'$$//;s/=/='\''/;s/$$/'\''/;')
+env_args                         = $(env.args) $(env.dist) $(env.file)
 
-SHELL:=/bin/bash
+SHELL                           := /bin/bash
 
 # function .env: Call .env_update function
 ## it sets .env, .env.dist and .env.ENV files paths
@@ -48,9 +47,9 @@ SHELL:=/bin/bash
 	# 3rd arg: path to .env override files, default to .env.$(ENV)
 define .env
 	$(call INFO,.env,$(1)$(comma) $(2)$(comma) $(3))
-	$(eval env_file:=$(or $(1),.env))
-	$(eval env_dists:=$(wildcard $(or $(2),$(env_file).dist)))
-	$(eval env_over:=$(wildcard $(or $(3),$(env_file).$(ENV))))
+	$(eval env_file               := $(or $(1),$(ENV_PATH)/.env))
+	$(eval env_dists              := $(filter-out .,$(wildcard $(or $(2),$(env_file).dist))))
+	$(eval env_over               := $(filter-out .,$(wildcard $(or $(3),$(env_file).$(ENV)))))
 	$(if $(FORCE)$(call newenv,$(env_file),$(env_dists) $(env_over))$(if $(wildcard $(env_file)),,FORCE),
 	  $(foreach env_dist,$(env_dists),$(call .env_update)))
 endef
@@ -84,8 +83,8 @@ endef
 	  # add variables definition to the .env file
 define .env_update
 	$(call INFO,.env_update,$(env_file)$(comma) $(env_dist)$(comma) $(env_over))
-	touch $(env_file) $(if $(VERBOSE)$(DEBUG),,2> /dev/null) ||:
-	printenv \
+	touch $(env_file) $(if $(VERBOSE)$(DEBUG),,2> /dev/null) \
+	 && printenv \
 	  |awk -F '=' 'NR == FNR { if($$1 !~ /^(#|$$)/) { A[$$1]; next } } !($$1 in A)' - $(env_dist) \
 	  |cat $(env_over) - \
 	  |awk 'BEGIN {split("$(MAKE_CMD_VARS)",vars," "); for (var in vars) {print vars[var]"="ENVIRON[vars[var]]};} {print}' \

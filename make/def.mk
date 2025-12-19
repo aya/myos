@@ -52,8 +52,9 @@ DRYRUN_RECURSIVE                ?= false
 ELAPSED_TIME                     = $(shell $(call TIME))
 ENV                             ?= master
 ENV_ARGS                        ?= $(env_args)
-ENV_FILE                        ?= $(wildcard $(if $(filter-out myos,$(MYOS)),$(MONOREPO_DIR)/.env) $(CONFIG)/$(ENV)/$(APP)/.env .env)
+ENV_FILE                        ?= $(wildcard $(if $(filter-out myos,$(MYOS)),$(MONOREPO_DIR)/.env) $(CONFIG)/$(ENV)/$(APP)/.env $(ENV_PATH)/.env)
 ENV_LIST                        ?= $(shell ls .git/refs/heads/ 2>/dev/null)
+ENV_PATH                        ?= .
 ENV_RESET                       ?= false
 GID                             ?= $(shell id -g 2>/dev/null)
 GIDS                            ?= $(shell id -G 2>/dev/null)
@@ -154,7 +155,7 @@ debug = $(if $(DEBUG), \
  && printf '\n' >&$(DEBUG_FD) \
 )
 
- ERROR_FD := 2
+ERROR_FD := 2
 # macro ERROR: print colorized warning
 ERROR = \
 printf '${COLOR_ERROR}ERROR:${COLOR_RESET} ${COLOR_INFO}$(APP)${COLOR_RESET}[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}]$(if $@, ${COLOR_VALUE}$@${COLOR_RESET}):${COLOR_RESET} ' >&$(ERROR_FD) \
@@ -196,27 +197,27 @@ JWT_HEADER = {"alg":"HS256","typ":"JWT"}
 
 # macro JWT: Print Json Web Token for header $1 payload $2 and key $3
 JWT := $(strip \
-      $(eval header := $(or $(1),$(JWT_HEADER))) \
-      $(eval payload := $(or $(2),$(JWT_PAYLOAD))) \
-      $(eval secret := $(or $(3),$(JWT_SECRET))) \
-      $(eval b64_header := $(call base64t,$(header))) \
-      $(eval b64_payload := $(call base64t,$(payload))) \
-      $(eval b64_signature := $(call base64t,$(call hs256,$(b64_header).$(b64_payload),$(secret)))) \
-      $(eval b64_signature := $(call b64_hs256,$(b64_header).$(b64_payload),$(secret))) \
+      $(eval header             := $(or $(1),$(JWT_HEADER))) \
+      $(eval payload            := $(or $(2),$(JWT_PAYLOAD))) \
+      $(eval secret             := $(or $(3),$(JWT_SECRET))) \
+      $(eval b64_header         := $(call base64t,$(header))) \
+      $(eval b64_payload        := $(call base64t,$(payload))) \
+      $(eval b64_signature      := $(call base64t,$(call hs256,$(b64_header).$(b64_payload),$(secret)))) \
+      $(eval b64_signature      := $(call b64_hs256,$(b64_header).$(b64_payload),$(secret))) \
       $(b64_header).$(b64_payload).$(b64_signature))
 
 # macro RESU: Print USER associated to MAIL
 RESU = $(strip \
  $(if $(findstring @,$(MAIL)), \
-  $(eval user          := $(call LOWERCASE,$(subst +,.,$(subst _,.,$(shell printf '$(MAIL)' |awk -F "@" '{print $$1}'))))) \
-  $(eval domain        := $(call LOWERCASE,$(subst +,.,$(subst _,.,$(shell printf '$(MAIL)' |awk -F "@" '{print $$NF}'))))) \
+  $(eval user                   := $(call LOWERCASE,$(subst +,.,$(subst _,.,$(shell printf '$(MAIL)' |awk -F "@" '{print $$1}'))))) \
+  $(eval domain                 := $(call LOWERCASE,$(subst +,.,$(subst _,.,$(shell printf '$(MAIL)' |awk -F "@" '{print $$NF}'))))) \
   $(if $(domain), \
-    $(eval mail        := $(call LOWERCASE,$(subst +,.,$(subst _,.,$(MAIL))))) \
-    $(eval niamod      := $(subst $(space),.,$(strip $(call reverse,$(subst ., ,$(domain)))))) \
-    $(eval resu        := $(subst $(space),.,$(strip $(call reverse,$(subst ., ,$(user)))))) \
-    $(eval resu.niamod := $(niamod).$(resu)) \
-    $(eval resu.path   := $(subst .,/,$(resu.niamod))) \
-    $(eval user.domain := $(user).$(domain)) \
+    $(eval mail                 := $(call LOWERCASE,$(subst +,.,$(subst _,.,$(MAIL))))) \
+    $(eval niamod               := $(subst $(space),.,$(strip $(call reverse,$(subst ., ,$(domain)))))) \
+    $(eval resu                 := $(subst $(space),.,$(strip $(call reverse,$(subst ., ,$(user)))))) \
+    $(eval resu.niamod          := $(niamod).$(resu)) \
+    $(eval resu.path            := $(subst .,/,$(resu.niamod))) \
+    $(eval user.domain          := $(user).$(domain)) \
     $(user.domain) \
   , $(USER) \
   ) \
@@ -286,9 +287,9 @@ verlt = [ "$(1)" = "$(2)" ] && return 1 || $(call verlte,$(1),$(2))
 ## it prints the line with variable 3 definition from block 2 in file 1
 define conf
 	$(call INFO,conf,$(1)$(comma) $(2)$(comma) $(3))
-	$(eval file := $(1))
-	$(eval block := $(2))
-	$(eval variable := $(3))
+	$(eval file                   := $(1))
+	$(eval block                  := $(2))
+	$(eval variable               := $(3))
 	[ -r "$(file)" ] && while IFS='=' read -r key value; do \
 		case $${key} in \
 		  \#*) \
@@ -319,9 +320,9 @@ endef
 
 # function env-vars: Extract variables from file 1 to update variable ENV_VARS
 define env-vars
-	$(call INFO,env-vars,$(1))
-	$(eval file             := $(wildcard $(or $(1),$(COMPOSE_FILE))))
-	$(if $(file),$(eval ENV_VARS         := $(sort $(ENV_VARS) $(shell sed 's/\$$\$$//g' $(file) | grep -oE '\$$\{?[A-Z0-9_]+' | tr -d '{}$$'))))
+	$(call INFO,env-vars,$(1)$(comma))
+	$(eval file                   := $(wildcard $(or $(1),$(COMPOSE_FILE))))
+	$(if $(file),$(eval ENV_VARS  := $(sort $(ENV_VARS) $(shell sed 's/\$$\$$//g' $(file) | grep -oE '\$$\{?[A-Z0-9_]+' | tr -d '{}$$'))))
 	$(call debug,ENV_VARS)
 endef
 
@@ -338,14 +339,14 @@ endef
 	# actually run make command
 	# if DRYRUN_RECURSIVE mode, run make command in DRYRUN mode
 define make
-	$(eval cmd := $(1))
-	$(eval dir := $(2))
-	$(eval vars := $(3))
-	$(eval file := $(4))
+	$(eval cmd                    := $(1))
+	$(eval dir                    := $(2))
+	$(eval vars                   := $(3))
+	$(eval file                   := $(4))
 	$(if $(vars),$(eval MAKE_ARGS += $(foreach var,$(vars),$(if $($(var)),$(var)='$($(var))'))))
 	$(if $(wildcard $(file)),$(eval MAKE_ARGS += $(shell cat $(file) |sed '/^$$/d; /^#/d; /=/!d; s/^[[\s\t]]*//; s/[[\s\t]]*=[[\s\t]]*/=/;' |awk -F '=' '{print $$1"='\''"$$2"'\''"}')))
-	$(eval MAKE_DIR := $(if $(dir),-C $(dir)))
-	$(eval MAKE_OLDFILE += $(filter-out $(MAKE_OLDFILE), $^))
+	$(eval MAKE_DIR               := $(if $(dir),-C $(dir)))
+	$(eval MAKE_OLDFILE           += $(filter-out $(MAKE_OLDFILE), $^))
 	$(call INFO,make,$(MAKE_ARGS) $(cmd),$(dir))
 	$(RUN) $(MAKE) $(MAKE_DIR) $(patsubst %,-o %,$(MAKE_OLDFILE)) MAKE_OLDFILE="$(MAKE_OLDFILE)" $(MAKE_ARGS) $(cmd)
 	$(if $(filter true,$(DRYRUN_RECURSIVE)),$(MAKE) $(MAKE_DIR) $(patsubst %,-o %,$(MAKE_OLDFILE)) MAKE_OLDFILE="$(MAKE_OLDFILE)" DRYRUN=$(DRYRUN) RECURSIVE=$(RECURSIVE) $(MAKE_ARGS) $(cmd))

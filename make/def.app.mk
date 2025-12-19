@@ -16,15 +16,15 @@ endef
 # function app-bootstrap: Define custom variables for app 1 in dir 2 with name 3 and type 4
 define app-bootstrap
 	$(call INFO,app-bootstrap,$(1)$(comma) $(2$(comma) $(3))$(comma) $(4))
-	$(eval APP              := $(or $(1), $(APP)))
-	$(eval APP_DIR          := $(or $(2), $(RELATIVE)$(APP)))
-	$(eval APP_NAME         := $(or $(3),$(subst -,,$(subst .,,$(call LOWERCASE,$(APP))))))
-	$(eval COMPOSE_PROJECT_NAME := $(or $(DOCKER_COMPOSE_PROJECT_NAME),$(subst .,,$(call LOWERCASE,$(USER)-$(APP_NAME)-$(ENV)$(addprefix -,$(subst /,,$(subst -,,$(APP_PATH))))))))
-	$(eval COMPOSE_SERVICE_NAME := $(or $(DOCKER_COMPOSE_SERVICE_NAME),$(subst _,-,$(COMPOSE_PROJECT_NAME))))
-	$(eval DOCKER_BUILD_DIR := $(APP_DIR))
+	$(eval APP                    := $(or $(1), $(APP)))
+	$(eval APP_DIR                := $(or $(2), $(RELATIVE)$(APP)))
+	$(eval APP_NAME               := $(or $(3),$(subst -,,$(subst .,,$(call LOWERCASE,$(APP))))))
+	$(eval COMPOSE_PROJECT_NAME   := $(or $(DOCKER_COMPOSE_PROJECT_NAME),$(subst .,,$(call LOWERCASE,$(USER)-$(APP_NAME)-$(ENV)$(addprefix -,$(subst /,,$(subst -,,$(APP_PATH))))))))
+	$(eval COMPOSE_SERVICE_NAME   := $(or $(DOCKER_COMPOSE_SERVICE_NAME),$(subst _,-,$(COMPOSE_PROJECT_NAME))))
+	$(eval DOCKER_BUILD_PATH      := $(APP_DIR))
 	$(call compose-file,$(APP_DIR) $(APP_DIR)/$(or $(APP_DOCKER_DIR),$(DOCKER_DIR)),docker-compose)
 	$(call compose-file,$(MYOS_STACK),$(MYOS_STACK_FILE))
-	$(eval APP_COMPOSE_FILE ?= $(COMPOSE_FILE))
+	$(eval APP_COMPOSE_FILE       ?= $(COMPOSE_FILE))
 	$(call docker-stack,$(APP))
 	$(call .env,$(APP_DIR)/.env,$(APP_DIR)/.env.dist $(APP_DIR)/.env.example $(APP_DIR)/.env.sample)
 endef
@@ -81,15 +81,15 @@ endef
 # function app-docker: Define custom variables for Dockerfile 1
 define app-docker
 	$(call INFO,app-docker,$(1)$(comma))
-	$(eval dir              := $(or $(APP_DIR)))
-	$(eval dockerfile       := $(or $(1)))
+	$(eval dir                    := $(or $(APP_DIR)))
+	$(eval dockerfile             := $(or $(1)))
 	$(if $(wildcard $(dockerfile)),
-	  $(eval service        := $(or $(DOCKER_SERVICE),$(subst .,,$(call LOWERCASE,$(lastword $(subst /, ,$(patsubst %/Dockerfile,%,$(dockerfile)))))),undefined))
-	  $(eval docker         := $(or $(DOCKER_COMPOSE_SERVICE_NAME),$(COMPOSE_SERVICE_NAME))-$(service))
-	  $(eval DOCKER_IMAGE   := $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG))
-	  $(eval DOCKER_LABELS  := SERVICE_NAME=$(docker) SERVICE_TAGS=$(call urlprefix,$(APP_PATH),,$(service).$(APP_HOST)))
-	  $(eval DOCKER_NAME    := $(docker))
-	  $(eval DOCKER_RUN_NAME := --name $(DOCKER_NAME))
+	  $(eval service              := $(or $(DOCKER_SERVICE),$(subst .,,$(call LOWERCASE,$(lastword $(subst /, ,$(patsubst %/Dockerfile,%,$(dockerfile)))))),undefined))
+	  $(eval docker               := $(or $(DOCKER_COMPOSE_SERVICE_NAME),$(COMPOSE_SERVICE_NAME))-$(service))
+	  $(eval DOCKER_IMAGE         := $(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG))
+	  $(eval DOCKER_LABELS        := SERVICE_NAME=$(docker) SERVICE_TAGS=$(call urlprefix,$(APP_PATH),,$(service).$(APP_HOST)))
+	  $(eval DOCKER_NAME          := $(docker))
+	  $(eval DOCKER_RUN_NAME      := --name $(DOCKER_NAME))
 	, $(call ERROR,Unable to find Dockerfile,$(dockerfile))
 	)
 endef
@@ -110,7 +110,7 @@ endef
 # function app-exec: Call docker exec $(ARGS) for each Dockerfile in dir 1
 define app-exec
 	$(call INFO,app-exec,$(1)$(comma) $(2))
-	$(eval args             := $(or $(2), $(ARGS)))
+	$(eval args                   := $(or $(2), $(ARGS)))
 	$(if $(APP_COMPOSE_FILE),
 	  $(call docker-compose,exec $(or $(SERVICE),$(DOCKER_SERVICE)) $(args))
 	, $(call docker-file,$(1))
@@ -124,8 +124,8 @@ endef
 # function app-install: Run 'git clone url 1 dir 2'
 define app-install
 	$(call INFO,app-install,$(1)$(comma) $(2))
-	$(eval url              := $(or $(1), $(REPOSITORY_URL), $(APP_REPOSITORY_URL)))
-	$(eval dir              := $(or $(2), $(RELATIVE)$(lastword $(subst /, ,$(url)))))
+	$(eval url                    := $(or $(1), $(REPOSITORY_URL), $(APP_REPOSITORY_URL)))
+	$(eval dir                    := $(or $(2), $(RELATIVE)$(lastword $(subst /, ,$(url)))))
 	$(if $(wildcard $(dir)/.git),
 	  $(call INFO,app $(url) already installed in dir $(dir))
 	, $(RUN) git clone $(QUIET) $(url) $(dir) && if [ -n "$(APP_VERSION)" ]; then cd $(dir) && git reset --hard $(QUIET) "$(APP_VERSION)"; fi
@@ -162,7 +162,7 @@ endef
 # function app-rebuild: Call app-build with DOCKER_BUILD_CACHE=false
 define app-rebuild
 	$(call INFO,app-rebuild,$(1)$(comma))
-	$(eval DOCKER_BUILD_CACHE := false)
+	$(eval DOCKER_BUILD_CACHE     := false)
 	$(call app-build,$(1))
 endef
 
@@ -179,8 +179,8 @@ endef
 # function app-run: Call docker-run for each Dockerfile in dir 1 with args 2
 define app-run
 	$(call INFO,app-run,$(1)$(comma) $(2))
-	$(eval args             := $(or $(2), $(ARGS)))
-	$(eval DOCKER_RUN_OPTIONS += -it)
+	$(eval args                   := $(or $(2), $(ARGS)))
+	$(eval DOCKER_RUN_OPTIONS     += -it)
 	$(if $(APP_COMPOSE_FILE),
 	  $(call docker-compose,run $(DOCKER_RUN_OPTIONS) $(or $(SERVICE),$(DOCKER_SERVICE)) $(args))
 	, $(call docker-file,$(1))
@@ -232,7 +232,7 @@ endef
 # function app-up: Call docker-run (-d) for each Dockerfile in dir 1
 define app-up
 	$(call INFO,app-up,$(1)$(comma))
-	$(eval DOCKER_RUN_OPTIONS := -d)
+	$(eval DOCKER_RUN_OPTIONS     := -d)
 	$(if $(APP_COMPOSE_FILE),
 	  $(call docker-compose,up $(DOCKER_COMPOSE_UP_OPTIONS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 	, $(if $(shell docker ps -q -f name=$(DOCKER_NAME) 2>/dev/null),
@@ -245,8 +245,8 @@ endef
 # function app-update: Run 'cd dir 1 && git pull' or Call app-install
 define app-update
 	$(call INFO,app-update,$(1)$(comma) $(2))
-	$(eval url              := $(or $(1), $(REPOSITORY_URL), $(APP_REPOSITORY_URL)))
-	$(eval dir              := $(or $(2), $(APP_DIR)))
+	$(eval url                    := $(or $(1), $(REPOSITORY_URL), $(APP_REPOSITORY_URL)))
+	$(eval dir                    := $(or $(2), $(APP_DIR)))
 	$(if $(wildcard $(dir)/.git),
 	  $(RUN) sh -c 'cd $(dir) && git pull $(QUIET) && if [ -n "$(APP_VERSION)" ]; then git reset --hard $(QUIET) "$(APP_VERSION)"; fi'
 	, $(call app-install,$(url),$(dir))

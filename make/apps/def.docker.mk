@@ -71,32 +71,32 @@ endif
 # function compose-file: Search compose files to update variable COMPOSE_FILE
 define compose-file
 	$(call INFO,compose-file,$(1)$(comma) $(2)$(comma) $(3)$(comma) $(4))
-	$(eval path             := $(or $(1),. $(APP_DOCKER_DIR)))
-	$(eval name             := $(or $(2),$(DOCKER_COMPOSE_FILE)))
-	$(eval suffix           := $(or $(3),$(COMPOSE_FILE_SUFFIX)))
-	$(eval extension        := $(or $(4),yml yaml))
-	$(eval COMPOSE_FILE     += $(wildcard $(foreach e,$(extension),$(foreach n,$(name),$(foreach p,$(path),$(p)/$(n).$(e) $(p)/$(n).$(ENV).$(e) $(p)/$(ENV)/$(n).$(e) $(p)/$(ENV)/$(n).$(ENV).$(e) $(foreach s,$(suffix),$(p)/$(n).$(s).$(e) $(p)/$(n).$(s).$(ENV).$(e)))))))
+	$(eval file_path              := $(or $(1),. $(APP_DOCKER_DIR)))
+	$(eval file_name              := $(or $(2),$(DOCKER_COMPOSE_FILE)))
+	$(eval file_suffix            := $(or $(3),$(COMPOSE_FILE_SUFFIX)))
+	$(eval file_extension         := $(or $(4),yml yaml))
+	$(eval COMPOSE_FILE           += $(wildcard $(foreach e,$(file_extension),$(foreach n,$(file_name),$(foreach p,$(file_path),$(p)/$(n).$(e) $(p)/$(n).$(ENV).$(e) $(p)/$(ENV)/$(n).$(e) $(p)/$(ENV)/$(n).$(ENV).$(e) $(foreach s,$(file_suffix),$(p)/$(n).$(s).$(e) $(p)/$(n).$(s).$(ENV).$(e)))))))
 	$(call debug,COMPOSE_FILE)
 endef
 # function docker-build: Build docker image
 define docker-build
 	$(call INFO,docker-build,$(1)$(comma) $(2)$(comma) $(3))
-	$(eval path             := $(patsubst $(DOCKER_BUILD_DIR)/%,%,$(patsubst %/,%,$(1))))
-	$(eval service          := $(subst .,,$(call LOWERCASE,$(lastword $(subst /, ,$(path))))))
-	$(eval tag              := $(or $(2),$(DOCKER_REPOSITORY)/$(service):$(DOCKER_IMAGE_TAG)))
-	$(eval target           := $(subst ",,$(subst ',,$(or $(3),$(DOCKER_BUILD_TARGET)))))
-	$(eval image_id         := $(shell docker images -q $(tag) 2>/dev/null))
-	$(eval build_image      := $(or $(filter false,$(DOCKER_BUILD_CACHE)),$(if $(image_id),,true)))
-	$(if $(build_image),$(RUN) docker build $(DOCKER_BUILD_ARGS) --build-arg DOCKER_BUILD_DIR="$(path)" $(DOCKER_BUILD_LABEL) --tag $(tag) $(if $(target),--target $(target)) -f $(path)/Dockerfile $(or $(DOCKER_BUILD_DIR),.),$(call INFO,docker image $(tag) has id $(image_id)))
+	$(eval build_path             := $(patsubst $(DOCKER_BUILD_PATH)/%,%,$(patsubst %/,%,$(1))))
+	$(eval build_service          := $(subst .,,$(call LOWERCASE,$(lastword $(subst /, ,$(build_path))))))
+	$(eval build_image_tag        := $(or $(2),$(DOCKER_REPOSITORY)/$(build_service):$(DOCKER_IMAGE_TAG)))
+	$(eval build_target           := $(subst ",,$(subst ',,$(or $(3),$(DOCKER_BUILD_TARGET)))))
+	$(eval image_id               := $(shell docker images -q $(build_image_tag) 2>/dev/null))
+	$(eval build_image            := $(or $(filter false,$(DOCKER_BUILD_CACHE)),$(if $(image_id),,true)))
+	$(if $(build_image),$(RUN) docker build $(DOCKER_BUILD_ARGS) --build-arg DOCKER_BUILD_PATH="$(build_path)" $(DOCKER_BUILD_LABEL) --build_image_tag $(build_image_tag) $(if $(build_target),--build_target $(build_target)) -f $(build_path)/Dockerfile $(or $(DOCKER_BUILD_PATH),.),$(call INFO,docker image $(build_image_tag) has id $(image_id)))
 endef
 # function docker-commit: Commit docker image
 define docker-commit
 	$(call INFO,docker-commit,$(1)$(comma) $(2)$(comma) $(3)$(comma) $(4))
-	$(eval service          := $(or $(1),$(DOCKER_SERVICE)))
-	$(eval container        := $(or $(2),$(firstword $(shell $(call docker-compose,ps -q $(service) 2>/dev/null)))))
-	$(eval repository       := $(or $(3),$(DOCKER_REPOSITORY)/$(service)))
-	$(eval tag              := $(or $(4),$(DOCKER_IMAGE_TAG)))
-	$(RUN) docker commit $(container) $(repository):$(tag)
+	$(eval commit_service         := $(or $(1),$(DOCKER_SERVICE)))
+	$(eval commit_container       := $(or $(2),$(firstword $(shell $(call docker-compose,ps -q $(commit_service) 2>/dev/null)))))
+	$(eval commit_repository      := $(or $(3),$(DOCKER_REPOSITORY)/$(commit_service)))
+	$(eval commit_image_tag       := $(or $(4),$(DOCKER_IMAGE_TAG)))
+	$(RUN) docker commit $(commit_container) $(commit_repository):$(commit_image_tag)
 endef
 # function docker-compose: Run docker-compose with arg 1
 # TODO: accept $2 COMPOSE_FILE and remove stack from prereq
@@ -121,10 +121,10 @@ endef
 # function docker-push: Push docker image
 define docker-push
 	$(call INFO,docker-push,$(1)$(comma) $(2)$(comma) $(3))
-	$(eval service          := $(or $(1),$(DOCKER_SERVICE)))
-	$(eval name             := $(or $(2),$(DOCKER_REGISTRY_REPOSITORY)/$(service)))
-	$(eval tag              := $(or $(3),$(DOCKER_IMAGE_TAG)))
-	$(RUN) docker push $(name):$(tag)
+	$(eval push_service           := $(or $(1),$(DOCKER_SERVICE)))
+	$(eval push_name              := $(or $(2),$(DOCKER_REGISTRY_REPOSITORY)/$(push_service)))
+	$(eval push_tag               := $(or $(3),$(DOCKER_IMAGE_TAG)))
+	$(RUN) docker push $(push_name):$(push_tag)
 endef
 # function docker-stack: Call itself recursively for each stack to expand stacks
 # docker-stack: if 1st arg is a variable and can be expand to values, it calls
@@ -133,8 +133,8 @@ endef
 	# 2nd arg: versions, extract it from stack_names:stack_versions or 2nd arg
 define docker-stack
 	$(call INFO,docker-stack,$(1)$(comma) $(2))
-	$(eval stacks           := $(firstword $(subst :, ,$(1))))
-	$(eval versions         := $(or $(if $(findstring :,$(1)),$(lastword $(subst :, ,$(1)))),$(2)))
+	$(eval stacks                 := $(firstword $(subst :, ,$(1))))
+	$(eval versions               := $(or $(if $(findstring :,$(1)),$(lastword $(subst :, ,$(1)))),$(2)))
 	$(if $($(stacks)),$(foreach substack,$($(stacks)),$(call docker-stack,$(substack),$(if $(findstring :,$(1)),$(versions)))),$(call docker-stack-update,$(stacks),$(versions)))
 endef
 # function docker-stack-update: Update COMPOSE_FILE with .yml files of the stack
@@ -149,21 +149,21 @@ endef
 	# if $(path)/.env.dist file exists, update .env file
 define docker-stack-update
 	$(call INFO,docker-stack-update,$(1)$(comma) $(2)$(comma) $(3))
-	$(eval stack            := $(patsubst %.yml,%,$(notdir $(1))))
-	$(eval name             := $(firstword $(subst :, ,$(stack))))
-	$(eval version          := $(or $(2),$(if $(findstring :,$(stack)),$(lastword $(subst :, ,$(stack))),latest)))
-	$(eval path             := $(patsubst %/,%,$(or $(3),$(foreach stack_dir,$(STACK_DIR),$(if $(findstring /,$(1)),$(if $(wildcard $(stack_dir)/$(1) $(stack_dir)/$(1).yml),$(stack_dir)/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard $(stack_dir)/$(1).yml),$(dir $(1)),$(1))),$(if $(wildcard $(stack_dir)/$(stackz)/$(1) $(stack_dir)/$(stackz)/$(1).yml),$(stack_dir)/$(stackz)/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard $(stack_dir)/$(stackz)/$(1).yml),$(dir $(1)),$(1))),$(dir $(1)))))),$(foreach stack_dir,$(STACK_DIR),$(firstword $(wildcard $(stack_dir)/$(stackz)/$(name) $(stack_dir)/$(stackz) $(stack_dir)/$(name)))))))
-	$(call compose-file,$(path),docker-compose $(name),$(COMPOSE_FILE_SUFFIX) $(version))
-	$(if $(wildcard $(path)/.env.dist),$(call .env,,$(path)/.env.dist,$(wildcard $(CONFIG)/$(ENV)/$(APP)/.env $(path)/.env.$(ENV) .env)))
+	$(eval stack_update           := $(patsubst %.yml,%,$(notdir $(1))))
+	$(eval stack_name             := $(firstword $(subst :, ,$(stack_update))))
+	$(eval stack_version          := $(or $(2),$(if $(findstring :,$(stack_update)),$(lastword $(subst :, ,$(stack_update))),latest)))
+	$(eval stack_path             := $(patsubst %/,%,$(or $(3),$(foreach stack_dir,$(STACK_DIR),$(if $(findstring /,$(1)),$(if $(wildcard $(stack_dir)/$(1) $(stack_dir)/$(1).yml),$(stack_dir)/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard $(stack_dir)/$(1).yml),$(dir $(1)),$(1))),$(if $(wildcard $(stack_dir)/$(stackz)/$(1) $(stack_dir)/$(stackz)/$(1).yml),$(stack_dir)/$(stackz)/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard $(stack_dir)/$(stackz)/$(1).yml),$(dir $(1)),$(1))),$(dir $(1)))))),$(foreach stack_dir,$(STACK_DIR),$(firstword $(wildcard $(stack_dir)/$(stackz)/$(stack_name) $(stack_dir)/$(stackz) $(stack_dir)/$(stack_name)))))))
+	$(call compose-file,$(stack_path),docker-compose $(stack_name),$(COMPOSE_FILE_SUFFIX) $(stack_version)) 
+	$(if $(wildcard $(stack_path)/.env.dist),$(call .env,,$(stack_path)/.env.dist,$(wildcard $(CONFIG)/$(ENV)/$(APP)/.env $(stack_path)/.env.$(ENV) .env)))
 	$(call env-vars,$(COMPOSE_FILE))
 endef
 # function docker-tag: Tag docker image
 define docker-tag
 	$(call INFO,docker-tag,$(1)$(comma) $(2)$(comma) $(3)$(comma) $(4)$(comma) $(5))
-	$(eval service          := $(or $(1),$(DOCKER_SERVICE)))
-	$(eval source           := $(or $(2),$(DOCKER_REPOSITORY)/$(service)))
-	$(eval source_tag       := $(or $(3),$(DOCKER_IMAGE_TAG)))
-	$(eval target           := $(or $(4),$(DOCKER_REGISTRY_REPOSITORY)/$(service)))
-	$(eval target_tag       := $(or $(5),$(source_tag)))
+	$(eval tag_service            := $(or $(1),$(DOCKER_SERVICE)))
+	$(eval source                 := $(or $(2),$(DOCKER_REPOSITORY)/$(tag_service)))
+	$(eval source_tag             := $(or $(3),$(DOCKER_IMAGE_TAG)))
+	$(eval target                 := $(or $(4),$(DOCKER_REGISTRY_REPOSITORY)/$(tag_service)))
+	$(eval target_tag             := $(or $(5),$(source_tag)))
 	$(RUN) docker tag $(source):$(source_tag) $(target):$(target_tag)
 endef
