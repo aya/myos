@@ -5,7 +5,7 @@ define app-attach
 	$(call INFO,app-attach,$(1)$(comma))
 	$(if $(APP_COMPOSE_FILE),
 	  $(call docker-compose,logs -f $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
-	, $(call docker-file,$(1))
+	, $(call app-docker-file,$(1))
 	  $(foreach dockerfile,$(DOCKER_FILE),
 	    $(call app-docker,$(dockerfile))
 	    $(call docker-attach)
@@ -22,7 +22,7 @@ define app-bootstrap
 	$(eval COMPOSE_PROJECT_NAME   := $(or $(DOCKER_COMPOSE_PROJECT_NAME),$(subst .,,$(call LOWERCASE,$(USER)-$(APP_NAME)-$(ENV)$(addprefix -,$(subst /,,$(subst -,,$(APP_PATH))))))))
 	$(eval COMPOSE_SERVICE_NAME   := $(or $(DOCKER_COMPOSE_SERVICE_NAME),$(subst _,-,$(COMPOSE_PROJECT_NAME))))
 	$(eval DOCKER_BUILD_PATH      := $(APP_DIR))
-	$(call compose-file,$(APP_DIR) $(APP_DIR)/$(or $(APP_DOCKER_DIR),$(DOCKER_DIR)),docker-compose)
+	$(call compose-file,$(APP_DOCKER_DIR:%=$(APP_DIR)/%))
 	$(call compose-file,$(MYOS_STACK),$(MYOS_STACK_FILE))
 	$(eval APP_COMPOSE_FILE       ?= $(COMPOSE_FILE))
 	$(call docker-stack,$(APP))
@@ -34,7 +34,7 @@ define app-build
 	$(call INFO,app-build,$(1)$(comma))
 	$(if $(APP_COMPOSE_FILE),
 	  $(call docker-compose,build $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
-	, $(call docker-file,$(1))
+	, $(call app-docker-file,$(1))
 	  $(foreach dockerfile,$(DOCKER_FILE),
 	    $(call app-docker,$(dockerfile))
 	    $(call docker-build, $(dir $(dockerfile)), $(DOCKER_IMAGE), "" )
@@ -48,7 +48,7 @@ define app-clean
 	$(eval DOCKER_COMPOSE_DOWN_OPTIONS += --rmi all --volumes)
 	$(if $(APP_COMPOSE_FILE),
 	  $(call docker-compose,down $(DOCKER_COMPOSE_DOWN_OPTIONS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
-	, $(call docker-file,$(1))
+	, $(call app-docker-file,$(1))
 	  $(foreach dockerfile,$(DOCKER_FILE),
 	    $(call app-docker,$(dockerfile))
 	    $(call docker-rm)
@@ -70,7 +70,7 @@ define app-connect
 	$(call INFO,app-connect,$(1)$(comma))
 	$(if $(APP_COMPOSE_FILE),
 	  $(call docker-compose,exec $(or $(SERVICE),$(DOCKER_SERVICE)) $(DOCKER_SHELL))
-	, $(call docker-file,$(1))
+	, $(call app-docker-file,$(1))
 	  $(foreach dockerfile,$(DOCKER_FILE),
 	    $(call app-docker,$(dockerfile))
 	    $(call docker-connect)
@@ -94,12 +94,25 @@ define app-docker
 	)
 endef
 
+# function app-docker-file: eval DOCKER_FILE in dir 1 or APP_DIR
+define app-docker-file
+	$(call INFO,app-docker-file,$(1))
+	$(eval dir                    := $(or $(1),$(APP_DIR)))
+	$(eval DOCKER_FILE            := $(wildcard $(dir)/$(DOCKER_DIR_NAME)/*/Dockerfile $(dir)/$(DOCKER_DIR_NAME)/Dockerfile $(dir)/Dockerfile))
+  $(if $(DOCKER_FILE),
+	, $(eval DOCKER_FILE          := $(wildcard $(dir)/*/Dockerfile $(dir)/*/*/Dockerfile $(dir)/*/*/*/Dockerfile))
+  )
+	$(if $(DOCKER_FILE),
+	, $(call ERROR,Unable to find a,Dockerfile,in dir,$(dir))
+	)
+endef
+
 # function app-down: Call docker rm for each Dockerfile in dir 1
 define app-down
 	$(call INFO,app-down,$(1)$(comma))
 	$(if $(APP_COMPOSE_FILE),
 	  $(call docker-compose,down $(DOCKER_COMPOSE_DOWN_OPTIONS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
-	, $(call docker-file,$(1))
+	, $(call app-docker-file,$(1))
 	  $(foreach dockerfile,$(DOCKER_FILE),
 	    $(call app-docker,$(dockerfile))
 	    $(call docker-rm)
@@ -113,7 +126,7 @@ define app-exec
 	$(eval args                   := $(or $(2), $(ARGS)))
 	$(if $(APP_COMPOSE_FILE),
 	  $(call docker-compose,exec $(or $(SERVICE),$(DOCKER_SERVICE)) $(args))
-	, $(call docker-file,$(1))
+	, $(call app-docker-file,$(1))
 	  $(foreach dockerfile,$(DOCKER_FILE),
 	    $(call app-docker,$(dockerfile))
 	    $(call exec,$(args))
@@ -137,7 +150,7 @@ define app-logs
 	$(call INFO,app-logs,$(1)$(comma) $(2))
 	$(if $(APP_COMPOSE_FILE),
 	  $(call docker-compose,logs $(DOCKER_COMPOSE_LOGS_OPTIONS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
-	, $(call docker-file,$(1))
+	, $(call app-docker-file,$(1))
 	  $(foreach dockerfile,$(DOCKER_FILE),
 	    $(call app-docker,$(dockerfile))
 	    $(call docker-logs)
@@ -150,7 +163,7 @@ define app-ps
 	$(call INFO,app-ps,$(1)$(comma))
 	$(if $(APP_COMPOSE_FILE),
 	  $(call docker-compose,ps $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
-	, $(call docker-file,$(1))
+	, $(call app-docker-file,$(1))
 	  $(foreach dockerfile,$(DOCKER_FILE),
 	    $(call app-docker,$(dockerfile))
 	    $(eval DOCKERS += $(DOCKER_NAME))
@@ -183,7 +196,7 @@ define app-run
 	$(eval DOCKER_RUN_OPTIONS     += -it)
 	$(if $(APP_COMPOSE_FILE),
 	  $(call docker-compose,run $(DOCKER_RUN_OPTIONS) $(or $(SERVICE),$(DOCKER_SERVICE)) $(args))
-	, $(call docker-file,$(1))
+	, $(call app-docker-file,$(1))
 	  $(foreach dockerfile,$(DOCKER_FILE),
 	    $(call app-docker,$(dockerfile))
 	    $(if $(shell docker images -q $(DOCKER_IMAGE) 2>/dev/null),
@@ -208,7 +221,7 @@ define app-start
 	$(call INFO,app-start,$(1)$(comma))
 	$(if $(APP_COMPOSE_FILE),
 	  $(call docker-compose,start $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
-	, $(call docker-file,$(1))
+	, $(call app-docker-file,$(1))
 	  $(foreach dockerfile,$(DOCKER_FILE),
 	    $(call app-docker,$(dockerfile))
 	    $(call docker-start)
@@ -221,7 +234,7 @@ define app-stop
 	$(call INFO,app-stop,$(1)$(comma))
 	$(if $(APP_COMPOSE_FILE),
 	  $(call docker-compose,stop $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
-	, $(call docker-file,$(1))
+	, $(call app-docker-file,$(1))
 	  $(foreach dockerfile,$(DOCKER_FILE),
 	    $(call app-docker,$(dockerfile))
 	    $(call docker-stop)

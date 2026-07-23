@@ -28,7 +28,7 @@ DOCKER_BUILD_CACHE              ?= true
 DOCKER_BUILD_LABEL              ?= $(foreach var,$(filter $(BUILD_LABEL_VARS),$(MAKE_FILE_VARS)),$(if $($(var)),--label $(var)='$($(var))'))
 DOCKER_BUILD_NO_CACHE           ?= false
 DOCKER_BUILD_TARGET             ?= $(if $(filter $(ENV),$(DOCKER_BUILD_TARGETS)),$(ENV),$(DOCKER_BUILD_TARGET_DEFAULT))
-DOCKER_BUILD_TARGET_DEFAULT     ?= master
+DOCKER_BUILD_TARGET_DEFAULT     ?=
 DOCKER_BUILD_TARGETS            ?= $(ENV_DEPLOY)
 DOCKER_BUILD_VARS               ?= APP BRANCH COMPOSE_VERSION DOCKER_GID DOCKER_MACHINE DOCKER_REPOSITORY DOCKER_SYSTEM GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME SSH_REMOTE_HOSTS USER VERSION
 DOCKER_COMPOSE                  ?= $(or $(shell $(call verle,$(COMPOSE_VERSION),$(shell docker compose version --short 2>/dev/null)) && printf 'docker $(DOCKER_ARGS) compose\n'),$(shell $(call verle,$(COMPOSE_VERSION),$(shell docker-compose version --short 2>/dev/null)) && printf 'docker-compose\n'))
@@ -42,7 +42,7 @@ DOCKER_COMPOSE_RUN_OPTIONS      ?= --rm $(DOCKER_COMPOSE_RUN_ENTRYPOINT) $(DOCKE
 DOCKER_COMPOSE_RUN_WORKDIR      ?= $(if $(DOCKER_COMPOSE_WORKDIR),-w $(DOCKER_COMPOSE_WORKDIR))
 DOCKER_COMPOSE_SERVICE_NAME     ?= $(subst _,-,$(DOCKER_COMPOSE_PROJECT_NAME))
 DOCKER_COMPOSE_UP_OPTIONS       ?= -d
-DOCKER_IMAGE_TAG                ?= $(if $(filter true,$(DEPLOY)),$(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION)),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),$(ENV)))
+DOCKER_IMAGE_TAG                ?= $(if $(filter true,$(DEPLOY)),$(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION)),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest))
 DOCKER_IMAGES                   ?= $(patsubst %/,%,$(patsubst docker/%,%,$(dir $(wildcard docker/*/Dockerfile))))
 DOCKER_PLUGIN                   ?= rexray/s3fs:latest
 DOCKER_PLUGIN_ARGS              ?= $(foreach var,$(DOCKER_PLUGIN_VARS),$(if $(DOCKER_PLUGIN_$(var)),$(var)='$(DOCKER_PLUGIN_$(var))'))
@@ -71,23 +71,27 @@ endif
 # function compose-file: Search compose files to update variable COMPOSE_FILE
 define compose-file
 	$(call INFO,compose-file,$(1)$(comma) $(2)$(comma) $(3)$(comma) $(4))
-	$(eval file_path              := $(or $(1),. $(APP_DOCKER_DIR)))
+	$(eval file_path              := $(or $(1),$(APP_DOCKER_DIR)))
 	$(eval file_name              := $(or $(2),$(DOCKER_COMPOSE_FILE)))
 	$(eval file_suffix            := $(or $(3),$(COMPOSE_FILE_SUFFIX)))
 	$(eval file_extension         := $(or $(4),yml yaml))
 	$(eval COMPOSE_FILE           += $(wildcard $(foreach e,$(file_extension),$(foreach n,$(file_name),$(foreach p,$(file_path),$(p)/$(n).$(e) $(p)/$(n).$(ENV).$(e) $(p)/$(ENV)/$(n).$(e) $(p)/$(ENV)/$(n).$(ENV).$(e) $(foreach s,$(file_suffix),$(p)/$(n).$(s).$(e) $(p)/$(n).$(s).$(ENV).$(e)))))))
 	$(call debug,COMPOSE_FILE)
 endef
-# function docker-build: Build docker image
+# function docker-build: Build docker image from dockerfile 1 for service 2 with tag 3 at target 4
 define docker-build
-	$(call INFO,docker-build,$(1)$(comma) $(2)$(comma) $(3))
-	$(eval build_path             := $(patsubst $(DOCKER_BUILD_PATH)/%,%,$(patsubst %/,%,$(1))))
-	$(eval build_service          := $(subst .,,$(call LOWERCASE,$(lastword $(subst /, ,$(build_path))))))
-	$(eval build_image_tag        := $(or $(2),$(DOCKER_REPOSITORY)/$(build_service):$(DOCKER_IMAGE_TAG)))
-	$(eval build_target           := $(subst ",,$(subst ',,$(or $(3),$(DOCKER_BUILD_TARGET)))))
+	$(call INFO,docker-build,$(1)$(comma) $(2)$(comma) $(3)$(comma) $(4))
+	$(eval build_path             := $(firstword $(subst $(DOCKER_DIR_NAME), ,$(1))))
+	$(eval build_dir              := $(patsubst $(or $(addsuffix /,$(DOCKER_BUILD_PATH)),$(build_path))%,%,$(patsubst %/,%,$(1))))
+	$(eval build_service          := $(or $(2),$(subst .,,$(call LOWERCASE,$(lastword $(subst /, ,$(build_dir)))))))
+	$(eval build_image_tag        := $(DOCKER_REPOSITORY)/$(if $(findstring :,$(build_service)),$(build_service),$(build_service):$(or $(3),$(DOCKER_IMAGE_TAG))))
+	$(eval build_target           := $(subst ",,$(subst ',,$(or $(4),$(DOCKER_BUILD_TARGET)))))
 	$(eval image_id               := $(shell docker images -q $(build_image_tag) 2>/dev/null))
 	$(eval build_image            := $(or $(filter false,$(DOCKER_BUILD_CACHE)),$(if $(image_id),,true)))
-	$(if $(build_image),$(RUN) docker build $(DOCKER_BUILD_ARGS) --build-arg DOCKER_BUILD_PATH="$(build_path)" $(DOCKER_BUILD_LABEL) --build_image_tag $(build_image_tag) $(if $(build_target),--build_target $(build_target)) -f $(build_path)/Dockerfile $(or $(DOCKER_BUILD_PATH),.),$(call INFO,docker image $(build_image_tag) has id $(image_id)))
+	$(call debug,build_path build_dir build_image_tag)
+	$(if $(build_image),\
+    $(RUN) docker build $(DOCKER_BUILD_ARGS) --build-arg DOCKER_BUILD_DIR="$(build_dir)" $(DOCKER_BUILD_LABEL) --tag $(build_image_tag) $(if $(build_target),--target $(build_target)) -f $(build_dir)/Dockerfile $(or $(DOCKER_BUILD_PATH),$(build_path),.) \
+   ,$(call INFO,docker image $(build_image_tag) has id $(image_id)))
 endef
 # function docker-commit: Commit docker image
 define docker-commit
@@ -106,7 +110,7 @@ define docker-compose
 	  $(if $(DOCKER_COMPOSE),
 	    $(call env-exec,$(RUN) $(DOCKER_COMPOSE) $(DOCKER_COMPOSE_ARGS) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
 	  , $(if $(DOCKER_RUN),
-	      $(call docker-build,$(MYOS)/docker/compose,docker/compose:$(COMPOSE_VERSION))
+	      $(call docker-build,$(call docker-path,compose),docker/compose,$(COMPOSE_VERSION))
 	      $(call docker-run,docker/compose:$(COMPOSE_VERSION) $(DOCKER_COMPOSE_ARGS),$(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
 	    , $(call env-exec,$(RUN) docker-compose $(DOCKER_COMPOSE_ARGS) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
 	    )
@@ -153,6 +157,7 @@ define docker-stack-update
 	$(eval stack_name             := $(firstword $(subst :, ,$(stack_update))))
 	$(eval stack_version          := $(or $(2),$(if $(findstring :,$(stack_update)),$(lastword $(subst :, ,$(stack_update))),latest)))
 	$(eval stack_path             := $(patsubst %/,%,$(or $(3),$(foreach stack_dir,$(STACK_DIR),$(if $(findstring /,$(1)),$(if $(wildcard $(stack_dir)/$(1) $(stack_dir)/$(1).yml),$(stack_dir)/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard $(stack_dir)/$(1).yml),$(dir $(1)),$(1))),$(if $(wildcard $(stack_dir)/$(stackz)/$(1) $(stack_dir)/$(stackz)/$(1).yml),$(stack_dir)/$(stackz)/$(if $(findstring .yml,$(1)),$(dir $(1)),$(if $(wildcard $(stack_dir)/$(stackz)/$(1).yml),$(dir $(1)),$(1))),$(dir $(1)))))),$(foreach stack_dir,$(STACK_DIR),$(firstword $(wildcard $(stack_dir)/$(stackz)/$(stack_name) $(stack_dir)/$(stackz) $(stack_dir)/$(stack_name)))))))
+  $(call debug,stack_path)
 	$(call compose-file,$(stack_path),docker-compose $(stack_name),$(COMPOSE_FILE_SUFFIX) $(stack_version)) 
 	$(if $(wildcard $(stack_path)/.env.dist),$(call .env,,$(stack_path)/.env.dist,$(wildcard $(CONFIG)/$(ENV)/$(APP)/.env $(stack_path)/.env.$(ENV) .env)))
 	$(call env-vars,$(COMPOSE_FILE))

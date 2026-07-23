@@ -3,7 +3,7 @@
 
 # target ssh: Call ssh-connect ARGS or SHELL
 .PHONY: ssh
-ssh: ssh-get-PrivateIpAddress-$(SERVER_NAME) ## Connect to first remote host
+ssh: # ssh-get-PrivateIpAddress-$(SERVER_NAME) ## Connect to first remote host
 	$(call ssh-connect,$(AWS_INSTANCE_IP),$(if $(ARGS),$(ARGS),$(SHELL)))
 
 # target ssh-add: Fire ssh-key and ssh-add file SSH_PRIVATE_KEYS in folder SSH_DIR
@@ -15,7 +15,7 @@ ssh-add: ssh-key
 
 # target ssh-connect: Call ssh-connect make connect SERVICE
 .PHONY: ssh-connect
-ssh-connect: ssh-get-PrivateIpAddress-$(SERVER_NAME)
+ssh-connect: # ssh-get-PrivateIpAddress-$(SERVER_NAME)
 	$(call ssh-connect,$(AWS_INSTANCE_IP),make connect COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) ENV=$(ENV) $(if $(SERVICE),SERVICE=$(SERVICE)))
 
 # target ssh-del: ssh-add -d file SSH_PRIVATE_KEYS in folder SSH_DIR
@@ -26,7 +26,7 @@ ssh-del:
 
 # target ssh-exec: Call ssh-exec make exec SERVICE ARGS
 .PHONY: ssh-exec
-ssh-exec: ssh-get-PrivateIpAddress-$(SERVER_NAME)
+ssh-exec: # ssh-get-PrivateIpAddress-$(SERVER_NAME)
 	$(call ssh-exec,$(AWS_INSTANCE_IP),make exec COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) ENV=$(ENV) $(if $(SERVICE),SERVICE=$(SERVICE)) $(if $(ARGS),ARGS='\''"$(ARGS)"'\''))
 
 # target ssh-get-PrivateIpAddress-%: Fire aws-ec2-get-instances-PrivateIpAddress-%
@@ -43,5 +43,5 @@ endif
 
 # target ssh-run: Call ssh-run make run SERVICE ARGS
 .PHONY: ssh-run
-ssh-run: ssh-get-PrivateIpAddress-$(SERVER_NAME)
+ssh-run: # ssh-get-PrivateIpAddress-$(SERVER_NAME)
 	$(call ssh-exec,$(AWS_INSTANCE_IP),make run $(if $(SERVICE),SERVICE=$(SERVICE)) $(if $(ARGS),ARGS='\''"$(ARGS)"'\''))

@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## v1.0-beta - 2026-07-29
+
+* split make files in `myos` project and docker files in `stack` project
+
 ## v1.0-alpha - 2022-11-29
 
 * node is host

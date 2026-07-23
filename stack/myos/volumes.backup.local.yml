@@ -1,0 +1,9 @@
+version: '3.6'
+
+volumes:
+  backup:
+    driver: local
+    driver_opts:
+      device: /var/lib/backup
+      o: bind
+      type: none

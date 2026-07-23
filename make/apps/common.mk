@@ -121,8 +121,8 @@ logs: docker-stack-logs ## Display application dockers logs
 
 # target ps: List application dockers
 # on local host
-.PHONY: ps
-ps: docker-stack-ps ## List application dockers
+.PHONY: ps status
+ps status: docker-stack-ps ## List application dockers
 
 # target rebuild: Rebuild application docker images
 # on local host
@@ -137,8 +137,8 @@ rebuild@%:
 
 # target recreate: Recreate application dockers
 # on local host
-.PHONY: recreate
-recreate: docker-stack-recreate app-start ## Recreate application dockers
+.PHONY: recreate reload
+recreate reload: docker-stack-recreate app-start ## Recreate application dockers
 
 # target reinstall: Fire clean, Call .env target, Call install target
 # on local host

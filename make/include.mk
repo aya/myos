@@ -14,13 +14,13 @@ MAKE_LATEST                     := $(MAKE_DIR)/end.mk
 include $(wildcard $(MAKE_FIRST))
 ## it includes $(MAKE_DIR)/$(MAKE_SUBDIRS)/def.mk $(MAKE_DIR)/$(MAKE_SUBDIRS)/def.*.mk
 include $(foreach subdir,$(MAKE_SUBDIRS),$(wildcard $(MAKE_DIR)/$(subdir)/def.mk $(MAKE_DIR)/$(subdir)/def.*.mk))
-## if not in $(MYOS) nor $(MONOREPO), it includes def.mk def.*.mk */def.mk */def.*.mk
-include $(if $(filter-out . myos,$(MYOS)),$(wildcard def.mk def.*.mk */def.mk */def.*.mk))
 ## it includes $(MAKE_DIR)/*.mk
 include $(filter-out $(wildcard $(MAKE_FILE) $(MAKE_FIRST) $(MAKE_LATEST)),$(wildcard $(MAKE_DIR)/*.mk))
 ## it includes $(MAKE_DIR)/$(MAKE_SUBDIRS)/*.mk
 include $(foreach subdir,$(MAKE_SUBDIRS),$(filter-out $(wildcard $(MAKE_DIR)/$(subdir)/def.mk $(MAKE_DIR)/$(subdir)/def.*.mk),$(wildcard $(MAKE_DIR)/$(subdir)/*.mk)))
-## if not in $(MYOS) nor $(MONOREPO), it includes *.mk */*.mk, else stack/*.mk if in $(MYOS)
-include $(if $(filter-out myos,$(MYOS)),$(if $(filter-out .,$(MYOS)),$(filter-out $(wildcard def.mk def.*.mk */def.mk */def.*.mk),$(wildcard *.mk */*.mk)),$(foreach stack_dir,$(STACK_DIR),$(wildcard $(stack_dir)/*.mk $(stack_dir)/*/*.mk))))
+## if not in $(MYOS) nor $(MONOREPO), it includes def.mk def.*.mk */def.mk */def.*.mk *.mk */*.mk
+include $(if $(filter-out . myos,$(MYOS)),$(wildcard def.mk def.*.mk */def.mk */def.*.mk) $(filter-out $(wildcard def.mk def.*.mk */def.mk */def.*.mk stack/*.mk),$(wildcard *.mk */*.mk)))
+## it includes $(STACK_DIR)/*.mk $(STACK_DIR)/*/*.mk
+include $(foreach stack_dir,$(STACK_DIR),$(wildcard $(stack_dir)/*.mk $(stack_dir)/*/*.mk))
 ## it includes $(MAKE_LATEST)
 include $(wildcard $(MAKE_LATEST))

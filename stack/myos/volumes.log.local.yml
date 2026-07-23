@@ -1,0 +1,9 @@
+version: '3.6'
+
+volumes:
+  log:
+    driver: local
+    driver_opts:
+      device: /var/log
+      o: bind
+      type: none

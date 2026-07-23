@@ -1,4 +1,5 @@
-DOCKER_DIR                      ?= docker
+DOCKER_DIR                      ?= $(sort $(realpath $(wildcard $(patsubst %,%/docker,$(APP_DIR) $(SHARE_DIR) $(patsubst %,%/myos,$(SHARE_DIR))))))
+DOCKER_DIR_NAME                 ?= docker
 DOCKER_ENV_ARGS                 ?= $(docker_env_args)
 DOCKER_EXEC_OPTIONS             ?=
 DOCKER_GID                      ?= $(call gid,docker)
@@ -32,11 +33,13 @@ HOST_DOCKER_VOLUME              ?= $(HOST_COMPOSE_PROJECT_NAME)
 HOST_GID                        ?= $(HOST_UID)
 HOST_UID                        ?= 123
 HOST_STACK                      ?= $(filter host,$(firstword $(subst /, ,$(STACK))))
-MYOS_STACK                      ?= $(foreach stack_dir,$(STACK_DIR),$(MYOS)/$(stack_dir)/myos)
+MYOS_STACK                      ?= $(wildcard $(foreach stack_dir,$(STACK_DIR),$(stack_dir)/myos))
 MYOS_STACK_FILE                 ?= networks volumes
 RESU_DOCKER_REPOSITORY          ?= $(subst -,/,$(USER_COMPOSE_PROJECT_NAME))
+SHARE_DIR                       ?= . .. ~/.local/share /usr/local/share /usr/share
 STACK                           ?= $(APP)
-STACK_DIR                       ?= ../mystack
+STACK_DIR                       ?= $(sort $(realpath $(wildcard $(patsubst %,%/$(STACK_DIR_NAME),$(APP_DIR) $(SHARE_DIR) $(patsubst %,%/myos,$(SHARE_DIR))))))
+STACK_DIR_NAME                  ?= stack
 USER_COMPOSE_PROJECT_NAME       ?= $(subst .,-,$(RESU))
 USER_COMPOSE_SERVICE_NAME       ?= $(USER_COMPOSE_PROJECT_NAME)
 USER_DOCKER_IMAGE               ?= $(USER_DOCKER_REPOSITORY):${DOCKER_IMAGE_TAG}
@@ -152,6 +155,11 @@ define docker-exec
 	)
 endef
 
+# function docker-exited: Print exited dockers matching DOCKER_NAME
+define docker-exited
+$(shell docker ps -q -f status=exited $(patsubst %,-f name=%,$(or $(1), ^$(DOCKER_NAME)$$, ^$)) 2>/dev/null)
+endef
+
 # function docker-logs: Print logs of docker 1 or DOCKER_NAME
 define docker-logs
 	$(call INFO,docker-logs,$(1))
@@ -162,19 +170,18 @@ define docker-logs
 	)
 endef
 
-# function docker-file: eval DOCKER_FILE in dir 1 or APP_DIR
-define docker-file
-	$(call INFO,docker-file,$(1)$(comma))
-	$(eval dir                    := $(or $(1),$(APP_DIR)))
-	$(eval DOCKER_FILE            := $(wildcard $(dir)/$(DOCKER_DIR)/*/Dockerfile $(dir)/$(DOCKER_DIR)/Dockerfile $(dir)/Dockerfile))
-	$(if $(DOCKER_FILE),
-	, $(call ERROR,Unable to find a,Dockerfile,in dir,$(dir))
-	)
-endef
-
-# function docker-exited: Print exited dockers matching DOCKER_NAME
-define docker-exited
-$(shell docker ps -q -f status=exited $(patsubst %,-f name=%,$(or $(1), ^$(DOCKER_NAME)$$, ^$)) 2>/dev/null)
+# function docker-path: eval docker_path for docker 1 in DOCKER_DIR 2
+define docker-path
+  $(strip
+	$(call INFO,docker-path,$(1)$(comma) $(2))
+	$(eval docker_name            := $(or $(subst :,/,$(patsubst %:$(DOCKER_IMAGE_TAG),%,$(1))),myos))
+	$(eval docker_dir             := $(or $(2),$(DOCKER_DIR)))
+	$(eval docker_path            := $(foreach dir,$(docker_dir),$(patsubst %/Dockerfile,%,$(wildcard $(patsubst %,%/$(docker_name)/Dockerfile,$(dir))))))
+  $(call debug,docker_name docker_dir docker_path)
+	$(if $(docker_path),
+    $(docker_path)
+	, $(call ERROR,Unable to find a docker,$(docker_name),in dir,$(docker_dir))
+	))
 endef
 
 # function docker-running: Print running dockers matching DOCKER_NAME
@@ -223,4 +230,17 @@ define docker-volume-copy
 	$(RUN) docker volume inspect $(from) >/dev/null
 	$(RUN) docker volume inspect $(to) >/dev/null 2>&1 || $(RUN) docker volume create $(to) >/dev/null
 	$(RUN) docker run --rm -v $(from):/from -v $(to):/to alpine ash -c "cd /from; cp -a . /to"
+endef
+
+# function stack-path: eval stack_path for stack 1 in STACK_DIR 2
+define stack-path
+  $(strip
+	$(call INFO,stack-path,$(1)$(comma) $(2))
+	$(eval stack_name             := $(or $(firstword $(subst :, ,$(patsubst %.yml,%,$(notdir $(1))))),myos))
+	$(eval stack_dir              := $(or $(2),$(STACK_DIR)))
+	$(eval stack_path             := $(foreach dir,$(stack_dir),$(patsubst %/,%,$(wildcard $(patsubst %,%/$(stack_name)/,$(dir))))))
+	$(if $(stack_path),
+    $(stack_path)
+	, $(call ERROR,Unable to find a stack,$(stack_name),in dir,$(stack_dir))
+	))
 endef

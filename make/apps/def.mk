@@ -1,5 +1,3 @@
-APP_DIR                         ?= $(CURDIR)
-APP_DOCKER_DIR                  ?= $(DOCKER_DIR)
 APP_DOMAIN                      ?= $(patsubst %,$(APP_DOMAIN_PREFIX)%,$(DOMAIN))
 APP_DOMAIN_PREFIX               ?= $(if $(HOST_STACK),,$(if $(filter true,$(APP_HOST_MULTI_USER)),$(USER).))
 APP_HOST                        ?= $(patsubst %,$(APP_HOST_PREFIX)%,$(if $(filter true,$(APP_HOST_MULTI_APP)),$(APP_NAME).)$(APP_DOMAIN))$(if $(HOST_STACK),$(if $(HOST_LB),$(space)$(DOMAIN)))

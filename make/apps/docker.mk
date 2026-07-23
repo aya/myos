@@ -9,9 +9,13 @@ docker-build: docker-image-myos
 # target docker-build-%: Call docker-build for each Dockerfile in docker/% folder
 .PHONY: docker-build-%
 docker-build-%: stack
-	$(if $(wildcard docker/$*/Dockerfile),$(call docker-build,docker/$*))
-	$(if $(findstring :,$*),$(eval DOCKER_FILE := $(wildcard docker/$(subst :,/,$*)/Dockerfile)),$(eval DOCKER_FILE := $(wildcard docker/$*/*/Dockerfile)))
-	$(foreach dockerfile,$(DOCKER_FILE),$(call docker-build,$(dir $(dockerfile)),$(DOCKER_REPOSITORY)/$(word 2,$(subst /, ,$(dir $(dockerfile)))):$(lastword $(subst /, ,$(dir $(dockerfile)))),""))
+	$(if $(findstring :,$*), \
+	  $(eval DOCKER_FILE := $(wildcard $(DOCKER_DIR:%=%/$(subst :,/,$*)/Dockerfile) $(DOCKER_DIR:%=%/*/$(subst :,/,$*)/Dockerfile))) \
+	 ,$(eval DOCKER_FILE := $(wildcard $(DOCKER_DIR:%=%/$*/Dockerfile) $(DOCKER_DIR:%=%/$*/*/Dockerfile) $(DOCKER_DIR:%=%/*/$*/Dockerfile))))
+	$(call debug,DOCKER_FILE)
+	$(foreach dockerfile,$(DOCKER_FILE), \
+	  $(eval docker_service := $(patsubst %/,%,$(lastword $(subst $(DOCKER_DIR_NAME)/, ,$(dir $(dockerfile)))))) \
+	  $(call docker-build,$(dir $(dockerfile)),$(if $(findstring :,$*),$(call pop,$(docker_service)),$(docker_service)),$(if $(findstring :,$*),$(lastword $(subst /, ,$(dir $(dockerfile))))))||:)
 
 # target docker-commit: Call docker-commit for each SERVICES
 .PHONY: docker-commit
@@ -164,6 +168,10 @@ docker-network-rm-%:
 		 ||: ; \
 	fi
 
+.PHONY: docker-path-%
+docker-path-%:
+	echo $(call docker-path,$*)
+
 # target docker-plugin-install: Run 'docker plugin install DOCKER_PLUGIN_OPTIONS DOCKER_PLUGIN'
 .PHONY: docker-plugin-install
 docker-plugin-install:
@@ -264,3 +272,7 @@ docker-volume-rm: docker-volume-rm-$(COMPOSE_PROJECT_NAME)
 .PHONY: docker-volume-rm-%
 docker-volume-rm-%:
 	docker volume ls |awk '$$2 ~ /^$*/ {print $$2}' |sort -u |while read volume; do $(RUN) docker volume rm $$volume; done
+
+.PHONY: stack-path-%
+stack-path-%:
+	echo $(call stack-path,$*)

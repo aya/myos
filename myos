@@ -1,0 +1,15 @@
+#!/bin/bash
+#shellcheck source=/dev/null disable=SC2046
+set -eu
+
+# define MYOS path
+MYOS="$(dirname "$(readlink "$0" || echo "$0")")"
+
+# load system config
+[ -r /etc/default/myos ] && . /etc/default/myos
+
+# check myos requirements
+[ -f "${MYOS:-.}/Makefile" ] || { echo 'Unable to find myos Makefile' >&2; exit 1; }
+
+# call myos Makefile
+IFS=$'\n'; exec env $(cat /etc/default/myos 2>/dev/null) MYOS=. WORKDIR="${PWD}" make -esC "${MYOS:-.}" "$@"

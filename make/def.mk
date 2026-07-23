@@ -8,8 +8,10 @@ percent                         ?= %
 quote                           ?= '
 rbracket                        ?= )
 APP                             ?= $(if $(wildcard .git),$(notdir $(CURDIR)))
+APP_DIR                         ?= $(or $(filter-out .,$(WORKDIR)), $(CURDIR))
+APP_DOCKER_DIR                  ?= . $(DOCKER_DIR_NAME)
 APP_NAME                        ?= $(subst _,,$(subst -,,$(subst .,,$(call LOWERCASE,$(APP)))))
-APP_TYPE                        ?= $(if $(SUBREPO),subrepo) $(if $(filter .,$(MYOS)),myos)
+APP_TYPE                        ?= $(if $(SUBREPO),subrepo) $(if $(filter .,$(MYOS)),myos) $(if $(wildcard .git),git)
 APPS                            ?= $(if $(MONOREPO),$(sort $(patsubst $(MONOREPO_DIR)/%/.git,%,$(wildcard $(MONOREPO_DIR)/*/.git))))
 APPS_NAME                       ?= $(foreach app,$(APPS),$(or $(shell awk -F '=' '$$1 == "APP" {print $$2}' $(or $(wildcard $(MONOREPO_DIR)/$(app)/.env),$(wildcard $(MONOREPO_DIR)/$(app)/.env.$(ENV)),$(MONOREPO_DIR)/$(app)/.env.dist) 2>/dev/null),$(app)))
 BRANCH                          ?= $(GIT_BRANCH)
@@ -40,7 +42,7 @@ CONFIG_REPOSITORY_PATH          ?= $(shell printf '$(CONFIG_REPOSITORY_URI)\n' |
 CONFIG_REPOSITORY_SCHEME        ?= $(shell printf '$(CONFIG_REPOSITORY_URL)\n' |sed 's|://.*||;')
 CONFIG_REPOSITORY_URI           ?= $(shell printf '$(CONFIG_REPOSITORY_URL)\n' |sed 's|.*://||;')
 CONFIG_REPOSITORY_URL           ?= $(call pop,$(APP_UPSTREAM_REPOSITORY))/$(notdir $(CONFIG))
-CONTEXT                         ?= ENV $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null)
+CONTEXT                         ?= ENV ENV_PATH $(shell awk 'BEGIN {FS="="}; $$1 !~ /^(\#|$$)/ {print $$1}' .env.dist 2>/dev/null)
 CONTEXT_DEBUG                   ?= MAKEFILE_LIST DOCKER_ENV_ARGS ENV_ARGS APPS GIT_AUTHOR_EMAIL GIT_AUTHOR_NAME MAKE_DIR MAKE_SUBDIRS MAKE_CMD_ARGS MAKE_ENV_ARGS UID USER
 DEBUG                           ?= 
 DOCKER                          ?= $(shell type -p docker)
@@ -50,11 +52,11 @@ DRONE                           ?= false
 DRYRUN                          ?= false
 DRYRUN_RECURSIVE                ?= false
 ELAPSED_TIME                     = $(shell $(call TIME))
-ENV                             ?= master
+ENV                             ?= local
 ENV_ARGS                        ?= $(env_args)
 ENV_FILE                        ?= $(wildcard $(if $(filter-out myos,$(MYOS)),$(MONOREPO_DIR)/.env) $(CONFIG)/$(ENV)/$(APP)/.env $(ENV_PATH)/.env)
 ENV_LIST                        ?= $(shell ls .git/refs/heads/ 2>/dev/null)
-ENV_PATH                        ?= .
+ENV_PATH                        ?= $(WORKDIR)
 ENV_RESET                       ?= false
 GID                             ?= $(shell id -g 2>/dev/null)
 GIDS                            ?= $(shell id -G 2>/dev/null)
@@ -110,6 +112,7 @@ TAG                             ?= $(GIT_TAG)
 UID                             ?= $(shell id -u 2>/dev/null)
 USER                            ?= $(shell id -nu 2>/dev/null)
 VERSION                         ?= $(GIT_VERSION)
+WORKDIR                         ?= .
 
 ifneq ($(DEBUG),)
 CONTEXT                         += $(CONTEXT_DEBUG)
@@ -151,7 +154,7 @@ DEBUG_FD := 2
 # macro debug: print variable content when DEBUG
 debug = $(if $(DEBUG), \
  printf '${COLOR_INFO}$(APP)${COLOR_RESET}[${COLOR_VALUE}$(MAKELEVEL)${COLOR_RESET}]$(if $@, ${COLOR_VALUE}$@${COLOR_RESET}):${COLOR_RESET} ' >&$(DEBUG_FD) \
- $(foreach variable,$(1),&& printf '${COLOR_DEBUG}$(variable):${COLOR_RESET} ${COLOR_VALUE}$($(variable))${COLOR_RESET}, ' >&$(DEBUG_FD)) \
+ $(foreach variable,$(1),&& printf '${COLOR_DEBUG}$(variable):${COLOR_RESET} ${COLOR_VALUE}' && $(call PRINTF,$($(variable))) && printf '${COLOR_RESET}, ' >&$(DEBUG_FD)) \
  && printf '\n' >&$(DEBUG_FD) \
 )
 

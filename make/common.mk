@@ -15,12 +15,13 @@ $(APP) $(APP_DIR):
 ## it includes apps/$(app)/*.mk file and hydrates APP_* variables
 ## ex: APP_REPOSITORY_URL is set with value from variable $(APP)_REPOSITORY_URL
 .PHONY: app-%
-app-%: APP_DIR := $(RELATIVE)$(APP)
+app-%: APP_DIR := $(or $(WORKDIR), $(RELATIVE)$(APP))
 app-%: $(APP_DIR)
 	$(eval APP_REPOSITORY_URL     :=)
 	$(eval COMPOSE_FILE     :=)
 	$(eval STACK            :=)
 	$(eval app              := $(subst -$(lastword $(subst -, ,$*)),,$*))
+	$(eval app_dir          := $(or $(WORKDIR), $(RELATIVE)$(app)))
 	$(eval command          := $(lastword $(subst -, ,$*)))
 	$(eval include $(wildcard $(foreach stack_dir,$(STACK_DIR),$(stack_dir)/$(app).mk $(stack_dir)/$(app)/*.mk)))
 	$(foreach var,$(filter $(call UPPERCASE,$(app))_%,$(MAKE_FILE_VARS)), \
@@ -28,7 +29,7 @@ app-%: $(APP_DIR)
 	    $(eval $(subst $(call UPPERCASE,$(app))_,APP_,$(var)) := $($(var))) \
 	  ) \
 	)
-	$(if $(wildcard $(RELATIVE)$(app)), \
+	$(if $(wildcard $(app_dir)), \
 	  $(if $(filter app-$(command),$(.VARIABLES)), \
 	    $(call app-bootstrap,$(app)) \
 	    $(call app-$(command)) \
@@ -43,7 +44,7 @@ app-%: $(APP_DIR)
 	  $(if $(APP_REPOSITORY_URL), \
 	    $(call app-install) \
 	    $(call app-bootstrap) \
-	   ,$(call WARNING,Unable to find app,$(app),in dir,$(RELATIVE)$(app)) \
+	   ,$(call WARNING,Unable to find app,$(app),in dir,$(app_dir)) \
 	  ) \
 	)
 
