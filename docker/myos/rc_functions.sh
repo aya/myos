@@ -58,6 +58,25 @@ process_count() {
 
 # function prompt_set: Export custom PROMPT_COMMAND
 prompt_set() {
+  # zsh: PROMPT_COMMAND is bash-only, set the terminal title from a precmd hook
+  if [ -n "${ZSH_VERSION:-}" ]; then
+    _prompt_precmd() {
+      local __ret=$? dcs st host
+      case "${TERM}" in
+        screen*) dcs=$'\ek'; st=$'\e\\';;
+        *)       dcs=$'\e]0;'; st=$'\a';;
+      esac
+      host="${HOSTNAME:-${HOST}}"
+      if [ -n "${STY}" ]; then
+        printf '%s%s%s' "${dcs}" "${PWD##*/}" "${st}"
+      else
+        printf '%s%s@%s:%s%s' "${dcs}" "${USER}" "${host%%.*}" "${PWD##*/}" "${st}"
+      fi
+      return ${__ret}
+    }
+    autoload -Uz add-zsh-hook 2>/dev/null && add-zsh-hook precmd _prompt_precmd
+    return
+  fi
   case "${TERM}" in
     screen*)
       ESCAPE_CODE_DCS="\033k"
@@ -87,6 +106,58 @@ prompt_set() {
 
 # function ps1_set: Export custom PS1
 ps1_set() {
+  # zsh: bash prompt escapes (\[ \]) and "$0" shell detection do not apply;
+  # rebuild PROMPT from a precmd hook using zsh's %{ %} non-printing markers
+  if [ -n "${ZSH_VERSION:-}" ]; then
+    _ps1_precmd() {
+      local __ret=$?
+      local dgray=$'%{\e[1;30m%}' red=$'%{\e[01;31m%}' green=$'%{\e[01;32m%}' \
+            brown=$'%{\e[0;33m%}' yellow=$'%{\e[01;33m%}' blue=$'%{\e[01;34m%}' \
+            cyan=$'%{\e[0;36m%}' gray=$'%{\e[0;37m%}' reset=$'%{\e[0m%}'
+      local scol ucol hcol count user host wd git end sym uid h br
+      uid="$(id -u)"
+      # exit status: blue on success, yellow on 1, red otherwise
+      case "${__ret}" in
+        0) scol="${blue}";;
+        1) scol="${yellow}";;
+        *) scol="${red}";;
+      esac
+      count="${dgray}[${scol}${__ret}"
+      type process_count >/dev/null 2>&1 \
+        && count="${count}${dgray}|${blue}$(process_count 2>/dev/null)"
+      type user_count >/dev/null 2>&1 \
+        && count="${count}${dgray}|${blue}$(user_count 2>/dev/null)"
+      type load_average >/dev/null 2>&1 \
+        && count="${count}${dgray}|${blue}$(load_average 2>/dev/null)"
+      count="${count}${dgray}]${reset}"
+      # user: red for root, brown otherwise
+      [ "${uid}" = 0 ] && ucol="${red}" || ucol="${brown}"
+      user="${ucol}$(id -nu):${uid}${reset}"
+      # hostname: red on prod, yellow if ENV set, green otherwise
+      h="$(hostname |sed 's/\..*//')"
+      case "${ENV}${h}" in
+        *[Pp][Rr][Oo][Dd]*|*[Pp][Rr][Dd]*) hcol="${red}";;
+        *) [ -n "${ENV}" ] && hcol="${yellow}" || hcol="${green}";;
+      esac
+      host="${hcol}${h}${reset}"
+      # workdir with ~ for $HOME
+      wd="${gray}$(pwd |sed 's|^'"${HOME}"'\(/.*\)*$|~\1|')${reset}"
+      # git branch
+      if type __git_ps1 >/dev/null 2>&1; then
+        git="$(__git_ps1 ' (%s)' 2>/dev/null)"
+      else
+        br="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+        [ -n "${br}" ] && git=" (${br})"
+      fi
+      git="${cyan}${git}${reset}"
+      # tail: # for root, $ otherwise
+      [ "${uid}" = 0 ] && sym='#' || sym='$'
+      end="${dgray}${sym}${reset}"
+      PROMPT="${count}${user}${dgray}@${host}${dgray}:${wd}${git}${end} "
+    }
+    autoload -Uz add-zsh-hook 2>/dev/null && add-zsh-hook precmd _ps1_precmd
+    return
+  fi
   case "$0" in
     *sh)
       COLOR_DGRAY="\[\033[1;30m\]"
@@ -194,6 +265,8 @@ screen_detach() {
 # function ssh_add: Load all private keys in ~/.ssh/ to ssh agent
 ssh_add() {
   command -v ssh-agent >/dev/null 2>&1 && command -v ssh-add >/dev/null 2>&1 || return
+  # zsh: emulate bash handling of unmatched globs (scoped to this function via localoptions)
+  [ -n "${ZSH_VERSION:-}" ] && setopt localoptions nonomatch
   SSH_AGENT_DIR="/tmp/ssh-$(id -u)"
   SSH_AGENT_SOCK="${SSH_AGENT_DIR}/agent@$(hostname |sed 's/\..*//')"
   # launch a new agent
@@ -219,8 +292,8 @@ ssh_add() {
     fi
     SSH_PRIVATE_KEYS="${SSH_PRIVATE_KEYS:-} ${dir}/id_ed25519 ${dir}/id_rsa $(grep -l${GREP_RECURSIVE_FLAG:-} 'PRIVATE KEY' "${dir}/"${GREP_RECURSIVE_CHAR:-} 2>/dev/null |grep -vwE "${dir}/id_(rsa|ed25519)")"
   done
-  # shellcheck disable=SC2086
-  printf '%s\n' ${SSH_PRIVATE_KEYS} |while read -r file; do
+  # split on spaces/newlines via tr, portable across bash (IFS split) and zsh (no word split)
+  printf '%s' "${SSH_PRIVATE_KEYS}" |tr ' ' '\n' |while read -r file; do
     [ -r "${file}" ] || continue
     # add private key to agent
     ssh-add -l |grep -q "$(ssh-keygen -lf "${file}" 2>/dev/null |awk '{print $2}')" 2>/dev/null || ssh-add "${file}"
@@ -231,6 +304,8 @@ ssh_add() {
 # function ssh_del: removes all private keys in ~/.ssh/ from ssh agent
 ssh_del() {
   command -v ssh-add >/dev/null 2>&1 || return
+  # zsh: emulate bash handling of unmatched globs (scoped to this function via localoptions)
+  [ -n "${ZSH_VERSION:-}" ] && setopt localoptions nonomatch
   # attach to agent
   if [ -z "${SSH_AUTH_SOCK}" ]; then
     return
@@ -245,8 +320,8 @@ ssh_del() {
     fi
     SSH_PRIVATE_KEYS="${SSH_PRIVATE_KEYS:-} ${dir}/id_ed25519 ${dir}/id_rsa $(grep -l${GREP_RECURSIVE_FLAG:-} 'PRIVATE KEY' "${dir}/"${GREP_RECURSIVE_CHAR:-} 2>/dev/null |grep -vwE "${dir}/id_(rsa|ed25519)")"
   done
-  # shellcheck disable=SC2086
-  printf '%s\n' ${SSH_PRIVATE_KEYS} |while read -r file; do
+  # split on spaces/newlines via tr, portable across bash (IFS split) and zsh (no word split)
+  printf '%s' "${SSH_PRIVATE_KEYS}" |tr ' ' '\n' |while read -r file; do
     [ -r "${file}" ] || continue
     # remove private key from agent
     ssh-add -l |grep -q "$(ssh-keygen -lf "${file}" 2>/dev/null |awk '{print $2}')" 2>/dev/null && ssh-add -d "${file}"
