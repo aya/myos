@@ -2,7 +2,7 @@
 # file rc_functions.sh: Define shell functions
 ## author: Yann "aya" Autissier
 ## license: GPL
-## version: 20221229
+## version: 20260730
 
 # function force: Run a command sine die
 force() {
@@ -295,8 +295,12 @@ ssh_add() {
   # split on spaces/newlines via tr, portable across bash (IFS split) and zsh (no word split)
   printf '%s' "${SSH_PRIVATE_KEYS}" |tr ' ' '\n' |while read -r file; do
     [ -r "${file}" ] || continue
+    # fingerprint is empty when ssh-keygen cannot read the key (legacy PEM without .pub):
+    # in that case add it instead of matching the empty pattern against every agent line
+    fingerprint="$(ssh-keygen -lf "${file}" 2>/dev/null |awk '{print $2}')"
+    [ -n "${fingerprint}" ] && ssh-add -l 2>/dev/null |grep -qF "${fingerprint}" && continue
     # add private key to agent
-    ssh-add -l |grep -q "$(ssh-keygen -lf "${file}" 2>/dev/null |awk '{print $2}')" 2>/dev/null || ssh-add "${file}"
+    ssh-add "${file}"
   done
   unset GREP_RECURSIVE_CHAR GREP_RECURSIVE_FLAG SSH_AGENT_DIR SSH_AGENT_SOCK SSH_PRIVATE_KEYS
 }
@@ -323,8 +327,11 @@ ssh_del() {
   # split on spaces/newlines via tr, portable across bash (IFS split) and zsh (no word split)
   printf '%s' "${SSH_PRIVATE_KEYS}" |tr ' ' '\n' |while read -r file; do
     [ -r "${file}" ] || continue
+    # skip keys we cannot fingerprint, an empty pattern would match any agent line
+    fingerprint="$(ssh-keygen -lf "${file}" 2>/dev/null |awk '{print $2}')"
+    [ -n "${fingerprint}" ] || continue
     # remove private key from agent
-    ssh-add -l |grep -q "$(ssh-keygen -lf "${file}" 2>/dev/null |awk '{print $2}')" 2>/dev/null && ssh-add -d "${file}"
+    ssh-add -l 2>/dev/null |grep -qF "${fingerprint}" && ssh-add -d "${file}"
   done
   unset GREP_RECURSIVE_CHAR GREP_RECURSIVE_FLAG SSH_PRIVATE_KEYS
 }

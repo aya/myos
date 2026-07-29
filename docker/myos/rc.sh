@@ -2,7 +2,7 @@
 # file rc.sh: Call user defined functions
 ## author: Yann "aya" Autissier
 ## license: GPL
-## version: 20220630
+## version: 20260730
 
 case $- in
   # if this is an interactive shell
@@ -20,7 +20,14 @@ case $- in
                 func_name="${func_name#?}"
             done
             # call user function with args passed from the content of the file
-            command -v "${func_name}" >/dev/null 2>&1 && "${func_name}" "${func_args}"
+            # an empty file means no args at all, do not pass an empty string
+            if command -v "${func_name}" >/dev/null 2>&1; then
+                if [ -n "${func_args}" ]; then
+                    "${func_name}" "${func_args}"
+                else
+                    "${func_name}"
+                fi
+            fi
         fi
     done
     # load user stuff from RC_* env vars
@@ -36,7 +43,14 @@ case $- in
             func_name="${func_name#?}"
         done
         # call user function with args passed from the value of the env var
-        command -v "${func_name}" >/dev/null 2>&1 && "${func_name}" "${func_args}"
+        # RC_FOO=true means no args at all, do not pass an empty string
+        if command -v "${func_name}" >/dev/null 2>&1; then
+            if [ -n "${func_args:-}" ]; then
+                "${func_name}" "${func_args}"
+            else
+                "${func_name}"
+            fi
+        fi
     done
     unset IFS
   ;;
