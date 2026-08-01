@@ -14,6 +14,10 @@ DOCKER_NETWORK                  ?= $(if $(USER_STACK),$(USER),$(DOCKER_NETWORK_P
 DOCKER_NETWORK_DEFAULT          ?= _$(COMPOSE_PROJECT_NAME)
 DOCKER_NETWORK_PRIVATE          ?= $(USER)-$(ENV)
 DOCKER_NETWORK_PUBLIC           ?= $(HOSTNAME)
+# The myos networks.yml is appended to COMPOSE_FILE after the per-stack
+# env-vars scan, so these infra vars must always reach compose or the
+# external network names fall back to their placeholders.
+ENV_VARS                        += DOCKER_NETWORK_DEFAULT DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC
 # DOCKER_RUN: if empty, run system command, else run it in a docker
 DOCKER_RUN                      ?= $(if $(filter-out false False FALSE,$(DOCKER)),$(DOCKER))
 DOCKER_RUN_ENTRYPOINT           ?= $(patsubst %,--entrypoint=%,$(DOCKER_ENTRYPOINT))
