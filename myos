@@ -5,11 +5,16 @@ set -eu
 # define MYOS path
 MYOS="$(dirname "$(readlink "$0" || echo "$0")")"
 
-# load system config
-[ -r /etc/default/myos ] && . /etc/default/myos
+# load system config: /etc/conf.d/myos (openrc convention) first, then the
+# debian-style /etc/default/myos as fallback
+MYOS_CONF=/etc/conf.d/myos
+[ -r "$MYOS_CONF" ] || MYOS_CONF=/etc/default/myos
+
+[ -r "$MYOS_CONF" ] && . "$MYOS_CONF"
 
 # check myos requirements
 [ -f "${MYOS:-.}/Makefile" ] || { echo 'Unable to find myos Makefile' >&2; exit 1; }
 
-# call myos Makefile
-IFS=$'\n'; exec env $(cat /etc/default/myos 2>/dev/null) MYOS=. WORKDIR="${PWD}" make -esC "${MYOS:-.}" "$@"
+# call myos Makefile: a WORKDIR from the config or environment wins over PWD,
+# so a machine can pin its deployment dir and run myos from anywhere
+IFS=$'\n'; exec env $(cat "$MYOS_CONF" 2>/dev/null) MYOS=. WORKDIR="${WORKDIR:-${PWD}}" make -esC "${MYOS:-.}" "$@"
