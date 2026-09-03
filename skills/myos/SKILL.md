@@ -48,6 +48,9 @@ myos down <stack>             # remove the containers
 
 A reference is `[<group>/]<name>[:<version>]`, or a path.
 
+Commands chain: `myos build up logs host/fabio` runs the three in order and
+stops at the first failure.
+
 ```sh
 myos up                    # the current directory, when it holds a compose file
 myos up host               # a group: expands to host/consul host/fabio ...
@@ -57,9 +60,13 @@ myos -C /opt/app up        # somewhere else
 myos -e master up          # in another environment
 ```
 
-Stacks are looked up along the stack path, project first:
-`./stack`, `../stack`, `~/.local/share/myos/stack`, `/usr/local/share/myos/stack`,
-`/usr/share/myos/stack`. `myos doctor` prints the resolved path.
+Stacks are looked up along the stack path: `./stack`, `../stack`,
+`~/.local/share/myos/stack`, `/usr/local/share/myos/stack`, `/usr/share/myos/stack`.
+`myos doctor` prints the resolved path.
+
+A stack found in several of them is **merged**, the project last, so a project
+adds `stack/postgres/postgres.local.yml` next to the catalogue's `postgres.yml`
+and refines it instead of replacing it. The same goes for the settings hooks.
 
 ## Three kinds of stack
 

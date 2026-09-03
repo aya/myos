@@ -99,6 +99,20 @@ parsed, never sourced, so a value may contain a `#` or a `$(...)` without
 breaking anything or being executed. The make engine included `.env` as a
 makefile, where both broke.
 
+## Where a stack lives
+
+The same stack may exist in several directories of the stack path. They are all
+loaded, least specific first, so the project has the last word:
+
+```
+/usr/local/share/myos/stack/postgres/postgres.yml     the catalogue
+./stack/postgres/postgres.local.yml                   the project refines it
+./stack/postgres/postgres.sh                          and may redefine a default
+```
+
+Nothing has to be copied to change one setting: a value in the project `.env`
+already wins over any default a stack ships.
+
 ## Per-stack settings
 
 A stack keeps its own settings next to its compose files:

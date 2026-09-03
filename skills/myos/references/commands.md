@@ -30,6 +30,20 @@ myos [options] <command> [stack...] [VAR=value...] [-- args...]
 | `doctor` | check the installation |
 | `version` | the myos version |
 
+## Several commands at once
+
+Commands chain, the way make targets did. Leading words that name commands are
+commands; the first word that is not one starts the list of stacks.
+
+```sh
+myos build up logs host/fabio        # like: make build up logs STACK=host/fabio
+myos up ps host
+```
+
+They run in order and stop at the first failure. A stack whose name is also a
+command name has to be given as `STACK=<name>`, otherwise it is read as a
+command.
+
 Anything after `--` goes to docker compose:
 
 ```sh
@@ -65,7 +79,8 @@ does not: a typo is an error.
 |---|---|
 | `make up STACK=host` | `myos up host` |
 | `make print-COMPOSE_FILE` | `myos env COMPOSE_FILE` |
-| `make host` | `myos up host` |
+| `make host` | `myos up host` (a bare stack name is not a command) |
+| `make build up logs STACK=host/fabio` | `myos build up logs host/fabio` |
 | `make stack-host-config` | `myos config host` |
 | `make up@master` | `myos -e master up` |
 | `make exec SERVICE=php ARGS='ls'` | `myos exec <stack> -- php ls` |

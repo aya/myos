@@ -44,6 +44,37 @@ myos_stack_version() {
   case $_r in *:*) printf '%s' "${_r##*:}" ;; *) printf 'latest' ;; esac
 }
 
+# myos_stack_dirs REF  every directory of MYOS_PATH holding this stack, least
+# specific first. A compose overlay wins over the ones before it, so a project
+# that ships stack/postgres/postgres.local.yml refines the postgres stack of
+# the catalogue instead of replacing it.
+myos_stack_dirs() {
+  _ref=${1%/}
+  case $_ref in *:*) _ref=${_ref%:*} ;; esac
+  _name=$(myos_stack_name "$1")
+  case $_ref in
+    .|./*|/*|../*)
+      [ -d "$_ref" ] && (cd "$_ref" && pwd -P)
+      return 0 ;;
+  esac
+  _found=
+  _IFS=$IFS; IFS=:
+  for _d in $(myos_path); do
+    IFS=$_IFS
+    _hit=
+    if [ -d "$_d/$_ref" ]; then _hit=$_d/$_ref
+    elif [ -f "$_d/$_ref.yml" ] || [ -f "$_d/$_ref.yaml" ]; then _hit=$(dirname "$_d/$_ref")
+    elif [ -d "$_d/$_name" ]; then _hit=$_d/$_name
+    fi
+    # least specific last here, then reversed below
+    [ -n "$_hit" ] && _found="$_hit
+$_found"
+    IFS=:
+  done
+  IFS=$_IFS
+  printf '%s' "$_found" | sed '/^$/d'
+}
+
 # myos_stack_resolve REF  print the directory holding the stack,
 # or fail with MYOS_E_NOSTACK
 myos_stack_resolve() {

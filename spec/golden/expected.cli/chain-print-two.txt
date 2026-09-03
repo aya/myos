@@ -1,0 +1,5 @@
+COMPOSE_PROJECT_NAME testhost
+APP consul
+COMPOSE_PROJECT_NAME testhost
+APP consul
+[exit 0]

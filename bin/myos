@@ -24,11 +24,22 @@ for _m in core str var tags naming stack config compose hooks; do
   . "$MYOS_ROOT/lib/$_m.sh"
 done
 
+# myos_is_command WORD  true when WORD names a command rather than a stack
+myos_is_command() {
+  case $1 in
+    up|down|start|stop|restart|ps|logs|config|build|pull|create|kill|top|images) return 0 ;;
+    version|help) return 0 ;;
+    print-*|stack-*-*) return 0 ;;
+    *@*) myos_is_command "${1%@*}"; return $? ;;
+  esac
+  [ -f "$MYOS_ROOT/lib/cmd/$1.sh" ]
+}
+
 # --- command line ---------------------------------------------------------
 # These are read by the lib/cmd/* files sourced further down.
 # shellcheck disable=SC2034
 {
-  MYOS_CMD=
+  MYOS_CMDS=
   MYOS_REFS=
   MYOS_REFS_RAW=
   MYOS_VARS=
@@ -83,39 +94,63 @@ while [ $# -gt 0 ]; do
     -h|--help) usage; exit 0 ;;
     --) shift; MYOS_ARGS="$*"; break ;;
     -*)
-      if [ -n "$MYOS_CMD" ]; then
+      if [ -n "$MYOS_CMDS" ]; then
         MYOS_ARGS="${MYOS_ARGS:+$MYOS_ARGS }$1"; shift
       else
         myos_error "unknown option: $1"; usage >&2; exit "$MYOS_E_USAGE"
       fi ;;
     *=*) eval "${1%%=*}=\${1#*=}"; export "${1%%=*}"; shift ;;
     *)
-      if [ -z "$MYOS_CMD" ]; then MYOS_CMD=$1; else MYOS_REFS="${MYOS_REFS:+$MYOS_REFS }$1"; fi
+      # Leading words that name commands are commands, the rest are stacks:
+      # `myos build up logs host/fabio` runs three commands on one stack, the
+      # way `make build up logs STACK=host/fabio` did.
+      if [ -z "$MYOS_REFS" ] && myos_is_command "$1"; then
+        MYOS_CMDS="${MYOS_CMDS:+$MYOS_CMDS }$1"
+      else
+        MYOS_REFS="${MYOS_REFS:+$MYOS_REFS }$1"
+      fi
       shift ;;
   esac
 done
 
-[ -n "$MYOS_CMD" ] || { usage; exit "$MYOS_E_USAGE"; }
+if [ -z "$MYOS_CMDS" ]; then
+  if [ -n "$MYOS_REFS" ]; then
+    # the first word was meant as a command; name it rather than dump the usage
+    myos_error "unknown command: ${MYOS_REFS%% *}"
+    myos_error "to act on a stack of that name, say what to do: myos up ${MYOS_REFS%% *}"
+    exit "$MYOS_E_USAGE"
+  fi
+  usage
+  exit "$MYOS_E_USAGE"
+fi
 MYOS_REFS_RAW=$MYOS_REFS
-case $MYOS_CMD in
-  env|ls|doctor) MYOS_VARS=$MYOS_REFS; MYOS_REFS= ;;
-esac
 
-# Targets of the make engine keep working: print-VAR, stack-<stack>-<command>,
-# <command>@<env> and a bare group name.
-case $MYOS_CMD in
-  print-*)
-    MYOS_VARS=${MYOS_CMD#print-}
-    # shellcheck disable=SC2209  # the literal string "env", not the command
-    MYOS_CMD=env ;;
-  *@*)     ENV=${MYOS_CMD#*@}; MYOS_CMD=${MYOS_CMD%@*} ;;
-esac
-case $MYOS_CMD in
-  stack-*-*)
-    _rest=${MYOS_CMD#stack-}
-    MYOS_CMD=${_rest##*-}
-    MYOS_REFS="${_rest%-*} $MYOS_REFS"
-    MYOS_REFS=${MYOS_REFS% } ;;
+# Targets of the make engine keep working: print-VAR, stack-<stack>-<command>
+# and <command>@<env> each translate to a command of the CLI.
+_cmds=
+for _c in $MYOS_CMDS; do
+  case $_c in
+    *@*) ENV=${_c#*@}; _c=${_c%@*} ;;
+  esac
+  case $_c in
+    print-*)
+      MYOS_VARS="${MYOS_VARS:+$MYOS_VARS }${_c#print-}"
+      # shellcheck disable=SC2209  # the literal string "env", not the command
+      _c=env ;;
+    stack-*-*)
+      _rest=${_c#stack-}
+      _c=${_rest##*-}
+      MYOS_REFS="${_rest%-*}${MYOS_REFS:+ $MYOS_REFS}" ;;
+  esac
+  _cmds="${_cmds:+$_cmds }$_c"
+done
+MYOS_CMDS=$_cmds
+
+# env, ls and doctor take variable names where the others take stacks
+case $MYOS_CMDS in
+  env|ls|doctor)
+    [ -n "$MYOS_VARS" ] || MYOS_VARS=$MYOS_REFS
+    MYOS_REFS= ;;
 esac
 
 # --- configuration --------------------------------------------------------
@@ -178,10 +213,13 @@ if [ -z "$MYOS_REFS" ]; then
   fi
 fi
 if [ -z "$MYOS_REFS" ]; then
-  case $MYOS_CMD in
-    env|env-update|ls|doctor|version|help) ;;
-    *) myos_die "$MYOS_E_USAGE" "no stack given, and no compose file in $WORKDIR" ;;
-  esac
+  # these commands describe the installation rather than act on a stack
+  for _c in $MYOS_CMDS; do
+    case $_c in
+      env|env-update|ls|doctor|version|help) ;;
+      *) myos_die "$MYOS_E_USAGE" "no stack given, and no compose file in $WORKDIR" ;;
+    esac
+  done
 fi
 
 # shellcheck disable=SC2086  # a list of references
@@ -198,48 +236,64 @@ APP_SCHEME=${APP_SCHEME:-http}
 # Per-stack hooks must run in this shell: everything downstream reads the
 # variables they set, and a command substitution would throw them away.
 for _ref in $MYOS_STACKS; do
-  _hdir=$(myos_stack_resolve "$_ref" 2>/dev/null) || continue
-  myos_stack_hooks "$_hdir" "$(myos_stack_name "$_ref")"
+  for _hdir in $(myos_stack_dirs "$_ref"); do
+    myos_stack_hooks "$_hdir" "$(myos_stack_name "$_ref")"
+  done
 done
 
+# The two functions below are called from the lib/cmd/* files sourced later,
+# which shellcheck cannot see.
+# shellcheck disable=SC2329
 # myos_framework_compose_files  the networks and volumes overlays myos itself
 # provides; they always come last so a stack can rely on them being there.
 myos_framework_compose_files() {
   myos_compose_files "$MYOS_ROOT/share/compose" "networks volumes" "$(myos_compose_suffixes)" "$ENV"
 }
 
+# shellcheck disable=SC2329
 # myos_stack_compose_files REF  the ordered compose files of one reference
 myos_stack_compose_files() {
-  _dir=$(myos_stack_resolve "$1") || return $?
+  _dirs=$(myos_stack_dirs "$1")
+  [ -n "$_dirs" ] || { myos_stack_resolve "$1" >/dev/null; return $?; }
   _name=$(myos_stack_name "$1")
   _suffixes="$(myos_compose_suffixes) $(myos_stack_version "$1")"
-  case $1 in
-    .|./*|/*|../*)
-      myos_compose_files "$_dir" "docker-compose compose" "$_suffixes" "$ENV"
-      myos_compose_files "$_dir/docker" "docker-compose compose" "$_suffixes" "$ENV" ;;
-    *)
-      myos_compose_files "$_dir" "docker-compose $_name" "$_suffixes" "$ENV" ;;
-  esac
+  for _dir in $_dirs; do
+    case $1 in
+      .|./*|/*|../*)
+        myos_compose_files "$_dir" "docker-compose compose" "$_suffixes" "$ENV"
+        myos_compose_files "$_dir/docker" "docker-compose compose" "$_suffixes" "$ENV" ;;
+      *)
+        myos_compose_files "$_dir" "docker-compose $_name" "$_suffixes" "$ENV" ;;
+    esac
+  done
 }
 
 # --- dispatch -------------------------------------------------------------
-case $MYOS_CMD in
-  version) printf 'myos %s\n' "$MYOS_VERSION"; exit 0 ;;
-  help) usage; exit 0 ;;
-esac
+# myos_dispatch COMMAND  run one command
+myos_dispatch() {
+  case $1 in
+    version) printf 'myos %s\n' "$MYOS_VERSION"; return 0 ;;
+    help) usage; return 0 ;;
+  esac
+  if [ -f "$MYOS_ROOT/lib/cmd/$1.sh" ]; then
+    # shellcheck source=/dev/null
+    . "$MYOS_ROOT/lib/cmd/$1.sh"
+    "myos_cmd_$(printf '%s' "$1" | tr '-' '_')"
+    return $?
+  fi
+  # commands that map straight onto docker compose
+  case $1 in
+    up|down|start|stop|restart|ps|logs|config|build|pull|create|kill|top|images) ;;
+    *) myos_error "unknown command: $1"; usage >&2; return "$MYOS_E_USAGE" ;;
+  esac
+  # shellcheck source=/dev/null
+  . "$MYOS_ROOT/lib/cmd/_compose.sh"
+  myos_cmd_compose "$1"
+}
 
-# shellcheck source=/dev/null
-if [ -f "$MYOS_ROOT/lib/cmd/$MYOS_CMD.sh" ]; then
-  . "$MYOS_ROOT/lib/cmd/$MYOS_CMD.sh"
-  "myos_cmd_$(printf '%s' "$MYOS_CMD" | tr '-' '_')"
-  exit $?
-fi
-
-# commands that map straight onto docker compose
-case $MYOS_CMD in
-  up|down|start|stop|restart|ps|logs|config|build|pull|create|kill|top|images) ;;
-  *) myos_error "unknown command: $MYOS_CMD"; usage >&2; exit "$MYOS_E_USAGE" ;;
-esac
-
-. "$MYOS_ROOT/lib/cmd/_compose.sh"
-myos_cmd_compose "$MYOS_CMD"
+# Several commands run in order and stop at the first failure, as make did.
+_rc=0
+for MYOS_CMD in $MYOS_CMDS; do
+  myos_dispatch "$MYOS_CMD" || { _rc=$?; break; }
+done
+exit "$_rc"

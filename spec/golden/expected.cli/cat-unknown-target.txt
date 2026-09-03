@@ -1,28 +1,3 @@
 ERROR: unknown command: doesnotexist
-Usage: myos [options] <command> [stack...] [VAR=value...] [-- args...]
-
-Options:
- -C DIR work in DIR instead of the current directory
- -e ENV environment (default: local, or ENV from the config)
- -H HOSTS run on remote hosts instead (comma separated, or "all")
- -n, --dry-run print the commands instead of running them
- --color WHEN always, never or auto (default: colour when on a terminal)
- -v, --verbose show what myos does
- -d, --debug show every command
- -h, --help this help
-
-Commands:
- up down start stop restart recreate manage the containers of a stack
- ps logs config exec run inspect and enter them
- ls [--groups] list the stacks myos can see
- env [VAR...] show resolved variables
- env-update fill .env from the .env.dist templates
- doctor check the installation
- version print the myos version
-
-Stacks:
- myos up the stack of the current directory
- myos up host a group, expanded from host=... in a .env or .mk
- myos up host/fabio a single stack
- myos up postgres:9.6 a versioned stack
+ERROR: to act on a stack of that name, say what to do: myos up doesnotexist
 [exit 2]

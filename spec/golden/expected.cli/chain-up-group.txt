@@ -1,0 +1,5 @@
+docker network create tester-local
+docker network create testhost
+docker compose -f @WD@/stack/host/consul.yml -f @WD@/stack/host/fabio.yml -f @WD@/stack/host/registrator.yml -f @MYOS@/share/compose/networks.yml -p testhost --project-directory @WD@/stack/host up -d
+docker compose -f @WD@/stack/host/consul.yml -f @WD@/stack/host/fabio.yml -f @WD@/stack/host/registrator.yml -f @MYOS@/share/compose/networks.yml -p testhost --project-directory @WD@/stack/host ps
+[exit 0]

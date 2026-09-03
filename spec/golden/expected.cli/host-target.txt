@@ -1,2 +1,3 @@
-ERROR: no stack given, and no compose file in @WD@
+ERROR: unknown command: host
+ERROR: to act on a stack of that name, say what to do: myos up host
 [exit 2]

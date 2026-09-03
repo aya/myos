@@ -20,6 +20,9 @@
 - the project `.env` now wins over `/etc/conf.d/myos`, as documented;
   `MYOS_CONF_PRIORITY=system` restores the previous order
 - `share/make/shim.mk`: make as an optional front end over the same shell code
+- commands chain: `myos build up logs host/fabio`, as make targets did
+- a stack found in several directories of the stack path is merged, project
+  last, so a project refines a catalogue stack instead of replacing it
 - `--color always|never|auto`, and no colour when the output is piped
 - verified under the /bin/sh of Alpine (busybox) and Debian (dash)
 - the make engine still works and is still covered by the golden tests

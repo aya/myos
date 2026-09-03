@@ -81,3 +81,6 @@ shim-up-group                   | shim-project  | @make up STACK=host DRYRUN=tru
 shim-config                     | shim-project  | @make config STACK=host/consul DRYRUN=true
 shim-project-target             | shim-project  | @make host-certs
 shim-env                        | shim-project  | @make env ARGS=COMPOSE_PROJECT_NAME STACK=host
+chain-build-up-logs             | host-project  | build up logs host/fabio
+chain-up-group                  | host-project  | up ps host
+chain-print-two                 | host-project  | print-COMPOSE_PROJECT_NAME print-APP STACK=host/consul
