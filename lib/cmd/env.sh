@@ -46,35 +46,3 @@ myos_cmd_env() {
   done
 }
 
-# myos_all_compose_files  every compose file of every requested stack, in order
-myos_all_compose_files() {
-  for _ref in $MYOS_STACKS; do
-    myos_stack_compose_files "$_ref" 2>/dev/null
-  done
-  myos_framework_compose_files
-  return 0
-}
-
-# myos_first_app / myos_first_scope / myos_first_project
-# describe the first requested stack, which is what the introspection commands
-# report when several stacks are asked for at once.
-myos_first_app() {
-  for _ref in $MYOS_STACKS; do
-    case $_ref in
-      .|./*|/*|../*) basename "$(myos_stack_resolve "$_ref" 2>/dev/null)" ;;
-      *) myos_stack_name "$_ref" ;;
-    esac
-    return 0
-  done
-}
-
-myos_first_scope() {
-  for _ref in $MYOS_STACKS; do myos_scope "$_ref"; return 0; done
-}
-
-myos_first_project() {
-  for _ref in $MYOS_STACKS; do
-    myos_project_name "$(myos_scope "$_ref")" "$USER" "$ENV" "$(myos_first_app)"
-    return 0
-  done
-}

@@ -19,7 +19,7 @@ done
 MYOS_ROOT=$(cd "$(dirname "$_self")/.." && pwd -P)
 export MYOS_ROOT
 
-for _m in core str var tags naming stack config compose hooks; do
+for _m in core str var tags naming stack config compose hooks context; do
   # shellcheck source=/dev/null
   . "$MYOS_ROOT/lib/$_m.sh"
 done
@@ -224,6 +224,8 @@ fi
 
 # shellcheck disable=SC2086  # a list of references
 MYOS_STACKS=$(myos_group_expand $MYOS_REFS)
+
+myos_context_defaults
 
 # The uri a stack is served on: the tag helpers build on it, so it has to be
 # known before the hooks run.

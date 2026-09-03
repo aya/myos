@@ -39,6 +39,8 @@ myos_normalize() {
       -e 's/^APPS .*/APPS @APPS@/' \
       -e 's/^BRANCH .*/BRANCH @BRANCH@/' \
       -e 's/^VERSION .*/VERSION @VERSION@/' \
+      -e 's/--build-arg VERSION=[^ ]*/--build-arg VERSION=@VERSION@/' \
+      -e 's/--build-arg BRANCH=[^ ]*/--build-arg BRANCH=@BRANCH@/' \
       -e 's/[[:space:]][[:space:]]*/ /g' \
       -e 's/[[:space:]]*$//'
 }
