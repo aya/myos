@@ -39,22 +39,31 @@ myos_compose() {
   done
   _dir=$(dirname "$_first")
 
-  # variables the compose files reference, plus the network names they default
-  # on (networks.yml is appended after the scan, so its variables are added here)
+  # the variables the compose files reference, plus the network names: those
+  # live in networks.yml, which is appended after the scan
   # shellcheck disable=SC2086  # both are deliberate word lists
   _vars=$(myos_env_vars $_files)
   # shellcheck disable=SC2086
   _envargs=$(myos_env_export $_vars DOCKER_NETWORK_DEFAULT DOCKER_NETWORK_PRIVATE DOCKER_NETWORK_PUBLIC COMPOSE_SERVICE_NAME)
 
   if [ "${DRYRUN:-false}" = true ]; then
+    # shellcheck disable=SC2086  # printed, not executed
     printf '%s%s -p %s --project-directory %s %s\n' "$_bin" "$_fargs" "$_project" "$_dir" "$*"
-  else
-    _IFS=$IFS; IFS='
-'
-    # shellcheck disable=SC2046,SC2086  # deliberate word splitting on IFS=newline
-    env $_envargs $_bin --ansi=auto $_fargs -p "$_project" --project-directory "$_dir" "$@"
-    _rc=$?
-    IFS=$_IFS
-    return $_rc
+    return 0
   fi
+
+  # Export the variables in a subshell rather than through env(1): a value may
+  # contain spaces, and the command line must still be split on spaces (the
+  # compose binary can be the two words "docker compose").
+  (
+    while IFS= read -r _kv; do
+      [ -n "$_kv" ] || continue
+      # shellcheck disable=SC2163  # _kv is a NAME=value pair, not a name
+      export "$_kv"
+    done <<EOF
+$_envargs
+EOF
+    # shellcheck disable=SC2086  # _bin and _fargs are deliberate word lists
+    exec $_bin --ansi=auto $_fargs -p "$_project" --project-directory "$_dir" "$@"
+  )
 }

@@ -1,6 +1,10 @@
 #!/bin/sh
 # Mock docker for myos tests: logs every call, answers a few read-only queries deterministically.
-[ -n "${MYOS_DOCKER_LOG:-}" ] && printf 'docker %s\n' "$*" >> "$MYOS_DOCKER_LOG"
+if [ -n "${MYOS_DOCKER_LOG:-}" ]; then
+  printf 'docker %s\n' "$*" >> "$MYOS_DOCKER_LOG"
+  # the environment is recorded too, so a test can assert what was exported
+  env > "$(dirname "$MYOS_DOCKER_LOG")/env.log"
+fi
 case "$1 $2" in
   "compose version") echo "${MOCK_COMPOSE_VERSION:-2.29.0}" ;;
   "compose config")  echo "# mock compose config" ;;

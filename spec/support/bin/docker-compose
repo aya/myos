@@ -1,4 +1,8 @@
 #!/bin/sh
-[ -n "${MYOS_DOCKER_LOG:-}" ] && printf 'docker-compose %s\n' "$*" >> "$MYOS_DOCKER_LOG"
+if [ -n "${MYOS_DOCKER_LOG:-}" ]; then
+  printf 'docker-compose %s\n' "$*" >> "$MYOS_DOCKER_LOG"
+  # the environment is recorded too, so a test can assert what was exported
+  env > "$(dirname "$MYOS_DOCKER_LOG")/env.log"
+fi
 case "$1" in version) echo "${MOCK_COMPOSE_VERSION:-2.29.0}" ;; config) echo "# mock compose config" ;; *) : ;; esac
 exit 0
