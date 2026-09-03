@@ -12,7 +12,7 @@ test-unit: ## Run unit tests only
 test-golden: ## Run golden tests only (MYOS_ENGINE=legacy|cli)
 	$(SHELLSPEC) spec/golden
 test-integration: ## Run tests needing a real docker daemon
-	$(SHELLSPEC) --tag integration
+	MYOS_INTEGRATION=1 $(SHELLSPEC) spec/integration
 golden-record: ## Re-record golden expectations from the legacy engine
 	spec/golden/record.sh $(CASES)
 lint: ## shellcheck all shell sources
