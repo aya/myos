@@ -1,5 +1,17 @@
 # CHANGELOG
 
+## v2.0.0-dev - 2026-09-03
+
+- new bash CLI (`bin/myos`, `lib/`): one model for a project directory, a
+  catalogue stack, a group and a host singleton
+- unknown command or unknown stack now fails, instead of succeeding silently
+- default compose project is `<user>-<env>-<app>`; set
+  `MYOS_PROJECT_FORMAT=user-app-env` on deployments created before this
+- `myos ls`, `myos env`, `myos doctor` to inspect an installation
+- `install.sh`, and the catalogue is looked up beside the installation
+- agent skill in `skills/myos/`, contributor notes in `AGENTS.md`
+- the make engine still works and is still covered by the golden tests
+
 ## v1.1 - 2026-09-03
 
 - move the stack catalogue and the docker build contexts to the myos-stacks project

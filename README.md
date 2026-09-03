@@ -61,6 +61,9 @@ sudo git clone https://github.com/aya/myos-stacks /usr/local/share/myos
 ## Usage
 
 ```sh
+myos doctor                      # check the installation first
+myos ls                          # what stacks are reachable
+myos -n up host                  # print what it would run
 myos up                          # the stack of the current directory
 myos up STACK=host               # a group of stacks, see stack/host/host.mk
 myos up STACK=host/fabio         # a single stack
@@ -108,15 +111,24 @@ Networks: `default` = `_<project>` (private to the project), `private` =
 | `ENV=<env>` | environment: selects `.env.<env>` and the `<name>.<env>.yml` overlays |
 | `STACK=<refs>` | stacks to act on |
 | `SERVICE=<name>` | target one compose service (`exec`, `run`, `logs`, `scale`) |
+| `MYOS_PROJECT_FORMAT` | `user-env-app` (default) or `user-app-env` for deployments made before myos 2.0 |
 
 ```sh
-myos print-COMPOSE_FILE           # show a variable
-myos print-COMPOSE_PROJECT_NAME
-myos debug                        # show debug variables
-myos doc                          # self documentation from the make comments
+myos env COMPOSE_FILE             # show a variable
+myos env COMPOSE_PROJECT_NAME
+myos config <stack>               # the rendered compose file
 ```
 
+The make targets keep working: `print-VAR`, `stack-<stack>-<command>`,
+`<command>@<env>`, and a project `Makefile` that includes `make/include.mk`.
+
 `SETUP_UFW=true` enables the ufw/ufw-docker integration (`myos setup-ufw`).
+
+## For agents
+
+`skills/myos/SKILL.md` is a skill describing how to drive myos, with
+references on the conventions, the commands and the failure modes.
+`AGENTS.md` covers changing myos itself.
 
 ## Tests
 
