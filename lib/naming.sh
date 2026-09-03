@@ -33,6 +33,8 @@ myos_resu() {
   _niamod=$(myos_reverse "$(printf '%s' "$_domain" | tr '.' ' ')" | tr ' ' '.')
   _resu=$(myos_reverse "$(printf '%s' "$_user" | tr '.' ' ')" | tr ' ' '.')
   MYOS_RESU_NIAMOD="$_niamod.$_resu"
+  # consumed by the User stacks, not by this file
+  # shellcheck disable=SC2034
   MYOS_RESU_PATH=$(printf '%s' "$MYOS_RESU_NIAMOD" | tr '.' '/')
   printf '%s.%s' "$_user" "$_domain"
 }
@@ -47,6 +49,8 @@ myos_project_name() {
   [ -n "${DOCKER_COMPOSE_PROJECT_NAME:-}" ] && { printf '%s' "$DOCKER_COMPOSE_PROJECT_NAME"; return 0; }
   case $_scope in
     host)
+      # HOSTNAME is set by lib/config.sh, not inherited from the shell
+      # shellcheck disable=SC3028
       printf '%s' "${HOST_COMPOSE_PROJECT_NAME:-${HOSTNAME:-localhost}}"; return 0 ;;
     user)
       if [ -n "${USER_COMPOSE_PROJECT_NAME:-}" ]; then printf '%s' "$USER_COMPOSE_PROJECT_NAME"

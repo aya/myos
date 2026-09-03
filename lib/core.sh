@@ -5,6 +5,8 @@
 # the command instead of running it. Messages go to stderr so that stdout stays
 # usable for data (myos env, myos config, myos ls).
 
+# Exit codes and colors are consumed by the other lib/ files and by bin/myos.
+# shellcheck disable=SC2034
 MYOS_E_OK=0        # success
 MYOS_E_FAIL=1      # command failed
 MYOS_E_USAGE=2     # bad invocation
