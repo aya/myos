@@ -70,3 +70,10 @@ inc-app-print-env-vars          | app-git       | @make print-ENV_VARS
 inc-app-print-network-default   | app-git       | @make print-DOCKER_NETWORK_DEFAULT
 inc-app-stack-postgres-up       | app-git       | @make up STACK=postgres
 inc-app-unknown-target          | app-git       | @make doesnotexist
+cmd-exec-host                   | host-project  | exec host/consul -- consul members
+cmd-exec-service                | host-project  | exec host/fabio SERVICE=fabio -- sh
+cmd-run-catalogue               | app-nogit     | run postgres -- psql -l
+cmd-scale                       | app-nogit     | scale postgres SERVICE=postgres NUM=3
+cmd-ls                          | host-project  | ls
+cmd-ls-groups                   | host-project  | ls --groups
+cmd-env-domain                  | host-project  | env DOMAIN

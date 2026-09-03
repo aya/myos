@@ -1,0 +1,4 @@
+docker network create tester-local
+docker network create testhost
+docker compose -f @HOME@/.local/share/myos/stack/postgres/postgres.yml -f @HOME@/.local/share/myos/stack/postgres/postgres.local.yml -f @MYOS@/share/compose/networks.yml -p tester-postgres-local --project-directory @HOME@/.local/share/myos/stack/postgres up -d --scale postgres=3
+[exit 0]

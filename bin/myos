@@ -196,7 +196,7 @@ if [ -f "$MYOS_ROOT/lib/cmd/$MYOS_CMD.sh" ]; then
   exit $?
 fi
 
-# compose passthrough commands
+# commands that map straight onto docker compose
 case $MYOS_CMD in
   up|down|start|stop|restart|ps|logs|config|build|pull|create|kill|top|images) ;;
   *) myos_error "unknown command: $MYOS_CMD"; usage >&2; exit "$MYOS_E_USAGE" ;;

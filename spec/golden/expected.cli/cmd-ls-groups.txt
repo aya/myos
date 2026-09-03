@@ -1,0 +1,4 @@
+host host/consul host/fabio host/registrator
+default postgres redis
+testing drone/drone redis
+[exit 0]
