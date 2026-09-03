@@ -15,7 +15,12 @@ myos_path() {
   _wd=${WORKDIR:-$PWD}
   _name=${STACK_DIR_NAME:-stack}
   _out=
-  for _d in "$_wd" "$_wd/.." "${HOME:-/nonexistent}/.local/share" /usr/local/share /usr/share; do
+  # <prefix>/share comes from MYOS_ROOT, so an installation under any prefix
+  # finds the catalogue installed beside it
+  _prefix=
+  [ -n "${MYOS_ROOT:-}" ] && _prefix=$(dirname "$(dirname "$MYOS_ROOT")")/share
+  for _d in "$_wd" "$_wd/.." "${HOME:-/nonexistent}/.local/share" \
+            ${_prefix:+"$_prefix"} /usr/local/share /usr/share; do
     for _c in "$_d/$_name" "$_d/myos/$_name"; do
       [ -d "$_c" ] || continue
       _c=$(cd "$_c" && pwd -P)

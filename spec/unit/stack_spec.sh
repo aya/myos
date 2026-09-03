@@ -168,3 +168,25 @@ Describe 'lib/stack.sh group safety'
     The lines of output should equal 2
   End
 End
+
+Describe 'lib/stack.sh installation prefix'
+  setup() {
+    MYOS_TMP=$(mktemp -d "${TMPDIR:-/tmp}/myos-prefix.XXXXXX")
+    # myos resolves stack paths physically, so compare against the physical path
+    MYOS_TMP=$(cd "$MYOS_TMP" && pwd -P)
+    mkdir -p "$MYOS_TMP/lib/myos" "$MYOS_TMP/share/myos/stack/demo"
+    : > "$MYOS_TMP/share/myos/stack/demo/demo.yml"
+    MYOS_ROOT=$MYOS_TMP/lib/myos
+    WORKDIR=$MYOS_TMP
+    HOME=$MYOS_TMP/nohome
+    MYOS_PATH=
+  }
+  cleanup() { rm -rf "$MYOS_TMP"; }
+  BeforeEach setup
+  AfterEach cleanup
+
+  It 'finds the catalogue installed beside the framework'
+    When call myos_stack_resolve demo
+    The output should equal "$MYOS_TMP/share/myos/stack/demo"
+  End
+End
