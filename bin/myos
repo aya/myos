@@ -1,0 +1,188 @@
+#!/bin/sh
+# myos - Make Your Own Stack
+#
+# shellcheck disable=SC2034  # most globals here are read by lib/ and lib/cmd/
+# shellcheck disable=SC1091  # lib files are sourced by path at runtime
+#
+# Runs docker compose stacks: on a host, in a project directory, for a user.
+# See README.md, or `myos help`.
+set -u
+
+MYOS_VERSION=2.0.0-dev
+
+# --- locate the installation ---------------------------------------------
+_self=$0
+while [ -L "$_self" ]; do
+  _link=$(readlink "$_self")
+  case $_link in /*) _self=$_link ;; *) _self=$(dirname "$_self")/$_link ;; esac
+done
+MYOS_ROOT=$(cd "$(dirname "$_self")/.." && pwd -P)
+export MYOS_ROOT
+
+for _m in core str tags naming stack config compose; do
+  # shellcheck source=/dev/null
+  . "$MYOS_ROOT/lib/$_m.sh"
+done
+
+# --- command line ---------------------------------------------------------
+# These are read by the lib/cmd/* files sourced further down.
+# shellcheck disable=SC2034
+{
+  MYOS_CMD=
+  MYOS_REFS=
+  MYOS_REFS_RAW=
+  MYOS_VARS=
+  MYOS_ARGS=
+  MYOS_HOSTS=
+  VERBOSE=${VERBOSE:-}
+  DEBUG=${DEBUG:-}
+}
+
+usage() {
+  cat <<'USAGE'
+Usage: myos [options] <command> [stack...] [VAR=value...] [-- args...]
+
+Options:
+  -C DIR        work in DIR instead of the current directory
+  -e ENV        environment (default: local, or ENV from the config)
+  -H HOSTS      run on remote hosts instead (comma separated, or "all")
+  -n, --dry-run print the commands instead of running them
+  -v, --verbose show what myos does
+  -d, --debug   show every command
+  -h, --help    this help
+
+Commands:
+  up down start stop restart recreate   manage the containers of a stack
+  ps logs config exec run               inspect and enter them
+  ls [--groups]                         list the stacks myos can see
+  env [VAR...]                          show resolved variables
+  doctor                                check the installation
+  version                               print the myos version
+
+Stacks:
+  myos up                     the stack of the current directory
+  myos up host                a group, expanded from host=... in a .env or .mk
+  myos up host/fabio          a single stack
+  myos up postgres:9.6        a versioned stack
+USAGE
+}
+
+while [ $# -gt 0 ]; do
+  case $1 in
+    -C) WORKDIR=$2; shift 2 ;;
+    -e) ENV=$2; shift 2 ;;
+    -H) MYOS_HOSTS=$2; shift 2 ;;
+    -n|--dry-run) DRYRUN=true; shift ;;
+    -v|--verbose) VERBOSE=true; shift ;;
+    -d|--debug) DEBUG=true; shift ;;
+    -h|--help) usage; exit 0 ;;
+    --) shift; MYOS_ARGS="$*"; break ;;
+    -*)
+      if [ -n "$MYOS_CMD" ]; then
+        MYOS_ARGS="${MYOS_ARGS:+$MYOS_ARGS }$1"; shift
+      else
+        myos_error "unknown option: $1"; usage >&2; exit "$MYOS_E_USAGE"
+      fi ;;
+    *=*) eval "${1%%=*}=\${1#*=}"; export "${1%%=*}"; shift ;;
+    *)
+      if [ -z "$MYOS_CMD" ]; then MYOS_CMD=$1; else MYOS_REFS="${MYOS_REFS:+$MYOS_REFS }$1"; fi
+      shift ;;
+  esac
+done
+
+[ -n "$MYOS_CMD" ] || { usage; exit "$MYOS_E_USAGE"; }
+MYOS_REFS_RAW=$MYOS_REFS
+case $MYOS_CMD in
+  env|ls|doctor) MYOS_VARS=$MYOS_REFS; MYOS_REFS= ;;
+esac
+
+# Targets of the make engine keep working: print-VAR, stack-<stack>-<command>,
+# <command>@<env> and a bare group name.
+case $MYOS_CMD in
+  print-*)
+    MYOS_VARS=${MYOS_CMD#print-}
+    # shellcheck disable=SC2209  # the literal string "env", not the command
+    MYOS_CMD=env ;;
+  *@*)     ENV=${MYOS_CMD#*@}; MYOS_CMD=${MYOS_CMD%@*} ;;
+esac
+case $MYOS_CMD in
+  stack-*-*)
+    _rest=${MYOS_CMD#stack-}
+    MYOS_CMD=${_rest##*-}
+    MYOS_REFS="${_rest%-*} $MYOS_REFS"
+    MYOS_REFS=${MYOS_REFS% } ;;
+esac
+
+# --- configuration --------------------------------------------------------
+WORKDIR=${WORKDIR:-$PWD}
+WORKDIR=$(cd "$WORKDIR" 2>/dev/null && pwd -P) || myos_die "$MYOS_E_USAGE" "no such directory: $WORKDIR"
+
+for _f in $(myos_conf_files); do myos_dotenv_load "$_f"; done
+myos_dotenv_load "$HOME/.config/myos/config"
+ENV=${ENV:-local}
+myos_dotenv_load "$WORKDIR/.env.$ENV"
+myos_dotenv_load "$WORKDIR/.env"
+
+USER=${USER:-$(id -nu 2>/dev/null)}
+HOSTNAME=${HOSTNAME:-$(hostname 2>/dev/null | sed 's/\..*//')}
+HOSTNAME=$(myos_lower "$HOSTNAME")
+DOMAIN=${DOMAIN:-localhost}
+DRYRUN=${DRYRUN:-false}
+myos_colors
+
+# --- stack references -----------------------------------------------------
+# No reference given: the current directory when it holds a compose file,
+# else the STACK of the configuration.
+if [ -z "$MYOS_REFS" ]; then
+  if [ -f "$WORKDIR/docker-compose.yml" ] || [ -f "$WORKDIR/compose.yml" ] ||
+     [ -f "$WORKDIR/docker/docker-compose.yml" ]; then
+    MYOS_REFS=./
+  else
+    MYOS_REFS=${STACK:-}
+  fi
+fi
+if [ -z "$MYOS_REFS" ]; then
+  case $MYOS_CMD in
+    env|ls|doctor|version|help) ;;
+    *) myos_die "$MYOS_E_USAGE" "no stack given, and no compose file in $WORKDIR" ;;
+  esac
+fi
+
+# shellcheck disable=SC2086  # a list of references
+MYOS_STACKS=$(myos_group_expand $MYOS_REFS)
+
+# myos_stack_compose_files REF  the ordered compose files of one reference
+myos_stack_compose_files() {
+  _dir=$(myos_stack_resolve "$1") || return $?
+  _name=$(myos_stack_name "$1")
+  _suffixes="$(myos_compose_suffixes) $(myos_stack_version "$1")"
+  case $1 in
+    .|./*|/*|../*)
+      myos_compose_files "$_dir" "docker-compose compose" "$_suffixes" "$ENV"
+      myos_compose_files "$_dir/docker" "docker-compose compose" "$_suffixes" "$ENV" ;;
+    *)
+      myos_compose_files "$_dir" "docker-compose $_name" "$_suffixes" "$ENV" ;;
+  esac
+}
+
+# --- dispatch -------------------------------------------------------------
+case $MYOS_CMD in
+  version) printf 'myos %s\n' "$MYOS_VERSION"; exit 0 ;;
+  help) usage; exit 0 ;;
+esac
+
+# shellcheck source=/dev/null
+if [ -f "$MYOS_ROOT/lib/cmd/$MYOS_CMD.sh" ]; then
+  . "$MYOS_ROOT/lib/cmd/$MYOS_CMD.sh"
+  "myos_cmd_$MYOS_CMD"
+  exit $?
+fi
+
+# compose passthrough commands
+case $MYOS_CMD in
+  up|down|start|stop|restart|ps|logs|config|build|pull|create|kill|top|images) ;;
+  *) myos_error "unknown command: $MYOS_CMD"; usage >&2; exit "$MYOS_E_USAGE" ;;
+esac
+
+. "$MYOS_ROOT/lib/cmd/_compose.sh"
+myos_cmd_compose "$MYOS_CMD"

@@ -38,9 +38,9 @@ Describe 'lib/stack.sh'
       When call myos_stack_resolve postgres
       The output should equal "$HOME/.local/share/myos/stack/postgres"
     End
-    It 'resolves a versioned reference'
-      When run source spec/unit/stack_version_helper.sh
-      The output should equal "postgres 9.6"
+    It 'resolves a versioned reference to its stack directory'
+      When call myos_stack_resolve "postgres:9.6"
+      The output should equal "$HOME/.local/share/myos/stack/postgres"
     End
     It 'resolves a directory reference'
       When call myos_stack_resolve "$WORKDIR/stack/host"
@@ -50,6 +50,24 @@ Describe 'lib/stack.sh'
       When run myos_stack_resolve nosuchstack
       The status should equal 3
       The stderr should include "stack not found: nosuchstack"
+    End
+  End
+
+  Describe 'myos_stack_name / myos_stack_version'
+    Parameters
+      "postgres"        postgres    latest
+      "postgres:9.6"    postgres    9.6
+      "host/fabio"      fabio       latest
+      "host/fabio:1.6"  fabio       1.6
+      "drone/drone.yml" drone       latest
+    End
+    It "reads the name out of $1"
+      When call myos_stack_name "$1"
+      The output should equal "$2"
+    End
+    It "reads the version out of $1"
+      When call myos_stack_version "$1"
+      The output should equal "$3"
     End
   End
 
@@ -132,5 +150,21 @@ Describe 'lib/stack.sh'
       The status should equal 2
       The stderr should include "nested too deep"
     End
+  End
+End
+
+Describe 'lib/stack.sh group safety'
+  BeforeEach 'MYOS_PATH=/nonexistent'
+  It 'does not expand an uppercase variable that happens to share a name'
+    # shellcheck disable=SC2034
+    DOMAIN="example.test"
+    When call myos_group_expand DOMAIN
+    The output should equal "DOMAIN"
+  End
+  It 'still expands a lowercase group'
+    # shellcheck disable=SC2034
+    host="host/consul host/fabio"
+    When call myos_group_expand host
+    The lines of output should equal 2
   End
 End

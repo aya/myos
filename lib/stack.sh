@@ -26,17 +26,25 @@ myos_path() {
   printf '%s' "$_out"
 }
 
-# myos_stack_resolve REF  print the directory holding the stack, or fail with
-# MYOS_E_NOSTACK. Sets MYOS_STACK_NAME and MYOS_STACK_VERSION as a side effect.
+# myos_stack_name REF     the stack name: "host/fabio:1.6" -> "fabio"
+# myos_stack_version REF  the version, "latest" when the reference has none
+# Both are pure, so a caller can use them inside a command substitution.
+myos_stack_name() {
+  _r=${1%/}
+  case $_r in *:*) _r=${_r%:*} ;; esac
+  basename "$_r" .yml
+}
+myos_stack_version() {
+  _r=${1%/}
+  case $_r in *:*) printf '%s' "${_r##*:}" ;; *) printf 'latest' ;; esac
+}
+
+# myos_stack_resolve REF  print the directory holding the stack,
+# or fail with MYOS_E_NOSTACK
 myos_stack_resolve() {
   _ref=${1%/}
-  # MYOS_STACK_NAME and MYOS_STACK_VERSION are read back by the callers
-  # shellcheck disable=SC2034
-  {
-    MYOS_STACK_VERSION=latest
-    case $_ref in *:*) MYOS_STACK_VERSION=${_ref##*:}; _ref=${_ref%:*} ;; esac
-    MYOS_STACK_NAME=$(basename "$_ref" .yml)
-  }
+  case $_ref in *:*) _ref=${_ref%:*} ;; esac
+  _name=$(myos_stack_name "$1")
 
   # a path reference resolves to itself
   case $_ref in
@@ -52,7 +60,7 @@ myos_stack_resolve() {
     if [ -f "$_d/$_ref.yml" ] || [ -f "$_d/$_ref.yaml" ]; then
       printf '%s' "$(dirname "$_d/$_ref")"; return 0
     fi
-    if [ -d "$_d/$MYOS_STACK_NAME" ]; then printf '%s' "$_d/$MYOS_STACK_NAME"; return 0; fi
+    if [ -d "$_d/$_name" ]; then printf '%s' "$_d/$_name"; return 0; fi
     IFS=:
   done
   IFS=$_IFS
@@ -114,9 +122,14 @@ myos_group_expand() {
   done
 }
 
-# myos_group_value REF  the list a group expands to, empty when not a group
+# myos_group_value REF  the list a group expands to, empty when not a group.
+# Groups are lowercase by convention (host, testing, coroot, default): without
+# that rule any environment variable sharing a stack name would be expanded,
+# which is how the make engine behaved. The character class is spelled out
+# because a-z also matches uppercase under a dictionary collation (fr_FR).
 myos_group_value() {
   case $1 in .|/*|*/*|*:*) return 0 ;; esac
+  case $1 in *[![:lower:][:digit:]_-]*) return 0 ;; esac
   _v=$(myos_var "$1")
   [ -n "$_v" ] && { printf '%s' "$_v"; return 0; }
   _IFS=$IFS; IFS=:
