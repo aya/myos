@@ -110,21 +110,49 @@ A stack keeps its own settings next to its compose files:
 | `<name>.sh` | values that have to be computed |
 | `<name>.mk` | the legacy make snippet; still read for its groups |
 
-A `.sh` hook is sourced with the myos helpers available, and sets variables
-directly. This is what lets a stack work on a machine that has no make:
+A `.sh` hook declares **lazy defaults**: a function named
+`myos_default_<VARIABLE>`, called only when the variable has no value, and
+called again at each reference. That is the make `?=` on a recursive variable,
+in shell:
 
 ```sh
 # stack/host/fabio.sh
-HOST_FABIO_VERSION=${HOST_FABIO_VERSION:-1.6.3}
-HOST_FABIO_SERVICE_9998_NAME=${HOST_FABIO_SERVICE_9998_NAME:-fabio}
-HOST_FABIO_SERVICE_9998_AUTH=${HOST_FABIO_SERVICE_9998_AUTH:-default}
-HOST_FABIO_SERVICE_9998_TAGS=${HOST_FABIO_SERVICE_9998_TAGS:-$(myos_tagprefix HOST_FABIO 9998)}
+myos_default_HOST_FABIO_VERSION()              { printf '1.6.3'; }
+myos_default_HOST_FABIO_SERVICE_9998_NAME()    { printf 'fabio'; }
+myos_default_HOST_FABIO_SERVICE_9998_AUTH()    { printf 'default'; }
+myos_default_HOST_FABIO_SERVICE_9998_TAGS()    { myos_tagprefix HOST_FABIO 9998; }
 ```
 
-Always write `${VAR:-default}` so the environment and the `.env` still win.
+Two things follow, and they are the point:
+
+- a value given anywhere (environment, `.env`, command line) wins over the
+  default, without the hook having to say so;
+- the default is computed against the values current **at the moment it is
+  read**, so a `DOMAIN` set in a `.env` loaded later is taken into account.
+
+The prefix is not decoration: a bare function named `host` or `test` would be
+indistinguishable from the program of that name, and myos would run it.
+
 Helpers available in a hook: `myos_tagprefix`, `myos_urlprefix`, `myos_uri`,
 `myos_url`, `myos_envprefix`, `myos_servicenvs`, `myos_var`, `myos_lower`,
-`myos_upper`.
+`myos_upper`, and `myos_default NAME 'body'` when the name is built at run time.
+
+## Templates: .env.dist
+
+A stack may ship a `.env.dist` listing the variables it expects, with their
+defaults. `myos env-update` writes the missing ones into the `.env`, expanding
+`${VAR}` against the current values and running `$(command)`:
+
+```sh
+# stack/demo/.env.dist
+DEMO_IMAGE=alpine:${DEMO_VERSION}
+DEMO_VERSION=3.20
+DEMO_SECRET=$(openssl rand -hex 16)
+```
+
+A line may refer to a variable defined further down. A variable that already
+has a value keeps it: the `.env` records choices, it never overwrites them, and
+running the command twice changes nothing.
 
 ## Groups
 

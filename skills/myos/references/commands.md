@@ -26,6 +26,7 @@ myos [options] <command> [stack...] [VAR=value...] [-- args...]
 | `build` / `pull` | images |
 | `ls [--groups]` | the stacks and groups myos can see |
 | `env [VAR...]` | resolved variables |
+| `env-update` | fill the `.env` from the `.env.dist` templates |
 | `doctor` | check the installation |
 | `version` | the myos version |
 

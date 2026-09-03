@@ -80,3 +80,94 @@ myos_env_export() {
   done
   return 0
 }
+
+# myos_expand STRING  substitute ${VAR} and $(command) in STRING.
+# shellcheck disable=SC2016  # the single quotes are deliberate: these patterns
+# match the literal characters ${ and $( in the input, they are not expansions
+# This is what the make engine did when it generated a .env out of a .env.dist:
+# ${VAR} takes the current value, $(cmd) runs the command. Nothing else is
+# interpreted, so the rest of the line can hold anything.
+myos_expand() {
+  _in=$1
+  _guard=0
+  while [ "$_guard" -lt 16 ]; do
+    _guard=$((_guard + 1))
+    case $_in in
+      *'${'*'}'*)
+        _pre=${_in%%'${'*}
+        _rest=${_in#*'${'}
+        _name=${_rest%%\}*}
+        _post=${_rest#*\}}
+        case $_name in
+          ''|*[!A-Za-z0-9_]*) _in="$_pre\${$_name}$_post"; break ;;
+        esac
+        _in="$_pre$(myos_var "$_name")$_post" ;;
+      *) break ;;
+    esac
+  done
+  _guard=0
+  while [ "$_guard" -lt 16 ]; do
+    _guard=$((_guard + 1))
+    case $_in in
+      *'$('*')'*)
+        _pre=${_in%%'$('*}
+        _rest=${_in#*'$('}
+        _cmd=${_rest%%)*}
+        _post=${_rest#*)}
+        _in="$_pre$(eval "$_cmd" 2>/dev/null)$_post" ;;
+      *) break ;;
+    esac
+  done
+  printf '%s' "$_in"
+}
+
+# myos_env_update FILE DIST [OVER...]
+# Add to FILE every variable of DIST that is missing from it, expanded.
+# A variable that already has a value keeps it, whether it comes from the
+# environment, from FILE, or from one of the OVER files: the .env is a record
+# of the choices already made, never something that overwrites them.
+myos_env_update() {
+  _file=$1; _dist=$2; shift 2
+  [ -f "$_dist" ] || return 0
+  [ -e "$_file" ] || : > "$_file"
+
+  # what the overrides pin, read before anything else
+  for _over in "$@"; do
+    [ -f "$_over" ] || continue
+    myos_dotenv_load "$_over"
+  done
+
+  # Which keys already hold a choice, made in the environment, in the .env or
+  # in an override. Those are kept verbatim; everything else is a template.
+  _preset=" "
+  while IFS= read -r _kv; do
+    [ -n "$_kv" ] || continue
+    _k=${_kv%%=*}
+    [ -n "$_k" ] || continue
+    [ -n "$(myos_var "$_k")" ] && _preset="$_preset$_k "
+  done <<EOF
+$(myos_dotenv_parse "$_dist")
+EOF
+
+  # Make the templates themselves visible, so a line may refer to a variable
+  # defined further down the file, as the make engine allowed.
+  myos_dotenv_load "$_dist"
+
+  _added=0
+  while IFS= read -r _kv; do
+    [ -n "$_kv" ] || continue
+    _k=${_kv%%=*}
+    [ -n "$_k" ] || continue
+    myos_dotenv_has "$_file" "$_k" && continue
+    case $_preset in
+      *" $_k "*) _v=$(myos_var "$_k") ;;
+      *) _v=$(myos_expand "${_kv#*=}") ;;
+    esac
+    printf '%s=%s\n' "$_k" "$_v" >> "$_file"
+    _added=$((_added + 1))
+  done <<EOF
+$(myos_dotenv_parse "$_dist")
+EOF
+  [ "$_added" -gt 0 ] && myos_info "added $_added variable(s) to $_file"
+  return 0
+}

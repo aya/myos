@@ -1,6 +1,7 @@
 #shellcheck shell=sh
 Include lib/str.sh
 Include lib/core.sh
+Include lib/var.sh
 Include lib/tags.sh
 
 # The expectations below are the very examples left as comments in

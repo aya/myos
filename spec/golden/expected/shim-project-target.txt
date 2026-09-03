@@ -1,0 +1,2 @@
+would renew the certificates of host/consul host/fabio
+[exit 0]

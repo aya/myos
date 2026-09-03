@@ -1,6 +1,7 @@
 #shellcheck shell=sh
 Include lib/str.sh
 Include lib/core.sh
+Include lib/var.sh
 Include lib/tags.sh
 Include lib/config.sh
 
@@ -102,5 +103,97 @@ Describe 'lib/config.sh robustness'
     When call myos_var ""
     The output should equal ""
     The status should be success
+  End
+End
+
+# The make engine generated a .env out of a .env.dist, expanding ${VAR} against
+# the current values and running $(cmd). These check the shell equivalent.
+Describe 'lib/config.sh templates'
+  setup() { MYOS_TMP=$(mktemp -d "${TMPDIR:-/tmp}/myos-tpl.XXXXXX"); }
+  cleanup() { rm -rf "$MYOS_TMP"; }
+  BeforeEach setup
+  AfterEach cleanup
+
+  Describe 'myos_expand'
+    It 'substitutes a variable'
+      DOMAIN=example.org
+      When call myos_expand 'https://app.${DOMAIN}/'
+      The output should equal "https://app.example.org/"
+    End
+    It 'substitutes several, including twice the same'
+      DOMAIN=example.org
+      When call myos_expand '${DOMAIN}:${DOMAIN}'
+      The output should equal "example.org:example.org"
+    End
+    It 'substitutes a lazy default like any other value'
+      # shellcheck disable=SC2317
+      myos_default_LAZY_DOMAIN() { printf 'lazy.example.org'; }
+      When call myos_expand 'https://${LAZY_DOMAIN}/'
+      The output should equal "https://lazy.example.org/"
+    End
+    It 'empties an unknown variable, as make does'
+      When call myos_expand 'a${NOT_SET_ANYWHERE}b'
+      The output should equal "ab"
+    End
+    It 'runs a command substitution'
+      When call myos_expand 'pre-$(echo mid)-post'
+      The output should equal "pre-mid-post"
+    End
+    It 'leaves a malformed reference alone'
+      When call myos_expand 'a${not-a-name}b'
+      The output should equal 'a${not-a-name}b'
+    End
+  End
+
+  Describe 'myos_env_update'
+    It 'adds the missing variables, expanded'
+      printf 'DOMAIN=example.org\nAPP_URL=https://app.${DOMAIN}/\n' > "$MYOS_TMP/.env.dist"
+      DOMAIN=chosen.org
+      When call myos_env_update "$MYOS_TMP/.env" "$MYOS_TMP/.env.dist"
+      The status should be success
+      The contents of file "$MYOS_TMP/.env" should include "APP_URL=https://app.chosen.org/"
+      The contents of file "$MYOS_TMP/.env" should include "DOMAIN=chosen.org"
+    End
+    It 'never touches a value already recorded'
+      printf 'KEEP=default\n' > "$MYOS_TMP/.env.dist"
+      printf 'KEEP=already-chosen\n' > "$MYOS_TMP/.env"
+      When call myos_env_update "$MYOS_TMP/.env" "$MYOS_TMP/.env.dist"
+      The contents of file "$MYOS_TMP/.env" should equal "KEEP=already-chosen"
+    End
+    It 'is idempotent'
+      printf 'A=1\nB=${A}2\n' > "$MYOS_TMP/.env.dist"
+      When run source spec/unit/config_update_helper.sh "$MYOS_TMP"
+      The output should equal "2"
+    End
+    It 'does nothing without a template'
+      When call myos_env_update "$MYOS_TMP/.env" "$MYOS_TMP/nope.dist"
+      The status should be success
+      The path "$MYOS_TMP/.env" should not be exist
+    End
+  End
+End
+
+Describe 'lib/config.sh forward references'
+  setup() { MYOS_TMP=$(mktemp -d "${TMPDIR:-/tmp}/myos-fwd.XXXXXX"); }
+  cleanup() { rm -rf "$MYOS_TMP"; }
+  BeforeEach setup
+  AfterEach cleanup
+
+  It 'resolves a reference to a variable defined further down the template'
+    printf 'IMAGE=alpine:${VERSION}\nVERSION=3.20\n' > "$MYOS_TMP/.env.dist"
+    When call myos_env_update "$MYOS_TMP/.env" "$MYOS_TMP/.env.dist"
+    The contents of file "$MYOS_TMP/.env" should include "IMAGE=alpine:3.20"
+  End
+  It 'resolves a chain of references'
+    printf 'A=${B}\nB=${C}\nC=deep\n' > "$MYOS_TMP/.env.dist"
+    When call myos_env_update "$MYOS_TMP/.env" "$MYOS_TMP/.env.dist"
+    The contents of file "$MYOS_TMP/.env" should include "A=deep"
+  End
+  It 'still lets an explicit choice win over the template'
+    printf 'IMAGE=alpine:${VERSION}\nVERSION=3.20\n' > "$MYOS_TMP/.env.dist"
+    VERSION=3.19
+    When call myos_env_update "$MYOS_TMP/.env" "$MYOS_TMP/.env.dist"
+    The contents of file "$MYOS_TMP/.env" should include "IMAGE=alpine:3.19"
+    The contents of file "$MYOS_TMP/.env" should include "VERSION=3.19"
   End
 End

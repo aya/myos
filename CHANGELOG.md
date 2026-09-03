@@ -12,6 +12,14 @@
 - agent skill in `skills/myos/`, contributor notes in `AGENTS.md`
 - stacks carry their settings in `<name>.env` and `<name>.sh` hooks, so the
   catalogue no longer needs make to be installed
+- lazy defaults (`myos_default_<VAR>` functions) give the recursive `?=` of
+  make in pure shell: an explicit value wins, and the default is recomputed
+  at each reference
+- `myos env-update` generates a `.env` from the `.env.dist` templates,
+  expanding `${VAR}` and `$(command)`, including forward references
+- the project `.env` now wins over `/etc/conf.d/myos`, as documented;
+  `MYOS_CONF_PRIORITY=system` restores the previous order
+- `share/make/shim.mk`: make as an optional front end over the same shell code
 - `--color always|never|auto`, and no colour when the output is piped
 - verified under the /bin/sh of Alpine (busybox) and Debian (dash)
 - the make engine still works and is still covered by the golden tests

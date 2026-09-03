@@ -1,0 +1,2 @@
+docker compose -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost --project-directory @WD@/stack/host config
+[exit 0]

@@ -19,7 +19,7 @@ done
 MYOS_ROOT=$(cd "$(dirname "$_self")/.." && pwd -P)
 export MYOS_ROOT
 
-for _m in core str tags naming stack config compose hooks; do
+for _m in core str var tags naming stack config compose hooks; do
   # shellcheck source=/dev/null
   . "$MYOS_ROOT/lib/$_m.sh"
 done
@@ -58,6 +58,7 @@ Commands:
   ps logs config exec run               inspect and enter them
   ls [--groups]                         list the stacks myos can see
   env [VAR...]                          show resolved variables
+  env-update                            fill .env from the .env.dist templates
   doctor                                check the installation
   version                               print the myos version
 
@@ -121,11 +122,30 @@ esac
 WORKDIR=${WORKDIR:-$PWD}
 WORKDIR=$(cd "$WORKDIR" 2>/dev/null && pwd -P) || myos_die "$MYOS_E_USAGE" "no such directory: $WORKDIR"
 
-for _f in $(myos_conf_files); do myos_dotenv_load "$_f"; done
-myos_dotenv_load "${HOME:-}/.config/myos/config"
+# ENV decides which .env.<env> to read, so it is resolved first, from the most
+# specific source that names it.
+if [ -z "${ENV:-}" ]; then
+  for _f in "$WORKDIR/.env" "${HOME:-}/.config/myos/config" $(myos_conf_files); do
+    ENV=$(myos_dotenv_parse "$_f" | sed -n 's/^ENV=//p' | tail -1)
+    [ -n "$ENV" ] && break
+  done
+fi
 ENV=${ENV:-local}
-myos_dotenv_load "$WORKDIR/.env.$ENV"
-myos_dotenv_load "$WORKDIR/.env"
+
+# The layers, most specific first: the loader never overwrites a value, so the
+# order below is the order of precedence. The environment and the VAR=value
+# arguments are already set, and therefore win over every file.
+# MYOS_CONF_PRIORITY=system puts the machine files first, as the make engine did.
+myos_config_layers() {
+  if [ "${MYOS_CONF_PRIORITY:-}" = system ]; then
+    myos_conf_files
+    printf '%s\n' "${HOME:-}/.config/myos/config" "$WORKDIR/.env.$ENV" "$WORKDIR/.env"
+  else
+    printf '%s\n' "$WORKDIR/.env.$ENV" "$WORKDIR/.env" "${HOME:-}/.config/myos/config"
+    myos_conf_files
+  fi
+}
+for _f in $(myos_config_layers); do myos_dotenv_load "$_f"; done
 
 # Overlay switches. Their names drive which <stack>.<suffix>.yml files load,
 # so these defaults decide that e.g. supabase.labels.yml is picked up.
@@ -159,7 +179,7 @@ if [ -z "$MYOS_REFS" ]; then
 fi
 if [ -z "$MYOS_REFS" ]; then
   case $MYOS_CMD in
-    env|ls|doctor|version|help) ;;
+    env|env-update|ls|doctor|version|help) ;;
     *) myos_die "$MYOS_E_USAGE" "no stack given, and no compose file in $WORKDIR" ;;
   esac
 fi
@@ -211,7 +231,7 @@ esac
 # shellcheck source=/dev/null
 if [ -f "$MYOS_ROOT/lib/cmd/$MYOS_CMD.sh" ]; then
   . "$MYOS_ROOT/lib/cmd/$MYOS_CMD.sh"
-  "myos_cmd_$MYOS_CMD"
+  "myos_cmd_$(printf '%s' "$MYOS_CMD" | tr '-' '_')"
   exit $?
 fi
 

@@ -16,6 +16,7 @@ Commands:
  ps logs config exec run inspect and enter them
  ls [--groups] list the stacks myos can see
  env [VAR...] show resolved variables
+ env-update fill .env from the .env.dist templates
  doctor check the installation
  version print the myos version
 

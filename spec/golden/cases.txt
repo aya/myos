@@ -77,3 +77,7 @@ cmd-scale                       | app-nogit     | scale postgres SERVICE=postgre
 cmd-ls                          | host-project  | ls
 cmd-ls-groups                   | host-project  | ls --groups
 cmd-env-domain                  | host-project  | env DOMAIN
+shim-up-group                   | shim-project  | @make up STACK=host DRYRUN=true
+shim-config                     | shim-project  | @make config STACK=host/consul DRYRUN=true
+shim-project-target             | shim-project  | @make host-certs
+shim-env                        | shim-project  | @make env ARGS=COMPOSE_PROJECT_NAME STACK=host

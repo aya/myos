@@ -4,12 +4,9 @@
 # Ported from make/apps/def.mk (uri, url, urlprefix, urlprefixs, tagprefix,
 # envprefix, servicenvs). Registrator publishes the SERVICE_<port>_TAGS label
 # to consul, fabio routes on the urlprefix- tags it finds there.
-
-# myos_var NAME  value of the variable named NAME, empty when unset
-myos_var() {
-  [ -n "${1:-}" ] || return 0
-  eval "printf '%s' \"\${$1:-}\""
-}
+#
+# Every lookup goes through myos_var (lib/var.sh), so a stack setting may be a
+# plain value or a lazy default, and the two behave the same here.
 
 # myos_uri SERVICE PORT [BASE_URI]
 # <service>.<base uri>, unless <SERVICE>_SERVICE[_<port>]_NAME overrides the prefix

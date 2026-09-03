@@ -124,6 +124,19 @@ The make targets keep working: `print-VAR`, `stack-<stack>-<command>`,
 
 `SETUP_UFW=true` enables the ufw/ufw-docker integration (`myos setup-ufw`).
 
+## With make
+
+A project that would rather drive make can include the shim, which turns every
+myos command into a make target while leaving its own targets alone:
+
+```make
+MYOS ?= /usr/local/lib/myos
+include $(MYOS)/share/make/shim.mk
+```
+
+`make up STACK=host` then runs exactly what `myos up host` runs: the shim only
+forwards. make is not needed otherwise, and the CLI never calls it.
+
 ## For agents
 
 `skills/myos/SKILL.md` is a skill describing how to drive myos, with

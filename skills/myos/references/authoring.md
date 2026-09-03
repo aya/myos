@@ -7,7 +7,7 @@ stack/<name>/<name>.yml          the services
 stack/<name>/<name>.local.yml    what only makes sense on a workstation (published ports…)
 stack/<name>/<name>.labels.yml   the registrator labels, so routing stays optional
 stack/<name>/<name>.env          plain settings: versions, defaults
-stack/<name>/<name>.sh           computed settings (fabio tags), no make needed
+stack/<name>/<name>.sh           lazy defaults (fabio tags), no make needed
 stack/<name>/.env.dist           the variables it expects, with defaults
 stack/<name>/README.md           what it is and what it needs
 ```
@@ -54,7 +54,9 @@ lib/core.sh       logging, exit codes, dry run
 lib/str.sh        strings and version comparison
 lib/naming.sh     project names, networks, user identity
 lib/stack.sh      stack path, references, overlays, groups
-lib/config.sh     dotenv, variables of the compose files
+lib/var.sh        variable resolution and lazy defaults
+lib/config.sh     dotenv, templates, variables of the compose files
+lib/hooks.sh      the per-stack .env and .sh
 lib/compose.sh    finding and calling docker compose
 lib/tags.sh       fabio tags
 lib/cmd/<x>.sh    one file per command

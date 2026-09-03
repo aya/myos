@@ -47,8 +47,9 @@ myos_normalize() {
 # shellcheck disable=SC2046  # myos_hermetic_env output is meant to be word-split
 myos_run_engine() {
   _engine=$1; _sb=$2; shift 2
-  # "@make" as first arg = include mode: the project Makefile includes make/include.mk
-  # and make runs from the project dir (CURDIR = project). Same for both engines.
+  # "@make" as first arg = the project drives make itself: its Makefile includes
+  # either the legacy engine (make/include.mk) or the shim (make/shim.mk), and
+  # make runs from the project directory.
   if [ "${1:-}" = "@make" ]; then
     shift
     _out=$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") MYOS_CONF=/dev/null \

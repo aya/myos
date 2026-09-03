@@ -1,0 +1,12 @@
+services:
+  consul:
+    image: hashicorp/consul:1.15
+    container_name: ${HOST_COMPOSE_PROJECT_NAME:-localhost}-consul
+    network_mode: host
+    restart: always
+    environment:
+      CONSUL_HTTP_TOKEN: ${HOST_CONSUL_HTTP_TOKEN}
+    volumes:
+      - consul:/consul/data
+volumes:
+  consul:
