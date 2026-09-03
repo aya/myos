@@ -21,6 +21,8 @@
   `MYOS_CONF_PRIORITY=system` restores the previous order
 - `share/make/shim.mk`: make as an optional front end over the same shell code
 - commands chain: `myos build up logs host/fabio`, as make targets did
+- the stack catalogue no longer needs make at all: its settings are hooks, and
+  only six stacks keep a .mk, for targets
 - a stack found in several directories of the stack path is merged, project
   last, so a project refines a catalogue stack instead of replacing it
 - `--color always|never|auto`, and no colour when the output is piped
