@@ -1,5 +1,14 @@
 # CHANGELOG
 
+## v1.1 - 2026-09-03
+
+- move the stack catalogue and the docker build contexts to the myos-stacks project
+- keep the framework infra compose files in share/compose and the myos tool image in share/docker
+- fix stack_path resolution: host/<svc> stacks were only found when the project
+  stack directory sorted first
+- drop the docker/compose image fallback: docker compose >= 2.24.4 or docker-compose is required
+- add a shellspec golden test harness (make test)
+
 ## v1.0-beta - 2026-07-29
 
 * split make files in `myos` project and docker files in `stack` project

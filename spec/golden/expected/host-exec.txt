@@ -1,4 +1,4 @@
-docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/stack/myos/networks.yml -p testhost exec -T consul sh -c consul members
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost exec -T consul sh -c consul members
 /bin/bash: -c: line 0: syntax error near unexpected token `||'
 /bin/bash: -c: line 0: `|| true'
 make: *** [exec] Error 2

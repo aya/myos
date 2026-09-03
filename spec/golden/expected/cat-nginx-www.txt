@@ -1,2 +1,2 @@
-COMPOSE_FILE @HOME@/.local/share/myos/stack/host/nginx.yml @HOME@/.local/share/myos/stack/host/nginx.www.yml @MYOS@/stack/myos/networks.yml @MYOS@/stack/myos/volumes.www.local.yml
+COMPOSE_FILE @HOME@/.local/share/myos/stack/host/nginx.yml @HOME@/.local/share/myos/stack/host/nginx.www.yml @MYOS@/share/compose/networks.yml @MYOS@/share/compose/volumes.www.local.yml
 [exit 0]

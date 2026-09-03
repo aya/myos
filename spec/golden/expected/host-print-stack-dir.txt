@@ -1,2 +1,2 @@
-STACK_DIR @MYOS@/stack @HOME@/.local/share/myos/stack @WD@/stack
+STACK_DIR @HOME@/.local/share/myos/stack @WD@/stack
 [exit 0]

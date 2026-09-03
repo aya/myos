@@ -43,7 +43,7 @@ DOCKER_COMPOSE_RUN_WORKDIR      ?= $(if $(DOCKER_COMPOSE_WORKDIR),-w $(DOCKER_CO
 DOCKER_COMPOSE_SERVICE_NAME     ?= $(subst _,-,$(DOCKER_COMPOSE_PROJECT_NAME))
 DOCKER_COMPOSE_UP_OPTIONS       ?= -d
 DOCKER_IMAGE_TAG                ?= $(if $(filter true,$(DEPLOY)),$(if $(filter $(ENV),$(ENV_DEPLOY)),$(VERSION)),$(if $(DRONE_BUILD_NUMBER),$(DRONE_BUILD_NUMBER),latest))
-DOCKER_IMAGES                   ?= $(patsubst %/,%,$(patsubst docker/%,%,$(dir $(wildcard docker/*/Dockerfile))))
+DOCKER_IMAGES                   ?= $(foreach dir,$(DOCKER_DIR),$(patsubst $(dir)/%/Dockerfile,%,$(wildcard $(dir)/*/Dockerfile)))
 DOCKER_PLUGIN                   ?= rexray/s3fs:latest
 DOCKER_PLUGIN_ARGS              ?= $(foreach var,$(DOCKER_PLUGIN_VARS),$(if $(DOCKER_PLUGIN_$(var)),$(var)='$(DOCKER_PLUGIN_$(var))'))
 DOCKER_PLUGIN_OPTIONS           ?= --grant-all-permissions
@@ -109,11 +109,7 @@ define docker-compose
 	$(if $(COMPOSE_FILE),
 	  $(if $(DOCKER_COMPOSE),
 	    $(call env-exec,$(RUN) $(DOCKER_COMPOSE) $(DOCKER_COMPOSE_ARGS) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
-	  , $(if $(DOCKER_RUN),
-	      $(call docker-build,$(call docker-path,compose),docker/compose,$(COMPOSE_VERSION))
-	      $(call docker-run,docker/compose:$(COMPOSE_VERSION) $(DOCKER_COMPOSE_ARGS),$(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
-	    , $(call env-exec,$(RUN) docker-compose $(DOCKER_COMPOSE_ARGS) $(patsubst %,-f %,$(COMPOSE_FILE)) -p $(COMPOSE_PROJECT_NAME) $(1))
-	    )
+	  , $(call ERROR,docker compose >= $(COMPOSE_VERSION) not found: install the docker compose plugin or docker-compose)
 	  )
 	)
 endef

@@ -1,9 +1,9 @@
 ##
 # DOCKER
 
-# target docker-build: Fire docker-image-myos, Call docker-build-% target for each DOCKER_IMAGES
+# target docker-build: Call docker-build-% target for each DOCKER_IMAGES
 .PHONY: docker-build
-docker-build: docker-image-myos
+docker-build:
 	$(foreach image,$(or $(SERVICE),$(DOCKER_IMAGES)),$(call make,docker-build-$(image)))
 
 # target docker-build-%: Call docker-build for each Dockerfile in docker/% folder
@@ -27,10 +27,10 @@ docker-commit: stack
 docker-commit-%: stack
 	$(foreach service,$(or $(SERVICE),$(SERVICES)),$(call docker-commit,$(service),,,$*))
 
-# target docker-compose-build: Fire docker-image-myos, Call docker-compose build SERVICE
+# target docker-compose-build: Call docker-compose build SERVICE
 .PHONY: docker-compose-build
 docker-compose-build: DOCKER_RUN_OPTIONS += -it
-docker-compose-build: docker-image-myos stack
+docker-compose-build: stack
 	$(call docker-compose,build $(DOCKER_BUILD_ARGS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
 # target docker-compose-config: Call docker-compose config
@@ -110,17 +110,11 @@ docker-compose-start: stack
 docker-compose-stop: stack
 	$(call docker-compose,stop $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
 
-# target docker-compose-up: Fire docker-image-myos, Call docker-compose up SERVICE
+# target docker-compose-up: Call docker-compose up SERVICE
 .PHONY: docker-compose-up
 docker-compose-up: DOCKER_RUN_OPTIONS += -it
-docker-compose-up: docker-image-myos bootstrap-stack stack
+docker-compose-up: bootstrap-stack stack
 	$(call docker-compose,up $(DOCKER_COMPOSE_UP_OPTIONS) $(if $(filter $(SERVICE),$(SERVICES)),$(SERVICE)))
-
-# target docker-image-myos: Call myos-docker-build-% target for each MYOS_DOCKER_IMAGES
-.PHONY: docker-image-myos
-docker-image-myos: MAKE_VARS += DOCKER_REPOSITORY STACK
-docker-image-myos:
-	$(foreach image,$(subst $(quote),,$(MYOS_DOCKER_IMAGES)),$(call make,docker-build-$(image),$(MYOS)))
 
 # target docker-image-rm: Remove docker images matching DOCKER_REPOSITORY
 .PHONY: docker-image-rm

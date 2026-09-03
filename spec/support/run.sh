@@ -27,6 +27,8 @@ myos_hermetic_env() {
 }
 
 # myos_normalize SANDBOX  (stdin -> stdout)
+# APPS, BRANCH and VERSION depend on where the myos checkout lives and on its git state,
+# so they are masked to keep the goldens reproducible across machines.
 myos_normalize() {
   sed -e 's/\x1b\[[0-9;]*m//g' \
       -e "s#$MYOS_ROOT#@MYOS@#g" \
@@ -34,6 +36,9 @@ myos_normalize() {
       -e "s#$1/home#@HOME@#g" \
       -e "s#$1#@TMP@#g" \
       -e 's#/[^ ]*/bin/make#make#g' \
+      -e 's/^APPS .*/APPS @APPS@/' \
+      -e 's/^BRANCH .*/BRANCH @BRANCH@/' \
+      -e 's/^VERSION .*/VERSION @VERSION@/' \
       -e 's/[[:space:]][[:space:]]*/ /g' \
       -e 's/[[:space:]]*$//'
 }

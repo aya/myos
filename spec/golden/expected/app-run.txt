@@ -1,2 +1,2 @@
-docker --log-level=error compose --ansi=auto -f @MYOS@/stack/myos/networks.yml -p tester-myos-local run --rm app id
+docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local run --rm app id
 [exit 0]

@@ -1,6 +1,12 @@
 # myos - Make Your Own Stack
 
-Make Your Own Stack provides common make targets to build and run docker projects.
+myos runs docker compose stacks: on a server, in a project directory, for a user.
+It is a thin layer over `docker compose` that resolves which compose files to load,
+under which project name, with which environment variables.
+
+The framework itself ships no stack. Ready-to-use stacks (consul, fabio, registrator,
+postgres, supabase, drone, …) live in a separate catalogue,
+[myos-stacks](https://github.com/aya/myos-stacks).
 
 ## Disclaimer
 
@@ -8,197 +14,119 @@ This is beta software, use it at your own risks.
 
 ## Requirements
 
-You need `docker`, `git` and `make`.
+`docker` (with the `docker compose` plugin >= 2.24.4, or a `docker-compose` binary),
+`git` and `make`.
 
 ## Install
 
-* Include MYOS file `make/include.mk` adding the following lines to your project file `Makefile`.
+### As a command
 
+```sh
+sudo git clone https://github.com/aya/myos /usr/local/lib/myos
+sudo ln -s /usr/local/lib/myos/myos /usr/local/bin/myos
 ```
-MYOS                                      ?= ../myos
-MYOS_REPOSITORY                           ?= $(patsubst %/$(THIS),%/myos,$(THIS_REPOSITORY))
-THIS                                      ?= $(lastword $(subst /, ,$(THIS_REPOSITORY)))
-THIS_REPOSITORY                           ?= $(shell git config --get remote.origin.url 2>/dev/null)
-$(MYOS):
-	-@git clone $(MYOS_REPOSITORY) $(MYOS)
+
+Optionally pin per-machine settings in `/etc/conf.d/myos` (or `/etc/default/myos`),
+one `VAR=value` per line, no comments:
+
+```sh
+DOMAIN=example.org
+ENV=master
+```
+
+`myos` runs from the current directory: it passes it as `WORKDIR`, so stacks and
+`.env` are looked up there. A `WORKDIR` set in the config file wins over the current
+directory, which pins a machine to its deployment directory.
+
+### As a make include
+
+Add to your project `Makefile`:
+
+```make
+MYOS ?= /usr/local/lib/myos
 -include $(MYOS)/make/include.mk
 ```
 
-* Call the `make help` command to show available targets.
+Then `make help` lists the available targets.
 
-```
-$ make help
-Usage:
-make [target]
+### Stack catalogue
 
-Targets:
-help                                    This help
-[...]
+myos looks for stacks in `./stack`, `../stack`, `~/.local/share/myos/stack`,
+`/usr/local/share/myos/stack` and `/usr/share/myos/stack`:
+
+```sh
+sudo git clone https://github.com/aya/myos-stacks /usr/local/share/myos
 ```
 
 ## Usage
 
-### Examples
-
-* Configure myos for domain `domain.tld` and stack `default`
-
-```shell
-$ make bootstrap DOMAIN=domain.tld STACK=default
+```sh
+myos up                          # the stack of the current directory
+myos up STACK=host               # a group of stacks, see stack/host/host.mk
+myos up STACK=host/fabio         # a single stack
+myos up STACK=postgres:9.6       # a versioned stack
+myos ps
+myos logs
+myos config                      # rendered compose file
+myos down
+myos shutdown                    # every stack: app, host and user
 ```
 
-* Start myos stack `host`
+### How a stack is resolved
 
-```shell
-$ make host
-```
-
-`make host` starts the stack `host` with docker host services :
-- consul (service discovery) on host port 8500
-- fabio (load balancer) on host ports 80 and 443
-- registrator (docker/consul bridge)
-
-* Stop myos
-
-```shell
-$ make shutdown
-```
-
-### Variables
-
-* DEBUG
-
-Show executed commands.
-
-```shell
-$ make up DEBUG=true
-```
-
-* DRYRUN
-
-Do nothing, show commands instead of executing it.
-
-```shell
-$ make up DRYRUN=true
-```
-
-* VERBOSE
-
-Show called functions.
-
-```shell
-$ make up VERBOSE=true
-```
-
-* Show variable USER
-
-```shell
-$ make print-USER
-```
-
-#### Setup
-
-* SETUP_LETSENCRYPT
-
-Generate ${DOMAIN} certificate files with letsencrypt.
-
-By default, myos generates invalid ${DOMAIN} certificate files with openssl.
-You can use letsencrypt instead, to generate valid wildcard certificate files.
-
-To achieve this, you must add following DNS entries to domain ${DOMAIN} to prove you own it:
+A stack is a directory of compose files. For `STACK=<name>` in environment `ENV`,
+myos loads, in order, whichever of these exist:
 
 ```
-_acme-challenge.${DOMAIN}       IN CNAME ${DOMAIN}.acme.${DOMAIN}.
-acme.${DOMAIN}.                 IN NS certbot.${DOMAIN}.
-certbot.${DOMAIN}.              IN A ${DOCKER_HOST_INET4}
+<name>.yml   <name>.<ENV>.yml   <ENV>/<name>.yml
+<name>.<suffix>.yml   <name>.<suffix>.<ENV>.yml   <name>.<version>.yml
 ```
 
-In this config, DOCKER_HOST_INET4 should be the external IP address of the server running certbot.
-Port 53 of this IP address must be reachable from internet and point to this server.
+`<suffix>` comes from the `COMPOSE_FILE_*` variables that are not `false`
+(`app`, `labels`, `networks`, `ssh`, `volumes` by default; add e.g.
+`COMPOSE_FILE_WWW=true` to also load `<name>.www.yml`). The framework always
+appends its own `share/compose/networks.yml`.
 
-If you want a simple DNS configuration to host all your services on the same server, you can setup following DNS config:
+### Project names and networks
 
-```
-@                               IN A ${DOCKER_HOST_INET4}
-*.${DOMAIN}.                    IN CNAME ${DOMAIN}.
-_acme-challenge.${DOMAIN}       IN CNAME ${DOMAIN}.acme.${DOMAIN}.
-acme.${DOMAIN}.                 IN NS ${DOMAIN}.
-```
+| stack | compose project | meaning |
+|---|---|---|
+| `host/*` | `$(HOSTNAME)` | one instance per machine: ports 80/443, consul, certbot |
+| `User/*` | user identity | one instance per user |
+| anything else | `<user>-<app>-<env>` | many instances per machine |
 
-This will point domain ${DOMAIN} to the IP address ${DOCKER_HOST_INET4} of this server, and point all subdomains *.{DOMAIN} to the ip address pointed by ${DOMAIN}.
+Networks: `default` = `_<project>` (private to the project), `private` =
+`<user>-<env>` and `public` = `<hostname>`, both external and created on demand.
 
-At this point, you should be able to generate a valid certificate for *.${DOMAIN} using certbot [dns standalone](https://github.com/siilike/certbot-dns-standalone) plugin.
-This task is done automatically when creating the host stack if SETUP_LETSENCRYPT variable is not empty.
+## Variables
 
-If you already launched myos host stack before, the ${DOMAIN} certificates has been automatically generated by openssl and you should remove them before trying to generate them with letsencrypt.
+| variable | effect |
+|---|---|
+| `DEBUG=true` | show executed commands |
+| `DRYRUN=true` | print commands instead of running them |
+| `VERBOSE=true` | show called functions |
+| `ENV=<env>` | environment: selects `.env.<env>` and the `<name>.<env>.yml` overlays |
+| `STACK=<refs>` | stacks to act on |
+| `SERVICE=<name>` | target one compose service (`exec`, `run`, `logs`, `scale`) |
 
-```
-$ make host-down
-$ docker volume rm $(hostname)
-```
-
-You can then test the letsencrypt certificate generation using DEBUG mode that force to use the letsencrypt staging server.
-
-```
-$ make host SETUP_LETSENCRYPT=true DEBUG=true
-```
-
-If letsencrypt certificate generation fails, you can retry the generation of a staging certificate.
-
-```
-$ make host-certbot-staging
+```sh
+myos print-COMPOSE_FILE           # show a variable
+myos print-COMPOSE_PROJECT_NAME
+myos debug                        # show debug variables
+myos doc                          # self documentation from the make comments
 ```
 
-Once the certificate generation is working, you can ask for a valid certificate.
+`SETUP_UFW=true` enables the ufw/ufw-docker integration (`myos setup-ufw`).
 
-```
-$ make host-down
-$ docker volume rm $(hostname)
-$ make host SETUP_LETSENCRYPT=true
-```
+## Tests
 
-* SETUP_UFW
-
-Control linux firewall rules with ufw.
-
-```
-$ echo SETUP_UFW=true >> .env
-$ make setup-ufw
+```sh
+make test           # shellspec: unit + golden (a mocked docker, no daemon needed)
+make test-golden    # golden only
+make golden-record  # re-record the golden expectations
+make lint           # shellcheck
 ```
 
-### Debug
+## License
 
-* Show docker compose yaml config
-
-```shell
-$ make config
-```
-
-`make config` show docker compose yaml config for stack `STACK`
-`make host-config` show docker compose yaml config for stack `host`
-`make user-config` show docker compose yaml config for stack `User`
-`make stack-elastic-config` show docker compose yaml config for stack `elastic`
-
-* Show debug variables
-
-```shell
-$ make debug
-```
-
-* Generate self documentation
-
-```shell
-$ make doc
-```
-
-* Show env args
-
-```shell
-$ make print-env_args
-```
-
-* Show user mail
-
-```shell
-$ make print-MAIL
-```
-
+GPL-3.0, see LICENSE.

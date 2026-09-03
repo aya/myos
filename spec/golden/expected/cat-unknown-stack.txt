@@ -1,2 +1,2 @@
-COMPOSE_FILE @MYOS@/stack/myos/networks.yml
+COMPOSE_FILE @MYOS@/share/compose/networks.yml
 [exit 0]

@@ -1,5 +1,5 @@
 make -o docker-stack-up MAKE_OLDFILE=docker-stack-up ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-up STACK=default APP_NAME=default
 sh -c docker network create tester-local >/dev/null 2>&1
 sh -c docker network create testhost >/dev/null 2>&1
-docker --log-level=error compose --ansi=auto -f @HOME@/.local/share/myos/stack/postgres/postgres.yml -f @HOME@/.local/share/myos/stack/postgres/postgres.local.yml -f @HOME@/.local/share/myos/stack/redis/redis.yml -f @MYOS@/stack/myos/networks.yml -p tester-default-local up -d
+docker --log-level=error compose --ansi=auto -f @HOME@/.local/share/myos/stack/postgres/postgres.yml -f @HOME@/.local/share/myos/stack/postgres/postgres.local.yml -f @HOME@/.local/share/myos/stack/redis/redis.yml -f @MYOS@/share/compose/networks.yml -p tester-default-local up -d
 [exit 0]

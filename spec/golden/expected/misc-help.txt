@@ -43,10 +43,10 @@ DOCKER_SOCKET_LOCATION /var/run/docker.sock
 DOCKER_SYSTEM Linux
 DOMAIN example.test
 APP myos
-APPS c411 dsh myos wbr wbr.old
-BRANCH lightning
-VERSION legacy-1.0-beta
+APPS @APPS@
+BRANCH @BRANCH@
+VERSION @VERSION@
 RELEASE
-COMPOSE_FILE @MYOS@/stack/myos/networks.yml
+COMPOSE_FILE @MYOS@/share/compose/networks.yml
 DOCKER_REPOSITORY tester/myos/local
 [exit 0]

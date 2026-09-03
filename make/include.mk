@@ -19,7 +19,7 @@ include $(filter-out $(wildcard $(MAKE_FILE) $(MAKE_FIRST) $(MAKE_LATEST)),$(wil
 ## it includes $(MAKE_DIR)/$(MAKE_SUBDIRS)/*.mk
 include $(foreach subdir,$(MAKE_SUBDIRS),$(filter-out $(wildcard $(MAKE_DIR)/$(subdir)/def.mk $(MAKE_DIR)/$(subdir)/def.*.mk),$(wildcard $(MAKE_DIR)/$(subdir)/*.mk)))
 ## if not in $(MYOS) nor $(MONOREPO), it includes def.mk def.*.mk */def.mk */def.*.mk *.mk */*.mk
-include $(if $(filter-out . myos,$(MYOS)),$(wildcard def.mk def.*.mk */def.mk */def.*.mk) $(filter-out $(wildcard def.mk def.*.mk */def.mk */def.*.mk stack/*.mk),$(wildcard *.mk */*.mk)))
+include $(if $(filter-out . myos,$(MYOS)),$(wildcard def.mk def.*.mk */def.mk */def.*.mk) $(filter-out $(wildcard def.mk def.*.mk */def.mk */def.*.mk $(STACK_DIR_NAME)/*.mk),$(wildcard *.mk */*.mk)))
 ## it includes $(STACK_DIR)/*.mk $(STACK_DIR)/*/*.mk
 include $(foreach stack_dir,$(STACK_DIR),$(wildcard $(stack_dir)/*.mk $(stack_dir)/*/*.mk))
 ## it includes $(MAKE_LATEST)
