@@ -71,3 +71,17 @@ myos_tagprefix() {
   [ -n "$_uris" ] || _uris=$(myos_uri "$_stack" "$_port")
   myos_urlprefix "$_path" "$_opts" "$_uris"
 }
+
+# myos_servicenvs STACK GROUP KEY
+# Collect <STACK>_SERVICE_<env>_<KEY> for every env listed in
+# <STACK>_SERVICE_<GROUP>_ENVS. Used to build a list of listeners out of one
+# variable per protocol.
+myos_servicenvs() {
+  _s=$(myos_upper "$1"); _g=$(myos_upper "$2"); _k=$(myos_upper "$3")
+  _out=
+  for _e in $(myos_var "${_s}_SERVICE_${_g}_ENVS"); do
+    _v=$(myos_var "${_s}_SERVICE_$(myos_upper "$_e")_${_k}")
+    [ -n "$_v" ] && _out="${_out:+$_out }$_v"
+  done
+  printf '%s' "$_out"
+}

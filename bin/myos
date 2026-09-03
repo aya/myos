@@ -19,7 +19,7 @@ done
 MYOS_ROOT=$(cd "$(dirname "$_self")/.." && pwd -P)
 export MYOS_ROOT
 
-for _m in core str tags naming stack config compose; do
+for _m in core str tags naming stack config compose hooks; do
   # shellcheck source=/dev/null
   . "$MYOS_ROOT/lib/$_m.sh"
 done
@@ -34,6 +34,7 @@ done
   MYOS_VARS=
   MYOS_ARGS=
   MYOS_HOSTS=
+  MYOS_COLOR=${MYOS_COLOR:-auto}
   VERBOSE=${VERBOSE:-}
   DEBUG=${DEBUG:-}
 }
@@ -47,6 +48,7 @@ Options:
   -e ENV        environment (default: local, or ENV from the config)
   -H HOSTS      run on remote hosts instead (comma separated, or "all")
   -n, --dry-run print the commands instead of running them
+  --color WHEN  always, never or auto (default: colour when on a terminal)
   -v, --verbose show what myos does
   -d, --debug   show every command
   -h, --help    this help
@@ -73,6 +75,8 @@ while [ $# -gt 0 ]; do
     -e) ENV=$2; shift 2 ;;
     -H) MYOS_HOSTS=$2; shift 2 ;;
     -n|--dry-run) DRYRUN=true; shift ;;
+    --color) MYOS_COLOR=$2; shift 2 ;;
+    --color=*) MYOS_COLOR=${1#--color=}; shift ;;
     -v|--verbose) VERBOSE=true; shift ;;
     -d|--debug) DEBUG=true; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -162,6 +166,21 @@ fi
 
 # shellcheck disable=SC2086  # a list of references
 MYOS_STACKS=$(myos_group_expand $MYOS_REFS)
+
+# The uri a stack is served on: the tag helpers build on it, so it has to be
+# known before the hooks run.
+MYOS_SCOPE_FIRST=$(for _r in $MYOS_STACKS; do myos_scope "$_r"; break; done)
+MYOS_APP_FIRST=$(for _r in $MYOS_STACKS; do myos_stack_name "$_r"; break; done)
+APP_HOST=${APP_HOST:-$(myos_app_host "$MYOS_SCOPE_FIRST" "$USER" "$ENV" "$MYOS_APP_FIRST" "$DOMAINNAME" "$HOSTNAME")}
+APP_URI=${APP_URI:-$(myos_app_uri "$APP_HOST" "${APP_PATH:-}")}
+APP_SCHEME=${APP_SCHEME:-http}
+
+# Per-stack hooks must run in this shell: everything downstream reads the
+# variables they set, and a command substitution would throw them away.
+for _ref in $MYOS_STACKS; do
+  _hdir=$(myos_stack_resolve "$_ref" 2>/dev/null) || continue
+  myos_stack_hooks "$_hdir" "$(myos_stack_name "$_ref")"
+done
 
 # myos_framework_compose_files  the networks and volumes overlays myos itself
 # provides; they always come last so a stack can rely on them being there.

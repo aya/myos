@@ -13,13 +13,25 @@ MYOS_E_USAGE=2     # bad invocation
 MYOS_E_NOSTACK=3   # stack not found
 MYOS_E_NOREQ=4     # missing requirement
 
+# myos_colors  decide whether to emit colour.
+# MYOS_COLOR=always|never|auto (default auto: only when stdout is a terminal).
+# The make engine always emitted the escape codes, even into a pipe.
 myos_colors() {
-  if [ -t 2 ] && [ "${TERM:-dumb}" != dumb ] && [ -z "${NO_COLOR:-}" ]; then
+  _want=${MYOS_COLOR:-auto}
+  [ -n "${NO_COLOR:-}" ] && _want=never
+  case $_want in
+    never) _want=no ;;
+    always) _want=yes ;;
+    *) if [ -t 1 ] && [ "${TERM:-dumb}" != dumb ]; then _want=yes; else _want=no; fi ;;
+  esac
+  if [ "$_want" = yes ]; then
     MYOS_C_ERROR=$(printf '\033[31m');   MYOS_C_WARN=$(printf '\033[01;33m')
     MYOS_C_INFO=$(printf '\033[33m');    MYOS_C_DEBUG=$(printf '\033[01;34m')
     MYOS_C_VALUE=$(printf '\033[36m');   MYOS_C_RESET=$(printf '\033[0m')
+    MYOS_C_HIGHLIGHT=$(printf '\033[32m')
   else
     MYOS_C_ERROR=; MYOS_C_WARN=; MYOS_C_INFO=; MYOS_C_DEBUG=; MYOS_C_VALUE=; MYOS_C_RESET=
+    MYOS_C_HIGHLIGHT=
   fi
 }
 

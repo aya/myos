@@ -6,6 +6,7 @@ Options:
  -e ENV environment (default: local, or ENV from the config)
  -H HOSTS run on remote hosts instead (comma separated, or "all")
  -n, --dry-run print the commands instead of running them
+ --color WHEN always, never or auto (default: colour when on a terminal)
  -v, --verbose show what myos does
  -d, --debug show every command
  -h, --help this help

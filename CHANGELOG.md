@@ -10,6 +10,10 @@
 - `myos ls`, `myos env`, `myos doctor` to inspect an installation
 - `install.sh`, and the catalogue is looked up beside the installation
 - agent skill in `skills/myos/`, contributor notes in `AGENTS.md`
+- stacks carry their settings in `<name>.env` and `<name>.sh` hooks, so the
+  catalogue no longer needs make to be installed
+- `--color always|never|auto`, and no colour when the output is piped
+- verified under the /bin/sh of Alpine (busybox) and Debian (dash)
 - the make engine still works and is still covered by the golden tests
 
 ## v1.1 - 2026-09-03

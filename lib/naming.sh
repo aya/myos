@@ -79,3 +79,44 @@ myos_service_name() { printf '%s' "$1" | tr '_' '-'; }
 myos_network_default() { printf '_%s' "$1"; }
 myos_network_private() { printf '%s' "${DOCKER_NETWORK_PRIVATE:-${1}-${2}}"; }
 myos_network_public()  { printf '%s' "${DOCKER_NETWORK_PUBLIC:-${1}}"; }
+
+# myos_app_domain SCOPE USER DOMAIN
+# The domain a stack is served on. A host stack is never prefixed by the user:
+# it belongs to the machine.
+myos_app_domain() {
+  _scope=$1; _u=$2; _dom=$3
+  if [ "$_scope" != host ] && [ "${APP_HOST_MULTI_USER:-false}" = true ]; then
+    printf '%s.%s' "$_u" "$_dom"
+  else
+    printf '%s' "$_dom"
+  fi
+}
+
+# myos_app_host SCOPE USER ENV APP DOMAIN HOSTNAME
+# A host stack is served on <hostname>.<domain>; anything else is prefixed by
+# the environment unless the environment is the main one.
+myos_app_host() {
+  _scope=$1; _u=$2; _env=$3; _app=$4; _dom=$5; _host=$6
+  _multi_env=${APP_HOST_MULTI_ENV:-}
+  if [ -z "$_multi_env" ]; then
+    case $_env in local|master|main) _multi_env=false ;; *) _multi_env=true ;; esac
+  fi
+  _prefix=
+  if [ "$_scope" = host ]; then _prefix="$_host."
+  elif [ "$_multi_env" = true ]; then _prefix="$_env."
+  fi
+  _name=
+  [ "${APP_HOST_MULTI_APP:-false}" = true ] && _name="$(myos_name "$_app")."
+  _out="$_prefix$_name$(myos_app_domain "$_scope" "$_u" "$_dom")"
+  # a host stack behind the load balancer also answers on the bare domain
+  [ "$_scope" = host ] && [ -n "${HOST_LB:-}" ] && _out="$_out $_dom"
+  printf '%s' "$_out"
+}
+
+# myos_app_uri HOST [PATH]  the base uri the fabio tags are built on;
+# it always ends with a slash
+myos_app_uri() {
+  _out=
+  for _h in $1; do _out="${_out:+$_out }$_h/${2:-}"; done
+  printf '%s' "$_out"
+}

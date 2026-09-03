@@ -6,6 +6,8 @@
 stack/<name>/<name>.yml          the services
 stack/<name>/<name>.local.yml    what only makes sense on a workstation (published ports…)
 stack/<name>/<name>.labels.yml   the registrator labels, so routing stays optional
+stack/<name>/<name>.env          plain settings: versions, defaults
+stack/<name>/<name>.sh           computed settings (fabio tags), no make needed
 stack/<name>/.env.dist           the variables it expects, with defaults
 stack/<name>/README.md           what it is and what it needs
 ```

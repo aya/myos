@@ -99,6 +99,33 @@ parsed, never sourced, so a value may contain a `#` or a `$(...)` without
 breaking anything or being executed. The make engine included `.env` as a
 makefile, where both broke.
 
+## Per-stack settings
+
+A stack keeps its own settings next to its compose files:
+
+| file | for |
+|---|---|
+| `<name>.env` | plain values: versions, defaults |
+| `<name>.env.<env>` | the same, for one environment |
+| `<name>.sh` | values that have to be computed |
+| `<name>.mk` | the legacy make snippet; still read for its groups |
+
+A `.sh` hook is sourced with the myos helpers available, and sets variables
+directly. This is what lets a stack work on a machine that has no make:
+
+```sh
+# stack/host/fabio.sh
+HOST_FABIO_VERSION=${HOST_FABIO_VERSION:-1.6.3}
+HOST_FABIO_SERVICE_9998_NAME=${HOST_FABIO_SERVICE_9998_NAME:-fabio}
+HOST_FABIO_SERVICE_9998_AUTH=${HOST_FABIO_SERVICE_9998_AUTH:-default}
+HOST_FABIO_SERVICE_9998_TAGS=${HOST_FABIO_SERVICE_9998_TAGS:-$(myos_tagprefix HOST_FABIO 9998)}
+```
+
+Always write `${VAR:-default}` so the environment and the `.env` still win.
+Helpers available in a hook: `myos_tagprefix`, `myos_urlprefix`, `myos_uri`,
+`myos_url`, `myos_envprefix`, `myos_servicenvs`, `myos_var`, `myos_lower`,
+`myos_upper`.
+
 ## Groups
 
 A group is a lowercase name whose value lists stacks. It can live in a `.env`,
