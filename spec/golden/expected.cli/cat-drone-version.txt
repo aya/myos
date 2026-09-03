@@ -1,0 +1,2 @@
+COMPOSE_FILE @HOME@/.local/share/myos/stack/drone/drone.yml @HOME@/.local/share/myos/stack/drone/drone.1.6.yml @MYOS@/share/compose/networks.yml
+[exit 0]

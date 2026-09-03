@@ -1,4 +1,7 @@
 # name                          | fixture       | args
+#
+# `help` is deliberately absent: it renders the comments of the Makefile, so it
+# would break on every edit to a dev target rather than on a change of behaviour.
 host-print-project              | host-project  | print-COMPOSE_PROJECT_NAME STACK=host/consul
 host-print-compose-file         | host-project  | print-COMPOSE_FILE STACK=host/consul
 host-print-stack-dir            | host-project  | print-STACK_DIR STACK=host/consul
@@ -54,7 +57,6 @@ cat-nginx-www-dns               | app-nogit     | print-COMPOSE_FILE STACK=host/
 cat-nginx-project               | app-nogit     | print-COMPOSE_PROJECT_NAME STACK=host/nginx
 cat-unknown-stack               | app-nogit     | print-COMPOSE_FILE STACK=doesnotexist
 cat-unknown-target              | app-nogit     | doesnotexist
-misc-help                       | app-nogit     | help
 inc-app-print-project           | app-git       | @make print-COMPOSE_PROJECT_NAME
 inc-app-print-compose-file      | app-git       | @make print-COMPOSE_FILE
 inc-app-print-app               | app-git       | @make print-APP

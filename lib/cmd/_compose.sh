@@ -1,4 +1,5 @@
 #shellcheck shell=sh
+# shellcheck disable=SC3028  # HOSTNAME is a myos variable, set by bin/myos
 # The commands that map straight onto docker compose.
 #
 # Stacks are grouped by compose project: every host stack shares the project of
@@ -26,10 +27,10 @@ myos_cmd_compose() {
 
   for _project in $(printf '%s' "$_projects" | sed '/^$/d' | cut -f1 | awk '!seen[$0]++'); do
     _files=$(printf '%s' "$_projects" | sed '/^$/d' | awk -F'\t' -v p="$_project" '$1==p {print $2}' | tr ' ' '\n' | sed '/^$/d' | awk '!seen[$0]++')
-    # the framework networks always come last, as the make engine did
-    [ -f "$MYOS_ROOT/share/compose/networks.yml" ] &&
-      _files="$_files
-$MYOS_ROOT/share/compose/networks.yml"
+    # the framework overlays always come last, as the make engine did
+    _fw=$(myos_framework_compose_files)
+    [ -n "$_fw" ] && _files="$_files
+$_fw"
 
     COMPOSE_PROJECT_NAME=$_project
     COMPOSE_SERVICE_NAME=$(myos_service_name "$_project")

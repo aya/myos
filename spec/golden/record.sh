@@ -3,6 +3,7 @@
 # Usage: spec/golden/record.sh [case-name ...]
 set -u
 here=$(cd "$(dirname "$0")" && pwd)
+# shellcheck source=spec/support/run.sh
 . "$here/../support/run.sh"
 MYOS_ROOT=${MYOS_ROOT:-$(cd "$here/../.." && pwd)}
 only="$*"

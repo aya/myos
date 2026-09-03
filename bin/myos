@@ -123,22 +123,34 @@ ENV=${ENV:-local}
 myos_dotenv_load "$WORKDIR/.env.$ENV"
 myos_dotenv_load "$WORKDIR/.env"
 
+# Overlay switches. Their names drive which <stack>.<suffix>.yml files load,
+# so these defaults decide that e.g. supabase.labels.yml is picked up.
+COMPOSE_FILE_APP=${COMPOSE_FILE_APP:-true}
+COMPOSE_FILE_LABELS=${COMPOSE_FILE_LABELS:-true}
+COMPOSE_FILE_NETWORKS=${COMPOSE_FILE_NETWORKS:-true}
+COMPOSE_FILE_SSH=${COMPOSE_FILE_SSH:-true}
+COMPOSE_FILE_VOLUMES=${COMPOSE_FILE_VOLUMES:-true}
+COMPOSE_FILE_DEBUG=${COMPOSE_FILE_DEBUG:-${DEBUG:+true}}
+
 USER=${USER:-$(id -nu 2>/dev/null)}
 HOSTNAME=${HOSTNAME:-$(hostname 2>/dev/null | sed 's/\..*//')}
 HOSTNAME=$(myos_lower "$HOSTNAME")
 DOMAIN=${DOMAIN:-localhost}
+DOMAINNAME=${DOMAINNAME:-${DOMAIN%% *}}
+MAIL=${MAIL:-$(git config user.email 2>/dev/null || printf '%s@%s' "$USER" "$DOMAINNAME")}
 DRYRUN=${DRYRUN:-false}
 myos_colors
 
 # --- stack references -----------------------------------------------------
-# No reference given: the current directory when it holds a compose file,
-# else the STACK of the configuration.
+# No reference given: the configured STACK, else the current directory when it
+# holds a compose file. An explicit STACK always wins, so a project that pins
+# its stacks in .env keeps working from inside its own directory.
 if [ -z "$MYOS_REFS" ]; then
-  if [ -f "$WORKDIR/docker-compose.yml" ] || [ -f "$WORKDIR/compose.yml" ] ||
-     [ -f "$WORKDIR/docker/docker-compose.yml" ]; then
+  if [ -n "${STACK:-}" ]; then
+    MYOS_REFS=$STACK
+  elif [ -f "$WORKDIR/docker-compose.yml" ] || [ -f "$WORKDIR/compose.yml" ] ||
+       [ -f "$WORKDIR/docker/docker-compose.yml" ]; then
     MYOS_REFS=./
-  else
-    MYOS_REFS=${STACK:-}
   fi
 fi
 if [ -z "$MYOS_REFS" ]; then
@@ -150,6 +162,12 @@ fi
 
 # shellcheck disable=SC2086  # a list of references
 MYOS_STACKS=$(myos_group_expand $MYOS_REFS)
+
+# myos_framework_compose_files  the networks and volumes overlays myos itself
+# provides; they always come last so a stack can rely on them being there.
+myos_framework_compose_files() {
+  myos_compose_files "$MYOS_ROOT/share/compose" "networks volumes" "$(myos_compose_suffixes)" "$ENV"
+}
 
 # myos_stack_compose_files REF  the ordered compose files of one reference
 myos_stack_compose_files() {

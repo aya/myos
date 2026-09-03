@@ -1,0 +1,2 @@
+COMPOSE_FILE @HOME@/.local/share/myos/stack/postgres/postgres.yml @HOME@/.local/share/myos/stack/postgres/postgres.local.yml @HOME@/.local/share/myos/stack/postgres/postgres.9.6.yml @MYOS@/share/compose/networks.yml
+[exit 0]

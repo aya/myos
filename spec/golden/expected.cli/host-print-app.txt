@@ -1,0 +1,2 @@
+APP consul
+[exit 0]

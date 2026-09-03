@@ -1,4 +1,5 @@
 #shellcheck shell=sh
+# shellcheck disable=SC3028  # HOSTNAME is a myos variable, set by bin/myos
 # naming: compose project name, service name, networks, user identity.
 #
 # Ported from make/apps/def.docker.mk (COMPOSE_PROJECT_NAME, COMPOSE_SERVICE_NAME),
@@ -49,8 +50,6 @@ myos_project_name() {
   [ -n "${DOCKER_COMPOSE_PROJECT_NAME:-}" ] && { printf '%s' "$DOCKER_COMPOSE_PROJECT_NAME"; return 0; }
   case $_scope in
     host)
-      # HOSTNAME is set by lib/config.sh, not inherited from the shell
-      # shellcheck disable=SC3028
       printf '%s' "${HOST_COMPOSE_PROJECT_NAME:-${HOSTNAME:-localhost}}"; return 0 ;;
     user)
       if [ -n "${USER_COMPOSE_PROJECT_NAME:-}" ]; then printf '%s' "$USER_COMPOSE_PROJECT_NAME"

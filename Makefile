@@ -5,8 +5,9 @@ SHELLSPEC ?= shellspec
 SHELLCHECK ?= shellcheck
 
 .PHONY: $(DEV_TARGETS)
-test: ## Run unit + golden tests
+test: ## Run unit + golden tests against both engines
 	$(SHELLSPEC)
+	MYOS_ENGINE=cli $(SHELLSPEC) spec/golden
 test-unit: ## Run unit tests only
 	$(SHELLSPEC) spec/unit
 test-golden: ## Run golden tests only (MYOS_ENGINE=legacy|cli)

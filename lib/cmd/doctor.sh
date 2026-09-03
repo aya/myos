@@ -1,4 +1,5 @@
 #shellcheck shell=sh
+# shellcheck disable=SC3028  # HOSTNAME is a myos variable, set by bin/myos
 # myos doctor  check that this installation can actually run a stack
 myos_cmd_doctor() {
   _rc=0
@@ -21,7 +22,6 @@ myos_cmd_doctor() {
   [ -f "$WORKDIR/.env" ] && _ok "$WORKDIR/.env" "read"
   _ok ENV "$ENV"
   _ok USER "$USER"
-  # shellcheck disable=SC3028  # HOSTNAME is set by bin/myos
   _ok HOSTNAME "$HOSTNAME"
   _ok DOMAIN "$DOMAIN"
   _ok "project format" "${MYOS_PROJECT_FORMAT:-user-env-app}"

@@ -63,7 +63,10 @@ myos_run_engine() {
         make -esC "$MYOS_ROOT" MYOS=. WORKDIR="$_sb/wd" "$@" 2>&1); _rc=$?
       ;;
     cli)
+      # MYOS_PROJECT_FORMAT pins the legacy naming so that the goldens compare
+      # resolution, not naming; the new default is covered by the unit tests.
       _out=$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") MYOS_CONF=/dev/null \
+        MYOS_PROJECT_FORMAT=user-app-env \
         "$MYOS_ROOT/bin/myos" -C "$_sb/wd" "$@" 2>&1); _rc=$?
       ;;
     *) echo "unknown engine $_engine" >&2; return 2 ;;
