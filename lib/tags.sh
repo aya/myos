@@ -6,7 +6,10 @@
 # to consul, fabio routes on the urlprefix- tags it finds there.
 
 # myos_var NAME  value of the variable named NAME, empty when unset
-myos_var() { eval "printf '%s' \"\${$1:-}\""; }
+myos_var() {
+  [ -n "${1:-}" ] || return 0
+  eval "printf '%s' \"\${$1:-}\""
+}
 
 # myos_uri SERVICE PORT [BASE_URI]
 # <service>.<base uri>, unless <SERVICE>_SERVICE[_<port>]_NAME overrides the prefix

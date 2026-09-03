@@ -118,7 +118,7 @@ WORKDIR=${WORKDIR:-$PWD}
 WORKDIR=$(cd "$WORKDIR" 2>/dev/null && pwd -P) || myos_die "$MYOS_E_USAGE" "no such directory: $WORKDIR"
 
 for _f in $(myos_conf_files); do myos_dotenv_load "$_f"; done
-myos_dotenv_load "$HOME/.config/myos/config"
+myos_dotenv_load "${HOME:-}/.config/myos/config"
 ENV=${ENV:-local}
 myos_dotenv_load "$WORKDIR/.env.$ENV"
 myos_dotenv_load "$WORKDIR/.env"

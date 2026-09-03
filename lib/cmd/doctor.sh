@@ -18,7 +18,7 @@ myos_cmd_doctor() {
 
   printf 'configuration:\n'
   for _f in $(myos_conf_files); do _ok "$_f" "read"; done
-  [ -f "$HOME/.config/myos/config" ] && _ok "$HOME/.config/myos/config" "read"
+  [ -f "${HOME:-}/.config/myos/config" ] && _ok "${HOME:-}/.config/myos/config" "read"
   [ -f "$WORKDIR/.env" ] && _ok "$WORKDIR/.env" "read"
   _ok ENV "$ENV"
   _ok USER "$USER"

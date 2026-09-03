@@ -80,3 +80,27 @@ Describe 'lib/config.sh'
     End
   End
 End
+
+Describe 'lib/config.sh robustness'
+  setup() { MYOS_TMP=$(mktemp -d "${TMPDIR:-/tmp}/myos-cfg.XXXXXX"); }
+  cleanup() { rm -rf "$MYOS_TMP"; }
+  BeforeEach setup
+  AfterEach cleanup
+
+  It 'loads an empty .env without complaining'
+    : > "$MYOS_TMP/.env"
+    When call myos_dotenv_load "$MYOS_TMP/.env"
+    The status should be success
+    The stderr should equal ""
+  End
+  It 'ignores a line with an empty key'
+    printf '=orphan\nGOOD=1\n' > "$MYOS_TMP/.env"
+    When call myos_dotenv_parse "$MYOS_TMP/.env"
+    The output should equal "GOOD=1"
+  End
+  It 'returns empty for an unnamed variable'
+    When call myos_var ""
+    The output should equal ""
+    The status should be success
+  End
+End

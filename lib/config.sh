@@ -36,7 +36,10 @@ myos_dotenv_parse() {
 myos_dotenv_load() {
   [ -f "$1" ] || return 0
   while IFS= read -r _kv; do
+    # an empty file still yields one empty line through the here-document
+    [ -n "$_kv" ] || continue
     _k=${_kv%%=*}
+    [ -n "$_k" ] || continue
     [ -n "$(myos_var "$_k")" ] && continue
     eval "$_k=\${_kv#*=}"
   done <<EOF
