@@ -8,35 +8,45 @@
 # Every lookup goes through myos_var (lib/var.sh), so a stack setting may be a
 # plain value or a lazy default, and the two behave the same here.
 
-# myos_uri SERVICE PORT [BASE_URI]
-# <service>.<base uri>, unless <SERVICE>_SERVICE[_<port>]_NAME overrides the prefix
+# myos_uri SERVICES PORT [BASE_URI]
+# <service>.<base uri> for each service and each base uri, unless
+# <SERVICE>_SERVICE[_<port>]_NAME overrides the prefix. The first argument is a
+# list: one stack may publish several services on one port.
 myos_uri() {
-  _svc=$1; _port=${2:-}; _base=${3:-${APP_URI:-}}
-  _u=$(myos_upper "$_svc")
-  _name=$(myos_var "${_u}_SERVICE_${_port}_NAME")
-  [ -n "$_name" ] || _name=$(myos_var "${_u}_SERVICE_NAME")
-  [ -n "$_name" ] || _name=$_svc
+  set -f  # a uri may be a pattern such as *.ipns.example.org
+  _svcs=$1; _port=${2:-}; _base=${3:-${APP_URI:-}}
   _out=
-  for _b in $_base; do _out="${_out:+$_out }${_name}.${_b}"; done
+  for _svc in $_svcs; do
+    _u=$(myos_upper "$_svc")
+    _name=$(myos_var "${_u}_SERVICE_${_port}_NAME")
+    [ -n "$_name" ] || _name=$(myos_var "${_u}_SERVICE_NAME")
+    [ -n "$_name" ] || _name=$_svc
+    for _b in $_base; do _out="${_out:+$_out }${_name}.${_b}"; done
+  done
+  set +f
   printf '%s' "$_out"
 }
 
 # myos_url SERVICE PORT [BASE_URI]
 myos_url() {
+  set -f
   _out=
   for _u in $(myos_uri "$@"); do _out="${_out:+$_out }${APP_SCHEME:-http}://$_u"; done
+  set +f
   printf '%s' "$_out"
 }
 
 # myos_urlprefix [PATH] [OPTS] [URIS]
 # one comma separated "urlprefix-<uri><path>* [opts]" per uri
 myos_urlprefix() {
+  set -f
   _path=${1:-}; _opts=${2:-}; _uris=${3:-${APP_URI:-}}
   _out=
   for _u in $_uris; do
     _tag="urlprefix-${_u}${_path}${MYOS_URL_SUFFIX:-*}${_opts:+ $_opts}"
     _out="${_out:+$_out,}$_tag"
   done
+  set +f
   printf '%s' "$_out"
 }
 
@@ -62,7 +72,8 @@ myos_tagprefix() {
   [ -n "$_opts" ] || _opts=$(myos_envprefix "$_stack" "$_port" allow auth deny prepend proto register strip)
   _uris=
   for _k in "$@"; do
-    _v=$(myos_var "${_u}_SERVICE_${_port}_${_k}"); [ -n "$_v" ] && _uris="${_uris:+$_uris }$_v"
+    _v=$(myos_var "${_u}_SERVICE_${_port}_$(myos_upper "$_k")")
+    [ -n "$_v" ] && _uris="${_uris:+$_uris }$_v"
   done
   [ -n "$_uris" ] || _uris=$(myos_var "${_u}_SERVICE_${_port}_URIS")
   [ -n "$_uris" ] || _uris=$(myos_uri "$_stack" "$_port")

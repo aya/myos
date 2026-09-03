@@ -19,20 +19,28 @@
 MYOS                            ?= $(patsubst %/share/make/shim.mk,%,$(lastword $(MAKEFILE_LIST)))
 MYOS_BIN                        ?= $(MYOS)/bin/myos
 STACK_DIR_NAME                  ?= stack
-STACK_DIR                       ?= $(wildcard $(CURDIR)/$(STACK_DIR_NAME))
+## every directory myos looks for stacks in, so the .mk of a stack installed
+## system wide brings its targets along too
+STACK_DIR                       ?= $(subst :, ,$(shell $(MYOS_BIN) env MYOS_PATH --color=never 2>/dev/null | awk '{print $$2}'))
 
 # variable MYOS_ARGS: variables set on the make command line, forwarded to myos
 MYOS_ARGS                       ?= $(foreach v,$(MAKEOVERRIDES),$(v))
 
 .DEFAULT_GOAL                   := help
 
-## the stack files of the project may add their own targets and variables
-include $(wildcard $(STACK_DIR)/*.mk $(STACK_DIR)/*/*.mk)
+## the stack files may add their own targets: that is what make is kept for
+include $(foreach dir,$(STACK_DIR),$(wildcard $(dir)/*.mk $(dir)/*/*.mk))
 
 # function make: run a myos command, for the stack .mk files that call it
 define make
 	$(MYOS_BIN) $(MYOS_ARGS) $(1)
 endef
+
+# function myos-var: the value myos resolves for a variable.
+# A stack keeps its settings in hooks that only myos reads, so a .mk target
+# asks for them rather than defining them itself:
+#   $(call myos-var,HOST_DOCKER_VOLUME)
+myos-var = $(shell $(MYOS_BIN) --color=never $(MYOS_ARGS) env $(1) | awk '{print $$2}')
 
 # target help: List the myos commands
 .PHONY: help

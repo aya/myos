@@ -55,6 +55,11 @@ myos_context_defaults() {
   myos_default_DOCKER_NETWORK()            { myos_network_private "$USER" "$ENV"; }
   myos_default_DOCKER_IMAGE_TAG()          { printf 'latest'; }
   myos_default_GIT_USER()                  { printf '%s' "$USER"; }
+  myos_default_HOST()                      { myos_addprefix "${HOSTNAME:-}." "$(myos_var DOMAIN)"; }
+  myos_default_HOSTNAME()                  { printf '%s' "${HOSTNAME:-}"; }
+  myos_default_DOMAINNAME()                { myos_firstword "$(myos_var DOMAIN)"; }
+  myos_default_MACHINE()                   { uname -m 2>/dev/null; }
+  myos_default_SYSTEM()                    { uname -s 2>/dev/null; }
   myos_default_HOST_COMPOSE_PROJECT_NAME() { printf '%s' "${HOSTNAME:-}"; }
   myos_default_HOST_DOCKER_VOLUME()        { printf '%s' "${HOSTNAME:-}"; }
   myos_default_HOST_DOCKER_REPOSITORY()    { printf '%s' "${HOSTNAME:-}" | tr '_-' '//'; }

@@ -171,9 +171,12 @@ myos_group_value() {
   _IFS=$IFS; IFS=:
   for _d in $(myos_path); do
     IFS=$_IFS
-    [ -f "$_d/$1.env" ] && { _v=$(sed -n "s/^$1=//p" "$_d/$1.env" | tail -1 | tr -d '"'); }
-    [ -z "$_v" ] && [ -f "$_d/$1.mk" ] && { _v=$(myos_mk_group "$_d/$1.mk" "$1"); }
-    [ -z "$_v" ] && [ -f "$_d/$1/$1.mk" ] && { _v=$(myos_mk_group "$_d/$1/$1.mk" "$1"); }
+    for _f in "$_d/$1.env" "$_d/$1/$1.env" "$_d/$1/_stack.env"; do
+      [ -z "$_v" ] && [ -f "$_f" ] && _v=$(sed -n "s/^$1=//p" "$_f" | tail -1 | tr -d '"')
+    done
+    for _f in "$_d/$1.mk" "$_d/$1/$1.mk"; do
+      [ -z "$_v" ] && [ -f "$_f" ] && _v=$(myos_mk_group "$_f" "$1")
+    done
     [ -n "$_v" ] && { printf '%s' "$_v"; return 0; }
     IFS=:
   done

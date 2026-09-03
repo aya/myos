@@ -14,8 +14,10 @@ myos_slugify() { printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9
 
 # myos_reverse WORDS...  reverse the order of space separated words
 myos_reverse() {
+  set -f  # a word may be a pattern such as *.example.org, do not glob it
   _out=
   for _w in $1; do _out="$_w${_out:+ }$_out"; done
+  set +f
   printf '%s' "$_out"
 }
 
@@ -35,7 +37,7 @@ myos_verlt() {
 # The make list functions the catalogue uses, on space separated words.
 
 # myos_firstword LIST / myos_lastword LIST
-myos_firstword() { for _w in $1; do printf '%s' "$_w"; return 0; done; }
+myos_firstword() { set -f; for _w in $1; do set +f; printf '%s' "$_w"; return 0; done; set +f; }
 myos_lastword()  { _l=; for _w in $1; do _l=$_w; done; printf '%s' "$_l"; }
 
 # myos_or A B...  the first argument that is not empty
@@ -44,6 +46,7 @@ myos_or() { for _a in "$@"; do [ -n "$_a" ] && { printf '%s' "$_a"; return 0; };
 # myos_patsubst PATTERN REPLACEMENT LIST
 # The pattern holds one %, standing for any text; the replacement puts it back.
 myos_patsubst() {
+  set -f  # a word may be a pattern such as *.example.org, do not glob it
   _pre=${1%%%*}; _suf=${1#*%}
   _rpre=${2%%%*}; _rsuf=${2#*%}
   _out=
@@ -55,39 +58,51 @@ myos_patsubst() {
       *) _out="${_out:+$_out }$_w" ;;
     esac
   done
+  set +f
   printf '%s' "$_out"
 }
 
+# myos_pattern MAKE_PATTERN  the shell pattern matching a make pattern.
+# In make only % is a wildcard, so a literal *, ? or [ has to be protected
+# before % becomes *: "*.%" means "starts with a star and a dot", not
+# "anything".
+myos_pattern() {
+  printf '%s' "$1" | sed -e 's/[][*?]/\\&/g' -e 's/%/*/g'
+}
+
 # myos_filter PATTERNS LIST / myos_filter_out PATTERNS LIST
-# A make pattern uses % where a shell pattern uses *.
 myos_filter() {
-  _pats=$(printf '%s' "$1" | tr '%' '*')
+  set -f  # a word may itself be a pattern, do not glob it
   _out=
   for _w in $2; do
-    for _p in $_pats; do
-      # shellcheck disable=SC2254  # the pattern is meant to glob
+    for _raw in $1; do
+      _p=$(myos_pattern "$_raw")
+      # shellcheck disable=SC2254  # the pattern is meant to match, not to glob
       case $_w in $_p) _out="${_out:+$_out }$_w"; break ;; esac
     done
   done
+  set +f
   printf '%s' "$_out"
 }
 myos_filter_out() {
-  _pats=$(printf '%s' "$1" | tr '%' '*')
+  set -f
   _out=
   for _w in $2; do
     _keep=yes
-    for _p in $_pats; do
-      # shellcheck disable=SC2254  # the pattern is meant to glob
+    for _raw in $1; do
+      _p=$(myos_pattern "$_raw")
+      # shellcheck disable=SC2254  # the pattern is meant to match, not to glob
       case $_w in $_p) _keep=no; break ;; esac
     done
     [ "$_keep" = yes ] && _out="${_out:+$_out }$_w"
   done
+  set +f
   printf '%s' "$_out"
 }
 
 # myos_addprefix PREFIX LIST / myos_addsuffix SUFFIX LIST
-myos_addprefix() { _out=; for _w in $2; do _out="${_out:+$_out }$1$_w"; done; printf '%s' "$_out"; }
-myos_addsuffix() { _out=; for _w in $2; do _out="${_out:+$_out }$_w$1"; done; printf '%s' "$_out"; }
+myos_addprefix() { set -f; _out=; for _w in $2; do _out="${_out:+$_out }$1$_w"; done; set +f; printf '%s' "$_out"; }
+myos_addsuffix() { set -f; _out=; for _w in $2; do _out="${_out:+$_out }$_w$1"; done; set +f; printf '%s' "$_out"; }
 
 # myos_b64url  read stdin, write url-safe base64 without padding
 myos_b64url() { openssl enc -A -base64 | tr '+/' '-_' | tr -d '='; }
@@ -104,4 +119,17 @@ myos_jwt() {
   _pb=$(printf '%s' "$_p" | myos_b64url)
   _sig=$(printf '%s' "$_hb.$_pb" | openssl dgst -sha256 -binary -hmac "$_s" | myos_b64url)
   printf '%s.%s.%s' "$_hb" "$_pb" "$_sig"
+}
+
+# myos_patsublist PATTERN REPLACEMENT LIST
+# patsubst over a list, joined by commas. The fabio tags are built this way:
+# one route per uri, in a single label.
+myos_patsublist() {
+  set -f  # a word may be a pattern such as *.example.org, do not glob it
+  _out=
+  for _w in $3; do
+    _out="${_out:+$_out,}$(myos_patsubst "$1" "$2" "$_w")"
+  done
+  set +f
+  printf '%s' "$_out"
 }

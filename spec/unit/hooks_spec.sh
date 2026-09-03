@@ -5,6 +5,7 @@ Include lib/var.sh
 Include lib/tags.sh
 Include lib/naming.sh
 Include lib/config.sh
+Include lib/stack.sh
 Include lib/hooks.sh
 
 # A stack ships its computed settings as a shell hook, so the catalogue works
@@ -14,6 +15,7 @@ Describe 'lib/hooks.sh'
     MYOS_TMP=$(mktemp -d "${TMPDIR:-/tmp}/myos-hook.XXXXXX")
     MYOS_TMP=$(cd "$MYOS_TMP" && pwd -P)
     ENV=local; DOMAIN=example.org; USER=tester; HOSTNAME=testhost
+    MYOS_PATH=$MYOS_TMP
     APP_HOST=demo.example.org; APP_URI=demo.example.org/
   }
   cleanup() { rm -rf "$MYOS_TMP"; }
