@@ -1,0 +1,5 @@
+make -o docker-stack-up MAKE_OLDFILE=docker-stack-up ENV=master DOCKER_COMPOSE=docker --log-level=error compose docker-compose-up STACK=myos APP_NAME=myos
+sh -c docker network create tester-master >/dev/null 2>&1
+sh -c docker network create testhost >/dev/null 2>&1
+docker --log-level=error compose --ansi=auto -f @MYOS@/stack/myos/networks.yml -p tester-myos-master up -d
+[exit 0]

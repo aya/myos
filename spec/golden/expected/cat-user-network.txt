@@ -1,0 +1,2 @@
+DOCKER_NETWORK tester
+[exit 0]

@@ -1,0 +1,2 @@
+DOCKER_NETWORK_PUBLIC testhost
+[exit 0]

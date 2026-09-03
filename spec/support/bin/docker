@@ -1,0 +1,18 @@
+#!/bin/sh
+# Mock docker for myos tests: logs every call, answers a few read-only queries deterministically.
+[ -n "${MYOS_DOCKER_LOG:-}" ] && printf 'docker %s\n' "$*" >> "$MYOS_DOCKER_LOG"
+case "$1 $2" in
+  "compose version") echo "${MOCK_COMPOSE_VERSION:-2.29.0}" ;;
+  "compose config")  echo "# mock compose config" ;;
+  "compose ps")      : ;;
+  "compose "*)       : ;;
+  "info --format")   echo "${MOCK_SWARM_STATE:-inactive}" ;;
+  "run --rm")        case "$*" in *"uname -m"*) echo x86_64 ;; *"uname -s"*) echo Linux ;; *) : ;; esac ;;
+  "images -q")       : ;;
+  "ps -q")           : ;;
+  "network ls")      : ;;
+  "volume ls")       : ;;
+  "version --format") echo 29.0.0 ;;
+  *) : ;;
+esac
+exit 0

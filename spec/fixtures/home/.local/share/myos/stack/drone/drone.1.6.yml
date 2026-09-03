@@ -1,0 +1,3 @@
+services:
+  drone:
+    image: drone/drone:1.6

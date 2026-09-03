@@ -1,0 +1,3 @@
+make -o docker-stack-logs MAKE_OLDFILE=docker-stack-logs ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-logs STACK=host/consul APP_NAME=host
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/stack/myos/networks.yml -p testhost logs --follow --tail=100
+[exit 0]

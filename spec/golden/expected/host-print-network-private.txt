@@ -1,0 +1,2 @@
+DOCKER_NETWORK_PRIVATE tester-local
+[exit 0]

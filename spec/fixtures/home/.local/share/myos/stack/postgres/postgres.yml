@@ -1,0 +1,13 @@
+services:
+  postgres:
+    image: postgres:${POSTGRES_VERSION:-latest}
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    labels:
+      - SERVICE_5432_NAME=${COMPOSE_SERVICE_NAME}-postgres-5432
+    networks:
+      - private
+    volumes:
+      - postgres:/var/lib/postgresql/data
+volumes:
+  postgres:

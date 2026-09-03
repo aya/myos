@@ -1,0 +1,2 @@
+COMPOSE_FILE @HOME@/.local/share/myos/stack/host/nginx.yml @HOME@/.local/share/myos/stack/host/nginx.www.yml @HOME@/.local/share/myos/stack/host/nginx.dns.yml @MYOS@/stack/myos/networks.yml @MYOS@/stack/myos/volumes.www.local.yml @MYOS@/stack/myos/volumes.dns.local.yml
+[exit 0]

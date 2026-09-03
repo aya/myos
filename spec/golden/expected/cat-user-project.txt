@@ -1,0 +1,2 @@
+COMPOSE_PROJECT_NAME tester-example-test
+[exit 0]

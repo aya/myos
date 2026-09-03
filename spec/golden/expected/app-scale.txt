@@ -1,0 +1,3 @@
+make -o docker-stack-scale MAKE_OLDFILE=docker-stack-scale ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-scale STACK=myos APP_NAME=myos
+docker --log-level=error compose --ansi=auto -f @MYOS@/stack/myos/networks.yml -p tester-myos-local up -d --scale app=2
+[exit 0]

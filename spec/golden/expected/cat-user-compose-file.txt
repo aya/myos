@@ -1,0 +1,2 @@
+COMPOSE_FILE @HOME@/.local/share/myos/stack/User/User.yml @MYOS@/stack/myos/networks.yml
+[exit 0]

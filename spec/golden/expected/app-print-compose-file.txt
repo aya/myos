@@ -1,0 +1,2 @@
+COMPOSE_FILE @MYOS@/stack/myos/networks.yml
+[exit 0]

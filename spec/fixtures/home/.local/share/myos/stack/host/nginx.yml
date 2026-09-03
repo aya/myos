@@ -1,0 +1,6 @@
+services:
+  nginx:
+    image: nginx:alpine
+    container_name: ${HOST_COMPOSE_PROJECT_NAME:-localhost}-nginx
+    ports:
+      - "8080:80"

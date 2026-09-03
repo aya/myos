@@ -1,0 +1,2 @@
+WARNING: myos[0] doesnotexist-rule-exists: target doesnotexist unavailable in app myos
+[exit 0]

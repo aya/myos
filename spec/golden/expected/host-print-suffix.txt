@@ -1,0 +1,2 @@
+COMPOSE_FILE_SUFFIX app labels networks ssh volumes
+[exit 0]

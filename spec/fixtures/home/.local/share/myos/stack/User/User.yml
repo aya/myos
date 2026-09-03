@@ -1,0 +1,6 @@
+services:
+  myos:
+    image: ${USER_DOCKER_IMAGE:-myos:latest}
+    container_name: ${USER_COMPOSE_PROJECT_NAME:-user}
+    volumes:
+      - ${USER_DOCKER_VOLUME:-user}:/tmp/ssh-agent

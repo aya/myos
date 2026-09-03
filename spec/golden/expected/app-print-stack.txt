@@ -1,0 +1,2 @@
+STACK myos
+[exit 0]

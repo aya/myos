@@ -1,0 +1,4 @@
+#!/bin/sh
+[ -n "${MYOS_DOCKER_LOG:-}" ] && printf 'docker-compose %s\n' "$*" >> "$MYOS_DOCKER_LOG"
+case "$1" in version) echo "${MOCK_COMPOSE_VERSION:-2.29.0}" ;; config) echo "# mock compose config" ;; *) : ;; esac
+exit 0

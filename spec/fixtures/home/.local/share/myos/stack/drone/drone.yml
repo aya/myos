@@ -1,0 +1,7 @@
+services:
+  drone:
+    image: drone/drone:${DRONE_VERSION:-latest}
+    environment:
+      DRONE_SERVER_HOST: ${DRONE_SERVER_HOST:-drone.localhost}
+    networks:
+      - private

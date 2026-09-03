@@ -1,0 +1,9 @@
+make -o docker-stack-up MAKE_OLDFILE=docker-stack-up ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-up STACK=host/consul APP_NAME=host
+sh -c docker network create tester-local >/dev/null 2>&1
+sh -c docker network create testhost >/dev/null 2>&1
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @WD@/stack/host/fabio.yml -f @MYOS@/stack/myos/networks.yml -p testhost up -d
+make -o docker-stack-up MAKE_OLDFILE=docker-stack-up ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-up STACK=host/fabio APP_NAME=host
+sh -c docker network create tester-local >/dev/null 2>&1
+sh -c docker network create testhost >/dev/null 2>&1
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @WD@/stack/host/fabio.yml -f @MYOS@/stack/myos/networks.yml -p testhost up -d
+[exit 0]

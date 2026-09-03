@@ -1,0 +1,13 @@
+services:
+  app:
+    image: alpine:3.20
+    command: sleep infinity
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+      DOMAIN: ${DOMAIN}
+    labels:
+      - SERVICE_8080_NAME=${COMPOSE_SERVICE_NAME}-app-8080
+      - SERVICE_8080_TAGS=${APP_SERVICE_8080_TAGS:-urlprefix-app.localhost/*}
+    networks:
+      - default
+      - private

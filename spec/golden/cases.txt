@@ -1,0 +1,70 @@
+# name                          | fixture       | args
+host-print-project              | host-project  | print-COMPOSE_PROJECT_NAME STACK=host/consul
+host-print-compose-file         | host-project  | print-COMPOSE_FILE STACK=host/consul
+host-print-stack-dir            | host-project  | print-STACK_DIR STACK=host/consul
+host-print-env-vars             | host-project  | print-ENV_VARS STACK=host/consul
+host-print-suffix               | host-project  | print-COMPOSE_FILE_SUFFIX STACK=host/consul
+host-print-network-default      | host-project  | print-DOCKER_NETWORK_DEFAULT STACK=host/consul
+host-print-network-private      | host-project  | print-DOCKER_NETWORK_PRIVATE STACK=host/consul
+host-print-network-public       | host-project  | print-DOCKER_NETWORK_PUBLIC STACK=host/consul
+host-print-host-stack           | host-project  | print-HOST_STACK STACK=host/consul
+host-print-app                  | host-project  | print-APP STACK=host/consul
+host-up-consul                  | host-project  | up STACK=host/consul
+host-up-two                     | host-project  | up STACK="host/consul host/fabio"
+host-up-group                   | host-project  | up STACK=host
+host-target                     | host-project  | host
+host-down-group                 | host-project  | down STACK=host
+host-config                     | host-project  | config STACK=host/fabio
+host-ps                         | host-project  | ps STACK=host/consul
+host-logs                       | host-project  | logs STACK=host/consul
+host-stack-host-config          | host-project  | stack-host-config
+host-exec                       | host-project  | exec STACK=host/consul SERVICE=consul ARGS='consul members'
+host-env-master                 | host-project  | print-COMPOSE_FILE STACK=host/consul ENV=master
+host-print-project-env-master   | host-project  | print-COMPOSE_PROJECT_NAME STACK=host/consul ENV=master
+app-print-project               | app-git       | print-COMPOSE_PROJECT_NAME
+app-print-compose-file          | app-git       | print-COMPOSE_FILE
+app-print-app                   | app-git       | print-APP
+app-print-stack                 | app-git       | print-STACK
+app-up                          | app-git       | up
+app-up-env-master               | app-git       | up ENV=master
+app-config                      | app-git       | config
+app-down                        | app-git       | down
+app-run                         | app-git       | run SERVICE=app ARGS='id'
+app-scale                       | app-git       | scale SERVICE=app NUM=2
+app-print-service-name          | app-git       | print-COMPOSE_SERVICE_NAME
+app-print-repository            | app-git       | print-DOCKER_REPOSITORY
+nogit-print-project             | app-nogit     | print-COMPOSE_PROJECT_NAME
+nogit-print-app                 | app-nogit     | print-APP
+nogit-up                        | app-nogit     | up
+cat-postgres-compose-file       | app-nogit     | print-COMPOSE_FILE STACK=postgres
+cat-postgres-project            | app-nogit     | print-COMPOSE_PROJECT_NAME STACK=postgres
+cat-postgres-up                 | app-nogit     | up STACK=postgres
+cat-postgres-version            | app-nogit     | print-COMPOSE_FILE STACK=postgres:9.6
+cat-postgres-env-master         | app-nogit     | print-COMPOSE_FILE STACK=postgres ENV=master
+cat-user-project                | app-nogit     | print-COMPOSE_PROJECT_NAME STACK=User/User
+cat-user-compose-file           | app-nogit     | print-COMPOSE_FILE STACK=User/User
+cat-user-network                | app-nogit     | print-DOCKER_NETWORK STACK=User/User
+cat-group-testing               | app-nogit     | print-COMPOSE_FILE STACK=testing
+cat-group-testing-up            | app-nogit     | up STACK=testing
+cat-group-default-up            | app-nogit     | up STACK=default
+cat-drone-version               | app-nogit     | print-COMPOSE_FILE STACK=drone/drone:1.6
+cat-drone-env-vars              | app-nogit     | print-ENV_VARS STACK=drone/drone
+cat-nginx-www                   | app-nogit     | print-COMPOSE_FILE STACK=host/nginx COMPOSE_FILE_WWW=true
+cat-nginx-www-dns               | app-nogit     | print-COMPOSE_FILE STACK=host/nginx COMPOSE_FILE_WWW=true COMPOSE_FILE_DNS=true
+cat-nginx-project               | app-nogit     | print-COMPOSE_PROJECT_NAME STACK=host/nginx
+cat-unknown-stack               | app-nogit     | print-COMPOSE_FILE STACK=doesnotexist
+cat-unknown-target              | app-nogit     | doesnotexist
+misc-help                       | app-nogit     | help
+inc-app-print-project           | app-git       | @make print-COMPOSE_PROJECT_NAME
+inc-app-print-compose-file      | app-git       | @make print-COMPOSE_FILE
+inc-app-print-app               | app-git       | @make print-APP
+inc-app-up                      | app-git       | @make up
+inc-app-up-env-master           | app-git       | @make up ENV=master
+inc-app-config                  | app-git       | @make config
+inc-app-down                    | app-git       | @make down
+inc-app-ps                      | app-git       | @make ps
+inc-app-print-service-name      | app-git       | @make print-COMPOSE_SERVICE_NAME
+inc-app-print-env-vars          | app-git       | @make print-ENV_VARS
+inc-app-print-network-default   | app-git       | @make print-DOCKER_NETWORK_DEFAULT
+inc-app-stack-postgres-up       | app-git       | @make up STACK=postgres
+inc-app-unknown-target          | app-git       | @make doesnotexist

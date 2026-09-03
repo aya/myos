@@ -1,0 +1,2 @@
+COMPOSE_FILE @WD@/stack/host/consul.yml @MYOS@/stack/myos/networks.yml
+[exit 0]
