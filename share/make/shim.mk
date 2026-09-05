@@ -36,10 +36,19 @@ define make
 	$(MYOS_BIN) $(MYOS_ARGS) $(1)
 endef
 
-# function myos-var: the value myos resolves for a variable.
-# A stack keeps its settings in hooks that only myos reads, so a .mk target
-# asks for them rather than defining them itself:
-#   $(call myos-var,HOST_DOCKER_VOLUME)
+# The settings of the stacks, read once and evaluated here.
+# A stack keeps its settings in hooks that only myos reads; asking for them one
+# at a time costs a process per variable, so they come in a single call.
+MYOS_SETTINGS                   ?= .myos.settings.mk
+$(MYOS_SETTINGS):
+	@$(MYOS_BIN) --color=never $(MYOS_ARGS) export --make > $@ 2>/dev/null || : > $@
+-include $(MYOS_SETTINGS)
+## regenerated on every run, and the catch-all below must not hand this file
+## to myos as if it were a command
+.PHONY: $(MYOS_SETTINGS)
+
+# function myos-var: the value myos resolves for one variable, when a single
+# lookup is cheaper than the whole set
 myos-var = $(shell $(MYOS_BIN) --color=never $(MYOS_ARGS) env $(1) | awk '{print $$2}')
 
 # target help: List the myos commands

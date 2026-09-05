@@ -28,7 +28,7 @@ done
 myos_is_command() {
   case $1 in
     up|down|start|stop|restart|ps|logs|config|build|pull|create|kill|top|images) return 0 ;;
-    version|help) return 0 ;;
+    version|help|export) return 0 ;;
     print-*|stack-*-*) return 0 ;;
     *@*) myos_is_command "${1%@*}"; return $? ;;
   esac
@@ -69,6 +69,7 @@ Commands:
   ps logs config exec run               inspect and enter them
   ls [--groups]                         list the stacks myos can see
   env [VAR...]                          show resolved variables
+  export                                every setting of the stacks, as KEY=value
   env-update                            fill .env from the .env.dist templates
   doctor                                check the installation
   version                               print the myos version
@@ -216,7 +217,7 @@ if [ -z "$MYOS_REFS" ]; then
   # these commands describe the installation rather than act on a stack
   for _c in $MYOS_CMDS; do
     case $_c in
-      env|env-update|ls|doctor|version|help) ;;
+      env|env-update|export|ls|doctor|version|help) ;;
       *) myos_die "$MYOS_E_USAGE" "no stack given, and no compose file in $WORKDIR" ;;
     esac
   done

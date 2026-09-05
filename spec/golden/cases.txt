@@ -86,3 +86,4 @@ chain-up-group                  | host-project  | up ps host
 chain-print-two                 | host-project  | print-COMPOSE_PROJECT_NAME print-APP STACK=host/consul
 mk-ssh-no-hosts                 | app-nogit     | ssh
 mk-ssh-with-hosts               | app-nogit     | ssh SSH_HOSTS=example.test ARGS=id
+bridge-export                   | host-project  | export STACK=host/consul
