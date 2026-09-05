@@ -11,15 +11,15 @@
 set -u
 MYOS=${MYOS:-$(cd "$(dirname "$0")/.." && pwd -P)}
 MYOS_LIB=$MYOS/lib
-for _m_m in core path ref files stack values settings fn; do . "$MYOS_LIB/$_m_m.sh"; done
+for _m_m in core path ref files stack values settings fn env events; do . "$MYOS_LIB/$_m_m.sh"; done
 for _m_m in "$MYOS_LIB"/verb/*.sh; do . "$_m_m"; done
 
 MYOS_VERSION=2.0.0-dev
 MYOS_SETTINGS_LOADED=; MYOS_SET_NAMES=; MYOS_SET_EXPORT=
-MYOS_VERBS="up down build config logs ps status restart start stop recreate connect exec run scale shutdown ls env print"
+MYOS_VERBS="up down build config logs ps status restart start stop recreate connect exec run scale shutdown bootstrap install clean attach env-update ls env print"
 MYOS_DRYRUN=${DRYRUN:-false}
 MYOS_OUTPUT=text; MYOS_STRICT=; MYOS_WORKDIR=${WORKDIR:-$PWD}
-verbs=; refs=; MYOS_ARGS=
+verbs=; refs=; MYOS_ARGS=; MYOS_IMAGE=; MYOS_BOOTSTRAP=; MYOS_YES=; MYOS_VERB=
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -28,6 +28,8 @@ while [ $# -gt 0 ]; do
     -C) shift; MYOS_WORKDIR=$1 ;;
     --json) MYOS_OUTPUT=json ;;
     --strict) MYOS_STRICT=1 ;;
+    --bootstrap) MYOS_BOOTSTRAP=1 ;;
+    --yes|-y) MYOS_YES=1 ;;
     --version) printf 'myos %s\n' "$MYOS_VERSION"; exit 0 ;;
     -h|--help) printf 'usage: myos [-n] [-C DIR] VERB... [REF...] [KEY=VALUE...] [-- ARGS...]\nverbs: %s\n' "$MYOS_VERBS"; exit 0 ;;
     -*) myos_die 2 "unknown option $1" ;;
@@ -40,6 +42,9 @@ while [ $# -gt 0 ]; do
         *) eval "MYOS_CLI_$_m_k=\$_m_v"; eval "$_m_k=\$_m_v"; export "$_m_k" ;;
       esac ;;
     print-*|context-*) verbs="${verbs:+$verbs }$1" ;;
+    docker-build-*) verbs="${verbs:+$verbs }build"; MYOS_IMAGE="${MYOS_IMAGE:+$MYOS_IMAGE }${1#docker-build-}" ;;
+    docker-build) verbs="${verbs:+$verbs }build" ;;
+    .env-update) verbs="${verbs:+$verbs }env-update" ;;
     stack-*-*) verbs="${verbs:+$verbs }$1" ;;
     *)
       if myos_has "$1" "$MYOS_VERBS"; then verbs="${verbs:+$verbs }$1"
@@ -47,7 +52,7 @@ while [ $# -gt 0 ]; do
   esac
   shift
 done
-[ -n "$verbs" ] || myos_die 2 "unknown verb ${refs%% *} (verbs: $MYOS_VERBS)"
+[ -n "$verbs" ] || myos_die 2 "unknown verb ${refs%% *} (myos -h lists the verbs)"
 myos_realpath "$MYOS_WORKDIR" || :; [ -n "$R" ] && MYOS_WORKDIR=$R
 MYOS_ENV=${ENV:-local}
 MYOS_USER=${USER:-$(id -un)}
@@ -142,7 +147,9 @@ myos_stacks_merge() {
 
 rc=0
 for verb in $verbs; do
+  MYOS_VERB=$verb
   case $verb in
+    env-update) myos_for_refs myos_verb_env_update || rc=$? ;;
     print-*|context-*) myos_stacks_merge; myos_verb_print "${verb#*-}" ;;
     stack-*-*)
       _m_v=${verb##*-}; _m_s=${verb#stack-}; _m_s=${_m_s%-*}

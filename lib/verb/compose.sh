@@ -43,7 +43,10 @@ myos_networks_ensure() {
   done
 }
 
-myos_verb_up()      { myos_networks_ensure; myos_compose up -d ${MYOS_SERVICE:+"$MYOS_SERVICE"}; }
+myos_verb_up() {
+  if myos_up_needs_bootstrap; then myos_verb_bootstrap || return 1; else myos_networks_ensure; fi
+  myos_compose up -d ${MYOS_SERVICE:+"$MYOS_SERVICE"}
+}
 myos_verb_down()    { myos_compose down; }
 myos_verb_build()   { myos_compose build; }
 myos_verb_config()  { myos_compose config; }

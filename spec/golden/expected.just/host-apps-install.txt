@@ -1,0 +1,2 @@
+myos: unknown verb apps-install (myos -h lists the verbs)
+[exit 2]

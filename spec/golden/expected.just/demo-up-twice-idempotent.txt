@@ -1,0 +1,11 @@
+myos up demo env-update ok (4 keys added)
+docker network create tester-local
+docker network create testhost
+docker build --build-arg DOCKER_BUILD_DIR=docker/web --build-arg UID=@UID@ --build-arg GID=@GID@ --tag tester/demo/local/web:latest -f @WD@/docker/web/Dockerfile @WD@
+docker build --build-arg DOCKER_BUILD_DIR=docker/web/alpine --build-arg UID=@UID@ --build-arg GID=@GID@ --tag tester/demo/local/web:alpine -f @WD@/docker/web/alpine/Dockerfile @WD@
+docker --log-level=error compose --ansi=auto -f @WD@/stack/demo/demo.yml -f @MYOS@/share/compose/networks.yml -p tester-demo-local up -d
+[then]DEMO_HOST=demo.example.test
+DEMO_SECRET=FIXED-SECRET-FOR-TESTS
+DEMO_TITLE=demo
+DEMO_URL=https://demo.example.test/
+[exit 0]

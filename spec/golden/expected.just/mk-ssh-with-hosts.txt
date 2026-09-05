@@ -1,0 +1,2 @@
+myos: unknown verb ssh (myos -h lists the verbs)
+[exit 2]

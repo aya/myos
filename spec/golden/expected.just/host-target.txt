@@ -1,2 +1,2 @@
-myos: unknown verb host (verbs: up down build config logs ps status restart start stop recreate connect exec run scale shutdown ls env print)
+myos: unknown verb host (myos -h lists the verbs)
 [exit 2]

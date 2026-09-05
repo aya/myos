@@ -1,0 +1,2 @@
+docker attach testhost-consul-1
+[exit 0]

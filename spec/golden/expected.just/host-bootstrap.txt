@@ -1,0 +1,3 @@
+docker network create tester-local
+docker network create testhost
+[exit 0]
