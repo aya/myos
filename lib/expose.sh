@@ -15,7 +15,11 @@
 #   mesh     the private network between the hosts of the fleet
 #   private  this host only: everything the load balancer reaches for you
 #
-# MYOS_BIND_<SCOPE> overrides any of them.
+# A stack does not declare its scope on the side: it is which of these it binds
+# to, read from the compose file. One source of truth, which cannot drift from
+# what is actually published. MYOS_BIND_<SCOPE> sets the address of a scope on
+# a given host, which is the part that belongs to the host rather than to the
+# stack.
 
 # myos_bind SCOPE  the address a port of that scope binds to
 myos_bind() {
@@ -66,15 +70,43 @@ myos_stack_prefix() {
   esac
 }
 
-# myos_expose_scope PREFIX SERVICE PORT  the scope a stack declares for a port:
-# <PREFIX>_SERVICE_<port>_EXPOSE, then <PREFIX>_SERVICE_EXPOSE, then the same
-# two on the service name, else private
-myos_expose_scope() {
-  _u=$(myos_upper "$1")
-  for _n in "${_u}_SERVICE_${3}_EXPOSE" "${_u}_SERVICE_EXPOSE" \
-            "$(myos_upper "$2")_SERVICE_${3}_EXPOSE" "$(myos_upper "$2")_SERVICE_EXPOSE"; do
-    _s=$(myos_var "$_n")
-    [ -n "$_s" ] && { printf '%s' "$_s"; return 0; }
-  done
-  printf 'private'
+# myos_expose_declared FILE...  SERVICE|CONTAINER_PORT|SCOPE for every port a
+# compose file publishes, read from the file as written rather than from the
+# resolved configuration.
+#
+# The scope is not declared twice: it is which binding the file asks for.
+#   ${MYOS_BIND_PUBLIC}:443:443   public
+#   ${MYOS_BIND_PRIVATE}::8080    private
+#   ${MYOS_BIND_MESH}::7946       mesh
+#   127.0.0.1:5432:5432           pinned to an address, deliberate but fixed
+#   80  or  8080:80               unbound: docker binds every address, and
+#                                 nobody chose that
+#
+# Resolving first would lose the difference: ${MYOS_BIND_PRIVATE} and a
+# hand-written 127.0.0.1 both become 127.0.0.1, and an unbound port becomes
+# 0.0.0.0 exactly like a deliberate public one.
+myos_expose_declared() {
+  awk '
+    function emit(entry,   e, scope, target) {
+      e = entry
+      gsub(/^[ \t"'"'"'-]+/, "", e); gsub(/["'"'"']+$/, "", e)
+      if (e ~ /\$\{MYOS_BIND_PUBLIC[^}]*\}/)       scope = "public"
+      else if (e ~ /\$\{MYOS_BIND_MESH[^}]*\}/)    scope = "mesh"
+      else if (e ~ /\$\{MYOS_BIND_PRIVATE[^}]*\}/) scope = "private"
+      else if (e ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:/) scope = "pinned"
+      else if (e ~ /^\[/)                          scope = "pinned"
+      else scope = "unbound"
+      # the container port is the last field, minus any /protocol
+      target = e
+      sub(/\/[a-z]+$/, "", target)
+      n = split(target, parts, ":")
+      target = parts[n]
+      if (target ~ /^[0-9]+(-[0-9]+)?$/) printf "%s|%s|%s\n", svc, target, scope
+    }
+    /^services:[ \t]*$/ { insvc = 1; next }
+    insvc && /^  [a-zA-Z0-9_.-]+:[ \t]*$/ { svc = $1; sub(/:$/, "", svc); inports = 0 }
+    insvc && /^    ports:/ { inports = 1; next }
+    inports && /^    [a-zA-Z]/ { inports = 0 }
+    inports && /^      *-/ { emit($0) }
+  ' "$@"
 }

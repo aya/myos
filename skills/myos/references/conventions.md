@@ -198,21 +198,23 @@ services:
 addresses; `MYOS_MESH_IFACE` names the interface when it is not one of
 easytier, tun0, tailscale0, mycelium or wg0.
 
-A stack also declares what it means, so an audit can tell a deliberate choice
-from an oversight:
+There is nothing else to declare: the scope **is** the binding the file asks
+for. A port written `- 80` or `- "9000:9000"` is *unbound*, which means docker
+opens it on every address and nobody chose that.
 
 ```sh
-<PREFIX>_SERVICE_EXPOSE=public          # the whole stack
-<PREFIX>_SERVICE_443_EXPOSE=public      # one port
+myos expose             # what each stack publishes, on which address
+myos expose --strict    # exits 1 when a port is published without a binding
 ```
 
-`<PREFIX>` is `HOST_<name>` for a host stack, `USER_<name>` for a user stack,
-`<name>` otherwise.
+The command reads the compose files as written **and** the resolved
+configuration, and shows both: the binding the stack asked for, and the address
+it ends up on. Resolving first would lose the difference, since
+`${MYOS_BIND_PRIVATE}` and a hand-written `127.0.0.1` both become `127.0.0.1`,
+and an unbound port becomes `0.0.0.0` exactly like a deliberate public one.
 
-```sh
-myos expose             # what each stack publishes, and its declared scope
-myos expose --strict    # exits 1 when a port faces the world undeclared
-```
+The split of responsibility: the **scope** belongs to the stack, in its compose
+file; the **address** of a scope belongs to the host, in its configuration.
 
 ## Groups
 

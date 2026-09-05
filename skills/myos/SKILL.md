@@ -85,7 +85,8 @@ See `references/conventions.md`.
 - Check what a stack opens before starting it on a server that faces the
   internet: `myos expose <stack>`. A port shown on `0.0.0.0` answers the world,
   and on linux the host firewall does not see it, because docker writes its own
-  rules. Bind it instead: `ports: ["${MYOS_BIND_PRIVATE}::<port>"]`.
+  rules. A port reported as `unbound` was published without anyone choosing an
+  address: bind it with `ports: ["${MYOS_BIND_PRIVATE}::<port>"]`.
 - Never run `myos clean` on a host stack: it removes images **and volumes**,
   including the certificates.
 - Secrets belong in a file outside the repository, never in a compose file.

@@ -54,26 +54,47 @@ Describe 'lib/expose.sh'
     End
   End
 
-  Describe 'myos_expose_scope'
-    It 'is private unless the stack says otherwise'
-      When call myos_expose_scope HOST_FTPS ftps 21
-      The output should equal "private"
+  Describe 'myos_expose_declared'
+    setup() { MYOS_TMP=$(mktemp -d "${TMPDIR:-/tmp}/myos-exp.XXXXXX"); }
+    cleanup() { rm -rf "$MYOS_TMP"; }
+    BeforeEach setup
+    AfterEach cleanup
+
+    # The scope is not declared on the side: it is which binding the compose
+    # file asks for. Reading the resolved configuration instead would lose the
+    # difference, since every form ends up as a plain address.
+    It 'reads the scope out of the binding each port asks for'
+      printf 'services:\n  a:\n    ports:\n' > "$MYOS_TMP/c.yml"
+      printf '      - "${MYOS_BIND_PUBLIC}:443:443"\n' >> "$MYOS_TMP/c.yml"
+      printf '      - "${MYOS_BIND_PRIVATE}::8080"\n' >> "$MYOS_TMP/c.yml"
+      printf '      - "${MYOS_BIND_MESH}::7946"\n' >> "$MYOS_TMP/c.yml"
+      printf '      - "127.0.0.1:5432:5432"\n' >> "$MYOS_TMP/c.yml"
+      printf '      - 80\n' >> "$MYOS_TMP/c.yml"
+      When call myos_expose_declared "$MYOS_TMP/c.yml"
+      The line 1 should equal "a|443|public"
+      The line 2 should equal "a|8080|private"
+      The line 3 should equal "a|7946|mesh"
+      The line 4 should equal "a|5432|pinned"
+      The line 5 should equal "a|80|unbound"
     End
-    It 'reads the scope of one port'
-      HOST_FTPS_SERVICE_21_EXPOSE=public
-      When call myos_expose_scope HOST_FTPS ftps 21
-      The output should equal "public"
+
+    It 'calls a plain host:container mapping unbound, because it is'
+      printf 'services:\n  a:\n    ports:\n      - "9000:9000"\n      - 25:25\n' > "$MYOS_TMP/c.yml"
+      When call myos_expose_declared "$MYOS_TMP/c.yml"
+      The line 1 should equal "a|9000|unbound"
+      The line 2 should equal "a|25|unbound"
     End
-    It 'reads the scope of a whole stack'
-      HOST_FTPS_SERVICE_EXPOSE=mesh
-      When call myos_expose_scope HOST_FTPS ftps 21
-      The output should equal "mesh"
+
+    It 'keeps the protocol out of the port'
+      printf 'services:\n  a:\n    ports:\n      - 4001/udp\n' > "$MYOS_TMP/c.yml"
+      When call myos_expose_declared "$MYOS_TMP/c.yml"
+      The output should equal "a|4001|unbound"
     End
-    It 'prefers the port over the stack'
-      HOST_FTPS_SERVICE_EXPOSE=mesh
-      HOST_FTPS_SERVICE_21_EXPOSE=public
-      When call myos_expose_scope HOST_FTPS ftps 21
-      The output should equal "public"
+
+    It 'reports nothing for a service that publishes nothing'
+      printf 'services:\n  a:\n    image: alpine\n' > "$MYOS_TMP/c.yml"
+      When call myos_expose_declared "$MYOS_TMP/c.yml"
+      The output should equal ""
     End
   End
 End
