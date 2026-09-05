@@ -91,3 +91,4 @@ cmd-recreate                    | host-project  | recreate host/consul
 cmd-status                      | host-project  | status host/consul
 expose-none                     | host-project  | expose host/consul
 expose-default                  | app-git       | expose
+cert-none                       | host-project  | cert list host/consul

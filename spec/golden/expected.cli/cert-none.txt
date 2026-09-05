@@ -1,0 +1,2 @@
+no routed hostname: nothing to certify
+[exit 0]

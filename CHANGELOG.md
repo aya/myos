@@ -26,6 +26,10 @@
   the linux-only ufw-docker patching with something that behaves the same on
   macOS and needs no privilege. The scope is read from the compose file rather
   than declared beside it, so it cannot disagree with what is published
+- `myos cert` derives the certificates a server needs from the route tags its
+  stacks publish, and asks dehydrated for them: a wildcard where a tag uses one,
+  a certificate per name otherwise. The `host/dehydrated` stack answers http-01
+  itself and delegates dns-01 to a provider hook
 - commands chain: `myos build up logs host/fabio`, as make targets did
 - the stack catalogue no longer needs make at all: its settings are hooks, and
   only six stacks keep a .mk, for targets

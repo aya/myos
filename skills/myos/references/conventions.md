@@ -216,6 +216,43 @@ and an unbound port becomes `0.0.0.0` exactly like a deliberate public one.
 The split of responsibility: the **scope** belongs to the stack, in its compose
 file; the **address** of a scope belongs to the host, in its configuration.
 
+## Certificates
+
+A site gets a certificate by being routed, not by being written down a second
+time. `myos cert` reads the same `urlprefix-` tags fabio routes on, and decides
+what to ask for:
+
+```sh
+myos cert list      # what would be asked for, and over which challenge
+myos cert issue     # ask for it
+myos cert renew     # what is close to expiry, for a cron
+myos cert show      # what exists, and when it expires
+```
+
+| a tag routes | myos asks for | challenge |
+|---|---|---|
+| `app.example.org` | a certificate for that name | http-01 |
+| `*.ipns.example.org` | `ipns.example.org` **and** `*.ipns.example.org` | dns-01 |
+
+That is the whole of "per site or wildcard as needed": a wildcard is asked for
+where a tag uses one, and it absorbs the concrete names it covers. A wildcard
+covers one label, so `*.example.org` absorbs `a.example.org` but not
+`a.b.example.org`, which keeps its own certificate.
+
+`MYOS_CERT_MODE=per-site` never asks for a wildcard, which keeps everything on
+http-01 and needs no DNS credentials. `wildcard` asks for one per domain.
+
+The issuer is [dehydrated](https://github.com/dehydrated-io/dehydrated), a
+shell script, in the `host/dehydrated` stack. It answers http-01 itself on a
+port bound to the loopback, which fabio routes
+`/.well-known/acme-challenge/` to. A wildcard needs dns-01, so point
+`HOST_DEHYDRATED_DNS_HOOK` at your provider's script; it receives dehydrated's
+own hook arguments.
+
+Certificates land where fabio looks for them, `<name>-cert.pem` and
+`<name>-key.pem` under `/host/certs`, written to a temporary name and moved, so
+fabio never reads half a file.
+
 ## Groups
 
 A group is a lowercase name whose value lists stacks. It can live in a `.env`,

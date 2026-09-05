@@ -19,7 +19,7 @@ done
 MYOS_ROOT=$(cd "$(dirname "$_self")/.." && pwd -P)
 export MYOS_ROOT
 
-for _m in core str var tags naming stack config compose hooks context expose; do
+for _m in core str var tags naming stack config compose hooks context expose cert; do
   # shellcheck source=/dev/null
   . "$MYOS_ROOT/lib/$_m.sh"
 done
@@ -70,6 +70,7 @@ Commands:
   export                                every setting of the stacks, as KEY=value
   env-update                            fill .env from the .env.dist templates
   expose [--strict]                     what the stacks publish, and to whom
+  cert list|issue|renew|show            certificates, derived from the routes
   doctor                                check the installation
   version                               print the myos version
 
@@ -147,6 +148,16 @@ for _c in $MYOS_CMDS; do
   _cmds="${_cmds:+$_cmds }$_c"
 done
 MYOS_CMDS=$_cmds
+
+# cert takes a subcommand where the others take only stacks
+case $MYOS_CMDS in
+  *cert*)
+    case ${MYOS_REFS%% *} in
+      list|domains|issue|renew|show)
+        MYOS_VARS=${MYOS_REFS%% *}
+        case $MYOS_REFS in *' '*) MYOS_REFS=${MYOS_REFS#* } ;; *) MYOS_REFS= ;; esac ;;
+    esac ;;
+esac
 
 # env, ls and doctor take variable names where the others take stacks
 case $MYOS_CMDS in

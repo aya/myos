@@ -28,6 +28,7 @@ myos [options] <command> [stack...] [VAR=value...] [-- args...]
 | `env [VAR...]` | resolved variables |
 | `env-update` | fill the `.env` from the `.env.dist` templates |
 | `expose [--strict]` | what the stacks publish, and to whom |
+| `cert list\|issue\|renew\|show` | certificates, derived from the route tags |
 | `export [--make]` | every setting of the stacks, as `KEY=value` |
 | `doctor` | check the installation |
 | `version` | the myos version |

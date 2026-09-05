@@ -87,26 +87,33 @@ myos_stack_prefix() {
 # 0.0.0.0 exactly like a deliberate public one.
 myos_expose_declared() {
   awk '
-    function emit(entry,   e, scope, target) {
+    function indent(line,   n) { match(line, /^ */); return RLENGTH }
+    function emit(entry,   e, scope, target, n, parts) {
       e = entry
-      gsub(/^[ \t"'"'"'-]+/, "", e); gsub(/["'"'"']+$/, "", e)
+      sub(/^ *- */, "", e)
+      gsub(/^["'"'"']|["'"'"']$/, "", e)
       if (e ~ /\$\{MYOS_BIND_PUBLIC[^}]*\}/)       scope = "public"
       else if (e ~ /\$\{MYOS_BIND_MESH[^}]*\}/)    scope = "mesh"
       else if (e ~ /\$\{MYOS_BIND_PRIVATE[^}]*\}/) scope = "private"
       else if (e ~ /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:/) scope = "pinned"
       else if (e ~ /^\[/)                          scope = "pinned"
       else scope = "unbound"
-      # the container port is the last field, minus any /protocol
       target = e
       sub(/\/[a-z]+$/, "", target)
       n = split(target, parts, ":")
       target = parts[n]
       if (target ~ /^[0-9]+(-[0-9]+)?$/) printf "%s|%s|%s\n", svc, target, scope
     }
-    /^services:[ \t]*$/ { insvc = 1; next }
-    insvc && /^  [a-zA-Z0-9_.-]+:[ \t]*$/ { svc = $1; sub(/:$/, "", svc); inports = 0 }
-    insvc && /^    ports:/ { inports = 1; next }
-    inports && /^    [a-zA-Z]/ { inports = 0 }
-    inports && /^      *-/ { emit($0) }
+    /^services:[ \t]*$/ { insvc = 1; svcind = -1; next }
+    !insvc { next }
+    # a service is the first level of keys under services:
+    /^ *[a-zA-Z0-9_.-]+:[ \t]*$/ && (svcind == -1 || indent($0) == svcind) {
+      if (svcind == -1) svcind = indent($0)
+      svc = $1; sub(/:$/, "", svc); inports = 0; next
+    }
+    /^ *ports:/ { inports = 1; portind = indent($0); next }
+    # the list items of a ports: block, whatever indent they use
+    inports && /^ *- / && indent($0) >= portind { emit($0); next }
+    inports && /^ *[a-zA-Z0-9_.-]+:/ { inports = 0 }
   ' "$@"
 }
