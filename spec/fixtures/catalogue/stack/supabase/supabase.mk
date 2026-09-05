@@ -1,3 +1,6 @@
+# the directory of this file, evaluated now: the versions below read the
+# compose file next to it, wherever make runs from
+SUPABASE_STACK_DIR                        := $(dir $(lastword $(MAKEFILE_LIST)))
 ENV_VARS                                  += SUPABASE_ADDITIONAL_REDIRECT_URLS SUPABASE_ANON_KEY SUPABASE_JWT_IAT SUPABASE_KONG_SERVICE_8000_TAGS SUPABASE_PUBLIC_URL SUPABASE_REALTIME_TENANT SUPABASE_SERVICE_ROLE_KEY SUPABASE_EDGE_RUNTIME_VERSION SUPABASE_KONG_VERSION SUPABASE_POSTGRES_VERSION SUPABASE_VECTOR_VERSION
 SUPABASE_ADDITIONAL_REDIRECT_URLS         ?= $(subst $(space),$(comma),$(call url,SUPABASE))
 SUPABASE_ANON_KEY                         ?= $(call JWT,,$(SUPABASE_JWT_PAYLOAD_ANON),$(SUPABASE_JWT_SECRET))
@@ -13,7 +16,7 @@ SUPABASE_SERVICE_NAME                     ?= supabase
 SUPABASE_SERVICE_ROLE_KEY                 ?= $(call JWT,,$(SUPABASE_JWT_PAYLOAD_SERVICE),$(SUPABASE_JWT_SECRET))
 SUPABASE_SERVICE_URIS                     ?= $(call uri,SUPABASE)
 SUPABASE_SERVICE_URL                      ?= $(call firstword,$(call url,SUPABASE))
-SUPABASE_EDGE_RUNTIME_VERSION             ?= $(shell awk -F: '/image: supabase\/edge-runtime:/ {print $$3}' stack/supabase/docker-compose.yml)
-SUPABASE_KONG_VERSION                     ?= $(shell awk -F: '/image: kong:/ {print $$3}' stack/supabase/docker-compose.yml)
-SUPABASE_POSTGRES_VERSION                 ?= $(shell awk -F: '/image: supabase\/postgres:/ {print $$3}' stack/supabase/docker-compose.yml)
-SUPABASE_VECTOR_VERSION                   ?= $(shell awk -F: '/image: timberio\/vector:/ {print $$3}' stack/supabase/docker-compose.yml)
+SUPABASE_EDGE_RUNTIME_VERSION             ?= $(shell awk -F: '/image: supabase\/edge-runtime:/ {print $$3}' $(SUPABASE_STACK_DIR)docker-compose.yml)
+SUPABASE_KONG_VERSION                     ?= $(shell awk -F: '/image: kong:/ {print $$3}' $(SUPABASE_STACK_DIR)docker-compose.yml)
+SUPABASE_POSTGRES_VERSION                 ?= $(shell awk -F: '/image: supabase\/postgres:/ {print $$3}' $(SUPABASE_STACK_DIR)docker-compose.yml)
+SUPABASE_VECTOR_VERSION                   ?= $(shell awk -F: '/image: timberio\/vector:/ {print $$3}' $(SUPABASE_STACK_DIR)docker-compose.yml)

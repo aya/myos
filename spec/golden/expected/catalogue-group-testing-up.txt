@@ -1,43 +1,11 @@
 make -o docker-stack-up MAKE_OLDFILE=docker-stack-up ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-up STACK=testing APP_NAME=testing
 sh -c docker network create tester-local >/dev/null 2>&1
 sh -c docker network create testhost >/dev/null 2>&1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
 cat: @HOME@/.local/share/myos/stack/drone: Is a directory
 cat: @HOME@/.local/share/myos/stack/drone: Is a directory
 cat: @HOME@/.local/share/myos/stack/drone: Is a directory
 cat: @HOME@/.local/share/myos/stack/redis: Is a directory
 cat: @HOME@/.local/share/myos/stack/redis: Is a directory
 cat: @HOME@/.local/share/myos/stack/redis: Is a directory
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
-awk: can't open file stack/supabase/docker-compose.yml
- source line number 1
 docker --log-level=error compose --ansi=auto -f @HOME@/.local/share/myos/stack/drone/drone.yml -f @WD@/stack/drone/drone.yml -f @WD@/stack/drone/drone.latest.yml -f @HOME@/.local/share/myos/stack/redis/redis.yml -f @WD@/stack/redis/redis.yml -f @MYOS@/share/compose/networks.yml -p tester-testing-local up -d
 [exit 0]

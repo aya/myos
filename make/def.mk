@@ -66,7 +66,7 @@ GIT_BRANCH                      ?= $(shell git rev-parse --abbrev-ref HEAD 2>/de
 GIT_COMMIT                      ?= $(shell git rev-parse $(BRANCH) 2>/dev/null)
 # a remote URL may carry credentials (https://user:token@host/...): they are
 # stripped here, because these values end up in docker image labels
-GIT_REPOSITORY                  ?= $(if $(SUBREPO),$(shell awk -F ' = ' '$$1 ~ /^[[\s\t]]*remote$$/ {print $$2}' .gitrepo 2>/dev/null |sed 's#://[^/@]*@#://#'),$(shell git config --get remote.origin.url 2>/dev/null |sed 's#://[^/@]*@#://#'))
+GIT_REPOSITORY                  ?= $(if $(SUBREPO),$(shell awk -F ' = ' '$$1 ~ /^[[\s\t]]*remote$$/ {print $$2}' .gitrepo 2>/dev/null |sed 's\#://[^/@]*@\#://\#'),$(shell git config --get remote.origin.url 2>/dev/null |sed 's\#://[^/@]*@\#://\#'))
 GIT_STATUS                      ?= $(shell git status -uno --porcelain 2>/dev/null |wc -l)
 GIT_TAG                         ?= $(shell git tag -l --points-at $(BRANCH) 2>/dev/null)
 GIT_UPSTREAM_REPOSITORY         ?= $(if $(GIT_REPOSITORY),$(if $(findstring ://,$(GIT_REPOSITORY)),$(call pop,$(call pop,$(GIT_REPOSITORY)))/,$(call pop,$(GIT_REPOSITORY),:):)$(or $(GIT_UPSTREAM_USER),$(GIT_USER))/$(lastword $(subst /, ,$(GIT_REPOSITORY))))
@@ -101,7 +101,7 @@ MONOREPO                        ?= $(if $(filter myos,$(MYOS)),$(notdir $(CURDIR
 MONOREPO_DIR                    ?= $(if $(MONOREPO),$(if $(filter myos,$(MYOS)),$(realpath $(CURDIR)),$(if $(APP),$(realpath $(CURDIR)/..))))
 MYOS                            ?= $(if $(filter $(MAKE_DIR),$(call pop,$(MAKE_DIR))),.,$(call pop,$(MAKE_DIR)))
 MYOS_COMMIT                     ?= $(shell GIT_DIR=$(MYOS)/.git git rev-parse head 2>/dev/null)
-MYOS_REPOSITORY                 ?= $(shell GIT_DIR=$(MYOS)/.git git config --get remote.origin.url 2>/dev/null |sed 's#://[^/@]*@#://#')
+MYOS_REPOSITORY                 ?= $(shell GIT_DIR=$(MYOS)/.git git config --get remote.origin.url 2>/dev/null |sed 's\#://[^/@]*@\#://\#')
 QUIET                           ?= $(if $(VERBOSE),,--quiet)
 RECURSIVE                       ?= true
 RELATIVE                        ?= $(if $(filter myos,$(MYOS)),./,../)
@@ -203,16 +203,17 @@ rs256 = $(shell echo -n '$(1)' |openssl dgst -sha256 -binary -sign '$(2)')
 JWT_HEADER = {"alg":"HS256","typ":"JWT"}
 
 # macro JWT: Print Json Web Token for header $1 payload $2 and key $3
-## a payload is JSON and holds commas, which make read as argument separators,
-## so the token came out with an empty payload. Pass the payload in a variable
-## and name it here rather than inlining it.
-JWT := $(strip \
+## a payload is JSON and holds commas, which make reads as argument
+## separators: pass it through a variable ($(call JWT,,$(MY_PAYLOAD),$(secret))),
+## a variable reference is one argument whatever it expands to.
+## The macro must stay recursive (=): simply expanded, it was evaluated once at
+## parse time with empty arguments and every call returned that same token.
+JWT = $(strip \
       $(eval header             := $(or $(1),$(JWT_HEADER))) \
       $(eval payload            := $(or $(2),$(JWT_PAYLOAD))) \
       $(eval secret             := $(or $(3),$(JWT_SECRET))) \
       $(eval b64_header         := $(call base64t,$(header))) \
       $(eval b64_payload        := $(call base64t,$(payload))) \
-      $(eval b64_signature      := $(call base64t,$(call hs256,$(b64_header).$(b64_payload),$(secret)))) \
       $(eval b64_signature      := $(call b64_hs256,$(b64_header).$(b64_payload),$(secret))) \
       $(b64_header).$(b64_payload).$(b64_signature))
 

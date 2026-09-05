@@ -34,7 +34,7 @@ envprefix  = $(foreach env,$(3),$(if $($(call UPPERCASE,$(1)_SERVICE_$(2)_$(env)
 ## before the comma joining two routes: "urlprefix-a/* ,urlprefix-b/*"
 patsublist = $(subst $(space)$(comma),$(comma),$(patsubst $(1),$(2),$(firstword $(3)))$(foreach pattern,$(wordlist 2,255,$(3)),$(comma)$(patsubst $(1),$(2),$(pattern))))
 servicenvs = $(foreach env,$(call UPPERCASE,$($(1)_SERVICE_$(2)_ENVS)),$(if $(3),$($(1)_SERVICE_$(env)_$(3)),$($(1)_SERVICE_$(2)_$(env))))
-tagprefix  = $(call urlprefix,$(or $($(call UPPERCASE,$(1)_SERVICE_$(2)_PATH)),$($(call UPPERCASE,$(1)_SERVICE_PATH))),$(or $($(call UPPERCASE,$(1)_SERVICE_$(2)_OPTS)),$($(call UPPERCASE,$(1)_SERVICE_OPTS)),$(call envprefix,$(1),$(2),allow auth deny preprend proto register strip)),$(or $(foreach env,$(3),$($(call UPPERCASE,$(1)_SERVICE_$(2)_$(env)))),$($(call UPPERCASE,$(1)_SERVICE_$(2)_URIS)),$(call uri,$(1),$(2))))
+tagprefix  = $(call urlprefix,$(or $($(call UPPERCASE,$(1)_SERVICE_$(2)_PATH)),$($(call UPPERCASE,$(1)_SERVICE_PATH))),$(or $($(call UPPERCASE,$(1)_SERVICE_$(2)_OPTS)),$($(call UPPERCASE,$(1)_SERVICE_OPTS)),$(call envprefix,$(1),$(2),allow auth deny prepend proto register strip)),$(or $(foreach env,$(3),$($(call UPPERCASE,$(1)_SERVICE_$(2)_$(env)))),$($(call UPPERCASE,$(1)_SERVICE_$(2)_URIS)),$(call uri,$(1),$(2))))
 uri        = $(foreach svc,$(1),$(patsubst %,$(addsuffix .,$(or $($(call UPPERCASE,$(svc)_SERVICE_$(2)_NAME)),$($(call UPPERCASE,$(svc)_SERVICE_NAME)),$(svc)))%,$(or $(3),$(APP_URI))))
 url        = $(patsubst %,$(APP_SCHEME)://%,$(call uri,$(1),$(2),$(or $(3),$(APP_URI))))
 url_suffix = *

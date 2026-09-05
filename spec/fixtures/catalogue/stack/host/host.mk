@@ -5,7 +5,7 @@ host                            ?= host/consul host/fabio host/registrator
 
 # target bootstrap-stack-host: Fire host-certbot host-ssl-certs
 .PHONY: bootstrap-stack-host
-bootstrap-stack-host: $(if $(SETUP_CERTBOT),host-certbot) host-ssl-certs
+bootstrap-stack-host: $(if $(SETUP_LETSENCRYPT),host-certbot) host-ssl-certs
 
 # target host: Fire stack-host-up
 .PHONY: host

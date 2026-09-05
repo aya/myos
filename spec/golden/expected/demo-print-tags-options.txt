@@ -1,2 +1,2 @@
-DEMO_SERVICE_80_TAGS urlprefix-demo.example.test/* proto=https strip=/demo
+DEMO_SERVICE_80_TAGS urlprefix-demo.example.test/* prepend=/demo proto=https strip=/demo
 [exit 0]
