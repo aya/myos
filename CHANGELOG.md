@@ -20,6 +20,11 @@
 - the project `.env` now wins over `/etc/conf.d/myos`, as documented;
   `MYOS_CONF_PRIORITY=system` restores the previous order
 - `share/make/shim.mk`: make as an optional front end over the same shell code
+- `myos expose` reports what each stack publishes and to whom, and `--strict`
+  fails when a port faces the world without saying so. `MYOS_BIND_PUBLIC`,
+  `_PRIVATE` and `_MESH` let a stack bind its published ports, which replaces
+  the linux-only ufw-docker patching with something that behaves the same on
+  macOS and needs no privilege
 - commands chain: `myos build up logs host/fabio`, as make targets did
 - the stack catalogue no longer needs make at all: its settings are hooks, and
   only six stacks keep a .mk, for targets

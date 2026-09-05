@@ -19,7 +19,7 @@ done
 MYOS_ROOT=$(cd "$(dirname "$_self")/.." && pwd -P)
 export MYOS_ROOT
 
-for _m in core str var tags naming stack config compose hooks context; do
+for _m in core str var tags naming stack config compose hooks context expose; do
   # shellcheck source=/dev/null
   . "$MYOS_ROOT/lib/$_m.sh"
 done
@@ -69,6 +69,7 @@ Commands:
   env [VAR...]                          show resolved variables
   export                                every setting of the stacks, as KEY=value
   env-update                            fill .env from the .env.dist templates
+  expose [--strict]                     what the stacks publish, and to whom
   doctor                                check the installation
   version                               print the myos version
 
@@ -217,7 +218,7 @@ if [ -z "$MYOS_REFS" ]; then
   # these commands describe the installation rather than act on a stack
   for _c in $MYOS_CMDS; do
     case $_c in
-      env|env-update|export|ls|doctor|version|help) ;;
+      env|env-update|export|expose|ls|doctor|version|help) ;;
       *) myos_die "$MYOS_E_USAGE" "no stack given, and no compose file in $WORKDIR" ;;
     esac
   done

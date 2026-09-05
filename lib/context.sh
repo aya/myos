@@ -58,6 +58,10 @@ myos_context_defaults() {
   myos_default_HOST()                      { myos_addprefix "${HOSTNAME:-}." "$(myos_var DOMAIN)"; }
   myos_default_HOSTNAME()                  { printf '%s' "${HOSTNAME:-}"; }
   myos_default_DOMAINNAME()                { myos_firstword "$(myos_var DOMAIN)"; }
+  # the addresses a stack binds its published ports to
+  myos_default_MYOS_BIND_PUBLIC()          { myos_bind public; }
+  myos_default_MYOS_BIND_PRIVATE()         { myos_bind private; }
+  myos_default_MYOS_BIND_MESH()            { myos_bind mesh; }
   myos_default_MACHINE()                   { uname -m 2>/dev/null; }
   myos_default_SYSTEM()                    { uname -s 2>/dev/null; }
   myos_default_HOST_COMPOSE_PROJECT_NAME() { printf '%s' "${HOSTNAME:-}"; }

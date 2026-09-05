@@ -168,6 +168,52 @@ A line may refer to a variable defined further down. A variable that already
 has a value keeps it: the `.env` records choices, it never overwrites them, and
 running the command twice changes nothing.
 
+## What a stack publishes, and to whom
+
+On linux docker writes its own firewall rules, so a port published with
+`ports: ["8080:80"]` answers the internet whatever the host firewall says. The
+portable answer is to publish where you mean to, which behaves the same on
+linux and on macOS and needs no privilege:
+
+```yaml
+services:
+  app:
+    ports:
+      - "${MYOS_BIND_PRIVATE}::8080"     # this host only, reached through fabio
+  gateway:
+    ports:
+      - "${MYOS_BIND_PUBLIC}:443:443"    # the internet, on purpose
+  peer:
+    ports:
+      - "${MYOS_BIND_MESH}::7946"        # the private network between the hosts
+```
+
+| scope | address | for |
+|---|---|---|
+| `private` | `127.0.0.1` | everything the load balancer reaches for you. The default. |
+| `public` | `0.0.0.0` | a load balancer, a public DNS or mail service |
+| `mesh` | the mesh interface | services shared between the hosts of a fleet |
+
+`MYOS_BIND_PUBLIC`, `MYOS_BIND_PRIVATE` and `MYOS_BIND_MESH` override the
+addresses; `MYOS_MESH_IFACE` names the interface when it is not one of
+easytier, tun0, tailscale0, mycelium or wg0.
+
+A stack also declares what it means, so an audit can tell a deliberate choice
+from an oversight:
+
+```sh
+<PREFIX>_SERVICE_EXPOSE=public          # the whole stack
+<PREFIX>_SERVICE_443_EXPOSE=public      # one port
+```
+
+`<PREFIX>` is `HOST_<name>` for a host stack, `USER_<name>` for a user stack,
+`<name>` otherwise.
+
+```sh
+myos expose             # what each stack publishes, and its declared scope
+myos expose --strict    # exits 1 when a port faces the world undeclared
+```
+
 ## Groups
 
 A group is a lowercase name whose value lists stacks. It can live in a `.env`,

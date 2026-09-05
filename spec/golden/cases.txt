@@ -89,3 +89,5 @@ mk-ssh-with-hosts               | app-nogit     | ssh SSH_HOSTS=example.test ARG
 bridge-export                   | host-project  | export STACK=host/consul
 cmd-recreate                    | host-project  | recreate host/consul
 cmd-status                      | host-project  | status host/consul
+expose-none                     | host-project  | expose host/consul
+expose-default                  | app-git       | expose

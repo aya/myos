@@ -27,6 +27,8 @@ myos [options] <command> [stack...] [VAR=value...] [-- args...]
 | `ls [--groups]` | the stacks and groups myos can see |
 | `env [VAR...]` | resolved variables |
 | `env-update` | fill the `.env` from the `.env.dist` templates |
+| `expose [--strict]` | what the stacks publish, and to whom |
+| `export [--make]` | every setting of the stacks, as `KEY=value` |
 | `doctor` | check the installation |
 | `version` | the myos version |
 

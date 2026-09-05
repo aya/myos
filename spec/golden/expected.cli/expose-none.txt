@@ -1,0 +1,2 @@
+no published port: nothing is reachable from outside the docker network
+[exit 0]

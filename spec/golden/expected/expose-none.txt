@@ -1,0 +1,3 @@
+WARNING: myos[0] expose-rule-exists: target expose unavailable in app myos
+WARNING: myos[0] host/consul-rule-exists: target host/consul unavailable in app myos
+[exit 0]
