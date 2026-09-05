@@ -39,13 +39,11 @@ endef
 # The settings of the stacks, read once and evaluated here.
 # A stack keeps its settings in hooks that only myos reads; asking for them one
 # at a time costs a process per variable, so they come in a single call.
+## Written while this file is read, not as a target: a target would collide
+## with the catch-all rule at the bottom, which hands anything else to myos.
 MYOS_SETTINGS                   ?= .myos.settings.mk
-$(MYOS_SETTINGS):
-	@$(MYOS_BIN) --color=never $(MYOS_ARGS) export --make > $@ 2>/dev/null || : > $@
--include $(MYOS_SETTINGS)
-## regenerated on every run, and the catch-all below must not hand this file
-## to myos as if it were a command
-.PHONY: $(MYOS_SETTINGS)
+MYOS_SETTINGS_FILE              := $(shell $(MYOS_BIN) --color=never $(MYOS_ARGS) export --make > $(MYOS_SETTINGS) 2>/dev/null && echo $(MYOS_SETTINGS))
+-include $(MYOS_SETTINGS_FILE)
 
 # function myos-var: the value myos resolves for one variable, when a single
 # lookup is cheaper than the whole set

@@ -87,3 +87,5 @@ chain-print-two                 | host-project  | print-COMPOSE_PROJECT_NAME pri
 mk-ssh-no-hosts                 | app-nogit     | ssh
 mk-ssh-with-hosts               | app-nogit     | ssh SSH_HOSTS=example.test ARGS=id
 bridge-export                   | host-project  | export STACK=host/consul
+cmd-recreate                    | host-project  | recreate host/consul
+cmd-status                      | host-project  | status host/consul

@@ -1,4 +1,0 @@
-@MYOS@/share/make/shim.mk:66: warning: overriding commands for target `.myos.settings.mk'
-@MYOS@/share/make/shim.mk:44: warning: ignoring old commands for target `.myos.settings.mk'
-docker compose -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost --project-directory @WD@/stack/host config
-[exit 0]

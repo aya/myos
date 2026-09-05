@@ -1,0 +1,7 @@
+make -o docker-stack-recreate MAKE_OLDFILE=docker-stack-recreate ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-recreate STACK=myos APP_NAME=myos
+docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local rm -fs
+sh -c docker network create tester-local >/dev/null 2>&1
+sh -c docker network create testhost >/dev/null 2>&1
+docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local up -d
+WARNING: myos[0] host/consul-rule-exists: target host/consul unavailable in app myos
+[exit 0]

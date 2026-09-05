@@ -44,7 +44,6 @@ myos_is_command() {
   MYOS_REFS_RAW=
   MYOS_VARS=
   MYOS_ARGS=
-  MYOS_HOSTS=
   MYOS_COLOR=${MYOS_COLOR:-auto}
   VERBOSE=${VERBOSE:-}
   DEBUG=${DEBUG:-}
@@ -57,7 +56,6 @@ Usage: myos [options] <command> [stack...] [VAR=value...] [-- args...]
 Options:
   -C DIR        work in DIR instead of the current directory
   -e ENV        environment (default: local, or ENV from the config)
-  -H HOSTS      run on remote hosts instead (comma separated, or "all")
   -n, --dry-run print the commands instead of running them
   --color WHEN  always, never or auto (default: colour when on a terminal)
   -v, --verbose show what myos does
@@ -66,7 +64,7 @@ Options:
 
 Commands:
   up down start stop restart recreate   manage the containers of a stack
-  ps logs config exec run               inspect and enter them
+  ps status logs config exec run        inspect and enter them
   ls [--groups]                         list the stacks myos can see
   env [VAR...]                          show resolved variables
   export                                every setting of the stacks, as KEY=value
@@ -86,7 +84,9 @@ while [ $# -gt 0 ]; do
   case $1 in
     -C) WORKDIR=$2; shift 2 ;;
     -e) ENV=$2; shift 2 ;;
-    -H) MYOS_HOSTS=$2; shift 2 ;;
+    # running on remote hosts is not implemented yet; the flag is refused
+    # rather than silently ignored
+    -H) myos_die "$MYOS_E_USAGE" "-H is not implemented yet: run myos on the host itself" ;;
     -n|--dry-run) DRYRUN=true; shift ;;
     --color) MYOS_COLOR=$2; shift 2 ;;
     --color=*) MYOS_COLOR=${1#--color=}; shift ;;
