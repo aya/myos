@@ -3,7 +3,14 @@
 set -eu
 
 # define MYOS path
-MYOS="$(dirname "$(readlink "$0" || echo "$0")")"
+## readlink without -f only followed one level and only an absolute link, so a
+## relative or chained symlink pointed the framework at the wrong directory
+MYOS="$0"
+while [ -L "$MYOS" ]; do
+  _link="$(readlink "$MYOS")"
+  case "$_link" in /*) MYOS="$_link" ;; *) MYOS="$(dirname "$MYOS")/$_link" ;; esac
+done
+MYOS="$(cd "$(dirname "$MYOS")" && pwd -P)"
 
 # load system config: /etc/conf.d/myos (openrc convention) first, then the
 # debian-style /etc/default/myos as fallback
@@ -17,4 +24,8 @@ MYOS_CONF=/etc/conf.d/myos
 
 # call myos Makefile: a WORKDIR from the config or environment wins over PWD,
 # so a machine can pin its deployment dir and run myos from anywhere
-IFS=$'\n'; exec env $(cat "$MYOS_CONF" 2>/dev/null) MYOS=. WORKDIR="${WORKDIR:-${PWD}}" make -esC "${MYOS:-.}" "$@"
+## a comment or a blank line in the config used to become the program env(1)
+## was asked to run, so the whole command failed
+IFS=$'\n'
+exec env $(sed -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' "$MYOS_CONF" 2>/dev/null) \
+  MYOS=. WORKDIR="${WORKDIR:-${PWD}}" make -esC "${MYOS:-.}" "$@"

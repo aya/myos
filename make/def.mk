@@ -141,7 +141,9 @@ MACHINE                         ?= $(shell uname -m 2>/dev/null)
 ifeq ($(SYSTEM),Darwin)
 SED_SUFFIX                      := ''
 STAT_FORMAT_ARG                 := -f
-STAT_FORMAT_FILE                := '%a %N'
+# %m is the modification time; %a is the access time, which is what this used
+# to ask for, so newer/older did not mean the same thing as on linux
+STAT_FORMAT_FILE                := '%m %N'
 else
 STAT_FORMAT_ARG                 := -c
 STAT_FORMAT_FILE                := '%Y %n'
@@ -199,6 +201,9 @@ rs256 = $(shell echo -n '$(1)' |openssl dgst -sha256 -binary -sign '$(2)')
 JWT_HEADER = {"alg":"HS256","typ":"JWT"}
 
 # macro JWT: Print Json Web Token for header $1 payload $2 and key $3
+## a payload is JSON and holds commas, which make read as argument separators,
+## so the token came out with an empty payload. Pass the payload in a variable
+## and name it here rather than inlining it.
 JWT := $(strip \
       $(eval header             := $(or $(1),$(JWT_HEADER))) \
       $(eval payload            := $(or $(2),$(JWT_PAYLOAD))) \
@@ -284,7 +289,8 @@ sed = $(RUN) sed -i $(SED_SUFFIX) '$(1)' $(2)
 verle = [ -n "$(1)" ] && [ "$(1)" = "$(shell echo -e "$(1)\n$(2)" |sort -V |head -n1)" ]
 
 # macro verlt: Return true when version 1 < 2
-verlt = [ "$(1)" = "$(2)" ] && return 1 || $(call verlte,$(1),$(2))
+## it was calling verlte, which does not exist, and returning from no function
+verlt = [ "$(1)" != "$(2)" ] && $(call verle,$(1),$(2))
 
 # function conf: Extract variable=value line from configuration files
 ## it prints the line with variable 3 definition from block 2 in file 1

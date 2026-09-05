@@ -1,0 +1,3 @@
+ERROR: myos[0] ssh-hosts-check: no remote host: set SSH_HOSTS=host1 host2
+make: *** [ssh-hosts-check] Error 2
+[exit 2]

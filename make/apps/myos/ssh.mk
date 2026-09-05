@@ -1,10 +1,25 @@
 ##
 # SSH
+#
+# The remote hosts used to come from AWS, through
+# ssh-get-PrivateIpAddress-% -> aws-ec2-get-instances-PrivateIpAddress-%.
+# make/apps/aws was removed and AWS_INSTANCE_IP is defined nowhere, so these
+# targets looped over an empty list and exited 0 without doing anything.
+# They now take SSH_HOSTS, and say so when it is empty rather than pretending
+# to have connected.
+
+# variable SSH_HOSTS: hosts the ssh targets act on, space separated
+SSH_HOSTS                       ?= $(AWS_INSTANCE_IP)
+
+# target ssh-hosts-check: Fail when no remote host is known
+.PHONY: ssh-hosts-check
+ssh-hosts-check:
+	$(if $(SSH_HOSTS),,$(call ERROR,no remote host: set SSH_HOSTS=host1 host2))
 
 # target ssh: Call ssh-connect ARGS or SHELL
 .PHONY: ssh
-ssh: # ssh-get-PrivateIpAddress-$(SERVER_NAME) ## Connect to first remote host
-	$(call ssh-connect,$(AWS_INSTANCE_IP),$(if $(ARGS),$(ARGS),$(SHELL)))
+ssh: ssh-hosts-check ## Connect to first remote host
+	$(call ssh-connect,$(SSH_HOSTS),$(if $(ARGS),$(ARGS),$(SHELL)))
 
 # target ssh-add: Fire ssh-key and ssh-add file SSH_PRIVATE_KEYS in folder SSH_DIR
 .PHONY: ssh-add
@@ -15,8 +30,8 @@ ssh-add: ssh-key
 
 # target ssh-connect: Call ssh-connect make connect SERVICE
 .PHONY: ssh-connect
-ssh-connect: # ssh-get-PrivateIpAddress-$(SERVER_NAME)
-	$(call ssh-connect,$(AWS_INSTANCE_IP),make connect COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) ENV=$(ENV) $(if $(SERVICE),SERVICE=$(SERVICE)))
+ssh-connect: ssh-hosts-check
+	$(call ssh-connect,$(SSH_HOSTS),make connect COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) ENV=$(ENV) $(if $(SERVICE),SERVICE=$(SERVICE)))
 
 # target ssh-del: ssh-add -d file SSH_PRIVATE_KEYS in folder SSH_DIR
 .PHONY: ssh-del
@@ -26,12 +41,8 @@ ssh-del:
 
 # target ssh-exec: Call ssh-exec make exec SERVICE ARGS
 .PHONY: ssh-exec
-ssh-exec: # ssh-get-PrivateIpAddress-$(SERVER_NAME)
-	$(call ssh-exec,$(AWS_INSTANCE_IP),make exec COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) ENV=$(ENV) $(if $(SERVICE),SERVICE=$(SERVICE)) $(if $(ARGS),ARGS='\''"$(ARGS)"'\''))
-
-# target ssh-get-PrivateIpAddress-%: Fire aws-ec2-get-instances-PrivateIpAddress-%
-.PHONY: ssh-get-PrivateIpAddress-%
-ssh-get-PrivateIpAddress-%: aws-ec2-get-instances-PrivateIpAddress-%;
+ssh-exec: ssh-hosts-check
+	$(call ssh-exec,$(SSH_HOSTS),make exec COMPOSE_PROJECT_NAME=$(COMPOSE_PROJECT_NAME) ENV=$(ENV) $(if $(SERVICE),SERVICE=$(SERVICE)) $(if $(ARGS),ARGS='\''"$(ARGS)"'\''))
 
 # target ssh-key: Add ssh private key SSH_KEY to SSH_DIR
 .PHONY: ssh-key
@@ -43,5 +54,5 @@ endif
 
 # target ssh-run: Call ssh-run make run SERVICE ARGS
 .PHONY: ssh-run
-ssh-run: # ssh-get-PrivateIpAddress-$(SERVER_NAME)
-	$(call ssh-exec,$(AWS_INSTANCE_IP),make run $(if $(SERVICE),SERVICE=$(SERVICE)) $(if $(ARGS),ARGS='\''"$(ARGS)"'\''))
+ssh-run: ssh-hosts-check
+	$(call ssh-exec,$(SSH_HOSTS),make run $(if $(SERVICE),SERVICE=$(SERVICE)) $(if $(ARGS),ARGS='\''"$(ARGS)"'\''))

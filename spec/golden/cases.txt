@@ -84,3 +84,5 @@ shim-env                        | shim-project  | @make env ARGS=COMPOSE_PROJECT
 chain-build-up-logs             | host-project  | build up logs host/fabio
 chain-up-group                  | host-project  | up ps host
 chain-print-two                 | host-project  | print-COMPOSE_PROJECT_NAME print-APP STACK=host/consul
+mk-ssh-no-hosts                 | app-nogit     | ssh
+mk-ssh-with-hosts               | app-nogit     | ssh SSH_HOSTS=example.test ARGS=id

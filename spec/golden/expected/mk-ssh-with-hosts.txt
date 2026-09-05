@@ -1,0 +1,4 @@
+
+ERROR: myos[0] ssh: Unable to find docker tester-example-test
+make: *** [ssh] Error 2
+[exit 2]

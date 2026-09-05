@@ -13,7 +13,9 @@ endif
 setup-docker-group:
 ifneq ($(DOCKER),)
 ifeq ($(or $(filter $(USER),$(subst $(comma), ,$(shell awk -F':' '$$1 == "docker" {print $$4}' /etc/group))),$(filter 0,$(UID))),)
-	$(call ansible-user-add-groups,$(USER),docker)
+	$(RUN) $(SUDO) usermod -aG docker $(USER) 2>/dev/null \
+	  || $(RUN) $(SUDO) addgroup $(USER) docker 2>/dev/null \
+	  || $(call ERROR,unable to add user,$(USER),to group,docker)
 	$(call WARNING,user,$(USER),added in group,docker)
 endif
 ifeq ($(filter 0 $(DOCKER_GID),$(GIDS)),)
