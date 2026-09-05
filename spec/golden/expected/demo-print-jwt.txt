@@ -1,0 +1,2 @@
+DEMO_JWT eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..Rw3zEl6B26vJ9nI0SsagV-2EPGm_YlyHpRo82pdK8kA
+[exit 0]

@@ -1,4 +1,3 @@
 make -o docker-stack-down MAKE_OLDFILE=docker-stack-down ENV=local DOCKER_COMPOSE=docker --log-level=error compose DOCKER_COMPOSE_DOWN_OPTIONS=--rmi all --volumes docker-compose-down STACK=host/consul APP_NAME=host
 docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost down --rmi all --volumes
-rm -f
 [exit 0]

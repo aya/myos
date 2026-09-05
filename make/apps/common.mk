@@ -51,7 +51,7 @@ build@%: myos-user
 # on local host
 .PHONY: clean app-clean
 clean: DOCKER_COMPOSE_DOWN_OPTIONS += --rmi all --volumes
-clean: app-clean docker-stack-down $(foreach stack,$(STACK),docker-image-rm-$(STACK)) .env-clean ## Clean application and docker stuffs
+clean: app-clean docker-stack-down $(foreach stack,$(STACK),docker-image-rm-$(stack)) .env-clean ## Clean application and docker stuffs
 
 # target clean@%: Clean deployed application and docker images of % ENV
 # on local host
@@ -94,7 +94,7 @@ exec: stack ## Exec command in docker SERVICE
 #ifneq (,$(filter $(ENV),$(ENV_DEPLOY)))
 #	$(RUN) $(call exec,$(ARGS))
 #else
-	$(call docker-compose-exec-sh,$(SERVICE),$(ARGS)) || true
+	-$(call docker-compose-exec-sh,$(SERVICE),$(ARGS))
 #endif
 
 # target exec@%: Exec ARGS in docker SERVICE of % ENV

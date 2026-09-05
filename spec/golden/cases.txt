@@ -106,3 +106,9 @@ demo-print-tags                 | demo-project  | print-DEMO_SERVICE_80_TAGS STA
 demo-print-env-vars             | demo-project  | print-ENV_VARS STACK=demo
 demo-up-group-nested            | demo-project  | up STACK=everything
 demo-config                     | demo-project  | config STACK=demo
+# --- cases showing a bug of the make engine (phase 3): recorded red, fixed, re-recorded green
+demo-print-jwt                  | demo-project  | print-DEMO_JWT STACK=demo
+demo-print-tags-options         | demo-project  | print-DEMO_SERVICE_80_TAGS STACK=demo DEMO_SERVICE_80_PREPEND=/demo DEMO_SERVICE_80_STRIP=/demo DEMO_SERVICE_80_PROTO=https
+host-deploy                     | host-project  | deploy@master
+catalogue-host-up-letsencrypt   | catalogue     | up STACK=host/consul SETUP_LETSENCRYPT=true
+catalogue-host-up               | catalogue     | up STACK=host/consul

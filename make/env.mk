@@ -11,7 +11,7 @@
 ## it removes file .env
 .PHONY: .env-clean
 .env-clean:
-	$(RUN) rm -$(if $(FORCE),f,i) $(ENV_FILE) || true
+	$(if $(ENV_FILE),$(RUN) rm -$(if $(FORCE),f,i) $(ENV_FILE) || true)
 
 # target .env-update: Update file ENV_FILE
 ## it updates file ENV_FILE with missing values from file ENV_DIST

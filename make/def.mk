@@ -64,7 +64,9 @@ GIT_AUTHOR_EMAIL                ?= $(or $(shell git config user.email 2>/dev/nul
 GIT_AUTHOR_NAME                 ?= $(or $(shell git config user.name 2>/dev/null),$(USER))
 GIT_BRANCH                      ?= $(shell git rev-parse --abbrev-ref HEAD 2>/dev/null)
 GIT_COMMIT                      ?= $(shell git rev-parse $(BRANCH) 2>/dev/null)
-GIT_REPOSITORY                  ?= $(if $(SUBREPO),$(shell awk -F ' = ' '$$1 ~ /^[[\s\t]]*remote$$/ {print $$2}' .gitrepo 2>/dev/null),$(shell git config --get remote.origin.url 2>/dev/null))
+# a remote URL may carry credentials (https://user:token@host/...): they are
+# stripped here, because these values end up in docker image labels
+GIT_REPOSITORY                  ?= $(if $(SUBREPO),$(shell awk -F ' = ' '$$1 ~ /^[[\s\t]]*remote$$/ {print $$2}' .gitrepo 2>/dev/null |sed 's#://[^/@]*@#://#'),$(shell git config --get remote.origin.url 2>/dev/null |sed 's#://[^/@]*@#://#'))
 GIT_STATUS                      ?= $(shell git status -uno --porcelain 2>/dev/null |wc -l)
 GIT_TAG                         ?= $(shell git tag -l --points-at $(BRANCH) 2>/dev/null)
 GIT_UPSTREAM_REPOSITORY         ?= $(if $(GIT_REPOSITORY),$(if $(findstring ://,$(GIT_REPOSITORY)),$(call pop,$(call pop,$(GIT_REPOSITORY)))/,$(call pop,$(GIT_REPOSITORY),:):)$(or $(GIT_UPSTREAM_USER),$(GIT_USER))/$(lastword $(subst /, ,$(GIT_REPOSITORY))))
@@ -99,7 +101,7 @@ MONOREPO                        ?= $(if $(filter myos,$(MYOS)),$(notdir $(CURDIR
 MONOREPO_DIR                    ?= $(if $(MONOREPO),$(if $(filter myos,$(MYOS)),$(realpath $(CURDIR)),$(if $(APP),$(realpath $(CURDIR)/..))))
 MYOS                            ?= $(if $(filter $(MAKE_DIR),$(call pop,$(MAKE_DIR))),.,$(call pop,$(MAKE_DIR)))
 MYOS_COMMIT                     ?= $(shell GIT_DIR=$(MYOS)/.git git rev-parse head 2>/dev/null)
-MYOS_REPOSITORY                 ?= $(shell GIT_DIR=$(MYOS)/.git git config --get remote.origin.url 2>/dev/null)
+MYOS_REPOSITORY                 ?= $(shell GIT_DIR=$(MYOS)/.git git config --get remote.origin.url 2>/dev/null |sed 's#://[^/@]*@#://#')
 QUIET                           ?= $(if $(VERBOSE),,--quiet)
 RECURSIVE                       ?= true
 RELATIVE                        ?= $(if $(filter myos,$(MYOS)),./,../)

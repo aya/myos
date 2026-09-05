@@ -1,5 +1,2 @@
 docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local exec -T fabio sh -c host/fabio sh
-/bin/bash: -c: line 0: syntax error near unexpected token `||'
-/bin/bash: -c: line 0: `|| true'
-make: *** [exec] Error 2
-[exit 2]
+[exit 0]

@@ -9,7 +9,7 @@
 # to have connected.
 
 # variable SSH_HOSTS: hosts the ssh targets act on, space separated
-SSH_HOSTS                       ?= $(AWS_INSTANCE_IP)
+SSH_HOSTS                       ?=
 
 # target ssh-hosts-check: Fail when no remote host is known
 .PHONY: ssh-hosts-check
