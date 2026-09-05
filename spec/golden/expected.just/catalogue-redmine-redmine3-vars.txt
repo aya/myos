@@ -1,0 +1,6 @@
+REDMINE3_DB_NAME tester-redmine-local-redmine3
+REDMINE3_DB_USER tester-redmine-local-redmine3
+REDMINE3_SERVICE_80_NAME redmine3
+REDMINE3_SERVICE_80_TAGS urlprefix-redmine3.example.test/*
+REDMINE3_SERVICE_NAME redmine3
+[exit 0]

@@ -11,10 +11,11 @@
 set -u
 MYOS=${MYOS:-$(cd "$(dirname "$0")/.." && pwd -P)}
 MYOS_LIB=$MYOS/lib
-for _m_m in core path ref files stack values; do . "$MYOS_LIB/$_m_m.sh"; done
+for _m_m in core path ref files stack values settings fn; do . "$MYOS_LIB/$_m_m.sh"; done
 for _m_m in "$MYOS_LIB"/verb/*.sh; do . "$_m_m"; done
 
 MYOS_VERSION=2.0.0-dev
+MYOS_SETTINGS_LOADED=; MYOS_SET_NAMES=; MYOS_SET_EXPORT=
 MYOS_VERBS="up down build config logs ps status restart start stop recreate connect exec run scale shutdown ls env print"
 MYOS_DRYRUN=${DRYRUN:-false}
 MYOS_OUTPUT=text; MYOS_STRICT=; MYOS_WORKDIR=${WORKDIR:-$PWD}

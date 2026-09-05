@@ -1,0 +1,7 @@
+# computed every run, exported to compose
+export DEMO_SERVICE_80_TAGS
+DEMO_SERVICE_80_TAGS ?= @tagprefix(demo,80)
+# a token derived from a payload: the payload holds commas, a variable
+# reference keeps it as one argument
+DEMO_JWT_PAYLOAD ?= {"role":"anon"${comma}"iss":"demo"}
+DEMO_JWT         ?= !jwt(,${DEMO_JWT_PAYLOAD},secret)

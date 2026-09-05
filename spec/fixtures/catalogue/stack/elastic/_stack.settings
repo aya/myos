@@ -1,0 +1,21 @@
+
+# converted from elastic.mk
+APM_SERVER_SERVICE_8200_NAME             ?= apm-server
+APM_SERVER_SERVICE_8200_TAGS             ?= @tagprefix(apm-server,8200)
+ELASTICSEARCH_SERVICE_9200_NAME          ?= elasticsearch
+ELASTICSEARCH_SERVICE_9200_TAGS          ?= @tagprefix(elasticsearch,9200)
+export APM_SERVER_SERVICE_8200_TAGS ELASTICSEARCH_SERVICE_9200_TAGS KIBANA_SERVICE_5601_TAGS
+KIBANA_SERVICE_NAME                      ?= kibana
+KIBANA_SERVICE_5601_TAGS                 ?= @tagprefix(kibana,5601)
+
+
+# target elasticsearch-delete-%: delete elasticsearch index %
+
+
+# targets of the .mk, to rewrite as hooks: elasticsearch-delete-%
+
+APM_SERVER_OSS_SERVICE_8200_NAME         ?= apm-server-oss
+APM_SERVER_OSS_SERVICE_8200_TAGS         ?= @tagprefix(apm-server-oss,8200)
+export APM_SERVER_OSS_SERVICE_8200_TAGS KIBANA_OSS_SERVICE_5601_TAGS
+KIBANA_OSS_SERVICE_5601_NAME             ?= kibana-oss
+KIBANA_OSS_SERVICE_5601_TAGS             ?= @tagprefix(kibana-oss,5601)

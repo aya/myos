@@ -1,0 +1,7 @@
+USER_DOMAIN tester.example.test
+USER_HOME @HOME@
+USER_HOST tester.testhost.example.test
+USER_HOST_LB
+USER_PATH
+USER_URIS tester.testhost.example.test/
+[exit 0]

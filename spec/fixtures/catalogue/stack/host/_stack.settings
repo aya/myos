@@ -1,0 +1,27 @@
+
+# converted from host.mk
+export DOCKER_HOST_IFACE DOCKER_HOST_INET4 DOCKER_INTERNAL_DOCKER_HOST
+SETUP_LETSENCRYPT                        ?=
+
+# target bootstrap-stack-host: Fire host-certbot host-ssl-certs
+
+# target host: Fire stack-host-up
+
+# target host-%; Fire target stack-host-%
+
+# target host-ssl-certs: Create invalid ${DOMAIN} certificate files with openssl
+
+# target host-certbot: Create ${DOMAIN} certificate files with letsencrypt
+
+# target host-certbot-certificates: List letsencrypt certificates
+
+# target host-certbot-renew: Renew letsencrypt certificates
+
+# target host-certbot-staging: Create staging ${DOMAIN} certificate files with letsencrypt
+
+# target host-docker-build-%: Build % docker
+
+# target host-docker-rebuild-%: Rebuild % docker
+
+
+# targets of the .mk, to rewrite as hooks: bootstrap-stack-host host host-% host-certbot host-certbot-certificates host-certbot-renew host-certbot-staging host-docker-build-% host-docker-rebuild-% host-ssl-certs

@@ -22,11 +22,24 @@ myos_values_load() {
 # myos_var NAME -> R (empty when unknown); origin in MYOS_ORIGIN
 myos_var() {
   MYOS_ORIGIN=
+  # a name built from a word that is not an identifier (*.ipns_SERVICE_NAME)
+  # is simply unknown, as it was for make
+  case $1 in *[!A-Za-z0-9_]*|'') R=; return 0 ;; esac
   eval "if [ -n \"\${MYOS_CLI_$1+set}\" ]; then R=\$MYOS_CLI_$1; MYOS_ORIGIN=cli
         elif [ -n \"\${$1+set}\" ]; then R=\$$1; MYOS_ORIGIN=env
         elif [ -n \"\${MYOS_ENVFILE_$1+set}\" ]; then R=\$MYOS_ENVFILE_$1; MYOS_ORIGIN=.env
         else R=; fi"
   [ -n "$MYOS_ORIGIN" ] && return 0
+  eval "if [ -n \"\${MYOS_MEMO_$1+set}\" ]; then R=\$MYOS_MEMO_$1; MYOS_ORIGIN=\$MYOS_MEMO_ORIGIN_$1; fi"
+  [ -n "$MYOS_ORIGIN" ] && return 0
+  # a setting the stack forces, then its plain defaults, then its computed ones
+  eval "_vv_kind=\${MYOS_SET_KIND_$1:-}"
+  if [ "$_vv_kind" = forced ]; then myos_compute "$1"
+  else
+    eval "if [ -n \"\${MYOS_STACKENV_$1+set}\" ]; then R=\$MYOS_STACKENV_$1; MYOS_ORIGIN=stack; fi"
+    [ -n "$MYOS_ORIGIN" ] || [ -z "$_vv_kind" ] || myos_compute "$1"
+  fi
+  if [ -n "$MYOS_ORIGIN" ]; then eval "MYOS_MEMO_$1=\$R; MYOS_MEMO_ORIGIN_$1=\$MYOS_ORIGIN"; return 0; fi
   # engine values
   case $1 in
     COMPOSE_FILE) myos_nl_join "$MYOS_STACK_FILES" ' ' ;;
@@ -34,6 +47,7 @@ myos_var() {
     COMPOSE_SERVICE_NAME) R=$(printf '%s' "$MYOS_PROJECT" | tr '_' '-') ;;
     COMPOSE_FILE_SUFFIX) myos_suffixes ;;
     STACK_DIR) myos_path; myos_nl_join "$R" ' ' ;;
+    MYOS_STACK_DIR) R=${MYOS_STACK_DIRS##*"$NL"} ;;
     STACK) R=$MYOS_STACKS ;;
     APP) R=$MYOS_STACK_NAME ;;
     APP_NAME) myos_name "$MYOS_STACK_APP" ;;
@@ -42,6 +56,10 @@ myos_var() {
     HOSTNAME) R=$MYOS_HOSTNAME ;;
     DOMAIN) R=$MYOS_DOMAIN ;;
     HOST_STACK) [ "$MYOS_STACK_SCOPE" = host ] && R=host || R= ;;
+    HOST_COMPOSE_PROJECT_NAME) R=$MYOS_HOSTNAME ;;
+    USER_COMPOSE_PROJECT_NAME) myos_resu; R=$(printf '%s' "$R" | tr '.' '-') ;;
+    RESU) myos_resu ;;
+    MAIL) R=${MAIL:-} ;;
     USER_STACK) [ "$MYOS_STACK_SCOPE" = user ] && R=User || R= ;;
     DOCKER_NETWORK) R=$MYOS_NETWORK ;;
     DOCKER_NETWORK_DEFAULT) R=$MYOS_NETWORK_DEFAULT ;;

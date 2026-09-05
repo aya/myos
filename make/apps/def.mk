@@ -38,7 +38,9 @@ tagprefix  = $(call urlprefix,$(or $($(call UPPERCASE,$(1)_SERVICE_$(2)_PATH)),$
 uri        = $(foreach svc,$(1),$(patsubst %,$(addsuffix .,$(or $($(call UPPERCASE,$(svc)_SERVICE_$(2)_NAME)),$($(call UPPERCASE,$(svc)_SERVICE_NAME)),$(svc)))%,$(or $(3),$(APP_URI))))
 url        = $(patsubst %,$(APP_SCHEME)://%,$(call uri,$(1),$(2),$(or $(3),$(APP_URI))))
 url_suffix = *
-urlprefix  = $(strip $(call patsublist,%,urlprefix-%$(1)$(url_suffix) $(2),$(or $(3),$(APP_URI))))
+## the options are appended only when there are some: with an empty $(2) the
+## route ended with a space, kept before the comma joining the next route
+urlprefix  = $(strip $(call patsublist,%,urlprefix-%$(1)$(url_suffix)$(if $(2), $(2)),$(or $(3),$(APP_URI))))
 urlprefixs = $(strip $(call urlprefix,$(firstword $(1)),$(wordlist 2,16,$(1)))$(foreach prefix,$(subst $(space),$(dollar),$(2)) $(subst $(space),$(dollar),$(3)) $(subst $(space),$(dollar),$(4)),$(comma)$(call subst,$(dollar),$(space),$(call urlprefix,$(firstword $(prefix)),$(wordlist 2,16,$(prefix))))))
 ## urlprefix tests (x APP_URI)
 # $(call urlprefix)

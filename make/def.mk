@@ -2,6 +2,9 @@
 .PHONY: FORCE
 comma                           ?= ,
 dollar                          ?= $
+empty                           :=
+# a single space: utils.mk, which defined it, is not included by the engine
+space                           := $(empty) $(empty)
 dquote                          ?= "
 lbracket                        ?= (
 percent                         ?= %

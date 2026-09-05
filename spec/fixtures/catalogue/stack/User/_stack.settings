@@ -1,0 +1,14 @@
+# converted from User.mk, the conditional block rewritten by hand: the RESU_*
+# switches select how the user identity (RESU) shapes the host, the path and
+# the home of the User stacks
+export USER_DOMAIN USER_HOST user_domain
+USER_DOMAIN                              ?= @patsubst(%,${USER}.%,${DOMAIN})
+USER_HOME                                ?= !shell(cd ~ && pwd -P)
+USER_HOST_BASE                           ?= @if(${APP_HOST_MULTI_USER},@patsubst(%,${USER}.%,${HOST}))${USER_HOST_LB}
+USER_HOST                                ?= @if(@filter(true,${RESU_HOST}),@patsubst(%,${RESU}.%,${USER_HOST_BASE}),${USER_HOST_BASE})
+USER_HOST_LB                             ?= @if(${USER_LB},${space}${HOST}@if(${HOST_LB},${space}${DOMAIN}),@if(${HOST_LB},${space}${USER_DOMAIN}))
+USER_PATH                                ?= @if(@filter(true,${RESU_PATH}),${USER_PATH_PREFIX}${RESU}/,${USER_PATH_PREFIX})
+USER_PATH_PREFIX                         ?=
+USER_URIS                                ?= @patsubst(%,%/${USER_PATH},${USER_HOST})
+
+# targets of User.mk, to rewrite as hooks: User user User-% user-% start-stack-User

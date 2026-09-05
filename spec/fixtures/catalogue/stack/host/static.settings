@@ -1,0 +1,3 @@
+export HOST_STATIC_SERVICE_80_TAGS
+HOST_STATIC_SERVICE_80_NAME              ?= static
+HOST_STATIC_SERVICE_80_TAGS              ?= @tagprefix(HOST_STATIC,80)

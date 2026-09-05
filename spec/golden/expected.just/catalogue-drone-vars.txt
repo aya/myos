@@ -1,0 +1,9 @@
+DRONE_RUNNER_NAME drone-runner.example.test
+DRONE_RUNNER_SERVICE_NAME drone-runner
+DRONE_SERVER_HOST drone.example.test
+DRONE_SERVICE_80_NAME drone
+DRONE_SERVICE_80_TAGS urlprefix-drone.example.test/*
+DRONE_SERVICE_NAME drone
+DRONE_USER_CREATE username:tester,admin:true
+DRONE_USER_FILTER tester
+[exit 0]

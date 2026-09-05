@@ -1,0 +1,4 @@
+
+export RABBITMQ_SERVICE_15672_TAGS
+RABBITMQ_SERVICE_15672_NAME              ?= rabbitmq
+RABBITMQ_SERVICE_15672_TAGS              ?= @tagprefix(rabbitmq,15672)

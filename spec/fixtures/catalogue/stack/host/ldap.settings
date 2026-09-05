@@ -1,0 +1,2 @@
+HOST_389DS_VERSION                       := 2.4.4
+export HOST_389DS_VERSION

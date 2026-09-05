@@ -1,0 +1,14 @@
+HOST_NGINX_HOST_URIS true
+HOST_NGINX_LETSENCRYPT_HOST testhost.example.test
+HOST_NGINX_SERVICE_443_HOST testhost.example.test:443
+HOST_NGINX_SERVICE_443_PATH /
+HOST_NGINX_SERVICE_443_PROTO https tlsskipverify=true
+HOST_NGINX_SERVICE_443_TAGS urlprefix-testhost.example.test:443/* proto=https tlsskipverify=true
+HOST_NGINX_SERVICE_80_ENVS host
+HOST_NGINX_SERVICE_80_HOST testhost.example.test
+HOST_NGINX_SERVICE_80_TAGS urlprefix-testhost.example.test:80/*,urlprefix-*/*,urlprefix-*/.well-known/acme-challenge/*
+HOST_NGINX_SERVICE_80_URIS testhost.example.test:80/
+HOST_NGINX_SERVICE_HOST testhost.example.test
+HOST_NGINX_SERVICE_HOST_URIS */ */.well-known/acme-challenge/
+HOST_NGINX_VIRTUAL_HOST testhost.example.test
+[exit 0]

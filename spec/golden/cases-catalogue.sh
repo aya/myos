@@ -10,9 +10,17 @@ ref() { # path of a .mk or .yml -> stack reference
 }
 slug() { printf '%s' "$1" | tr '/' '-' | tr '[:upper:]' '[:lower:]'; }
 find . -name '*.mk' | sed 's#^\./##' | sort | while read -r mk; do
-  vars=$(grep -oE '^[A-Z][A-Z0-9_]* *[?:+]?=' "$mk" | sed 's/ *[?:+]*=$//' | sort -u | tr '\n' ' ')
+  # ENV_VARS and MAKECMDARGS are the plumbing of make, not settings
+  vars=$(grep -oE '^[A-Z][A-Z0-9_]* *[?:+]?=' "$mk" | sed 's/ *[?:+]*=$//' | grep -v -e '^ENV_VARS$' -e '^MAKECMDARGS$' | sort -u | tr '\n' ' ')
   [ -z "$vars" ] && continue
   case $mk in */*) r=$(ref "$mk") ;; *) r=${mk%.mk} ;; esac
+  d=${mk%/*}; b=${mk##*/}; b=${b%.mk}
+  if [ "$mk" != "${mk#*/}" ] && [ ! -f "$d/$b.yml" ] && [ "$b" != "$d" ]; then
+    # apache.php5.mk -> host/apache/php5 ; woodpecker.mk -> the group woodpecker ; exporter.mk -> host/exporter
+    if [ -f "$d/$(printf '%s' "$b" | tr . /).yml" ]; then r=$d/$(printf '%s' "$b" | tr . /)
+    elif grep -qE "^[a-z][a-z0-9_-]*[[:space:]]*[?:]*=" "$mk"; then r=$(grep -oE "^[a-z][a-z0-9_-]*[[:space:]]*[?:]*=" "$mk" | head -1 | sed "s/[[:space:]]*[?:]*=//")
+    elif [ -d "$d/$b" ]; then r=$d/$b; fi
+  fi
   pin=
   # supabase derives its tokens from the current time: pin it
   case $r in supabase) pin=' SUPABASE_JWT_IAT=1700000000' ;; esac

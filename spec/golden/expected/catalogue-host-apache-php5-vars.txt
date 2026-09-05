@@ -1,0 +1,7 @@
+HOST_APACHE_PHP5_SERVICE_80_HOST testhost.example.test
+HOST_APACHE_PHP5_SERVICE_80_TAGS urlprefix-testhost.example.test/*
+HOST_APACHE_PHP5_SERVICE_HOST testhost.example.test
+HOST_APACHE_PHP5_SERVICE_PATH /
+HOST_APACHE_PHP5_VIRTUAL_HOST testhost.example.test
+HOST_APACHE_PHP5_VIRTUAL_ROOT %-1/%-2/%-3
+[exit 0]

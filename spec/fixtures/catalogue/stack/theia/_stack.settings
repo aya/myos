@@ -1,0 +1,4 @@
+
+export THEIA_SERVICE_3000_TAGS
+THEIA_SERVICE_3000_NAME                  ?= theai
+THEIA_SERVICE_3000_TAGS                  ?= @tagprefix(theia,3000)

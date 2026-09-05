@@ -1,0 +1,6 @@
+WOODPECKER_ADMIN tester
+WOODPECKER_HOST http://woodpecker.example.test
+WOODPECKER_SERVICE_8000_NAME woodpecker
+WOODPECKER_SERVICE_8000_TAGS urlprefix-woodpecker.example.test/*
+WOODPECKER_SERVICE_NAME woodpecker
+[exit 0]
