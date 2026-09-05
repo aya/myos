@@ -1,0 +1,2 @@
+echo MYOS_PROJECT_FORMAT=user-app-env >> @WD@/.env
+[exit 0]

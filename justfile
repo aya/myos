@@ -92,3 +92,8 @@ firewall *args:
 [group('lifecycle')]
 cert *args:
     @sh "{{lib}}/main.sh" cert "$@"
+
+# migrate pin: keep the project names of a deployment made with the make engine
+[group('lifecycle')]
+migrate *args:
+    @sh "{{lib}}/main.sh" migrate "$@"

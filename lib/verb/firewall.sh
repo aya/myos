@@ -42,6 +42,7 @@ myos_port_parse() {
     *)     MYOS_PORT_ADDR=; MYOS_PORT_HOST=; MYOS_PORT_CONTAINER=$_pp ;;
   esac
   [ -n "$MYOS_PORT_HOST" ] || MYOS_PORT_HOST=random
+  [ -n "$MYOS_PORT_CONTAINER" ] || MYOS_PORT_CONTAINER=none
 }
 myos_port_scope() { # ADDR -> R
   myos_var MYOS_BIND_MESH; _sc_mesh=$R

@@ -99,3 +99,6 @@ demo-print-tags-options         | demo-project  | print-DEMO_SERVICE_80_TAGS STA
 host-deploy                     | host-project  | deploy@master
 catalogue-host-up-letsencrypt   | catalogue     | up STACK=host/consul SETUP_LETSENCRYPT=true
 catalogue-host-up               | catalogue     | up STACK=host/consul
+# --- the migration of a deployment made with the make engine
+migrate-pin-dry                 | app-nogit     | -n migrate pin
+firewall-empty-port             | catalogue     | firewall x2go/vdi
