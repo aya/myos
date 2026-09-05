@@ -1,7 +1,8 @@
 #!/bin/sh
 # Helpers shared by the golden recorder and the shellspec suites.
-# myos_run_engine ENGINE WORKDIR ARGS...  runs myos (legacy make engine or bin/myos CLI)
-# in a hermetic environment and prints normalized stdout+stderr followed by "[exit N]".
+# myos_run_engine ENGINE SANDBOX ARGS...  runs myos (legacy = the make engine,
+# just = the rewrite) in a hermetic environment and prints normalized
+# stdout+stderr followed by "[exit N]".
 
 MYOS_ROOT="${MYOS_ROOT:-$(cd "$(dirname "$0")/../.." 2>/dev/null && pwd)}"
 SPEC_DIR="${SPEC_DIR:-$MYOS_ROOT/spec}"
@@ -50,8 +51,7 @@ myos_normalize() {
 myos_run_engine() {
   _engine=$1; _sb=$2; shift 2
   # "@make" as first arg = the project drives make itself: its Makefile includes
-  # either the legacy engine (make/include.mk) or the shim (make/shim.mk), and
-  # make runs from the project directory.
+  # the legacy engine (make/include.mk) and make runs from the project directory.
   if [ "${1:-}" = "@make" ]; then
     shift
     _out=$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") MYOS_CONF=/dev/null \
@@ -64,13 +64,6 @@ myos_run_engine() {
       # what /usr/local/bin/myos does: env from system conf + MYOS=. WORKDIR=$PWD make -esC $MYOS
       _out=$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") \
         make -esC "$MYOS_ROOT" MYOS=. WORKDIR="$_sb/wd" "$@" 2>&1); _rc=$?
-      ;;
-    cli)
-      # MYOS_PROJECT_FORMAT pins the legacy naming so that the goldens compare
-      # resolution, not naming; the new default is covered by the unit tests.
-      _out=$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") MYOS_CONF=/dev/null \
-        MYOS_PROJECT_FORMAT=user-app-env \
-        "$MYOS_ROOT/bin/myos" -C "$_sb/wd" "$@" 2>&1); _rc=$?
       ;;
     *) echo "unknown engine $_engine" >&2; return 2 ;;
   esac

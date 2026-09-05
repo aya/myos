@@ -1,2 +1,0 @@
-WARNING: myos[0] export-rule-exists: target export unavailable in app myos
-[exit 0]

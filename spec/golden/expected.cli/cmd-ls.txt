@@ -1,9 +1,0 @@
-@WD@/stack
- host 3 compose file(s)
-@HOME@/.local/share/myos/stack
- User 1 compose file(s)
- drone 2 compose file(s)
- host 3 compose file(s)
- postgres 3 compose file(s)
- redis 1 compose file(s)
-[exit 0]

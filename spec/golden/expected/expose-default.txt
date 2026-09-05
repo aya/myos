@@ -1,2 +1,0 @@
-WARNING: myos[0] expose-rule-exists: target expose unavailable in app myos
-[exit 0]

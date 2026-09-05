@@ -1,2 +1,0 @@
-STACK ./
-[exit 0]

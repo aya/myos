@@ -1,4 +1,0 @@
-WARNING: myos[0] cert-rule-exists: target cert unavailable in app myos
-WARNING: myos[0] list-rule-exists: target list unavailable in app myos
-WARNING: myos[0] host/consul-rule-exists: target host/consul unavailable in app myos
-[exit 0]

@@ -1,2 +1,0 @@
-DOMAIN example.test
-[exit 0]

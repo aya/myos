@@ -1,4 +1,0 @@
-docker network create tester-local
-docker network create testhost
-docker compose -f @WD@/docker-compose.yml -f @WD@/docker-compose.local.yml -f @WD@/docker/docker-compose.yml -f @MYOS@/share/compose/networks.yml -p tester-wd-local --project-directory @WD@ up -d
-[exit 0]

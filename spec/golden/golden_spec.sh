@@ -1,13 +1,13 @@
 #shellcheck shell=sh
 # Golden tests: every case of cases.txt must produce the recorded output.
-# MYOS_ENGINE=legacy (default) runs the make engine, MYOS_ENGINE=cli runs bin/myos.
-# For the cli engine, spec/golden/expected.cli/<case>.txt overrides the legacy
-# expectation when a delta is intentional (documented in DELTAS.md).
+# MYOS_ENGINE=legacy (default) runs the make engine, MYOS_ENGINE=just the rewrite.
+# For another engine, spec/golden/expected.<engine>/<case>.txt overrides the
+# legacy expectation when a delta is intentional (documented in DELTAS.md).
 Describe 'golden'
   engine=${MYOS_ENGINE:-legacy}
   expected_file() {
-    if [ "$engine" = cli ] && [ -f "$SHELLSPEC_PROJECT_ROOT/spec/golden/expected.cli/$1.txt" ]; then
-      printf '%s\n' "$SHELLSPEC_PROJECT_ROOT/spec/golden/expected.cli/$1.txt"
+    if [ "$engine" != legacy ] && [ -f "$SHELLSPEC_PROJECT_ROOT/spec/golden/expected.$engine/$1.txt" ]; then
+      printf '%s\n' "$SHELLSPEC_PROJECT_ROOT/spec/golden/expected.$engine/$1.txt"
     else
       printf '%s\n' "$SHELLSPEC_PROJECT_ROOT/spec/golden/expected/$1.txt"
     fi

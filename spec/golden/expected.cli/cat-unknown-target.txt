@@ -1,3 +1,0 @@
-ERROR: unknown command: doesnotexist
-ERROR: to act on a stack of that name, say what to do: myos up doesnotexist
-[exit 2]

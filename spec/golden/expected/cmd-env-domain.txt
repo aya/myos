@@ -1,3 +1,0 @@
-WARNING: myos[0] env-rule-exists: target env unavailable in app myos
-WARNING: myos[0] DOMAIN-rule-exists: target DOMAIN unavailable in app myos
-[exit 0]

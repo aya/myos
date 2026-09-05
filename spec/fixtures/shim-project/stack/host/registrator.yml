@@ -1,9 +1,0 @@
-services:
-  registrator:
-    image: gliderlabs/registrator:master
-    container_name: ${HOST_COMPOSE_PROJECT_NAME:-localhost}-registrator
-    network_mode: host
-    depends_on: [consul]
-    command: -internal=false -useIpFromLabel SERVICE_ADDRESS consul://127.0.0.1:8500
-    volumes:
-      - ${DOCKER_SOCKET_LOCATION:-/var/run/docker.sock}:/tmp/docker.sock

@@ -1,2 +1,0 @@
-WARNING: myos[0] ls-rule-exists: target ls unavailable in app myos
-[exit 0]

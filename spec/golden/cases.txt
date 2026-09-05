@@ -74,21 +74,10 @@ cmd-exec-host                   | host-project  | exec host/consul -- consul mem
 cmd-exec-service                | host-project  | exec host/fabio SERVICE=fabio -- sh
 cmd-run-catalogue               | app-nogit     | run postgres -- psql -l
 cmd-scale                       | app-nogit     | scale postgres SERVICE=postgres NUM=3
-cmd-ls                          | host-project  | ls
-cmd-ls-groups                   | host-project  | ls --groups
-cmd-env-domain                  | host-project  | env DOMAIN
-shim-up-group                   | shim-project  | @make up STACK=host DRYRUN=true
-shim-config                     | shim-project  | @make config STACK=host/consul DRYRUN=true
-shim-project-target             | shim-project  | @make host-certs
-shim-env                        | shim-project  | @make env ARGS=COMPOSE_PROJECT_NAME STACK=host
 chain-build-up-logs             | host-project  | build up logs host/fabio
 chain-up-group                  | host-project  | up ps host
 chain-print-two                 | host-project  | print-COMPOSE_PROJECT_NAME print-APP STACK=host/consul
 mk-ssh-no-hosts                 | app-nogit     | ssh
 mk-ssh-with-hosts               | app-nogit     | ssh SSH_HOSTS=example.test ARGS=id
-bridge-export                   | host-project  | export STACK=host/consul
 cmd-recreate                    | host-project  | recreate host/consul
 cmd-status                      | host-project  | status host/consul
-expose-none                     | host-project  | expose host/consul
-expose-default                  | app-git       | expose
-cert-none                       | host-project  | cert list host/consul

@@ -1,2 +1,0 @@
-STACK_DIR
-[exit 0]
