@@ -1,0 +1,4 @@
+#!/bin/sh
+# a doctor hook prints one check per line: <id> <ok|warn|fail> [hint]
+echo "app-license ok"
+echo "app-quota warn 80% of the quota used"

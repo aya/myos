@@ -1,3 +1,3 @@
 make -o docker-stack-connect MAKE_OLDFILE=docker-stack-connect ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-connect STACK=host/consul APP_NAME=host
-docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost exec /bin/sh
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost exec consul /bin/sh
 [exit 0]

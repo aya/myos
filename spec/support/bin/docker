@@ -1,22 +1,63 @@
 #!/bin/sh
-# Mock docker for myos tests: logs every call, answers a few read-only queries deterministically.
+# Mock docker for the tests: logs every call, answers the read-only queries
+# deterministically, and fakes the side effects the verbs look at.
+#   MYOS_DOCKER_LOG   every call is appended as "docker <args>"; env.log holds
+#                     the environment of the last call
+#   MOCK_COMPOSE_VERSION (2.29.0)  MOCK_SWARM_STATE (inactive)
+#   MOCK_PS_STATE=<state>:<service>  one service of `compose ps` in that state
+#   MOCK_VOLUMES      the names `volume ls` answers (space separated)
+#   MOCK_NETWORKS     the names `network ls` answers
 if [ -n "${MYOS_DOCKER_LOG:-}" ]; then
   printf 'docker %s\n' "$*" >> "$MYOS_DOCKER_LOG"
-  # the environment is recorded too, so a test can assert what was exported
   env > "$(dirname "$MYOS_DOCKER_LOG")/env.log"
 fi
-case "$1 $2" in
+# the command and its subcommand, options skipped: docker [--log-level=x]
+# compose [--ansi=auto] [-f F]... [-p P] SUB ...; docker run --rm ...
+project=; files=; cmd=; sub=; hostb=; prev=; want=
+for a in "$@"; do
+  case $a in *:/b|*:/b:ro) hostb=${a%%:*} ;; esac
+  if [ -n "$want" ]; then
+    case $want in -p|--project-name) project=$a ;; -f|--file) files="$files $a" ;; esac
+    want=; prev=$a; continue
+  fi
+  case $a in
+    -p|--project-name|-f|--file|--filter|--format|-v|--volume|-e|--env|-w|--workdir) want=$a; [ "$a" = --filter ] || [ "$a" = --format ] || [ "$a" = -v ] || [ "$a" = --volume ] || [ "$a" = -e ] || [ "$a" = --env ] || [ "$a" = -w ] || [ "$a" = --workdir ] && want=skip ;;
+    -*) ;;
+    *) if [ -z "$cmd" ]; then cmd=$a; elif [ -z "$sub" ]; then sub=$a; fi ;;
+  esac
+  prev=$a
+done
+[ "$want" = skip ] && want=
+services() { # the services of the compose files given with -f
+  for f in $files; do
+    awk '/^services:/ {s=1; next} s && /^[^ \t]/ {s=0} s && /^  [A-Za-z0-9_.-]+:/ {sub(/^  /, ""); sub(/:.*/, ""); print}' "$f" 2>/dev/null
+  done | awk '!seen[$0]++'
+}
+case "$cmd $sub" in
   "compose version") echo "${MOCK_COMPOSE_VERSION:-2.29.0}" ;;
-  "compose config")  echo "# mock compose config" ;;
-  "compose ps")      : ;;
-  "compose "*)       : ;;
-  "info --format")   echo "${MOCK_SWARM_STATE:-inactive}" ;;
-  "run --rm")        case "$*" in *"uname -m"*) echo x86_64 ;; *"uname -s"*) echo Linux ;; *) : ;; esac ;;
-  "images -q")       : ;;
-  "ps -q")           : ;;
-  "network ls")      : ;;
-  "volume ls")       : ;;
-  "version --format") echo 29.0.0 ;;
+  "compose config") case "$*" in *--services*) services ;; *) echo "# mock compose config" ;; esac ;;
+  "compose ps")
+    case "$*" in *"--format json"*)
+      for s in $(services); do
+        state=running; health=healthy
+        case ${MOCK_PS_STATE:-} in "$s":*|*:"$s") state=${MOCK_PS_STATE%%:*}; health= ;; esac
+        printf '{"Name":"%s-%s-1","Service":"%s","State":"%s","Health":"%s"}\n' "$project" "$s" "$s" "$state" "$health"
+      done ;;
+    esac ;;
+  "compose images") for s in $(services); do printf '{"Service":"%s","Repository":"mock/%s","Tag":"latest","ID":"sha256:0000"}\n' "$s" "$s"; done ;;
+  "compose "*) : ;;
+  "info --format") echo "${MOCK_SWARM_STATE:-inactive}" ;;
+  "version "*) echo "29.0.0" ;;
+  "run "*)
+    case "$*" in
+      *"uname -m"*) echo x86_64 ;;
+      *"uname -s"*) echo Linux ;;
+      *"tar czf /b/"*) all=$*; [ -n "$hostb" ] && { n=${all##*tar czf /b/}; n=${n%% *}; printf 'mock archive of %s\n' "$n" > "$hostb/$n"; } ;;
+      *) : ;;
+    esac ;;
+  "volume ls") for v in ${MOCK_VOLUMES:-}; do echo "$v"; done ;;
+  "network ls") for n in ${MOCK_NETWORKS:-}; do echo "$n"; done ;;
+  "images "*|"ps "*) : ;;
   *) : ;;
 esac
 exit 0

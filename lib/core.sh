@@ -60,5 +60,7 @@ myos_sort_words() {
   [ -n "$1" ] || { R=; return 0; }
   set -f; R=$(printf '%s\n' $1 | LC_ALL=C sort -u | tr '\n' ' '); set +f; R=${R% }
 }
+# myos_shquote STRING -> R: STRING single-quoted for eval
+myos_shquote() { R=$(printf '%s' "$1" | sed "s/'/'\\\\''/g"); R="'$R'"; }
 # myos_realpath DIR -> R (empty when DIR does not exist)
 myos_realpath() { R=$(cd "$1" 2>/dev/null && pwd -P); }

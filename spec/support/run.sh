@@ -102,3 +102,17 @@ myos_run_engine() {
 [then]$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") MYOS_ROOT="$MYOS_ROOT" sh -c "$_then" 2>&1)"
   printf '%s\n[exit %s]\n' "$_out" "$_rc" | myos_normalize "$_sb"
 }
+
+# myos_run_live SANDBOX ARGS...  the new engine on a sandbox, really running
+# against the mocks (no dry run), the date pinned; output normalized with
+# "[exit N]" like myos_run_engine
+# shellcheck disable=SC2046
+myos_run_live() {
+  _sb=$1; shift
+  _out=$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") DRYRUN=false MYOS_CONF=/dev/null \
+    MYOS_NOW=20260905-120000 MYOS_BACKUP_ROOT="$_sb/backup" MYOS_PROJECT_FORMAT=user-app-env \
+    MOCK_VOLUMES="${MOCK_VOLUMES:-}" MOCK_NETWORKS="${MOCK_NETWORKS:-}" MOCK_PS_STATE="${MOCK_PS_STATE:-}" \
+    MYOS_HEALTH_TIMEOUT="${MYOS_HEALTH_TIMEOUT:-2}" \
+    "$MYOS_ROOT/myos" "$@" 2>&1 </dev/null); _rc=$?
+  printf '%s\n[exit %s]\n' "$_out" "$_rc" | myos_normalize "$_sb"
+}

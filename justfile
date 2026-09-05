@@ -54,3 +54,31 @@ ls *args:
 [group('catalogue')]
 env *args:
     @sh "{{lib}}/main.sh" env "$@"
+
+[group('lifecycle')]
+bootstrap *args:
+    @sh "{{lib}}/main.sh" bootstrap "$@"
+
+# upgrade: backup, pull, build, up, then wait for the services to be healthy
+[group('lifecycle')]
+upgrade *args:
+    @sh "{{lib}}/main.sh" upgrade "$@"
+
+# backup: the volumes of the project into $MYOS_BACKUP_ROOT/<project>/<date>/
+[group('lifecycle')]
+backup *args:
+    @sh "{{lib}}/main.sh" backup "$@"
+
+# restore --from DIR|latest [--yes]: the volumes replaced from a backup
+[group('lifecycle')]
+restore *args:
+    @sh "{{lib}}/main.sh" restore "$@"
+
+# doctor: what this host and this project lack (exit 4 when a check fails)
+[group('lifecycle')]
+doctor *args:
+    @sh "{{lib}}/main.sh" doctor "$@"
+
+[group('stack')]
+clean *args:
+    @sh "{{lib}}/main.sh" clean "$@"

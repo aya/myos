@@ -11,15 +11,16 @@
 set -u
 MYOS=${MYOS:-$(cd "$(dirname "$0")/.." && pwd -P)}
 MYOS_LIB=$MYOS/lib
-for _m_m in core path ref files stack values settings fn env events; do . "$MYOS_LIB/$_m_m.sh"; done
+for _m_m in core path ref files stack values settings fn env events hooks lock; do . "$MYOS_LIB/$_m_m.sh"; done
 for _m_m in "$MYOS_LIB"/verb/*.sh; do . "$_m_m"; done
 
 MYOS_VERSION=2.0.0-dev
 MYOS_SETTINGS_LOADED=; MYOS_SET_NAMES=; MYOS_SET_EXPORT=
-MYOS_VERBS="up down build config logs ps status restart start stop recreate connect exec run scale shutdown bootstrap install clean attach env-update ls env print"
+MYOS_VERBS="up down build config logs ps status restart start stop recreate connect exec run scale shutdown bootstrap install clean attach env-update backup restore upgrade doctor ls env print"
 MYOS_DRYRUN=${DRYRUN:-false}
 MYOS_OUTPUT=text; MYOS_STRICT=; MYOS_WORKDIR=${WORKDIR:-$PWD}
 verbs=; refs=; MYOS_ARGS=; MYOS_IMAGE=; MYOS_BOOTSTRAP=; MYOS_YES=; MYOS_VERB=
+MYOS_FORCE=; MYOS_PAUSE=; MYOS_NO_BACKUP=; MYOS_KEEP=; MYOS_FROM=; MYOS_ARTIFACTS=; MYOS_LOCKED=
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -30,6 +31,13 @@ while [ $# -gt 0 ]; do
     --strict) MYOS_STRICT=1 ;;
     --bootstrap) MYOS_BOOTSTRAP=1 ;;
     --yes|-y) MYOS_YES=1 ;;
+    --force) MYOS_FORCE=1 ;;
+    --pause) MYOS_PAUSE=1 ;;
+    --no-backup) MYOS_NO_BACKUP=1 ;;
+    --keep) shift; MYOS_KEEP=$1 ;;
+    --keep=*) MYOS_KEEP=${1#--keep=} ;;
+    --from) shift; MYOS_FROM=$1 ;;
+    --from=*) MYOS_FROM=${1#--from=} ;;
     --version) printf 'myos %s\n' "$MYOS_VERSION"; exit 0 ;;
     -h|--help) printf 'usage: myos [-n] [-C DIR] VERB... [REF...] [KEY=VALUE...] [-- ARGS...]\nverbs: %s\n' "$MYOS_VERBS"; exit 0 ;;
     -*) myos_die 2 "unknown option $1" ;;
@@ -162,6 +170,11 @@ for verb in $verbs; do
       [ -n "$_m_list" ] && { myos_for_refs myos_verb_down "$_m_list" || rc=$?; } ;;
     *) myos_for_refs "myos_verb_$verb" || rc=$? ;;
   esac
-  [ "$rc" -eq 0 ] || exit "$rc"
+  [ "$rc" -eq 0 ] || break
 done
+if [ "$MYOS_OUTPUT" = json ]; then
+  _m_art=; set -f; for _m_a in $MYOS_ARTIFACTS; do myos_json_str "$_m_a"; _m_art="$_m_art${_m_art:+,}$R"; done; set +f
+  _m_status=ok; [ "$rc" -eq 0 ] || _m_status=fail
+  printf '{"verb":"%s","status":"%s","exit":%s,"artifacts":[%s]}\n' "$MYOS_VERB" "$_m_status" "$rc" "$_m_art"
+fi
 exit "$rc"

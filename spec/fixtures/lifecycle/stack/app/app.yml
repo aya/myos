@@ -1,0 +1,24 @@
+services:
+  web:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost/"]
+    volumes:
+      - data:/usr/share/nginx/html
+    networks:
+      - private
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_PASSWORD: ${APP_DB_PASSWORD}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - db:/var/lib/postgresql/data
+    networks:
+      - private
+volumes:
+  data:
+  db:

@@ -1,0 +1,3 @@
+#!/bin/sh
+# a stack quiesces its database before its volumes are archived
+printf '%s %s %s\n' "$MYOS_PHASE" "$MYOS_PROJECT" "$MYOS_BACKUP_DIR" >> "$MYOS_BACKUP_DIR/hook.log"

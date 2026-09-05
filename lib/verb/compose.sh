@@ -20,17 +20,22 @@ myos_compose() { # ARGS...
   [ -n "$MYOS_STACK_FILES" ] || { myos_warn "no compose file for $MYOS_STACK"; return 0; }
   myos_compose_cmd; _c_cmd=$R
   if [ "$MYOS_DRYRUN" = true ]; then printf '%s %s\n' "$_c_cmd" "$*"; return 0; fi
-  myos_env_vars; _c_exports=
+  # the exports and the command words are quoted one by one, so that env
+  # sees assignments, then the command, then the verb arguments as given
+  myos_env_vars; _c_pre=
   set -f
   for _c_v in $R; do
-    myos_var "$_c_v"; [ -n "$R" ] && _c_exports="$_c_exports$NL$_c_v=$R"
+    myos_var "$_c_v"; [ -n "$R" ] || continue
+    myos_shquote "$_c_v=$R"; _c_pre="$_c_pre $R"
   done
   set +f
-  _c_old=$IFS; IFS=$NL
-  # shellcheck disable=SC2086
-  env $_c_exports $_c_cmd "$@"; _c_rc=$?
-  IFS=$_c_old
-  return $_c_rc
+  _c_pre="$_c_pre docker --log-level=error compose --ansi=auto"
+  _c_old=$IFS; IFS=$NL; set -f
+  for _c_x in $MYOS_STACK_FILES; do myos_shquote "$_c_x"; _c_pre="$_c_pre -f $R"; done
+  IFS=$_c_old; set +f
+  myos_shquote "$MYOS_PROJECT"; _c_pre="$_c_pre -p $R"
+  eval "set -- $_c_pre \"\$@\""
+  env "$@"
 }
 
 myos_networks_ensure() {

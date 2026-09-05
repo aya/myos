@@ -1,0 +1,2 @@
+#!/bin/sh
+printf '%s %s\n' "$MYOS_PHASE" "$MYOS_PROJECT" >> "$MYOS_WORKDIR/hook.log"
