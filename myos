@@ -1,31 +1,28 @@
-#!/bin/bash
-#shellcheck source=/dev/null disable=SC2046
-set -eu
-
-# define MYOS path
-## readlink without -f only followed one level and only an absolute link, so a
-## relative or chained symlink pointed the framework at the wrong directory
-MYOS="$0"
+#!/bin/sh
+# myos: entry point. Resolves the installation directory (through symlinks),
+# loads the system configuration and runs the engine (lib/main.sh).
+# just is the interface for humans and agents (justfile, `just --list`) and
+# the format of the hooks a stack ships; the engine itself is POSIX sh, so a
+# host without just works the same.
+set -u
+MYOS=$0
 while [ -L "$MYOS" ]; do
-  _link="$(readlink "$MYOS")"
-  case "$_link" in /*) MYOS="$_link" ;; *) MYOS="$(dirname "$MYOS")/$_link" ;; esac
+  _link=$(readlink "$MYOS")
+  case $_link in /*) MYOS=$_link ;; *) MYOS=$(dirname "$MYOS")/$_link ;; esac
 done
-MYOS="$(cd "$(dirname "$MYOS")" && pwd -P)"
-
-# load system config: /etc/conf.d/myos (openrc convention) first, then the
-# debian-style /etc/default/myos as fallback
-MYOS_CONF=/etc/conf.d/myos
+MYOS=$(cd "$(dirname "$MYOS")" && pwd -P)
+export MYOS
+MYOS_CONF=${MYOS_CONF:-/etc/conf.d/myos}
 [ -r "$MYOS_CONF" ] || MYOS_CONF=/etc/default/myos
-
-[ -r "$MYOS_CONF" ] && . "$MYOS_CONF"
-
-# check myos requirements
-[ -f "${MYOS:-.}/Makefile" ] || { echo 'Unable to find myos Makefile' >&2; exit 1; }
-
-# call myos Makefile: a WORKDIR from the config or environment wins over PWD,
-# so a machine can pin its deployment dir and run myos from anywhere
-## a comment or a blank line in the config used to become the program env(1)
-## was asked to run, so the whole command failed
-IFS=$'\n'
-exec env $(sed -e '/^[[:space:]]*#/d' -e '/^[[:space:]]*$/d' "$MYOS_CONF" 2>/dev/null) \
-  MYOS=. WORKDIR="${WORKDIR:-${PWD}}" make -esC "${MYOS:-.}" "$@"
+if [ -r "$MYOS_CONF" ]; then
+  # KEY=VALUE lines of the system configuration become defaults of the
+  # environment: what the environment already holds wins
+  while IFS= read -r _line || [ -n "$_line" ]; do
+    case $_line in ''|'#'*|*[!A-Za-z0-9_=]*=*|*=*) ;; *) continue ;; esac
+    case $_line in ''|'#'*) continue ;; esac
+    _k=${_line%%=*}; _v=${_line#*=}
+    case $_k in *[!A-Za-z0-9_]*|'') continue ;; esac
+    eval "[ -n \"\${$_k+set}\" ] || { $_k=\$_v; export $_k; }"
+  done < "$MYOS_CONF"
+fi
+exec sh "$MYOS/lib/main.sh" "$@"

@@ -1,0 +1,4 @@
+docker network create tester-local
+docker network create testhost
+docker --log-level=error compose --ansi=auto -f @WD@/stack/memcached/memcached.yml -f @WD@/stack/mysql/mysql.yml -f @WD@/stack/mysql/mysql.local.yml -f @WD@/stack/mysql/mysql.latest.yml -f @WD@/stack/rabbitmq/rabbitmq.yml -f @HOME@/.local/share/myos/stack/redis/redis.yml -f @WD@/stack/redis/redis.yml -f @MYOS@/share/compose/networks.yml -p tester-default-local up -d
+[exit 0]

@@ -1,0 +1,2 @@
+STACK .
+[exit 0]

@@ -27,7 +27,9 @@ Describe 'golden'
 	$(cat "$SHELLSPEC_PROJECT_ROOT"/spec/golden/cases*.txt)
 	CASES
   End
+  pending() { [ -f "$SHELLSPEC_PROJECT_ROOT/spec/golden/pending.$engine" ] && grep -qx "$1" "$SHELLSPEC_PROJECT_ROOT/spec/golden/pending.$engine"; }
   It "matches recorded output: $1 ($engine)"
+    Skip if "listed in pending.$engine (not implemented yet)" pending "$1"
     When call run_case "$1" "$2" "$3"
     The output should equal "$(cat "$(expected_file "$1")")"
   End

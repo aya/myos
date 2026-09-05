@@ -1,0 +1,2 @@
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost restart
+[exit 0]

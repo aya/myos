@@ -1,0 +1,4 @@
+docker network create tester-master
+docker network create testhost
+docker --log-level=error compose --ansi=auto -f @WD@/docker-compose.yml -f @WD@/docker/docker-compose.yml -f @MYOS@/share/compose/networks.yml -p tester-wd-master up -d
+[exit 0]

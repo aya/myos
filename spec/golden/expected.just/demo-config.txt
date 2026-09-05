@@ -1,0 +1,2 @@
+docker --log-level=error compose --ansi=auto -f @WD@/stack/demo/demo.yml -f @MYOS@/share/compose/networks.yml -p tester-demo-local config
+[exit 0]

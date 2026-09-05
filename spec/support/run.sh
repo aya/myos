@@ -79,7 +79,7 @@ myos_run_engine() {
   if [ "${1:-}" = "@make" ]; then
     shift
     _out=$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") MYOS_CONF=/dev/null \
-      make -es MYOS="$MYOS_ROOT" "$@" 2>&1); _rc=$?
+      make -es MYOS="$MYOS_ROOT" "$@" 2>&1 </dev/null); _rc=$?
     printf '%s\n[exit %s]\n' "$_out" "$_rc" | myos_normalize "$_sb"
     return 0
   fi
@@ -87,7 +87,14 @@ myos_run_engine() {
     legacy)
       # what /usr/local/bin/myos does: env from system conf + MYOS=. WORKDIR=$PWD make -esC $MYOS
       _out=$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") \
-        make -esC "$MYOS_ROOT" MYOS=. WORKDIR="$_sb/wd" "$@" 2>&1); _rc=$?
+        make -esC "$MYOS_ROOT" MYOS=. WORKDIR="$_sb/wd" "$@" 2>&1 </dev/null); _rc=$?
+      ;;
+    just)
+      # the rewrite: the myos wrapper. MYOS_PROJECT_FORMAT pins the historical
+      # naming so that the goldens compare resolution, not naming; the new
+      # default has its own cases.
+      _out=$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") MYOS_CONF=/dev/null \
+        MYOS_PROJECT_FORMAT=user-app-env "$MYOS_ROOT/myos" "$@" 2>&1 </dev/null); _rc=$?
       ;;
     *) echo "unknown engine $_engine" >&2; return 2 ;;
   esac

@@ -1,0 +1,2 @@
+docker --log-level=error compose --ansi=auto -f @WD@/docker-compose.yml -f @WD@/docker-compose.local.yml -f @WD@/docker/docker-compose.yml -f @MYOS@/share/compose/networks.yml -p tester-wd-local run --rm app id
+[exit 0]
