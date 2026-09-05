@@ -24,3 +24,15 @@ Describe 'status'
     The output should include '"state":"running"'
   End
 End
+
+Describe 'compose command'
+  setup() { sb=$(myos_sandbox lifecycle); }
+  cleanup() { rm -rf "$sb"; }
+  BeforeEach setup
+  AfterEach cleanup
+  It 'uses the docker-compose binary when asked, or when there is no plugin'
+    When call myos_run_live "$sb" -n up app DOCKER_COMPOSE=docker-compose
+    The output should include 'docker-compose -f'
+    The output should include '-p tester-app-local up -d'
+  End
+End

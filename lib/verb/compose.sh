@@ -4,11 +4,26 @@
 # the files of the current project; the values referenced by the files are
 # exported to it.
 
+# myos_compose_bin -> R: the compose command. DOCKER_COMPOSE when set; the
+# compose plugin when its file exists (no fork to find out); the
+# docker-compose binary otherwise
+myos_compose_bin() {
+  [ -n "${MYOS_COMPOSE_BIN:-}" ] && { R=$MYOS_COMPOSE_BIN; return 0; }
+  if [ -n "${DOCKER_COMPOSE:-}" ]; then R=$DOCKER_COMPOSE
+  else
+    R=
+    for _cb_p in "${HOME:-/nonexistent}/.docker/cli-plugins" /usr/local/lib/docker/cli-plugins /usr/lib/docker/cli-plugins /usr/libexec/docker/cli-plugins /opt/homebrew/lib/docker/cli-plugins "${DOCKER_CONFIG:-/nonexistent}/cli-plugins"; do
+      [ -x "$_cb_p/docker-compose" ] && { R="docker --log-level=error compose --ansi=auto"; break; }
+    done
+    [ -n "$R" ] || { if command -v docker-compose >/dev/null 2>&1; then R=docker-compose; else R="docker --log-level=error compose --ansi=auto"; fi; }
+  fi
+  MYOS_COMPOSE_BIN=$R
+}
 myos_compose_cmd() { # -> R: the command prefix, files and project included
   _c_f=; _c_old=$IFS; IFS=$NL; set -f
   for _c_x in $MYOS_STACK_FILES; do _c_f="$_c_f -f $_c_x"; done
   IFS=$_c_old; set +f
-  R="docker --log-level=error compose --ansi=auto$_c_f -p $MYOS_PROJECT"
+  myos_compose_bin; R="$R$_c_f -p $MYOS_PROJECT"
 }
 
 myos_run() { # COMMAND...: print under dry run, run otherwise
@@ -29,7 +44,7 @@ myos_compose() { # ARGS...
     myos_shquote "$_c_v=$R"; _c_pre="$_c_pre $R"
   done
   set +f
-  _c_pre="$_c_pre docker --log-level=error compose --ansi=auto"
+  myos_compose_bin; _c_pre="$_c_pre $R"
   _c_old=$IFS; IFS=$NL; set -f
   for _c_x in $MYOS_STACK_FILES; do myos_shquote "$_c_x"; _c_pre="$_c_pre -f $R"; done
   IFS=$_c_old; set +f

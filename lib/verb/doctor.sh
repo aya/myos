@@ -12,10 +12,14 @@ myos_verb_doctor() {
   MYOS_DOCTOR_FAILED=
   _dc_v=$(docker version --format '{{.Server.Version}}' 2>/dev/null)
   if [ -n "$_dc_v" ]; then myos_check docker ok "$_dc_v"; else myos_check docker fail "docker is not reachable"; fi
-  _dc_c=$(docker compose version --short 2>/dev/null)
-  if [ -z "$_dc_c" ]; then myos_check compose fail "the docker compose plugin is missing"
+  myos_compose_bin; _dc_bin=$R
+  case $_dc_bin in docker-compose*) _dc_c=$(docker-compose version --short 2>/dev/null) ;; *) _dc_c=$(docker compose version --short 2>/dev/null) ;; esac
+  if [ -z "$_dc_c" ]; then
+    if command -v docker-compose >/dev/null 2>&1; then myos_check compose fail "$_dc_bin does not answer; set DOCKER_COMPOSE=docker-compose in the machine config to use the binary"
+    else myos_check compose fail "no docker compose plugin nor docker-compose binary"; fi
   elif [ "$(printf '%s\n2.21.0\n' "$_dc_c" | sort -t. -k1,1n -k2,2n -k3,3n | head -n1)" = "2.21.0" ]; then myos_check compose ok "$_dc_c"
   else myos_check compose fail "compose $_dc_c is older than 2.21"; fi
+  case $_dc_bin in docker-compose*) myos_check compose-bin warn "the docker-compose binary is used: install the compose plugin when you can" ;; esac
   command -v just >/dev/null 2>&1 && myos_check just ok || myos_check just warn "just is not installed: no justfile hooks, no just --list"
   command -v jq >/dev/null 2>&1 && myos_check jq ok || myos_check jq warn "jq is not installed"
   myos_path; myos_nl_join "$R" ' '; myos_check path ok "$R"

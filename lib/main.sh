@@ -15,7 +15,7 @@ for _m_m in core path ref files stack values settings fn env events hooks lock; 
 for _m_m in "$MYOS_LIB"/verb/*.sh; do . "$_m_m"; done
 
 MYOS_VERSION=2.0.0-dev
-MYOS_SETTINGS_LOADED=; MYOS_SET_NAMES=; MYOS_SET_EXPORT=; MYOS_MEMO_NAMES=; MYOS_DIST_LINES=; MYOS_ER_D=0
+MYOS_SETTINGS_LOADED=; MYOS_SET_NAMES=; MYOS_SET_EXPORT=; MYOS_MEMO_NAMES=; MYOS_DIST_LINES=; MYOS_ER_D=0; MYOS_COMPOSE_BIN=
 MYOS_VERBS="up down build config logs ps status restart start stop recreate connect exec run scale shutdown bootstrap install clean attach env-update backup restore upgrade doctor firewall cert migrate ls env print"
 MYOS_SUBS="audit apply list issue renew pin"
 MYOS_DRYRUN=${DRYRUN:-false}

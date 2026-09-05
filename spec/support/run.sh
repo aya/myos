@@ -15,6 +15,8 @@ myos_sandbox() {
   _tmp=$(mktemp -d "${TMPDIR:-/tmp}/myos-spec.XXXXXX"); _tmp=$(cd "$_tmp" && pwd -P)
   cp -R "$SPEC_DIR/fixtures/$_fixture" "$_tmp/wd"
   cp -R "$SPEC_DIR/fixtures/home" "$_tmp/home"
+  # a compose plugin file, so that the engine picks the plugin form
+  mkdir -p "$_tmp/docker/cli-plugins" && cp "$SPEC_DIR/support/bin/docker-compose" "$_tmp/docker/cli-plugins/docker-compose"
   printf '%s\n' "$_tmp"
 }
 
@@ -26,6 +28,7 @@ myos_hermetic_env() {
     "USER=tester" "HOSTNAME=testhost" "DOMAIN=example.test" \
     "DOCKER_MACHINE=x86_64" "DOCKER_SYSTEM=Linux" "DOCKER_SOCKET_LOCATION=/var/run/docker.sock" \
     "DRYRUN=true" "TERM=dumb" "LANG=C" "LC_ALL=C" \
+    "DOCKER_CONFIG=$1/docker" \
     "MYOS_DOCKER_LOG=$1/docker.log"
 }
 
