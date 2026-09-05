@@ -51,7 +51,9 @@ build@%: myos-user
 # on local host
 .PHONY: clean app-clean
 clean: DOCKER_COMPOSE_DOWN_OPTIONS += --rmi all --volumes
-clean: app-clean docker-stack-down $(foreach stack,$(STACK),docker-image-rm-$(stack)) .env-clean ## Clean application and docker stuffs
+# the version of a stack (postgres:9.6) is stripped: a ':' in a prerequisite
+# reads as a static pattern rule and broke every run with a versioned STACK
+clean: app-clean docker-stack-down $(foreach stack,$(STACK),docker-image-rm-$(firstword $(subst :, ,$(stack)))) .env-clean ## Clean application and docker stuffs
 
 # target clean@%: Clean deployed application and docker images of % ENV
 # on local host
