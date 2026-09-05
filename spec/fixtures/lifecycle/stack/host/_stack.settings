@@ -1,0 +1,6 @@
+export HOST_FABIO_SERVICE_9998_TAGS HOST_DEHYDRATED_SERVICE_8080_TAGS HOST_WEB_SERVICE_80_TAGS
+HOST_FABIO_SERVICE_9998_TAGS      ?= @tagprefix(HOST_FABIO,9998)
+HOST_FABIO_SERVICE_9998_NAME      ?= fabio
+HOST_DEHYDRATED_SERVICE_8080_TAGS ?= urlprefix-*/.well-known/acme-challenge/
+HOST_WEB_SERVICE_80_TAGS          ?= urlprefix-www.example.test/,urlprefix-*.apps.example.test/
+HOST_FABIO_FIREWALL               ?= 80/tcp 443/tcp

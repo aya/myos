@@ -16,11 +16,13 @@ for _m_m in "$MYOS_LIB"/verb/*.sh; do . "$_m_m"; done
 
 MYOS_VERSION=2.0.0-dev
 MYOS_SETTINGS_LOADED=; MYOS_SET_NAMES=; MYOS_SET_EXPORT=
-MYOS_VERBS="up down build config logs ps status restart start stop recreate connect exec run scale shutdown bootstrap install clean attach env-update backup restore upgrade doctor ls env print"
+MYOS_VERBS="up down build config logs ps status restart start stop recreate connect exec run scale shutdown bootstrap install clean attach env-update backup restore upgrade doctor firewall cert ls env print"
+MYOS_SUBS="audit apply list issue renew"
 MYOS_DRYRUN=${DRYRUN:-false}
 MYOS_OUTPUT=text; MYOS_STRICT=; MYOS_WORKDIR=${WORKDIR:-$PWD}
 verbs=; refs=; MYOS_ARGS=; MYOS_IMAGE=; MYOS_BOOTSTRAP=; MYOS_YES=; MYOS_VERB=
 MYOS_FORCE=; MYOS_PAUSE=; MYOS_NO_BACKUP=; MYOS_KEEP=; MYOS_FROM=; MYOS_ARTIFACTS=; MYOS_LOCKED=
+MYOS_SUB=; MYOS_WILDCARD=; MYOS_SELF_SIGNED=; MYOS_CHECK=; MYOS_FIREWALL=${MYOS_FIREWALL:-}; [ "${SETUP_UFW:-}" = true ] && MYOS_FIREWALL=${MYOS_FIREWALL:-ufw}
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -38,6 +40,9 @@ while [ $# -gt 0 ]; do
     --keep=*) MYOS_KEEP=${1#--keep=} ;;
     --from) shift; MYOS_FROM=$1 ;;
     --from=*) MYOS_FROM=${1#--from=} ;;
+    --wildcard) MYOS_WILDCARD=1 ;;
+    --self-signed) MYOS_SELF_SIGNED=1 ;;
+    --check) MYOS_CHECK=1 ;;
     --version) printf 'myos %s\n' "$MYOS_VERSION"; exit 0 ;;
     -h|--help) printf 'usage: myos [-n] [-C DIR] VERB... [REF...] [KEY=VALUE...] [-- ARGS...]\nverbs: %s\n' "$MYOS_VERBS"; exit 0 ;;
     -*) myos_die 2 "unknown option $1" ;;
@@ -53,9 +58,11 @@ while [ $# -gt 0 ]; do
     docker-build-*) verbs="${verbs:+$verbs }build"; MYOS_IMAGE="${MYOS_IMAGE:+$MYOS_IMAGE }${1#docker-build-}" ;;
     docker-build) verbs="${verbs:+$verbs }build" ;;
     .env-update) verbs="${verbs:+$verbs }env-update" ;;
+    setup-ufw) verbs="${verbs:+$verbs }firewall"; MYOS_SUB=apply; MYOS_FIREWALL=${MYOS_FIREWALL:-ufw} ;;
     stack-*-*) verbs="${verbs:+$verbs }$1" ;;
     *)
       if myos_has "$1" "$MYOS_VERBS"; then verbs="${verbs:+$verbs }$1"
+      elif myos_has "$1" "$MYOS_SUBS" && case " $verbs" in *" firewall"|*" cert") true ;; *) false ;; esac; then MYOS_SUB=$1
       else refs="${refs:+$refs }$1"; fi ;;
   esac
   shift
@@ -101,6 +108,7 @@ myos_project_of() {
   # the project is named after the reference as given
   myos_ref_parse "$1"; MYOS_STACK_APP=$MYOS_REF_APP
   myos_scope "$1"; MYOS_STACK_SCOPE=$R
+  case $MYOS_STACK_SCOPE in host) MYOS_STACK_SCOPE_PREFIX=HOST_ ;; user) MYOS_STACK_SCOPE_PREFIX=USER_ ;; *) MYOS_STACK_SCOPE_PREFIX= ;; esac
   myos_project_name "$MYOS_STACK_SCOPE" "$MYOS_STACK_APP"; MYOS_PROJECT=$R
   MYOS_NETWORK_DEFAULT=${DOCKER_NETWORK_DEFAULT:-_$MYOS_PROJECT}
   MYOS_STACK=$1

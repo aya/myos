@@ -50,7 +50,8 @@ myos_networks_ensure() {
 
 myos_verb_up() {
   if myos_up_needs_bootstrap; then myos_verb_bootstrap || return 1; else myos_networks_ensure; fi
-  myos_compose up -d ${MYOS_SERVICE:+"$MYOS_SERVICE"}
+  myos_compose up -d ${MYOS_SERVICE:+"$MYOS_SERVICE"} || return 1
+  if [ -n "$MYOS_FIREWALL" ] && [ "$MYOS_STACK_SCOPE" = host ]; then MYOS_SUB=apply; myos_firewall_apply; fi
 }
 myos_verb_down()    { myos_compose down; }
 myos_verb_build()   { myos_compose build; }

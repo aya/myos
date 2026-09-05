@@ -1,0 +1,14 @@
+services:
+  fabio:
+    image: fabiolb/fabio:1.6.3
+    ports:
+      - "80:80"
+      - "443:443"
+      - "${MYOS_BIND_PRIVATE:-127.0.0.1}:9998:9998"
+    volumes:
+      - host:/host:ro
+    networks:
+      - public
+volumes:
+  host:
+    name: ${HOST_DOCKER_VOLUME}

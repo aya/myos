@@ -82,3 +82,13 @@ doctor *args:
 [group('stack')]
 clean *args:
     @sh "{{lib}}/main.sh" clean "$@"
+
+# firewall [audit|apply]: the published ports and their scope; --strict exits 4
+[group('lifecycle')]
+firewall *args:
+    @sh "{{lib}}/main.sh" firewall "$@"
+
+# cert [list|issue] [--wildcard] [--self-signed] [--check]: the certificates the routes need
+[group('lifecycle')]
+cert *args:
+    @sh "{{lib}}/main.sh" cert "$@"

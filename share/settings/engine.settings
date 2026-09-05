@@ -25,3 +25,11 @@ HOST_UID            ?= 123
 HOST_DOCKER_VOLUME     ?= ${HOST_COMPOSE_PROJECT_NAME}
 HOST_DOCKER_REPOSITORY ?= @subst(-,/,@subst(_,/,${HOST_COMPOSE_PROJECT_NAME}))
 USER_DOCKER_VOLUME     ?= ${USER_COMPOSE_PROJECT_NAME}
+
+# where a published port listens: a stack writes
+# "${MYOS_BIND_PRIVATE:-127.0.0.1}:8080:80" for a port of the host only,
+# ${MYOS_BIND_MESH} for the overlay network, ${MYOS_BIND_PUBLIC} (host
+# stacks only) for the world
+MYOS_BIND_PUBLIC  ?= 0.0.0.0
+MYOS_BIND_PRIVATE ?= 127.0.0.1
+MYOS_BIND_MESH    ?=

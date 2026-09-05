@@ -1,0 +1,12 @@
+services:
+  dehydrated:
+    image: myos/dehydrated
+    ports:
+      - "${MYOS_BIND_PRIVATE:-127.0.0.1}::8080"
+    labels:
+      - SERVICE_8080_TAGS=${HOST_DEHYDRATED_SERVICE_8080_TAGS}
+    volumes:
+      - host:/host
+volumes:
+  host:
+    name: ${HOST_DOCKER_VOLUME}

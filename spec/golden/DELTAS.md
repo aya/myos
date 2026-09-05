@@ -28,3 +28,5 @@ reason. A delta without a line here is a regression. A case listed in
 | `host-clean` | `clean` refuses a host stack without `--yes` and never removes `.env` | the volumes of a host stack and the user's `.env` are not disposable |
 | `host-attach` | `attach` runs `docker attach <project>-<service>-1` without checking the container first | the check was a parse-time `docker ps` |
 | `host-apps-install`, `mk-ssh-*`, `host-deploy` | `apps-install`, `ssh*`, `deploy*`, `release*`, `subrepo*`, `git-*` are gone: `unknown verb`, exit 2 | never used on the fleet (monorepo, aws and ansible era) |
+| `host-setup-ufw`, `host-up-ufw` | `setup-ufw` is `firewall apply` with the ufw adapter, `SETUP_UFW=true` makes `up` apply the rules of a host project; no clone or build of ufw-docker | the rules are derived from the published ports and the `<SVC>_FIREWALL` (or `_UFW_UPDATE`) settings; a stack that is not a host stack binds its ports on `${MYOS_BIND_PRIVATE}` instead |
+| `catalogue-host-up-letsencrypt` | `up` does not issue certificates; `cert` does (dehydrated, http-01; `--self-signed` at bootstrap) | four certificate mechanisms became one verb |

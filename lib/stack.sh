@@ -47,6 +47,7 @@ myos_stack_resolve() { # REF
   myos_ref_parse "$1"
   MYOS_STACK_NAME=$MYOS_REF_NAME; MYOS_STACK_APP=$MYOS_REF_APP
   myos_scope "$1"; MYOS_STACK_SCOPE=$R
+  case $MYOS_STACK_SCOPE in host) MYOS_STACK_SCOPE_PREFIX=HOST_ ;; user) MYOS_STACK_SCOPE_PREFIX=USER_ ;; *) MYOS_STACK_SCOPE_PREFIX= ;; esac
   myos_ref_dirs; MYOS_STACK_DIRS=$R
   if [ -z "$MYOS_STACK_DIRS" ]; then
     myos_path; myos_nl_join "$R" ' '

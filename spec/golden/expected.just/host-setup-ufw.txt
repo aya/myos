@@ -1,0 +1,2 @@
+myos firewall . apply skip (not a host stack: bind its ports on ${MYOS_BIND_PRIVATE} instead)
+[exit 0]
