@@ -1,2 +1,3 @@
-WARNING: myos[0] doesnotexist-rule-exists: target doesnotexist unavailable in app myos
-[exit 0]
+ERROR: myos[0] doesnotexist-rule-exists: unknown target doesnotexist in app myos
+make: *** [doesnotexist-rule-exists] Error 2
+[exit 2]

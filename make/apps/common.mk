@@ -76,10 +76,6 @@ connect@%: SERVICE ?= $(DOCKER_SERVICE)
 connect@%:
 	$(call make,ssh-connect,$(MYOS),APP SERVICE)
 
-# target deploy: Fire deploy@% for ENV
-.PHONY: deploy
-deploy: $(if $(filter $(ENV),$(ENV_DEPLOY)),deploy-localhost,deploy@$(ENV)) ## Deploy application dockers
-
 # target down: Remove application dockers
 # on local host
 .PHONY: down
@@ -248,6 +244,8 @@ upgrade: update app-upgrade release-upgrade ## Upgrade application
 ## it fires the stack and %-rule-exists targets everytime
 %: FORCE %-rule-exists ;
 
-# target %-rule-exists: Print a warning message if % target does not exists
+# target %-rule-exists: Fail when a target given on the command line does not exist
+## a target that is only a prerequisite (a hook such as bootstrap-stack-%) is
+## still allowed to be missing
 %-rule-exists:
-	$(if $(filter $*,$(MAKECMDGOALS)),$(if $(filter-out $*,$(MAKE_TARGETS)),$(call WARNING,target,$*,unavailable in app,$(APP))))
+	$(if $(filter $*,$(MAKECMDGOALS)),$(if $(filter-out $*,$(MAKE_TARGETS)),$(call ERROR,unknown target,$*,in app,$(APP))))

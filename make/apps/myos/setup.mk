@@ -43,5 +43,5 @@ endif
 .PHONY: setup-ufw
 setup-ufw: ufw-install ufw-bootstrap ufw-build ufw-up
 ifeq ($(SETUP_UFW),true)
-	$(call ufw-docker,install)
+	$(call ufw-docker-cmd,install)
 endif

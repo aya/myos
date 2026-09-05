@@ -2,7 +2,7 @@
 
 .PHONY: ufw
 ufw:
-	$(call ufw,$(ARGS))
+	$(call ufw-cmd,$(ARGS))
 
 ifeq ($(SETUP_UFW),true)
 
@@ -28,7 +28,7 @@ ufw-delete: ufw-update
 # target ufw-docker: Call ufw-docker ARGS
 .PHONY: ufw-docker
 ufw-docker:
-	$(call ufw-docker,$(ARGS))
+	$(call ufw-docker-cmd,$(ARGS))
 
 # target ufw-install: Download ufw-docker application
 ufw-install:
@@ -50,10 +50,10 @@ ufw-update: stack $(if $(HOST_STACK),setup-ufw) debug-UFW_UPDATE
 	  $(eval ufw_update := $($(if $(HOST_STACK),HOST_)$(UPDATE)_UFW_UPDATE)) \
 	  $(eval ufw_docker := $($(if $(HOST_STACK),HOST_)$(UPDATE)_UFW_DOCKER)) \
 	  $(foreach port,$(ufw_docker), \
-	    $(call ufw-docker,$(if $(UFW_DELETE),delete) allow $(project_name)-$(call LOWERCASE,$(UPDATE))$(if $(HOST_STACK),,-1) $(port) ||:) \
+	    $(call ufw-docker-cmd,$(if $(UFW_DELETE),delete) allow $(project_name)-$(call LOWERCASE,$(UPDATE))$(if $(HOST_STACK),,-1) $(port) ||:) \
 	  ) \
 	  $(foreach port,$(ufw_update), \
-	    $(call ufw,$(if $(UFW_DELETE),delete) allow $(port)) \
+	    $(call ufw-cmd,$(if $(UFW_DELETE),delete) allow $(port)) \
 	  ) \
 	)
 
@@ -68,5 +68,12 @@ ufw-%:
 	    $(call make,ufw-$(command) STACK="$(stack)") \
 	  ) \
 	)
+
+else
+
+# without SETUP_UFW=true the firewall targets are no-ops: up and down depend
+# on them, and must not fall into the catch-all rule
+.PHONY: ufw-update ufw-delete
+ufw-update ufw-delete: ;
 
 endif

@@ -3,5 +3,6 @@ sh -c docker network create tester-local >/dev/null 2>&1
 sh -c docker network create testhost >/dev/null 2>&1
 docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @WD@/stack/host/fabio.yml -f @WD@/stack/host/registrator.yml -f @MYOS@/share/compose/networks.yml -p testhost up -d
 git clone --quiet https://github.com/chaifeng/ufw-docker ../ufw-docker
-make/apps/def.ufw.mk:13: *** Recursive variable `ufw-docker' references itself (eventually). Stop.
+ERROR: ufw-docker[0] ufw-build: Unable to find a Dockerfile in dir ../ufw-docker
+make: *** [ufw-build] Error 2
 [exit 2]

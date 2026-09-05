@@ -1,4 +1,5 @@
 make -o docker-stack-ps MAKE_OLDFILE=docker-stack-ps ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-ps STACK=myos APP_NAME=myos
 docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local ps
-WARNING: myos[0] host/consul-rule-exists: target host/consul unavailable in app myos
-[exit 0]
+ERROR: myos[0] host/consul-rule-exists: unknown target host/consul in app myos
+make: *** [host/consul-rule-exists] Error 2
+[exit 2]

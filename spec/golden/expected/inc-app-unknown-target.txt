@@ -1,2 +1,3 @@
-WARNING: wd[0] doesnotexist-rule-exists: target doesnotexist unavailable in app wd
-[exit 0]
+ERROR: wd[0] doesnotexist-rule-exists: unknown target doesnotexist in app wd
+make: *** [doesnotexist-rule-exists] Error 2
+[exit 2]

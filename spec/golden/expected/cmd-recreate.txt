@@ -3,5 +3,6 @@ docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.ym
 sh -c docker network create tester-local >/dev/null 2>&1
 sh -c docker network create testhost >/dev/null 2>&1
 docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local up -d
-WARNING: myos[0] host/consul-rule-exists: target host/consul unavailable in app myos
-[exit 0]
+ERROR: myos[0] host/consul-rule-exists: unknown target host/consul in app myos
+make: *** [host/consul-rule-exists] Error 2
+[exit 2]

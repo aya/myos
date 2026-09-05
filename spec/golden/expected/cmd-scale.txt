@@ -1,4 +1,5 @@
 make -o docker-stack-scale MAKE_OLDFILE=docker-stack-scale ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-scale STACK=myos APP_NAME=myos
 docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local up -d --scale postgres=3
-WARNING: myos[0] postgres-rule-exists: target postgres unavailable in app myos
-[exit 0]
+ERROR: myos[0] postgres-rule-exists: unknown target postgres in app myos
+make: *** [postgres-rule-exists] Error 2
+[exit 2]

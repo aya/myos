@@ -1,13 +1,3 @@
-make -C . -o myos-user MAKE_OLDFILE=myos-user ENV=master DOCKER_COMPOSE=docker --log-level=error compose user
-WARNING: myos[1] user-rule-exists: target user unavailable in app myos
-make -o deploy@master -o myos-user -o build@master MAKE_OLDFILE=deploy@master myos-user build@master ENV=master DOCKER_COMPOSE=docker --log-level=error compose docker-login docker-tag docker-push
-docker login
-WARNING: myos[1] docker-tag: target docker-tag disabled in app myos
-WARNING: myos[1] docker-push: target docker-push disabled in app myos
-make -o deploy@master -o myos-user -o build@master MAKE_OLDFILE=deploy@master myos-user build@master ENV=master DOCKER_COMPOSE=docker --log-level=error compose APP=myos myos-ansible-pull@master ANSIBLE_DOCKER_IMAGE_TAG=attempt-1-lib-3-gf7d1828 ANSIBLE_TAGS=deploy AWS_ACCESS_KEY_ID= AWS_SECRET_ACCESS_KEY=
-make -C . -o deploy@master -o myos-user -o build@master MAKE_OLDFILE=deploy@master myos-user build@master ENV=master DOCKER_COMPOSE=docker --log-level=error compose ansible-pull@master
-WARNING: myos[2] ansible-pull@master-rule-exists: target ansible-pull@master unavailable in app myos
-make -o deploy@master -o myos-user -o build@master MAKE_OLDFILE=deploy@master myos-user build@master ENV=master DOCKER_COMPOSE=docker --log-level=error compose APP=myos docker-tag-latest docker-push-latest
-WARNING: myos[1] docker-tag-latest: target docker-tag-latest disabled in app myos
-WARNING: myos[1] docker-push-latest: target docker-push-latest disabled in app myos
-[exit 0]
+ERROR: myos[0] deploy@master-rule-exists: unknown target deploy@master in app myos
+make: *** [deploy@master-rule-exists] Error 2
+[exit 2]
