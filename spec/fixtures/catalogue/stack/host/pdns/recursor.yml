@@ -1,0 +1,15 @@
+version: '3.6'
+
+services:
+  pdns-recursor:
+    build:
+      args:
+      - DOCKER_BUILD_DIR=docker/pdns-server
+      context: ../..
+      dockerfile: docker/pdns-server/Dockerfile
+    command: /usr/local/sbin/pdns_recursor --allow-from='127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16'
+    container_name: ${HOST_COMPOSE_PROJECT_NAME}-pdns-recursor
+    hostname: ${HOSTNAME}
+    image: ${HOST_DOCKER_REPOSITORY}/pdns-recursor:${DOCKER_IMAGE_TAG}
+    network_mode: host
+    restart: always

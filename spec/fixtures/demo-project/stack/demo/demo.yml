@@ -1,0 +1,10 @@
+services:
+  web:
+    image: ${DOCKER_REPOSITORY}/web:${DOCKER_IMAGE_TAG:-latest}
+    environment:
+      DEMO_URL: ${DEMO_URL}
+      DEMO_SECRET: ${DEMO_SECRET}
+    labels:
+      - SERVICE_80_TAGS=${DEMO_SERVICE_80_TAGS}
+    networks:
+      - private

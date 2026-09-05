@@ -1,0 +1,7 @@
+version: '3.6'
+
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.3.3
+    environment:
+    - discovery.zen.minimum_master_nodes=1

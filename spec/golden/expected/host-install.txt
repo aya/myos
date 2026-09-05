@@ -1,0 +1,4 @@
+@MYOS@/spec/support/bin/sudo usermod -aG docker tester
+unable to add user tester to group docker
+make: *** [setup-docker-group] Error 2
+[exit 2]

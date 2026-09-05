@@ -1,0 +1,21 @@
+make -o docker-stack-up MAKE_OLDFILE=docker-stack-up ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-up STACK=develop APP_NAME=develop
+sh -c docker network create tester-local >/dev/null 2>&1
+sh -c docker network create testhost >/dev/null 2>&1
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+docker --log-level=error compose --ansi=auto -f @WD@/stack/redmine/redmine.yml -f @WD@/stack/redmine/redmine.latest.yml -f @MYOS@/share/compose/networks.yml -p tester-develop-local up -d
+[exit 0]

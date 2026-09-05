@@ -1,0 +1,7 @@
+make -o docker-stack-up MAKE_OLDFILE=docker-stack-up ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-up STACK=host APP_NAME=host
+sh -c docker network create tester-local >/dev/null 2>&1
+sh -c docker network create testhost >/dev/null 2>&1
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @WD@/stack/host/fabio.yml -f @WD@/stack/host/registrator.yml -f @MYOS@/share/compose/networks.yml -p testhost up -d
+git clone --quiet https://github.com/chaifeng/ufw-docker ../ufw-docker
+make/apps/def.ufw.mk:13: *** Recursive variable `ufw-docker' references itself (eventually). Stop.
+[exit 2]

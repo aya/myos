@@ -1,0 +1,2 @@
+DOCKER_IMAGES web
+[exit 0]

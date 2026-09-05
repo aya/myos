@@ -1,0 +1,3 @@
+COMPOSE_FILE @WD@/stack/host/ipfs.yml @MYOS@/share/compose/networks.yml
+COMPOSE_PROJECT_NAME testhost
+[exit 0]

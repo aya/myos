@@ -1,0 +1,5 @@
+version: '3.6'
+
+services:
+  drone-runner-docker:
+    image: drone/drone-runner-docker:1.1

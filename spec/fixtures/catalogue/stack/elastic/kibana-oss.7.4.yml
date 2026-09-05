@@ -1,0 +1,9 @@
+version: '3.6'
+
+services:
+  kibana-oss:
+    image: docker.elastic.co/kibana/kibana-oss:7.4.2
+    environment:
+    - ELASTICSEARCH_HOSTS="${ELASTICSEARCH_PROTOCOL:-http}://${ELASTICSEARCH_HOST:-elasticsearch}:${ELASTICSEARCH_PORT:-9200}"
+    - KIBANA_INDEX=.kibana-oss.${COMPOSE_SERVICE_NAME}
+    - SERVER_NAME=kibana-oss.${APP_HOST}

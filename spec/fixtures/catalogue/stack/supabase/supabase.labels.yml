@@ -1,0 +1,61 @@
+services:
+  analytics:
+    labels:
+    - SERVICE_4000_CHECK_HTTP=/health
+    - SERVICE_4000_NAME=${COMPOSE_SERVICE_NAME}-analytics-4000
+  auth:
+    labels:
+    - SERVICE_9999_CHECK_HTTP=/health
+    - SERVICE_9999_NAME=${COMPOSE_SERVICE_NAME}-auth-9999
+  db:
+    labels:
+    - SERVICE_5432_CHECK_TCP=true
+    - SERVICE_5432_NAME=${COMPOSE_SERVICE_NAME}-db-5432
+  functions:
+    labels:
+    - SERVICE_9000_CHECK_HTTP=/functions/v1/hello
+    - SERVICE_9000_NAME=${COMPOSE_SERVICE_NAME}-functions-9000
+  imgproxy:
+    labels:
+    - SERVICE_5001_CHECK_HTTP=/health
+    - SERVICE_5001_NAME=${COMPOSE_SERVICE_NAME}-imgproxy-5001
+    - SERVICE_8080_IGNORE=true
+  kong:
+    labels:
+    - SERVICE_8000_CHECK_TCP=true
+    - SERVICE_8000_NAME=${COMPOSE_SERVICE_NAME}-kong-8000
+    - SERVICE_8000_TAGS=${SUPABASE_KONG_SERVICE_8000_TAGS:-urlprefix-supabase.localhost/*}
+    - SERVICE_8001_IGNORE=true
+    - SERVICE_8443_IGNORE=true
+    - SERVICE_8444_IGNORE=true
+  meta:
+    labels:
+    - SERVICE_8080_CHECK_HTTP=/
+    - SERVICE_8080_NAME=${COMPOSE_SERVICE_NAME}-meta-8080
+  rest:
+    labels:
+    - SERVICE_3000_CHECK_HTTP=/
+    - SERVICE_3000_NAME=${COMPOSE_SERVICE_NAME}-rest-3000
+  realtime:
+    labels:
+    - SERVICE_4000_CHECK_HTTP=/
+    - SERVICE_4000_NAME=${COMPOSE_SERVICE_NAME}-realtime-4000
+  storage:
+    labels:
+    - SERVICE_5000_CHECK_HTTP=/status
+    - SERVICE_5000_NAME=${COMPOSE_SERVICE_NAME}-storage-5000
+  studio:
+    labels:
+    - SERVICE_3000_CHECK_HTTP=/api/profile
+    - SERVICE_3000_NAME=${COMPOSE_SERVICE_NAME}-studio-3000
+  supavisor:
+    labels:
+    - SERVICE_4000_CHECK_HTTP=/api/health
+    - SERVICE_4000_NAME=${COMPOSE_SERVICE_NAME}-supavisor-4000
+    - SERVICE_5432_IGNORE=true
+    - SERVICE_6543_IGNORE=true
+  vector:
+    labels:
+    - SERVICE_9001_CHECK_HTTP=/health
+    - SERVICE_9001_NAME=${COMPOSE_SERVICE_NAME}-vector-9001
+

@@ -1,0 +1,14 @@
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+cat: @HOME@/.local/share/myos/stack/host: Is a directory
+cat: @HOME@/.local/share/myos/stack/host: Is a directory
+cat: @HOME@/.local/share/myos/stack/host: Is a directory
+COMPOSE_FILE @HOME@/.local/share/myos/stack/host/nginx.yml @WD@/stack/host/nginx.yml @MYOS@/share/compose/networks.yml
+COMPOSE_PROJECT_NAME testhost
+[exit 0]

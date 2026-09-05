@@ -12,7 +12,7 @@ only="$*"
 engine=${MYOS_ENGINE:-legacy}
 out="$here/expected"; [ "$engine" = legacy ] || out="$here/expected.$engine"
 mkdir -p "$out"
-grep -v '^#' "$here/cases.txt" | while IFS='|' read -r name fixture args; do
+cat "$here"/cases*.txt | grep -v '^#' | while IFS='|' read -r name fixture args; do
   name=$(echo "$name" | tr -d ' '); fixture=$(echo "$fixture" | tr -d ' ')
   [ -z "$name" ] && continue
   if [ -n "$only" ]; then case " $only " in *" $name "*) ;; *) continue ;; esac; fi

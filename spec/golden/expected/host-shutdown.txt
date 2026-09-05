@@ -1,0 +1,9 @@
+make -o docker-stack-down MAKE_OLDFILE=docker-stack-down ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-down STACK=myos APP_NAME=myos
+docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local down
+make -o stack-user-down MAKE_OLDFILE=stack-user-down ENV=local DOCKER_COMPOSE=docker --log-level=error compose COMPOSE_IGNORE_ORPHANS=true host=host/consul host/fabio host/registrator down STACK=user
+make -o stack-user-down MAKE_OLDFILE=stack-user-down ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-down STACK=user APP_NAME=user
+docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-user-local down
+make -o stack-host-down MAKE_OLDFILE=stack-host-down ENV=local DOCKER_COMPOSE=docker --log-level=error compose COMPOSE_IGNORE_ORPHANS=true host=host/consul host/fabio host/registrator COMPOSE_IGNORE_ORPHANS=true host=host/consul host/fabio host/registrator down STACK=host
+make -o stack-host-down MAKE_OLDFILE=stack-host-down ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-down STACK=host APP_NAME=host
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @WD@/stack/host/fabio.yml -f @WD@/stack/host/registrator.yml -f @MYOS@/share/compose/networks.yml -p testhost down
+[exit 0]

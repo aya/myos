@@ -1,0 +1,14 @@
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+awk: can't open file stack/supabase/docker-compose.yml
+ source line number 1
+cat: @HOME@/.local/share/myos/stack/postgres: Is a directory
+cat: @HOME@/.local/share/myos/stack/postgres: Is a directory
+cat: @HOME@/.local/share/myos/stack/postgres: Is a directory
+COMPOSE_FILE @HOME@/.local/share/myos/stack/postgres/postgres.yml @HOME@/.local/share/myos/stack/postgres/postgres.local.yml @WD@/stack/postgres/postgres.yml @WD@/stack/postgres/postgres.local.yml @WD@/stack/postgres/postgres.latest.yml @MYOS@/share/compose/networks.yml
+COMPOSE_PROJECT_NAME tester-myos-local
+[exit 0]

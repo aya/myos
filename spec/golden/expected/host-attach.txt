@@ -1,0 +1,3 @@
+ERROR: myos[0] attach: Unable to find docker testhost-consul
+make: *** [attach] Error 2
+[exit 2]

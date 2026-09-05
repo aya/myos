@@ -1,0 +1,5 @@
+version: '3.6'
+
+services:
+  redmine3:
+    image: sameersbn/redmine:3.4.12

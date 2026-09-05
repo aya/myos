@@ -1,0 +1,5 @@
+version: '3.6'
+
+services:
+  drone:
+    image: drone/drone:1.7

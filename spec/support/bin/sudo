@@ -1,0 +1,5 @@
+#!/bin/sh
+# Mock sudo: never escalates. Logs the refused command so a test can assert it.
+[ -n "${MYOS_DOCKER_LOG:-}" ] && printf 'sudo %s\n' "$*" >> "$MYOS_DOCKER_LOG"
+echo "sudo: refused by the test mock: $*" >&2
+exit 1

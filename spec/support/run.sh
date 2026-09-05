@@ -28,8 +28,10 @@ myos_hermetic_env() {
 }
 
 # myos_normalize SANDBOX  (stdin -> stdout)
-# APPS, BRANCH and VERSION depend on where the myos checkout lives and on its git state,
-# so they are masked to keep the goldens reproducible across machines.
+# APPS, BRANCH, VERSION, the image labels (git state, date, uid) and the ids of
+# the user depend on the machine and on the git state of the checkout, so they
+# are masked to keep the goldens reproducible. Credentials found in a URL are
+# masked too, so that a golden can never carry a token.
 myos_normalize() {
   sed -e 's/\x1b\[[0-9;]*m//g' \
       -e "s#$MYOS_ROOT#@MYOS@#g" \
@@ -42,6 +44,17 @@ myos_normalize() {
       -e 's/^VERSION .*/VERSION @VERSION@/' \
       -e 's/--build-arg VERSION=[^ ]*/--build-arg VERSION=@VERSION@/' \
       -e 's/--build-arg BRANCH=[^ ]*/--build-arg BRANCH=@BRANCH@/' \
+      -e 's/--build-arg COMPOSE_VERSION=[^ ]*/--build-arg COMPOSE_VERSION=@COMPOSE_VERSION@/' \
+      -e 's/--build-arg GID=[^ ]*/--build-arg GID=@GID@/' \
+      -e 's/--build-arg UID=[^ ]*/--build-arg UID=@UID@/' \
+      -e 's/--build-arg SSH_[A-Z_]*=.* --build-arg GID/--build-arg SSH_@@ --build-arg GID/' \
+      -e 's#\(https*://\)[^/@ ]*@#\1@CREDENTIALS@@#g' \
+      -e 's/[0-9a-f]\{40\}/@COMMIT@/g' \
+      -e 's/\(image\.created=\)[^ ]*/\1@DATE@/' \
+      -e 's/\(image\.version=\)[^ ]*/\1@VERSION@/' \
+      -e 's/\(os\.my\.version=\)[^ ]*/\1@VERSION@/' \
+      -e 's/\(os\.my\.build\.status=\).* --label os\.my\.compose/\1@STATUS@ --label os.my.compose/' \
+      -e 's/\(os\.my\.uid=\)[^ ]*/\1@UID@/' \
       -e 's/[[:space:]][[:space:]]*/ /g' \
       -e 's/[[:space:]]*$//'
 }
@@ -50,6 +63,17 @@ myos_normalize() {
 # shellcheck disable=SC2046  # myos_hermetic_env output is meant to be word-split
 myos_run_engine() {
   _engine=$1; _sb=$2; shift 2
+  # "@then CMD..." after the arguments: run CMD with sh in the project directory,
+  # in the same hermetic environment (plus MYOS_ROOT), once the engine has
+  # returned, and append its output (to look at a file the engine wrote).
+  _then=; _seen=; _n=0
+  for _a in "$@"; do
+    if [ -n "$_seen" ]; then _then="$_then $_a"
+    elif [ "$_a" = "@then" ]; then _seen=1
+    else _n=$((_n + 1)); fi
+  done
+  _i=0; while [ "$_i" -lt "$_n" ]; do set -- "$@" "$1"; shift; _i=$((_i + 1)); done
+  shift $(($# - _n))
   # "@make" as first arg = the project drives make itself: its Makefile includes
   # the legacy engine (make/include.mk) and make runs from the project directory.
   if [ "${1:-}" = "@make" ]; then
@@ -67,5 +91,7 @@ myos_run_engine() {
       ;;
     *) echo "unknown engine $_engine" >&2; return 2 ;;
   esac
+  [ -n "$_then" ] && _out="$_out
+[then]$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") MYOS_ROOT="$MYOS_ROOT" sh -c "$_then" 2>&1)"
   printf '%s\n[exit %s]\n' "$_out" "$_rc" | myos_normalize "$_sb"
 }

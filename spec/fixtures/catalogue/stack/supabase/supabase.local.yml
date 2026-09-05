@@ -1,0 +1,9 @@
+services:
+  supavisor:
+    ports:
+      - ${SUPABASE_POSTGRES_PORT:-5432}:5432/tcp
+      - ${SUPABASE_POOLER_PROXY_PORT_TRANSACTION:-6543}:6543/tcp
+  kong:
+    ports:
+      - ${SUPABASE_KONG_HTTP_PORT:-8000}:8000/tcp
+      - ${SUPABASE_KONG_HTTPS_PORT:-8443}:8443/tcp

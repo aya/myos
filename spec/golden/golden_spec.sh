@@ -23,7 +23,9 @@ Describe 'golden'
       name=$(echo "$name" | tr -d ' '); fixture=$(echo "$fixture" | tr -d ' ')
       [ -z "$name" ] || [ "${name#\#}" != "$name" ] && continue
       %data "$name" "$fixture" "$args"
-    done < "$SHELLSPEC_PROJECT_ROOT/spec/golden/cases.txt"
+    done <<-CASES
+	$(cat "$SHELLSPEC_PROJECT_ROOT"/spec/golden/cases*.txt)
+	CASES
   End
   It "matches recorded output: $1 ($engine)"
     When call run_case "$1" "$2" "$3"

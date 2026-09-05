@@ -81,3 +81,28 @@ mk-ssh-no-hosts                 | app-nogit     | ssh
 mk-ssh-with-hosts               | app-nogit     | ssh SSH_HOSTS=example.test ARGS=id
 cmd-recreate                    | host-project  | recreate host/consul
 cmd-status                      | host-project  | status host/consul
+# --- targets of the scope that had no case (phase 2 of the rewrite)
+host-build                      | host-project  | build STACK=host/fabio
+host-restart                    | host-project  | restart STACK=host/consul
+host-attach                     | host-project  | attach STACK=host/consul SERVICE=consul
+host-connect                    | host-project  | connect STACK=host/consul
+host-bootstrap                  | host-project  | bootstrap STACK=host/consul
+host-install                    | host-project  | install STACK=host/consul
+host-clean                      | host-project  | clean STACK=host/consul FORCE=true
+host-setup-ufw                  | host-project  | setup-ufw SETUP_UFW=true
+host-up-ufw                     | host-project  | up STACK=host SETUP_UFW=true HOST_FABIO_UFW_UPDATE=443/tcp
+host-shutdown                   | host-project  | shutdown
+host-stack-host-up              | host-project  | stack-host-up
+host-apps-install               | host-project  | apps-install
+nogit-stack-postgres-up         | app-nogit     | stack-postgres-up
+demo-docker-build               | demo-project  | docker-build-web
+demo-docker-build-nested        | demo-project  | docker-build-web:alpine
+demo-build-all                  | demo-project  | docker-build
+demo-print-images               | demo-project  | print-DOCKER_IMAGES
+demo-env-update                 | demo-project  | .env-update STACK=demo @then cat .env
+demo-up-renders-env             | demo-project  | up STACK=demo @then cat .env
+demo-up-twice-idempotent        | demo-project  | up STACK=demo @then 'make -esC $MYOS_ROOT MYOS=. WORKDIR=$PWD up STACK=demo >/dev/null 2>&1; cat .env'
+demo-print-tags                 | demo-project  | print-DEMO_SERVICE_80_TAGS STACK=demo
+demo-print-env-vars             | demo-project  | print-ENV_VARS STACK=demo
+demo-up-group-nested            | demo-project  | up STACK=everything
+demo-config                     | demo-project  | config STACK=demo

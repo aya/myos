@@ -1,0 +1,3 @@
+git clone --quiet https://github.com/chaifeng/ufw-docker ../ufw-docker
+make/apps/def.ufw.mk:13: *** Recursive variable `ufw-docker' references itself (eventually). Stop.
+[exit 2]

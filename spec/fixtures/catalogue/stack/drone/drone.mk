@@ -1,0 +1,10 @@
+drone                                     ?= drone/drone drone/drone-runner-docker drone/gc
+DRONE_RUNNER_NAME                         ?= $(DRONE_RUNNER_SERVICE_NAME).$(firstword $(APP_HOST))
+DRONE_RUNNER_SERVICE_NAME                 ?= drone-runner
+DRONE_SERVER_HOST                         ?= $(DRONE_SERVICE_NAME).$(firstword $(APP_HOST))
+DRONE_SERVICE_NAME                        ?= drone
+DRONE_SERVICE_80_NAME                     ?= $(DRONE_SERVICE_NAME)
+DRONE_SERVICE_80_TAGS                     ?= $(call tagprefix,drone,80)
+DRONE_USER_CREATE                         ?= username:$(GIT_USER),admin:true
+DRONE_USER_FILTER                         ?= $(GIT_USER)
+ENV_VARS                                  += DRONE_RUNNER_NAME DRONE_SERVER_HOST DRONE_USER_CREATE DRONE_USER_FILTER DRONE_SERVICE_80_TAGS

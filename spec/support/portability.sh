@@ -10,7 +10,7 @@ else
   engine=${MYOS_ENGINE:-legacy}
   . spec/support/run.sh
   fails=$(mktemp)
-  grep -v '^#' spec/golden/cases.txt | while IFS='|' read -r name fixture args; do
+  cat spec/golden/cases*.txt | grep -v '^#' | while IFS='|' read -r name fixture args; do
     name=$(echo "$name" | tr -d ' '); fixture=$(echo "$fixture" | tr -d ' ')
     [ -z "$name" ] && continue
     exp=spec/golden/expected/$name.txt

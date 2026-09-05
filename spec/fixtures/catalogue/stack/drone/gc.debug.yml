@@ -1,0 +1,8 @@
+version: '3.6'
+
+services:
+  drone-gc:
+    environment:
+    - GC_DEBUG=true
+    - GC_DEBUG_COLOR=true
+    - GC_DEBUG_PRETTY=true

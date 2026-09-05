@@ -1,0 +1,32 @@
+version: '3.6'
+
+services:
+  ftps:
+    container_name: ${HOST_COMPOSE_PROJECT_NAME}-ftps
+    environment:
+    - FTPS_EXTERNAL_IP=${DOCKER_HOST_INET4}
+    - FTPS_PASS=${HOST_FTPS_PASS}
+    - FTPS_USER=${HOST_FTPS_USER}
+    - FTPS_UID=${HOST_FTPS_UID}
+    image: bfren/ftps:latest
+    labels:
+    - SERVICE_21_CHECK_TCP=true
+    - SERVICE_21_NAME=${COMPOSE_SERVICE_NAME}-ftps-21
+    networks:
+    - private
+    - public
+    ports:
+    - 21:21
+    - 18700-18710:18700-18710
+    restart: always
+    volumes:
+    - backup:/files
+    - host:/host
+    - ssl:/ssl
+
+volumes:
+  backup:
+  host:
+    external: true
+    name: ${HOST_DOCKER_VOLUME}
+  ssl:

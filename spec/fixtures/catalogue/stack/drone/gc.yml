@@ -1,0 +1,13 @@
+version: '3.6'
+
+services:
+  drone-gc:
+    image: drone/gc:latest
+    environment:
+    - GC_CACHE=${DRONE_GC_CACHE:-20gb}
+    - GC_INTERVAL=${DRONE_GC_INTERVAL:-5m}
+    networks:
+    - private
+    restart: always
+    volumes:
+    - ${DOCKER_SOCKET_LOCATION}:/var/run/docker.sock
