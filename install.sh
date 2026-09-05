@@ -1,18 +1,20 @@
 #!/bin/sh
 # myos installer.
 #
-#   curl -fsSL https://raw.githubusercontent.com/aya/myos/lightning/install.sh | sh
-#   ... | sh -s -- --prefix ~/.local --with-stacks
+#   curl -fsSL https://raw.githubusercontent.com/aya/myos/tdd/install.sh | sh
+#   ... | sh -s -- --prefix ~/.local --with-stacks --with-just --conf
 #
-# Installs the framework into <prefix>/lib/myos, links <prefix>/bin/myos, and
-# optionally clones the stack catalogue into <prefix>/share/myos.
+# Installs the framework into <prefix>/lib/myos, links <prefix>/bin/myos,
+# optionally clones the stack catalogue into <prefix>/share/myos, downloads a
+# static `just` into <prefix>/bin, and writes the machine configuration.
 set -eu
 
 MYOS_REPOSITORY=${MYOS_REPOSITORY:-https://github.com/aya/myos}
 STACKS_REPOSITORY=${STACKS_REPOSITORY:-https://github.com/aya/myos-stacks}
-REF=${MYOS_REF:-lightning}
+REF=${MYOS_REF:-tdd}
 PREFIX=
 WITH_STACKS=false
+WITH_JUST=false
 WRITE_CONF=false
 
 say()  { printf '%s\n' "$*"; }
@@ -26,30 +28,23 @@ while [ $# -gt 0 ]; do
     --ref) REF=$2; shift 2 ;;
     --repository) MYOS_REPOSITORY=$2; shift 2 ;;
     --with-stacks) WITH_STACKS=true; shift ;;
+    --with-just) WITH_JUST=true; shift ;;
     --conf) WRITE_CONF=true; shift ;;
-    -h|--help)
-      sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    -h|--help) sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
     *) die "unknown option: $1" ;;
   esac
 done
 
-# Default prefix: system wide when we can write there, user local otherwise.
 if [ -z "$PREFIX" ]; then
   if [ "$(id -u)" = 0 ] || [ -w /usr/local/lib ]; then PREFIX=/usr/local; else PREFIX=$HOME/.local; fi
 fi
 
-# --- requirements ---------------------------------------------------------
 have git || die "git is required"
 have docker || warn "docker not found: myos will not be able to run anything"
-if have docker && docker compose version >/dev/null 2>&1; then :
-elif have docker-compose; then :
-else warn "no docker compose found: install the compose plugin, or docker-compose >= 2.24.4"
-fi
+if have docker && docker compose version >/dev/null 2>&1; then :; else warn "the docker compose plugin (>= 2.21) is missing"; fi
 
-# --- install --------------------------------------------------------------
 LIB=$PREFIX/lib/myos
 BIN=$PREFIX/bin
-
 if [ -d "$LIB/.git" ]; then
   say "updating $LIB"
   git -C "$LIB" fetch --quiet origin "$REF"
@@ -59,30 +54,36 @@ else
   mkdir -p "$(dirname "$LIB")"
   git clone --quiet --branch "$REF" "$MYOS_REPOSITORY" "$LIB"
 fi
-
 mkdir -p "$BIN"
-ln -sf "$LIB/bin/myos" "$BIN/myos"
+ln -sf "$LIB/myos" "$BIN/myos"
 say "linked $BIN/myos"
 
 if [ "$WITH_STACKS" = true ]; then
   SHARE=$PREFIX/share/myos
-  if [ -d "$SHARE/.git" ]; then
-    say "updating the stack catalogue in $SHARE"
-    git -C "$SHARE" pull --quiet --ff-only
-  else
-    say "installing the stack catalogue into $SHARE"
-    mkdir -p "$(dirname "$SHARE")"
-    git clone --quiet "$STACKS_REPOSITORY" "$SHARE"
-  fi
+  if [ -d "$SHARE/.git" ]; then say "updating the stack catalogue in $SHARE"; git -C "$SHARE" pull --quiet --ff-only
+  else say "installing the stack catalogue into $SHARE"; mkdir -p "$(dirname "$SHARE")"; git clone --quiet "$STACKS_REPOSITORY" "$SHARE"; fi
 fi
 
-# --- machine configuration ------------------------------------------------
-# /etc/conf.d on Alpine and other OpenRC systems, /etc/default elsewhere.
+# just: a static binary from its releases (linux); brew on macOS
+if [ "$WITH_JUST" = true ] && ! have just; then
+  case $(uname -s) in
+    Linux)
+      arch=$(uname -m); case $arch in x86_64) arch=x86_64 ;; aarch64|arm64) arch=aarch64 ;; armv7l) arch=armv7 ;; esac
+      tag=$(curl -fsSL https://api.github.com/repos/casey/just/releases/latest | sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -n1)
+      [ -n "$tag" ] || die "cannot read the latest release of just"
+      url="https://github.com/casey/just/releases/download/$tag/just-$tag-$arch-unknown-linux-musl.tar.gz"
+      say "installing just $tag into $BIN"
+      curl -fsSL "$url" | tar xzf - -C "$BIN" just
+      ;;
+    Darwin) have brew && brew install just || warn "install just with brew, or from https://github.com/casey/just/releases" ;;
+    *) warn "install just from https://github.com/casey/just/releases" ;;
+  esac
+fi
+
 if [ "$WRITE_CONF" = true ]; then
   if [ -d /etc/conf.d ]; then CONF=/etc/conf.d/myos; else CONF=/etc/default/myos; fi
   if [ "$(id -u)" != 0 ]; then CONF=$HOME/.config/myos/config; mkdir -p "$(dirname "$CONF")"; fi
-  if [ -f "$CONF" ]; then
-    say "keeping the existing $CONF"
+  if [ -f "$CONF" ]; then say "keeping the existing $CONF"
   else
     cat > "$CONF" <<CONFEOF
 # myos machine settings, one KEY=value per line.
@@ -96,11 +97,7 @@ CONFEOF
   fi
 fi
 
-case :$PATH: in
-  *:$BIN:*) ;;
-  *) warn "$BIN is not on your PATH" ;;
-esac
-
+case :$PATH: in *:$BIN:*) ;; *) warn "$BIN is not on your PATH" ;; esac
 say ""
-say "myos $("$BIN/myos" version 2>/dev/null | awk '{print $2}') installed"
+say "$("$BIN/myos" --version 2>/dev/null) installed"
 say "next: myos doctor"

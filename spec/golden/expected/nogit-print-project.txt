@@ -1,2 +1,2 @@
-COMPOSE_PROJECT_NAME tester-myos-local
+COMPOSE_PROJECT_NAME tester-wd-local
 [exit 0]

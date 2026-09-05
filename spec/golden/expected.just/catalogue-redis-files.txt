@@ -1,3 +1,0 @@
-COMPOSE_FILE @HOME@/.local/share/myos/stack/redis/redis.yml @WD@/stack/redis/redis.yml @MYOS@/share/compose/networks.yml
-COMPOSE_PROJECT_NAME tester-redis-local
-[exit 0]

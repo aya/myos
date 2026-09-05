@@ -1,3 +1,2 @@
-make -o docker-stack-restart MAKE_OLDFILE=docker-stack-restart ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-restart STACK=host/consul APP_NAME=host
 docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost restart
 [exit 0]

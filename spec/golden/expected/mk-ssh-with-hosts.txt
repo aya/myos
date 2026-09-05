@@ -1,4 +1,2 @@
-
-ERROR: myos[0] ssh: Unable to find docker tester-example-test
-make: *** [ssh] Error 2
+myos: unknown verb ssh (myos -h lists the verbs)
 [exit 2]

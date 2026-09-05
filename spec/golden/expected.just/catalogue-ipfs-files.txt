@@ -1,3 +1,0 @@
-COMPOSE_FILE @WD@/stack/ipfs/ipfs.yml @MYOS@/share/compose/networks.yml
-COMPOSE_PROJECT_NAME tester-ipfs-local
-[exit 0]

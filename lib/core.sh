@@ -22,10 +22,10 @@ myos_die() { # CODE MESSAGE...
 myos_warn() { printf 'myos: warning: %s\n' "$*" >&2; }
 myos_debug() { [ -n "${MYOS_DEBUG:-}" ] && printf 'myos: debug: %s\n' "$*" >&2; :; }
 
-# myos_lower STRING -> R
-myos_lower() { R=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]'); }
+# myos_lower STRING -> R (no fork when nothing is to change)
+myos_lower() { case $1 in *[[:upper:]]*) R=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]') ;; *) R=$1 ;; esac; }
 # myos_name STRING -> R: a compose project safe slug (lowercase, no . - _)
-myos_name() { R=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -d '._-'); }
+myos_name() { case $1 in *[[:upper:]._-]*) R=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | tr -d '._-') ;; *) R=$1 ;; esac; }
 # myos_id STRING -> R: a shell identifier
 myos_id() { R=$(printf '%s' "$1" | tr -c 'A-Za-z0-9' '_'); }
 

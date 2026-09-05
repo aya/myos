@@ -1,2 +1,0 @@
-myos: clean would remove the volumes of the host stack host/consul: run it with --yes
-[exit 2]

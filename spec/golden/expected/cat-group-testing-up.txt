@@ -1,5 +1,4 @@
-make -o docker-stack-up MAKE_OLDFILE=docker-stack-up ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-up STACK=testing APP_NAME=testing
-sh -c docker network create tester-local >/dev/null 2>&1
-sh -c docker network create testhost >/dev/null 2>&1
+docker network create tester-local
+docker network create testhost
 docker --log-level=error compose --ansi=auto -f @HOME@/.local/share/myos/stack/drone/drone.yml -f @HOME@/.local/share/myos/stack/redis/redis.yml -f @MYOS@/share/compose/networks.yml -p tester-testing-local up -d
 [exit 0]

@@ -1,3 +1,0 @@
-make -o docker-stack-ps MAKE_OLDFILE=docker-stack-ps ENV=local DOCKER_COMPOSE=docker --log-level=error compose app-wd-ps
-docker --log-level=error compose --ansi=auto -f ././docker-compose.yml -f ././docker-compose.local.yml -f ./docker/docker-compose.yml -p tester-wd-local ps
-[exit 0]

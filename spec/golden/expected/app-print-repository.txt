@@ -1,2 +1,2 @@
-DOCKER_REPOSITORY tester/myos/local
+DOCKER_REPOSITORY tester/wd/local
 [exit 0]

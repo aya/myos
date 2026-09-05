@@ -1,4 +1,0 @@
-docker network create tester-local
-docker network create testhost
-docker --log-level=error compose --ansi=auto -f @WD@/stack/redmine/redmine.yml -f @WD@/stack/redmine/redmine.latest.yml -f @MYOS@/share/compose/networks.yml -p tester-develop-local up -d
-[exit 0]

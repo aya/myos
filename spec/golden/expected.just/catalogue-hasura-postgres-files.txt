@@ -1,3 +1,0 @@
-COMPOSE_FILE @WD@/stack/hasura/postgres.yml @MYOS@/share/compose/networks.yml
-COMPOSE_PROJECT_NAME tester-hasura-local
-[exit 0]

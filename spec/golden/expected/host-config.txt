@@ -1,3 +1,2 @@
-make -o docker-stack-config MAKE_OLDFILE=docker-stack-config ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-config STACK=host/fabio APP_NAME=host
 docker --log-level=error compose --ansi=auto -f @WD@/stack/host/fabio.yml -f @MYOS@/share/compose/networks.yml -p testhost config
 [exit 0]

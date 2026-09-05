@@ -1,4 +1,0 @@
-docker network create tester-local
-docker network create testhost
-docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost up -d
-[exit 0]

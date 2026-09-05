@@ -1,3 +1,0 @@
-make -o docker-stack-down MAKE_OLDFILE=docker-stack-down ENV=local DOCKER_COMPOSE=docker --log-level=error compose app-wd-down
-docker --log-level=error compose --ansi=auto -f ././docker-compose.yml -f ././docker-compose.local.yml -f ./docker/docker-compose.yml -p tester-wd-local down
-[exit 0]

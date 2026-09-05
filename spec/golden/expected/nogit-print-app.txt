@@ -1,2 +1,2 @@
-APP myos
+APP wd
 [exit 0]

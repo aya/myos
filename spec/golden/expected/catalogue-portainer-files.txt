@@ -1,3 +1,3 @@
 COMPOSE_FILE @WD@/stack/portainer/portainer.yml @MYOS@/share/compose/networks.yml
-COMPOSE_PROJECT_NAME tester-myos-local
+COMPOSE_PROJECT_NAME tester-portainer-local
 [exit 0]

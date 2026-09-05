@@ -1,3 +1,0 @@
-ERROR: wd[0] doesnotexist-rule-exists: unknown target doesnotexist in app wd
-make: *** [doesnotexist-rule-exists] Error 2
-[exit 2]

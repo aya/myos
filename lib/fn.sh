@@ -5,7 +5,7 @@
 # A call may omit trailing arguments: every function reads ${2:-} and ${3:-} as ${2:-}.
 
 fn_lower() { myos_lower "$1"; }
-fn_upper() { R=$(printf '%s' "$1" | tr '[:lower:]-.' '[:upper:]__'); }
+fn_upper() { case $1 in *[[:lower:]\-.]*) R=$(printf '%s' "$1" | tr '[:lower:]-.' '[:upper:]__') ;; *) R=$1 ;; esac; }
 fn_name()  { myos_name "$1"; }
 fn_strip() { set -f; set -- $1; R=$*; set +f; }
 fn_words() { set -f; set -- $1; R=$#; set +f; }

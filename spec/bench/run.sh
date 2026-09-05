@@ -1,39 +1,21 @@
 #!/bin/sh
-# the full matrix: 5 runs each, median, every engine on the same work
-. /tmp/myos-bench/env.sh; cd "$WORKDIR"
-B=/tmp/myos-bench/bench.sh; N=5
-MK="make -esC $MYOS_ROOT MYOS=. WORKDIR=$WORKDIR"
-SH="$MYOS_ROOT/bin/myos"
-JU="just --justfile /tmp/myos-bench/justfile"
-GO=/tmp/myos-bench/myos-go
-S1="host/consul"; S2="host/consul host/fabio"; S3="host/consul host/fabio host/registrator"
-
-echo "== cout fixe : demarrage + cible vide"
-$B "make  noop" $N -- $MK FORCE
-$B "sh    noop (myos version)" $N -- $SH version
-$B "just  noop (parse + 1 sh + source lib/)" $N -- $JU noop
-$B "go    noop" $N -- $GO noop
-echo
-echo "== up : 1 / 2 / 3 stacks, dry-run"
-$B "make  up 1" $N -- $MK up STACK="$S1"
-$B "make  up 2" $N -- $MK up STACK="$S2"
-$B "make  up 3" $N -- $MK up STACK="$S3"
-$B "sh    up 1" $N -- $SH up host/consul
-$B "sh    up 2" $N -- $SH up host/consul host/fabio
-$B "sh    up 3" $N -- $SH up host/consul host/fabio host/registrator
-$B "just  up 1" $N -- $JU up host/consul
-$B "just  up 2" $N -- $JU up host/consul host/fabio
-$B "just  up 3" $N -- $JU up host/consul host/fabio host/registrator
-$B "go    up 1" $N -- $GO up host/consul
-$B "go    up 2" $N -- $GO up host/consul host/fabio
-$B "go    up 3" $N -- $GO up host/consul host/fabio host/registrator
-echo
-echo "== export : les 80 reglages du groupe host (evaluation des hooks shell)"
-$B "sh    export, hooks tels quels" $N -- $SH export STACK=host
-$B "just  export, hooks tels quels" $N -- $JU export host
-$B "go    export, hooks tels quels (1 sh/repertoire)" $N -- $GO export host
-echo
-echo "== export : memes hooks, evalues en une passe (MYOS_VAR_MEMO=1)"
-MYOS_VAR_MEMO=1 $B "sh    export, memoise" $N -- $SH export STACK=host
-MYOS_VAR_MEMO=1 $B "just  export, memoise" $N -- $JU export host
-MYOS_VAR_MEMO=1 $B "go    export, memoise" $N -- $GO export host
+# the benchmark: the engine on the catalogue fixture, 5 runs each, median
+MYOS_ROOT=${MYOS_ROOT:-$(cd "$(dirname "$0")/../.." && pwd -P)}; export MYOS_ROOT
+. "$(dirname "$0")/env.sh"
+rm -rf /tmp/myos-bench; mkdir -p /tmp/myos-bench/home/.local/share/myos
+cp -R "$MYOS_ROOT/spec/fixtures/catalogue" /tmp/myos-bench/wd
+cp -R "$MYOS_ROOT/spec/fixtures/home/.local/share/myos/stack" /tmp/myos-bench/home/.local/share/myos/stack
+cd "$WORKDIR" || exit 1
+B=$MYOS_ROOT/spec/bench/bench.sh; N=5; M=$MYOS_ROOT/myos
+echo "== fixed cost"
+$B "myos --version" $N -- $M --version
+$B "myos print-STACK_DIR (path only)" $N -- $M print-STACK_DIR host/consul
+echo "== up, dry run: 1 stack, the host group (3), the group with settings (host: 80 settings)"
+$B "up host/consul" $N -- $M up host/consul
+$B "up host" $N -- $M up host
+$B "up default (memcached mysql rabbitmq redis)" $N -- $M up default
+echo "== the settings: every exported value of the host group"
+$B "env host" $N -- $M env host
+$B "print-HOST_FABIO_SERVICE_9998_TAGS" $N -- $M print-HOST_FABIO_SERVICE_9998_TAGS host/fabio
+echo "== lifecycle, against the mock"
+DRYRUN=false MOCK_VOLUMES="tester-app-local_data" MYOS_BACKUP_ROOT=/tmp/myos-bench/backup $B "status host" $N -- $M status host

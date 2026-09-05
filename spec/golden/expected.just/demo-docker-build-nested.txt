@@ -1,2 +1,0 @@
-docker build --build-arg DOCKER_BUILD_DIR=docker/web/alpine --build-arg UID=@UID@ --build-arg GID=@GID@ --tag tester/wd/local/web:alpine -f @WD@/docker/web/alpine/Dockerfile @WD@
-[exit 0]

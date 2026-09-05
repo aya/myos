@@ -1,2 +1,2 @@
-COMPOSE_FILE @MYOS@/share/compose/networks.yml
+COMPOSE_FILE @WD@/docker-compose.yml @WD@/docker-compose.local.yml @WD@/docker/docker-compose.yml @MYOS@/share/compose/networks.yml
 [exit 0]

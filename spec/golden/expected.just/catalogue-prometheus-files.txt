@@ -1,3 +1,0 @@
-COMPOSE_FILE @WD@/stack/prometheus/prometheus.yml @MYOS@/share/compose/networks.yml
-COMPOSE_PROJECT_NAME tester-prometheus-local
-[exit 0]

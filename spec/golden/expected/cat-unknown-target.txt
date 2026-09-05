@@ -1,3 +1,2 @@
-ERROR: myos[0] doesnotexist-rule-exists: unknown target doesnotexist in app myos
-make: *** [doesnotexist-rule-exists] Error 2
+myos: unknown verb doesnotexist (myos -h lists the verbs)
 [exit 2]

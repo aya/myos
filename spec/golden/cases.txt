@@ -57,19 +57,6 @@ cat-nginx-www-dns               | app-nogit     | print-COMPOSE_FILE STACK=host/
 cat-nginx-project               | app-nogit     | print-COMPOSE_PROJECT_NAME STACK=host/nginx
 cat-unknown-stack               | app-nogit     | print-COMPOSE_FILE STACK=doesnotexist
 cat-unknown-target              | app-nogit     | doesnotexist
-inc-app-print-project           | app-git       | @make print-COMPOSE_PROJECT_NAME
-inc-app-print-compose-file      | app-git       | @make print-COMPOSE_FILE
-inc-app-print-app               | app-git       | @make print-APP
-inc-app-up                      | app-git       | @make up
-inc-app-up-env-master           | app-git       | @make up ENV=master
-inc-app-config                  | app-git       | @make config
-inc-app-down                    | app-git       | @make down
-inc-app-ps                      | app-git       | @make ps
-inc-app-print-service-name      | app-git       | @make print-COMPOSE_SERVICE_NAME
-inc-app-print-env-vars          | app-git       | @make print-ENV_VARS
-inc-app-print-network-default   | app-git       | @make print-DOCKER_NETWORK_DEFAULT
-inc-app-stack-postgres-up       | app-git       | @make up STACK=postgres
-inc-app-unknown-target          | app-git       | @make doesnotexist
 cmd-exec-host                   | host-project  | exec host/consul -- consul members
 cmd-exec-service                | host-project  | exec host/fabio SERVICE=fabio -- sh
 cmd-run-catalogue               | app-nogit     | run postgres -- psql -l

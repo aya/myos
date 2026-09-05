@@ -1,3 +1,3 @@
 COMPOSE_FILE @WD@/stack/elastic/curator.yml @WD@/stack/elastic/curator.local.yml @MYOS@/share/compose/networks.yml
-COMPOSE_PROJECT_NAME tester-myos-local
+COMPOSE_PROJECT_NAME tester-elastic-local
 [exit 0]

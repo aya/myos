@@ -1,16 +1,15 @@
 #!/bin/sh
-# Record golden outputs: MYOS_ENGINE=legacy (default) writes the historical
-# behaviour into spec/golden/expected/; another engine writes the intentional
-# deltas into spec/golden/expected.<engine>/ (each one listed in DELTAS.md).
-# Usage: [MYOS_ENGINE=just] spec/golden/record.sh [case-name ...]
+# Record golden outputs into spec/golden/expected/ (MYOS_ENGINE=just, the
+# default); another engine writes into spec/golden/expected.<engine>/.
+# Usage: spec/golden/record.sh [case-name ...]
 set -u
 here=$(cd "$(dirname "$0")" && pwd)
 # shellcheck source=spec/support/run.sh
 . "$here/../support/run.sh"
 MYOS_ROOT=${MYOS_ROOT:-$(cd "$here/../.." && pwd)}
 only="$*"
-engine=${MYOS_ENGINE:-legacy}
-out="$here/expected"; [ "$engine" = legacy ] || out="$here/expected.$engine"
+engine=${MYOS_ENGINE:-just}
+out="$here/expected"; [ "$engine" = just ] || out="$here/expected.$engine"
 mkdir -p "$out"
 cat "$here"/cases*.txt | grep -v '^#' | while IFS='|' read -r name fixture args; do
   name=$(echo "$name" | tr -d ' '); fixture=$(echo "$fixture" | tr -d ' ')

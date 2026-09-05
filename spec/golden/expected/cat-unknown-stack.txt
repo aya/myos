@@ -1,2 +1,2 @@
-COMPOSE_FILE @MYOS@/share/compose/networks.yml
-[exit 0]
+myos: stack doesnotexist not found (searched: @HOME@/.local/share/myos/stack)
+[exit 3]

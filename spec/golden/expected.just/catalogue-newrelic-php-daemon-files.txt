@@ -1,3 +1,0 @@
-COMPOSE_FILE @WD@/stack/newrelic/php-daemon.yml @MYOS@/share/compose/networks.yml
-COMPOSE_PROJECT_NAME tester-newrelic-local
-[exit 0]

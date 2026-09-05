@@ -1,93 +1,57 @@
 # Commands
 
-```
-myos [options] <command> [stack...] [VAR=value...] [-- args...]
-```
+`myos [options] VERB... [REF...] [KEY=VALUE...] [-- ARGS...]`. Verbs chain
+and stop at the first failure. No reference means the current directory.
+`STACK="a b"` is accepted (the make spelling).
 
-| option | effect |
+| option | meaning |
 |---|---|
-| `-C DIR` | work in DIR instead of the current directory |
-| `-e ENV` | environment: picks `.env.<env>` and the `<stack>.<env>.yml` overlays |
-| `-n`, `--dry-run` | print the commands instead of running them |
-| `-v`, `--verbose` | say what myos is doing |
-| `-d`, `--debug` | print every command |
+| `-n`, `DRYRUN=true` | print every command instead of running it |
+| `-C DIR` | work in DIR (the project directory, `$WORKDIR`) |
+| `--json` | one JSON line per step, a JSON summary at the end |
+| `--strict` | `status`, `firewall`: exit 4 on a finding |
+| `--yes` | `restore`, `clean` of a host stack: confirm |
+| `--bootstrap` | `up`: run the bootstrap even when `.env` exists |
+| `--pause`, `--keep N` | `backup`: pause the project around the archive; keep N backups |
+| `--from DIR\|latest`, `--no-backup`, `--force` | `restore` |
+| `--wildcard`, `--self-signed`, `--check` | `cert` |
+| `SERVICE=x`, `NUM=n`, `ENV=e`, `-- args` | the service, the scale, the environment, the arguments of exec/run |
 
-| command | effect |
+## Verbs
+
+| verb | does |
 |---|---|
-| `up` | create and start; creates the external networks first |
-| `down` | remove the containers |
-| `start` / `stop` / `restart` | on the existing containers |
-| `ps` | what is running |
-| `logs` | follow the logs |
-| `config` | the resolved compose file |
-| `exec` | run a command in a running service |
-| `run` | run it in a new container, removed afterwards |
-| `scale` | `myos scale <stack> SERVICE=<name> NUM=<n>` |
-| `build` / `pull` | images |
-| `ls [--groups]` | the stacks and groups myos can see |
-| `env [VAR...]` | resolved variables |
-| `env-update` | fill the `.env` from the `.env.dist` templates |
-| `expose [--strict]` | what the stacks publish, and to whom |
-| `cert list\|issue\|renew\|show` | certificates, derived from the route tags |
-| `export [--make]` | every setting of the stacks, as `KEY=value` |
-| `doctor` | check the installation |
-| `version` | the myos version |
+| `up` | bootstrap when there is no `.env` yet (or `--bootstrap`), ensure the networks, `compose up -d`; with a firewall adapter asked for, apply the rules of a host project |
+| `down`, `start`, `stop`, `restart`, `recreate` | the compose verb on the project |
+| `build [image[:variant]]` | `docker build` of `docker/<image>/Dockerfile` in the stack directories (tag `<user>/<stack>/<env>/<image>`), `compose build` when the stack builds nothing itself |
+| `config`, `ps`, `logs`, `exec`, `run`, `scale`, `connect`, `attach` | as compose; `exec` and `run` take `SERVICE=` and `-- args`; `status` reads `compose ps` as JSON |
+| `bootstrap` | render `.env` from the `.env.dist` of the stacks, create the networks, build the images |
+| `env-update` | render the missing keys of `.env` again (after a new `.env.dist` key) |
+| `upgrade` | lock, backup, `git pull --ff-only` where a stack directory is a checkout, `compose pull`, `compose build --pull` when needed, `compose up -d`, wait for every service to be running and healthy (`MYOS_HEALTH_TIMEOUT`, 120 s); `MYOS_UPGRADE_BACKUP=false` skips the backup |
+| `backup` | `pre-backup` hooks, one `tar.gz` per volume of the project (through an alpine container), the `.env` (mode 600), `manifest.json`, `post-backup` hooks; into `${MYOS_BACKUP_ROOT:-$WORKDIR/backup}/<project>/<date>/` |
+| `restore --from` | refuses a manifest of another project (`--force`), needs `--yes` when not interactive, takes a safety backup (`--no-backup`), `down`, recreates the missing volumes, extracts, `up`, `post-restore` hooks |
+| `firewall [audit]` | every published port of the compose files: service, host port, scope (public/private/mesh/address), address; `--strict` exits 4 when a stack that is not a host stack publishes a public port |
+| `firewall apply` | the rules of a host stack (its public ports and `<SVC>_FIREWALL`, or the old `<SVC>_UFW_UPDATE`) through `MYOS_FIREWALL=auto\|ufw\|nftables\|pf\|none`; `-n` prints them |
+| `cert list` | the names the `urlprefix-` routes of the stacks need, wildcards marked |
+| `cert [issue]` | `domains.txt` into the host volume, `dehydrated -c` in the dehydrated service (http-01); `--wildcard` adds the wildcards through `actions/cert-dns` or `MYOS_CERT_DNS_HOOK` (dns-01); `--self-signed` an openssl certificate per name; `--check` the expiry |
+| `doctor` | docker, compose >= 2.21, just, jq, the path, `.env` against `.env.dist`, empty values the files reference, networks, locks, the `doctor` hooks of the stacks; exit 4 when a check fails |
+| `clean` | `compose down --rmi all --volumes`; a host stack needs `--yes`; `.env` is kept |
+| `shutdown` | `down` of the host and user projects of this machine |
+| `install [URL [DIR]]` | clone a project, then bootstrap it |
+| `ls`, `env`, `print-NAME`, `--version`, `-h` | the path, stacks and groups; the exported values; one value; the version; the usage |
 
-## Several commands at once
+## What the make targets became
 
-Commands chain, the way make targets did. Leading words that name commands are
-commands; the first word that is not one starts the list of stacks.
-
-```sh
-myos build up logs host/fabio        # like: make build up logs STACK=host/fabio
-myos up ps host
-```
-
-They run in order and stop at the first failure. A stack whose name is also a
-command name has to be given as `STACK=<name>`, otherwise it is read as a
-command.
-
-Anything after `--` goes to docker compose:
-
-```sh
-myos logs host/fabio -- --tail 20
-myos up postgres -- --force-recreate
-```
-
-`exec` and `run` take the service from the stack name, since most stacks name
-their main service after themselves. `SERVICE=` picks another one:
-
-```sh
-myos exec host/consul -- consul members        # service consul, command "consul members"
-myos exec host/fabio SERVICE=fabio -- sh
-myos run postgres -- psql -l
-```
-
-## Exit codes
-
-| code | meaning |
+| make | now |
 |---|---|
-| 0 | fine |
-| 1 | the command failed |
-| 2 | bad invocation, or an unknown command |
-| 3 | stack not found (the message prints the search path) |
-| 4 | missing requirement, run `myos doctor` |
-
-The make engine exited 0 on an unknown target, printing only a warning. The CLI
-does not: a typo is an error.
-
-## Coming from the make targets
-
-| make | myos |
-|---|---|
-| `make up STACK=host` | `myos up host` |
-| `make print-COMPOSE_FILE` | `myos env COMPOSE_FILE` |
-| `make host` | `myos up host` (a bare stack name is not a command) |
-| `make build up logs STACK=host/fabio` | `myos build up logs host/fabio` |
-| `make stack-host-config` | `myos config host` |
-| `make up@master` | `myos -e master up` |
-| `make exec SERVICE=php ARGS='ls'` | `myos exec <stack> -- php ls` |
-| `make DRYRUN=true up` | `myos -n up` |
-
-`print-VAR`, `stack-<stack>-<command>` and `<command>@<env>` still work.
-A project `Makefile` that includes `make/include.mk` keeps working too.
+| `make up STACK=host/fabio` | `myos up host/fabio` |
+| `make host` | `myos up host` |
+| `make stack-host-config` | `myos stack-host-config` (kept) or `myos config host` |
+| `make print-COMPOSE_FILE STACK=x` | `myos print-COMPOSE_FILE x` |
+| `make docker-build-web` | `myos build web` (`docker-build-web` is kept) |
+| `make bootstrap`, `make install` | `myos bootstrap`, `myos install` (no system setup: `doctor` says what the host lacks) |
+| `make .env-update` | `myos env-update` |
+| `make setup-ufw`, `SETUP_UFW=true` | `myos firewall apply host`, `MYOS_FIREWALL=ufw` |
+| `host-certbot`, `host-ssl-certs`, acme | `myos cert host`, `myos cert host --self-signed` |
+| `make clean` | `myos clean` (`--yes` for a host stack; keeps `.env`) |
+| `apps-install`, `ssh*`, `deploy*`, `release*`, `subrepo*`, `git-*`, `setup-*` | gone |

@@ -1,78 +1,48 @@
-# Writing a stack, and working on myos
+# Writing a stack, and working on the engine
 
-## A new stack in the catalogue
+## A stack
 
-```
-stack/<name>/<name>.yml          the services
-stack/<name>/<name>.local.yml    what only makes sense on a workstation (published ports…)
-stack/<name>/<name>.labels.yml   the registrator labels, so routing stays optional
-stack/<name>/<name>.env          plain settings: versions, defaults
-stack/<name>/<name>.sh           lazy defaults (fabio tags), no make needed
-stack/<name>/.env.dist           the variables it expects, with defaults
-stack/<name>/README.md           what it is and what it needs
-```
+1. `stack/myapp/myapp.yml`: the compose file. Reference values, never
+   literals: `image: myimage:${MYAPP_VERSION}`, `ports:
+   ["${MYOS_BIND_PRIVATE:-127.0.0.1}:8080:80"]`, `labels: [SERVICE_80_TAGS=${MYAPP_SERVICE_80_TAGS}]`,
+   `networks: [private]`.
+2. `stack/myapp/.env.dist`: what the user must provide, with defaults that
+   compute themselves, rendered once into `$WORKDIR/.env` by the first `up`:
+   ```
+   MYAPP_VERSION=1.4
+   MYAPP_HOST=myapp.${DOMAIN}
+   MYAPP_SECRET=$(head -c 30 /dev/urandom | base64)
+   ```
+3. `stack/myapp/myapp.settings`: what is recomputed every run:
+   ```
+   export MYAPP_SERVICE_80_TAGS
+   MYAPP_SERVICE_80_NAME ?= myapp
+   MYAPP_SERVICE_80_TAGS ?= @tagprefix(MYAPP,80)
+   ```
+4. Hooks the lifecycle needs: `actions/pre-backup` dumping the database into
+   a volume before the archive, `actions/doctor` checking a licence or a
+   quota, or the same as recipes of a `justfile`.
+5. Check: `myos -n up myapp`, `myos env myapp`, `myos firewall myapp --strict`,
+   `myos doctor myapp`; then `myos up myapp` and `myos status myapp --strict`.
 
-Rules that keep a stack reusable:
-- no `container_name`, except in a `host/` stack: it prevents scaling and
-  collides between users,
-- no fixed host port outside `host/`; publish through the load balancer,
-- reference variables with a default: `${POSTGRES_VERSION:-16}`,
-- attach to `private` to be reachable by the other stacks of the user, to
-  `public` to be routed,
-- name volumes, never bind-mount an absolute path.
+A host stack (`stack/host/<name>.yml`) may publish public ports and declares
+what the host firewall must open: `HOST_<NAME>_FIREWALL ?= 443/tcp`.
 
-Check it before committing:
+## Converting an old `.mk`
 
-```sh
-myos -n config <name>     # the file list and the project
-myos config <name>        # the rendered yaml
-```
+`share/tools/mk2settings.py stack/x/x.mk` writes the `.settings` (and the
+groups into `.env`); conditional blocks and targets are left as comments to
+rewrite by hand (a target becomes a hook). Check every value against the old
+engine with `myos print-NAME x`.
 
-## A group
+## The engine
 
-```sh
-# stack/<group>.env
-mygroup=<name> other/<name>
-```
-
-Lowercase, and it may name other groups.
-
-## Working on myos itself
-
-```sh
-make test               # unit + golden, against both engines, with a mocked docker
-make test-golden        # golden only
-make golden-record      # re-record the golden expectations from the make engine
-make lint               # shellcheck
-```
-
-Layout:
-
-```
-bin/myos          argument parsing, configuration, dispatch
-lib/core.sh       logging, exit codes, dry run
-lib/str.sh        strings and version comparison
-lib/naming.sh     project names, networks, user identity
-lib/stack.sh      stack path, references, overlays, groups
-lib/var.sh        variable resolution and lazy defaults
-lib/config.sh     dotenv, templates, variables of the compose files
-lib/hooks.sh      the per-stack .env and .sh
-lib/compose.sh    finding and calling docker compose
-lib/tags.sh       fabio tags
-lib/cmd/<x>.sh    one file per command
-share/compose/    the networks and volumes overlays myos provides
-spec/             shellspec
-```
-
-Adding a command: write `lib/cmd/<name>.sh` defining `myos_cmd_<name>`, add it
-to the usage text in `bin/myos`, and cover it in `spec/unit`.
-
-Constraints:
-- POSIX shell, no bashisms: it has to run under the bash 3.2 of macOS and the
-  ash of Alpine. `make test` runs on both.
-- No `a-z` ranges in a `case` pattern: under a dictionary collation such as
-  `fr_FR` they also match uppercase. Use `[:lower:]`.
-- A function that has to return several values takes them out through printf,
-  not through a global: a caller inside `$( )` would lose the global.
-- Changing what a command prints means updating `spec/golden/expected*/` and
-  explaining the change in `spec/golden/DELTAS.md`.
+`myos` (wrapper) -> `lib/main.sh` (arguments, chaining) -> `lib/path.sh`,
+`ref.sh`, `files.sh`, `stack.sh` (resolution) -> `lib/values.sh`,
+`settings.sh` + `settings.awk`, `fn.sh`, `env.sh` (values) -> `lib/verb/*.sh`
+with `hooks.sh`, `events.sh`, `lock.sh`. POSIX sh only; a function returns
+through `R`; temporaries are prefixed per function. Tests: `make test`
+(golden: `spec/golden/cases.txt` -> `expected/`, re-recorded with `make
+golden-record CASES=...` and justified in `DELTAS.md`; verbs: `spec/verbs/`
+against `spec/support/bin/docker`; unit: `spec/unit/`), `make lint`, `make
+test-portability`, `make bench`. See `AGENTS.md`.

@@ -1,3 +1,2 @@
-make -o docker-stack-down MAKE_OLDFILE=docker-stack-down ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-down STACK=myos APP_NAME=myos
-docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local down
+docker --log-level=error compose --ansi=auto -f @WD@/docker-compose.yml -f @WD@/docker-compose.local.yml -f @WD@/docker/docker-compose.yml -f @MYOS@/share/compose/networks.yml -p tester-wd-local down
 [exit 0]

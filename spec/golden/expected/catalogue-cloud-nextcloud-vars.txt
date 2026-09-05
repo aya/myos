@@ -1,5 +1,5 @@
-NEXTCLOUD_MYSQL_DATABASE tester-myos-local-nextcloud
-NEXTCLOUD_MYSQL_USER tester-myos-local-nextcloud
+NEXTCLOUD_MYSQL_DATABASE tester-cloud-local-nextcloud
+NEXTCLOUD_MYSQL_USER tester-cloud-local-nextcloud
 NEXTCLOUD_SERVICE_80_NAME nextcloud
 NEXTCLOUD_SERVICE_80_TAGS urlprefix-nextcloud.example.test/*
 NEXTCLOUD_SERVICE_NAME nextcloud

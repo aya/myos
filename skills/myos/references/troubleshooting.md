@@ -1,64 +1,22 @@
 # Troubleshooting
 
-Start with `myos doctor`, then `myos -n <command>` to see what would run.
-
-## `stack not found: <name>` (exit 3)
-
-The reference is not on the stack path, which the message prints.
-- `myos ls` shows what is reachable.
-- The catalogue may not be installed: `git clone <myos-stacks> /usr/local/share/myos`.
-- A stack of the project is only found from the project: use `myos -C /path/to/project`.
-
-## `docker compose >= 2.24.4 not found` (exit 4)
-
-Install the compose plugin, or a `docker-compose` binary of that version.
-myos no longer falls back to a compose image.
-
-## `unknown command: <x>` (exit 2)
-
-Check the spelling against `myos help`. The make engine accepted any target
-and exited 0 after printing a warning, so typos used to look like successes.
-
-## The containers came back under a different name
-
-The default project name changed from `<user>-<app>-<env>` to
-`<user>-<env>-<app>`. The old containers and volumes are still there, under the
-old project. Put `MYOS_PROJECT_FORMAT=user-app-env` in the `.env` of the
-deployment (or in `/etc/conf.d/myos`) and bring it up again.
-
-Check first: `myos env COMPOSE_PROJECT_NAME` against `docker ps --format '{{.Names}}'`.
-
-## `network <name> declared as external, but could not be found`
-
-The `private` or `public` network is missing. `myos up` creates them; a bare
-`docker compose up` does not. Or create it by hand:
-`docker network create <user>-<env>`.
-
-## A service is up but not routed
-
-In order: the port must be `expose`d (registrator ignores what it cannot see),
-the labels must be on the service, the consul check must pass, and only then
-does fabio route the `urlprefix-` tag.
-
-```sh
-myos config <stack> | grep -A5 labels      # what the labels resolve to
-myos exec host/consul -- consul catalog services
-myos logs host/registrator
-```
-
-## A variable is empty in the container
-
-myos only passes the variables the compose files actually mention. Check with
-`myos env` and `myos config <stack>`. A variable set in a `.env` of another
-directory is not read: only the workdir's `.env` is.
-
-## On macOS with Colima
-
-The daemon lives in a VM: a bind mount only works for a path the VM shares, and
-`host.docker.internal` is the way back to the host. `myos doctor` prints the
-`DOCKER_HOST` in use.
-
-## Something changed after upgrading myos
-
-`spec/golden/DELTAS.md` in the myos repository lists every intentional
-difference between the make engine and the CLI, with the reason.
+| symptom | meaning | do |
+|---|---|---|
+| `unknown verb x (myos -h lists the verbs)`, exit 2 | the first word is neither a verb nor a reference, or an old target (`apps-install`, `deploy`) | `myos -h`; see commands.md for what the target became |
+| `stack x not found (searched: ...)`, exit 3 | no directory of the path holds `x` | `myos ls`; install the catalogue (`install.sh --with-stacks`) or fix `MYOS_PATH` |
+| `group expansion too deep (cycle?)` | a group names itself through its members | fix the `<group>=...` line of the `.env` |
+| `settings: NAME refers to itself (cycle)` | a `.settings` line references its own name | rename the previous definition |
+| `settings: compilation failed`, `file:line: not a setting` | a line of a `.settings` is not `NAME op expr` | fix the line; the language is in conventions.md |
+| `.env.dist: X refers to itself` | a `.env.dist` key references itself | fix the template |
+| `myos up . env-update ok (N keys added)` then a value is wrong | the `.env` was rendered from a stale template | edit `$WORKDIR/.env`: it is yours now; `myos env-update` only adds missing keys |
+| `doctor ... env fail (missing from .env: ...)`, exit 4 | a new `.env.dist` key | `myos env-update <stack>`, then fill it |
+| `doctor ... values warn (empty: X)` | a compose file references `${X}` and nothing sets it | set it in `.env` or the stack settings |
+| `firewall ... audit fail (public ports of a stack that is not a host stack)`, exit 4 | a published port answers the world | bind it: `${MYOS_BIND_PRIVATE}:port:port` |
+| `firewall apply ... skip (not a host stack)` | rules are only written for host stacks | see above |
+| `cert: a wildcard needs dns-01` | a route uses `*.domain` | provide `actions/cert-dns` (dehydrated hook API) or `MYOS_CERT_DNS_HOOK`, run with `--wildcard`; or `--self-signed` meanwhile |
+| `X is locked by another run`, exit 5 | an `upgrade` runs, or died | wait, or remove `$WORKDIR/.myos/lock.<project>` once sure |
+| `restore ... is a backup of project other` | the manifest names another project | choose another `--from`, or `--force` knowingly |
+| `restore replaces the volumes ...: run it with --yes` | not interactive | add `--yes` |
+| `upgrade ... health fail (not healthy: db)`, exit 1 | a service did not reach running/healthy in `MYOS_HEALTH_TIMEOUT` | `myos logs <stack> SERVICE=db`; `myos restore <stack> --from latest --yes` to go back |
+| containers named `tester-app-local` after an upgrade of myos | the project name format changed | `MYOS_PROJECT_FORMAT=user-app-env` in `.env` |
+| `just: not found` in `doctor` | optional | `install.sh --with-just`; the engine works without it, justfile hooks do not |

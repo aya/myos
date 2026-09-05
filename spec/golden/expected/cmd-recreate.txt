@@ -1,8 +1,2 @@
-make -o docker-stack-recreate MAKE_OLDFILE=docker-stack-recreate ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-recreate STACK=myos APP_NAME=myos
-docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local rm -fs
-sh -c docker network create tester-local >/dev/null 2>&1
-sh -c docker network create testhost >/dev/null 2>&1
-docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local up -d
-ERROR: myos[0] host/consul-rule-exists: unknown target host/consul in app myos
-make: *** [host/consul-rule-exists] Error 2
-[exit 2]
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost up -d --force-recreate
+[exit 0]

@@ -1,2 +1,2 @@
-STACK myos
+STACK .
 [exit 0]

@@ -13,19 +13,19 @@ if [ -n "${MYOS_DOCKER_LOG:-}" ]; then
 fi
 # the command and its subcommand, options skipped: docker [--log-level=x]
 # compose [--ansi=auto] [-f F]... [-p P] SUB ...; docker run --rm ...
-project=; files=; cmd=; sub=; hostb=; prev=; want=
+project=; files=; cmd=; sub=; hostb=; want=
 for a in "$@"; do
   case $a in *:/b|*:/b:ro) hostb=${a%%:*} ;; esac
   if [ -n "$want" ]; then
     case $want in -p|--project-name) project=$a ;; -f|--file) files="$files $a" ;; esac
-    want=; prev=$a; continue
+    want=; continue
   fi
   case $a in
     -p|--project-name|-f|--file|--filter|--format|-v|--volume|-e|--env|-w|--workdir) want=$a; [ "$a" = --filter ] || [ "$a" = --format ] || [ "$a" = -v ] || [ "$a" = --volume ] || [ "$a" = -e ] || [ "$a" = --env ] || [ "$a" = -w ] || [ "$a" = --workdir ] && want=skip ;;
     -*) ;;
     *) if [ -z "$cmd" ]; then cmd=$a; elif [ -z "$sub" ]; then sub=$a; fi ;;
   esac
-  prev=$a
+
 done
 [ "$want" = skip ] && want=
 services() { # the services of the compose files given with -f

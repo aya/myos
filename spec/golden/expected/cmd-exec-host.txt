@@ -1,2 +1,2 @@
-docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local exec -T sh -c host/consul consul members
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost exec -T consul sh -c consul members
 [exit 0]

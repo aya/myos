@@ -1,43 +1,45 @@
 # CHANGELOG
 
-## v2.0.0-dev - 2026-09-03
+## v2.0.0-dev - 2026-09-05
 
-- new bash CLI (`bin/myos`, `lib/`): one model for a project directory, a
-  catalogue stack, a group and a host singleton
-- unknown command or unknown stack now fails, instead of succeeding silently
-- default compose project is `<user>-<env>-<app>`; set
-  `MYOS_PROJECT_FORMAT=user-app-env` on deployments created before this
-- `myos ls`, `myos env`, `myos doctor` to inspect an installation
-- `install.sh`, and the catalogue is looked up beside the installation
-- agent skill in `skills/myos/`, contributor notes in `AGENTS.md`
-- stacks carry their settings in `<name>.env` and `<name>.sh` hooks, so the
-  catalogue no longer needs make to be installed
-- lazy defaults (`myos_default_<VAR>` functions) give the recursive `?=` of
-  make in pure shell: an explicit value wins, and the default is recomputed
-  at each reference
-- `myos env-update` generates a `.env` from the `.env.dist` templates,
-  expanding `${VAR}` and `$(command)`, including forward references
-- the project `.env` now wins over `/etc/conf.d/myos`, as documented;
-  `MYOS_CONF_PRIORITY=system` restores the previous order
-- `share/make/shim.mk`: make as an optional front end over the same shell code
-- `myos expose` reports what each stack publishes and to whom, and `--strict`
-  fails when a port faces the world without saying so. `MYOS_BIND_PUBLIC`,
-  `_PRIVATE` and `_MESH` let a stack bind its published ports, which replaces
-  the linux-only ufw-docker patching with something that behaves the same on
-  macOS and needs no privilege. The scope is read from the compose file rather
-  than declared beside it, so it cannot disagree with what is published
-- `myos cert` derives the certificates a server needs from the route tags its
-  stacks publish, and asks dehydrated for them: a wildcard where a tag uses one,
-  a certificate per name otherwise. The `host/dehydrated` stack answers http-01
-  itself and delegates dns-01 to a provider hook
-- commands chain: `myos build up logs host/fabio`, as make targets did
-- the stack catalogue no longer needs make at all: its settings are hooks, and
-  only six stacks keep a .mk, for targets
-- a stack found in several directories of the stack path is merged, project
-  last, so a project refines a catalogue stack instead of replacing it
-- `--color always|never|auto`, and no colour when the output is piped
-- verified under the /bin/sh of Alpine (busybox) and Debian (dash)
-- the make engine still works and is still covered by the golden tests
+The engine is rewritten in POSIX sh (`myos`, `lib/`), with `just` as the
+interface for humans and agents; GNU make is gone. The behaviour of every make
+target in use was recorded first (`spec/golden/`), the rewrite was driven by
+those recordings, and every intentional difference is in `spec/golden/DELTAS.md`.
+
+- one model of stack: a directory of compose files, found on a path ordered by
+  precedence or given as a path (the project directory is a stack like any
+  other); a reference names the compose project, a group expands into its
+  members, references naming the same project are one compose call
+- the computed defaults of a stack are `.settings` files (`NAME ?= expr` with
+  `${X}` references and `@tagprefix(...)`-style calls of the routing macros),
+  compiled by one awk into sh functions, lazy and memoised; the user's values
+  always win. `share/tools/mk2settings.py` converts the `.mk` of the old
+  catalogue
+- `.env.dist` is rendered once into `$WORKDIR/.env` (missing keys only,
+  `${X}` through every layer, `$(command)` run); `up` does it the first time
+- lifecycle: `bootstrap`, `upgrade` (backup, pull, build, up, wait for healthy,
+  under a lock), `backup` (one archive per volume, the `.env`, a manifest),
+  `restore --from` (behind guards), `status`, `doctor` (exit 4 when a check
+  fails), with hooks per stack (`actions/<phase>` or a justfile recipe) and
+  events (text, or NDJSON under `--json`)
+- `firewall` audits the published ports from the compose files (public,
+  private, mesh) and applies rules through ufw, nftables or pf; the portable
+  defence is the bind address, `${MYOS_BIND_PRIVATE}`
+- `cert` derives the certificates a host needs from its `urlprefix-` routes and
+  issues them through dehydrated (http-01; wildcards through a dns-01 hook);
+  `--self-signed` for a bootstrap, `--check` for the expiry
+- an unknown verb exits 2, an unknown stack exits 3
+- default project name `<user>-<env>-<app>`; `MYOS_PROJECT_FORMAT=user-app-env`
+  keeps the names of an existing deployment
+- gone: `apps-install`, `ssh*`, `deploy*`, `release*`, `subrepo*`, `git-*`
+  (never used), the make include of a project, `setup-*` (system setup is not
+  the job of a stack tool)
+- fixed in the make engine before the rewrite, and kept: credentials of a
+  remote URL leaked into image labels; `exec` recipe was a bash syntax error;
+  `clean` removed every image and ran `rm -i`; a versioned stack (`postgres:9.6`)
+  broke every run; `JWT` always signed an empty payload; the `prepend` route
+  option was misspelled; `space` was undefined so routes were joined by ` ,`
 
 ## v1.1 - 2026-09-03
 

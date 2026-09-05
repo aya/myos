@@ -1,2 +1,2 @@
-APP myos
+APP consul
 [exit 0]

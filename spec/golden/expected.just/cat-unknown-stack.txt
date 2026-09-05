@@ -1,2 +1,0 @@
-myos: stack doesnotexist not found (searched: @HOME@/.local/share/myos/stack)
-[exit 3]

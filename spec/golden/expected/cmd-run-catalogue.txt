@@ -1,2 +1,2 @@
-docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local run --rm postgres psql -l
+docker --log-level=error compose --ansi=auto -f @HOME@/.local/share/myos/stack/postgres/postgres.yml -f @HOME@/.local/share/myos/stack/postgres/postgres.local.yml -f @MYOS@/share/compose/networks.yml -p tester-postgres-local run --rm postgres psql -l
 [exit 0]

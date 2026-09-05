@@ -1,5 +1,5 @@
-REDMINE_DB_NAME tester-myos-local-redmine
-REDMINE_DB_USER tester-myos-local-redmine
+REDMINE_DB_NAME tester-redmine-local-redmine
+REDMINE_DB_USER tester-redmine-local-redmine
 REDMINE_SERVICE_80_NAME redmine
 REDMINE_SERVICE_80_TAGS urlprefix-redmine.example.test/*
 REDMINE_SERVICE_80_URIS

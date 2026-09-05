@@ -1,7 +1,0 @@
-docker network create tester-local
-docker network create testhost
-docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @WD@/stack/host/fabio.yml -f @WD@/stack/host/registrator.yml -f @MYOS@/share/compose/networks.yml -p testhost up -d
-ufw allow 80/tcp
-ufw allow 443/tcp
-myos up host apply ok (ufw)
-[exit 0]

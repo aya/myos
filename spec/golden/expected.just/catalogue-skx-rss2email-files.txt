@@ -1,3 +1,0 @@
-COMPOSE_FILE @WD@/stack/skx/rss2email.yml @MYOS@/share/compose/networks.yml
-COMPOSE_PROJECT_NAME tester-skx-local
-[exit 0]

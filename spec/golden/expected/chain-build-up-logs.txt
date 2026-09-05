@@ -1,11 +1,6 @@
-make -o docker-stack-build MAKE_OLDFILE=docker-stack-build ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-build STACK=myos APP_NAME=myos
-docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local build --build-arg APP=myos --build-arg BRANCH=@BRANCH@ --build-arg COMPOSE_VERSION=@COMPOSE_VERSION@ --build-arg DOCKER_MACHINE=x86_64 --build-arg DOCKER_REPOSITORY=tester/myos/local --build-arg DOCKER_SYSTEM=Linux --build-arg GIT_AUTHOR_EMAIL=tester@example.test --build-arg GIT_AUTHOR_NAME=tester --build-arg SSH_@@ --build-arg GID=@GID@ --build-arg UID=@UID@
-make -o docker-stack-up MAKE_OLDFILE=docker-stack-up ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-up STACK=myos APP_NAME=myos
-sh -c docker network create tester-local >/dev/null 2>&1
-sh -c docker network create testhost >/dev/null 2>&1
-docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local up -d
-make -o docker-stack-logs MAKE_OLDFILE=docker-stack-logs ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-logs STACK=myos APP_NAME=myos
-docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local logs --follow --tail=100
-ERROR: myos[0] host/fabio-rule-exists: unknown target host/fabio in app myos
-make: *** [host/fabio-rule-exists] Error 2
-[exit 2]
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/fabio.yml -f @MYOS@/share/compose/networks.yml -p testhost build
+docker network create tester-local
+docker network create testhost
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/fabio.yml -f @MYOS@/share/compose/networks.yml -p testhost up -d
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/fabio.yml -f @MYOS@/share/compose/networks.yml -p testhost logs --follow --tail=100
+[exit 0]

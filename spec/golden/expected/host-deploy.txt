@@ -1,3 +1,2 @@
-ERROR: myos[0] deploy@master-rule-exists: unknown target deploy@master in app myos
-make: *** [deploy@master-rule-exists] Error 2
+myos: unknown verb deploy@master (myos -h lists the verbs)
 [exit 2]

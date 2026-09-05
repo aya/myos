@@ -1,8 +1,10 @@
 #!/bin/sh
 # Helpers shared by the golden recorder and the shellspec suites.
-# myos_run_engine ENGINE SANDBOX ARGS...  runs myos (legacy = the make engine,
-# just = the rewrite) in a hermetic environment and prints normalized
-# stdout+stderr followed by "[exit N]".
+# myos_run_engine ENGINE SANDBOX ARGS...  runs myos in a hermetic environment
+# and prints normalized stdout+stderr followed by "[exit N]". The only engine
+# is "just" (the rewrite); the make engine the expectations were first
+# recorded from lives in the history (tag legacy-1.0-beta, and the commits
+# of the tdd branch before make/ was removed).
 
 MYOS_ROOT="${MYOS_ROOT:-$(cd "$(dirname "$0")/../.." 2>/dev/null && pwd)}"
 SPEC_DIR="${SPEC_DIR:-$MYOS_ROOT/spec}"
@@ -33,11 +35,12 @@ myos_hermetic_env() {
 # are masked to keep the goldens reproducible. Credentials found in a URL are
 # masked too, so that a golden can never carry a token.
 myos_normalize() {
+  # the sandbox first: its path may contain the name of the checkout (/myos)
   sed -e 's/\x1b\[[0-9;]*m//g' \
-      -e "s#$MYOS_ROOT#@MYOS@#g" \
       -e "s#$1/wd#@WD@#g" \
       -e "s#$1/home#@HOME@#g" \
       -e "s#$1#@TMP@#g" \
+      -e "s#$MYOS_ROOT#@MYOS@#g" \
       -e 's#/[^ ]*/bin/make#make#g' \
       -e 's/^APPS .*/APPS @APPS@/' \
       -e 's/^BRANCH .*/BRANCH @BRANCH@/' \
@@ -74,25 +77,11 @@ myos_run_engine() {
   done
   _i=0; while [ "$_i" -lt "$_n" ]; do set -- "$@" "$1"; shift; _i=$((_i + 1)); done
   shift $(($# - _n))
-  # "@make" as first arg = the project drives make itself: its Makefile includes
-  # the legacy engine (make/include.mk) and make runs from the project directory.
-  if [ "${1:-}" = "@make" ]; then
-    shift
-    _out=$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") MYOS_CONF=/dev/null \
-      make -es MYOS="$MYOS_ROOT" "$@" 2>&1 </dev/null); _rc=$?
-    printf '%s\n[exit %s]\n' "$_out" "$_rc" | myos_normalize "$_sb"
-    return 0
-  fi
   case $_engine in
-    legacy)
-      # what /usr/local/bin/myos does: env from system conf + MYOS=. WORKDIR=$PWD make -esC $MYOS
-      _out=$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") \
-        make -esC "$MYOS_ROOT" MYOS=. WORKDIR="$_sb/wd" "$@" 2>&1 </dev/null); _rc=$?
-      ;;
     just)
-      # the rewrite: the myos wrapper. MYOS_PROJECT_FORMAT pins the historical
-      # naming so that the goldens compare resolution, not naming; the new
-      # default has its own cases.
+      # the myos wrapper. MYOS_PROJECT_FORMAT pins the historical naming so
+      # that the goldens compare resolution, not naming; the new default has
+      # its own cases.
       _out=$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") MYOS_CONF=/dev/null \
         MYOS_PROJECT_FORMAT=user-app-env "$MYOS_ROOT/myos" "$@" 2>&1 </dev/null); _rc=$?
       ;;

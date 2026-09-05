@@ -1,6 +1,0 @@
-myos env-update demo env-update ok (4 keys added)
-[then]DEMO_HOST=demo.example.test
-DEMO_SECRET=FIXED-SECRET-FOR-TESTS
-DEMO_TITLE=demo
-DEMO_URL=https://demo.example.test/
-[exit 0]

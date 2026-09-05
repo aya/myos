@@ -53,12 +53,21 @@ myos_settings_of_stack() {
     IFS=$NL; set -f
   done
   IFS=$_ss_ifs; set +f
-  case "$NL$MYOS_SETTINGS_LOADED$NL" in *"$NL$_ss_files$NL"*) return 0 ;; esac
-  MYOS_SETTINGS_LOADED="$MYOS_SETTINGS_LOADED$NL$_ss_files"
-  _ss_ifs=$IFS; IFS=$NL; set -f
+  # each file is compiled once per run; a stack loaded later may redefine a
+  # name (last definition wins, as it did when make read every .mk)
+  _ss_new=; _ss_ifs=$IFS; IFS=$NL; set -f
+  for _ss_f in $_ss_files; do
+    case "$NL$MYOS_SETTINGS_LOADED$NL" in *"$NL$_ss_f$NL"*) ;; *) _ss_new="$_ss_new$NL$_ss_f"; MYOS_SETTINGS_LOADED="$MYOS_SETTINGS_LOADED$NL$_ss_f" ;; esac
+  done
   # shellcheck disable=SC2086
-  myos_settings_load $_ss_files
+  [ -n "$_ss_new" ] && myos_settings_load $_ss_new
   IFS=$_ss_ifs; set +f
+  myos_memo_clear
+}
+# myos_memo_clear: the values computed for the previous stack are forgotten
+myos_memo_clear() {
+  for _mc_n in ${MYOS_MEMO_NAMES:-}; do eval "unset MYOS_MEMO_$_mc_n MYOS_MEMO_ORIGIN_$_mc_n"; done
+  MYOS_MEMO_NAMES=
 }
 
 # myos_setting NAME -> R and return 0 when NAME has a computed default

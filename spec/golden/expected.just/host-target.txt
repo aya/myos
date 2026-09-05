@@ -1,2 +1,0 @@
-myos: unknown verb host (myos -h lists the verbs)
-[exit 2]

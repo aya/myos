@@ -1,3 +1,0 @@
-COMPOSE_FILE @HOME@/.local/share/myos/stack/drone/drone.yml @WD@/stack/drone/drone.yml @WD@/stack/drone/drone.latest.yml @WD@/stack/drone/drone-runner-docker.yml @WD@/stack/drone/drone-runner-docker.latest.yml @WD@/stack/drone/gc.yml @WD@/stack/drone/gc.latest.yml @MYOS@/share/compose/networks.yml
-COMPOSE_PROJECT_NAME tester-drone-local
-[exit 0]

@@ -1,2 +1,2 @@
-docker --log-level=error compose --ansi=auto -f @MYOS@/share/compose/networks.yml -p tester-myos-local exec -T fabio sh -c host/fabio sh
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/fabio.yml -f @MYOS@/share/compose/networks.yml -p testhost exec -T fabio sh -c sh
 [exit 0]

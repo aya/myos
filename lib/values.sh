@@ -39,7 +39,7 @@ myos_var() {
     eval "if [ -n \"\${MYOS_STACKENV_$1+set}\" ]; then R=\$MYOS_STACKENV_$1; MYOS_ORIGIN=stack; fi"
     [ -n "$MYOS_ORIGIN" ] || [ -z "$_vv_kind" ] || myos_compute "$1"
   fi
-  if [ -n "$MYOS_ORIGIN" ]; then eval "MYOS_MEMO_$1=\$R; MYOS_MEMO_ORIGIN_$1=\$MYOS_ORIGIN"; return 0; fi
+  if [ -n "$MYOS_ORIGIN" ]; then eval "MYOS_MEMO_$1=\$R; MYOS_MEMO_ORIGIN_$1=\$MYOS_ORIGIN"; MYOS_MEMO_NAMES="$MYOS_MEMO_NAMES $1"; return 0; fi
   # engine values
   case $1 in
     COMPOSE_FILE) myos_nl_join "$MYOS_STACK_FILES" ' ' ;;

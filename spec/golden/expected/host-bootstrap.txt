@@ -1,4 +1,3 @@
-@MYOS@/spec/support/bin/sudo usermod -aG docker tester
-WARNING: myos[0] setup-docker-group: user tester added in group docker
-WARNING: myos[0] setup-docker-group: YOU MUST LOGOUT NOW AND LOGIN BACK TO GET DOCKER GROUP MEMBERSHIP
+docker network create tester-local
+docker network create testhost
 [exit 0]

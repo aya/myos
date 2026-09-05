@@ -1,4 +1,2 @@
-make -o stack-host-config MAKE_OLDFILE=stack-host-config ENV=local DOCKER_COMPOSE=docker --log-level=error compose COMPOSE_IGNORE_ORPHANS=true host=host/consul host/fabio host/registrator config STACK=host
-make -o stack-host-config MAKE_OLDFILE=stack-host-config ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-config STACK=host APP_NAME=host
 docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @WD@/stack/host/fabio.yml -f @WD@/stack/host/registrator.yml -f @MYOS@/share/compose/networks.yml -p testhost config
 [exit 0]

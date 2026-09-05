@@ -1,3 +1,2 @@
-make -o docker-stack-down MAKE_OLDFILE=docker-stack-down ENV=local DOCKER_COMPOSE=docker --log-level=error compose docker-compose-down STACK=host APP_NAME=host
 docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @WD@/stack/host/fabio.yml -f @WD@/stack/host/registrator.yml -f @MYOS@/share/compose/networks.yml -p testhost down
 [exit 0]

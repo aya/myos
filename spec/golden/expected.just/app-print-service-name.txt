@@ -1,2 +1,0 @@
-COMPOSE_SERVICE_NAME tester-wd-local
-[exit 0]

@@ -1,3 +1,0 @@
-make -o docker-stack-up MAKE_OLDFILE=docker-stack-up ENV=master DOCKER_COMPOSE=docker --log-level=error compose app-wd-up
-docker --log-level=error compose --ansi=auto -f ././docker-compose.yml -f ./docker/docker-compose.yml -p tester-wd-master up -d
-[exit 0]

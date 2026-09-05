@@ -1,2 +1,0 @@
-APP wd
-[exit 0]

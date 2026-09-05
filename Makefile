@@ -1,36 +1,31 @@
-DEV_TARGETS := test test-unit test-golden test-verbs test-integration test-portability lint golden-record
-ifneq ($(filter $(DEV_TARGETS),$(MAKECMDGOALS)),)
-
+# Development targets. The engine itself is ./myos (lib/main.sh); this file
+# only runs the test suites and the linters.
 SHELLSPEC ?= shellspec
 SHELLCHECK ?= shellcheck
-# MYOS_ENGINE selects what the golden suite runs: legacy (make/) or just (lib/)
-MYOS_ENGINE ?= legacy
+MYOS_ENGINE ?= just
 export MYOS_ENGINE
 
-.PHONY: $(DEV_TARGETS)
-test: ## Run every suite against MYOS_ENGINE
+.PHONY: test test-unit test-golden test-verbs test-integration test-portability lint golden-record bench
+test: ## Run every suite
 	$(SHELLSPEC)
-test-unit: ## Unit tests of the new implementation only
+test-unit: ## Unit tests of the functions
 	$(SHELLSPEC) spec/unit
-test-golden: ## Golden tests: historical behaviour (MYOS_ENGINE=legacy|just)
+test-golden: ## Golden tests: the recorded behaviour of every verb
 	$(SHELLSPEC) spec/golden
-test-verbs: ## Black-box tests of the verbs without a make history
+test-verbs: ## Black-box tests of the lifecycle verbs against the docker mock
 	$(SHELLSPEC) spec/verbs
 test-integration: ## Tests needing a real docker daemon
 	MYOS_INTEGRATION=1 $(SHELLSPEC) spec/integration
-golden-record: ## Record expectations from MYOS_ENGINE (legacy -> expected/, else expected.<engine>/)
+golden-record: ## Re-record the expectations (CASES="name ..." for a subset)
 	spec/golden/record.sh $(CASES)
-test-portability: ## Run the golden suite under the /bin/sh of Alpine and Debian
+test-portability: ## Run the golden suite under the /bin/sh of Alpine (busybox) and Debian (dash)
 	@for img in alpine:3.20 debian:13-slim; do \
 	  printf '%s: ' "$$img"; \
-	  tar cf - --exclude .git . | docker run -i --rm -e MYOS_ENGINE "$$img" /bin/sh -c \
-	    'mkdir -p /myos && tar xf - -C /myos && cd /myos && \
-	     sh spec/support/portability.sh'; \
+	  tar cf - --exclude .git . | docker run -i --rm -e MYOS_ENGINE -e DEBIAN_FRONTEND=noninteractive "$$img" /bin/sh -c \
+	    '{ apk add -q openssl 2>/dev/null || { apt-get -qq update >/dev/null && apt-get -qq install -y openssl >/dev/null 2>&1; }; } && \
+	     mkdir -p /opt/engine && tar xf - -C /opt/engine && cd /opt/engine && sh spec/support/portability.sh'; \
 	done
-
+bench: ## Measure the engine (spec/bench)
+	spec/bench/run.sh
 lint: ## shellcheck every shell source
-	$(SHELLCHECK) -s sh myos spec/golden/record.sh spec/support/run.sh spec/support/bin/* $(wildcard lib/*.sh lib/*/*.sh install.sh)
-
-else
-include make/include.mk
-endif
+	$(SHELLCHECK) -s sh -S warning myos lib/*.sh lib/verb/*.sh spec/support/run.sh spec/support/try.sh spec/support/portability.sh spec/support/bin/* spec/golden/record.sh install.sh
