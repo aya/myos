@@ -20,9 +20,9 @@ MYOS_VERBS="up down build config logs ps status restart start stop recreate conn
 MYOS_SUBS="audit apply list issue renew"
 MYOS_DRYRUN=${DRYRUN:-false}
 MYOS_OUTPUT=text; MYOS_STRICT=; MYOS_WORKDIR=${WORKDIR:-$PWD}
-verbs=; refs=; MYOS_ARGS=; MYOS_IMAGE=; MYOS_BOOTSTRAP=; MYOS_YES=; MYOS_VERB=
+verbs=; refs=; MYOS_ARGS=; MYOS_IMAGE=; MYOS_BOOTSTRAP=; MYOS_YES=; MYOS_VERB=; _m_default_ref=.
 MYOS_FORCE=; MYOS_PAUSE=; MYOS_NO_BACKUP=; MYOS_KEEP=; MYOS_FROM=; MYOS_ARTIFACTS=; MYOS_LOCKED=
-MYOS_SUB=; MYOS_WILDCARD=; MYOS_SELF_SIGNED=; MYOS_CHECK=; MYOS_FIREWALL=${MYOS_FIREWALL:-}; [ "${SETUP_UFW:-}" = true ] && MYOS_FIREWALL=${MYOS_FIREWALL:-ufw}
+MYOS_SUB=; MYOS_WILDCARD=; MYOS_SELF_SIGNED=; MYOS_CHECK=; MYOS_FIREWALL=${MYOS_FIREWALL:-}
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -58,7 +58,7 @@ while [ $# -gt 0 ]; do
     docker-build-*) verbs="${verbs:+$verbs }build"; MYOS_IMAGE="${MYOS_IMAGE:+$MYOS_IMAGE }${1#docker-build-}" ;;
     docker-build) verbs="${verbs:+$verbs }build" ;;
     .env-update) verbs="${verbs:+$verbs }env-update" ;;
-    setup-ufw) verbs="${verbs:+$verbs }firewall"; MYOS_SUB=apply; MYOS_FIREWALL=${MYOS_FIREWALL:-ufw} ;;
+    setup-ufw) verbs="${verbs:+$verbs }firewall"; MYOS_SUB=apply; MYOS_FIREWALL=${MYOS_FIREWALL:-ufw}; _m_default_ref=host ;;
     stack-*-*) verbs="${verbs:+$verbs }$1" ;;
     *)
       if myos_has "$1" "$MYOS_VERBS"; then verbs="${verbs:+$verbs }$1"
@@ -68,6 +68,8 @@ while [ $# -gt 0 ]; do
   shift
 done
 [ -n "$verbs" ] || myos_die 2 "unknown verb ${refs%% *} (myos -h lists the verbs)"
+# SETUP_UFW=true (the old switch) asks for the ufw adapter
+[ "${SETUP_UFW:-}" = true ] && MYOS_FIREWALL=${MYOS_FIREWALL:-ufw}
 myos_realpath "$MYOS_WORKDIR" || :; [ -n "$R" ] && MYOS_WORKDIR=$R
 MYOS_ENV=${ENV:-local}
 MYOS_USER=${USER:-$(id -un)}
@@ -81,7 +83,7 @@ myos_values_load
 # the references: given, or the current directory. A reference names a
 # compose project (make: APP_NAME = its first path segment); a group is
 # expanded into its member stacks, whose files are merged into that project.
-[ -n "$refs" ] || refs=.
+[ -n "$refs" ] || refs=$_m_default_ref
 MYOS_REFS=$refs
 myos_expand "$refs"; MYOS_STACKS=$R
 

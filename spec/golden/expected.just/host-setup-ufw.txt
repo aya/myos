@@ -1,2 +1,4 @@
-myos firewall . apply skip (not a host stack: bind its ports on ${MYOS_BIND_PRIVATE} instead)
+ufw allow 80/tcp
+ufw allow 443/tcp
+myos firewall host apply ok (ufw)
 [exit 0]
