@@ -1,0 +1,52 @@
+# just as the engine: the interface is a justfile, the logic stays in lib/*.sh.
+# Recipes are shebang recipes, so a whole body runs in ONE sh that sources
+# lib/ once; what is measured is just's own overhead on top of the shell.
+
+set export
+
+MYOS_ROOT := env_var_or_default("MYOS_ROOT", "/Users/aya/dev/myos")
+WORKDIR   := env_var_or_default("WORKDIR", justfile_directory())
+ENV       := env_var_or_default("ENV", "local")
+USER      := env_var_or_default("USER", "tester")
+HOSTNAME  := env_var_or_default("HOSTNAME", "testhost")
+DOMAIN    := env_var_or_default("DOMAIN", "example.test")
+DRYRUN    := env_var_or_default("DRYRUN", "true")
+
+# a recipe that does nothing: the fixed cost of just + one sh + sourcing lib/
+noop:
+    #!/bin/sh
+    for m in core str var tags naming stack config compose hooks; do . $MYOS_ROOT/lib/$m.sh; done
+
+# up STACKS: resolve every stack of the groups, group by compose project,
+# print one compose command per project (what bin/myos does)
+up +stacks:
+    #!/bin/sh
+    for m in core str var tags naming stack config compose hooks; do . $MYOS_ROOT/lib/$m.sh; done
+    rows=""
+    for ref in $(myos_group_expand {{stacks}}); do
+      files=""
+      for d in $(myos_stack_dirs "$ref"); do
+        files="$files $(myos_compose_files "$d" "docker-compose $(myos_stack_name "$ref")" "$(myos_compose_suffixes)" "$ENV" | tr '\n' ' ')"
+      done
+      app=$(myos_stack_name "$ref")
+      project=$(myos_project_name "$(myos_scope "$ref")" "$USER" "$ENV" "$app")
+      rows="$rows
+    $project|$files"
+    done
+    for project in $(printf '%s\n' "$rows" | sed '/^$/d' | cut -d'|' -f1 | awk '!s[$0]++'); do
+      files=$(printf '%s\n' "$rows" | awk -F'|' -v p="$project" '$1==p {print $2}' | tr ' ' '\n' | sed '/^$/d' | awk '!s[$0]++')
+      fargs=""; for f in $files $MYOS_ROOT/share/compose/networks.yml; do fargs="$fargs -f $f"; done
+      echo "docker compose$fargs -p $project up -d"
+    done
+
+# export STACKS: every setting the hooks of the stacks declare
+export +stacks:
+    #!/bin/sh
+    for m in core str var tags naming stack config compose hooks; do . $MYOS_ROOT/lib/$m.sh; done
+    refs=$(myos_group_expand {{stacks}})
+    for ref in $refs; do
+      for d in $(myos_stack_dirs "$ref"); do myos_stack_hooks "$d" "$(myos_stack_name "$ref")"; done
+    done
+    names=$(for ref in $refs; do for d in $(myos_stack_dirs "$ref"); do
+      [ -f "$d/_stack.sh" ] && sed -n 's/^myos_default_\([A-Za-z_][A-Za-z0-9_]*\)().*/\1/p' "$d/_stack.sh"; done; done | sort -u)
+    for v in $names; do printf '%s=%s\n' "$v" "$(myos_var "$v")"; done
