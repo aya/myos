@@ -125,18 +125,60 @@ fn_urlprefix() { # PATH OPTS URIS: one urlprefix-<uri><path>* [opts] per uri, co
   done
   set +f; R=$_up_out
 }
+# The route a service declares is read once and rendered twice: @tagprefix
+# gives the canonical urlprefix- form (what consul carries, what fabio reads,
+# and what `cert` parses to know which certificates a host needs), @traefikrule
+# gives the same route as a traefik rule. A stack declares its route once; the
+# router is a choice of the host stack, through MYOS_ROUTER.
+fn_routepath_() { # SVC PORT -> R: the path of the route
+  fn_uvar_ "$1_SERVICE_${2:-}_PATH"; [ -n "$R" ] && return 0
+  fn_uvar_ "$1_SERVICE_PATH"
+}
+fn_routeuris_() { # SVC PORT [ENVS] -> R: the uris the service routes
+  _ru_uris=
+  for _ru_e in ${3:-}; do fn_uvar_ "$1_SERVICE_${2:-}_$_ru_e"; _ru_uris="${_ru_uris:+$_ru_uris }$R"; done
+  fn_strip "$_ru_uris"; _ru_uris=$R
+  [ -n "$_ru_uris" ] || { fn_uvar_ "$1_SERVICE_${2:-}_URIS"; _ru_uris=$R; }
+  [ -n "$_ru_uris" ] || { fn_uri "$1" "${2:-}"; _ru_uris=$R; }
+  R=$_ru_uris
+}
 fn_tagprefix() { # SVC PORT [ENVS]
-  fn_uvar_ "$1_SERVICE_${2:-}_PATH"; _tp_path=$R
-  [ -n "$_tp_path" ] || { fn_uvar_ "$1_SERVICE_PATH"; _tp_path=$R; }
+  fn_routepath_ "$1" "${2:-}"; _tp_path=$R
   fn_uvar_ "$1_SERVICE_${2:-}_OPTS"; _tp_opts=$R
   [ -n "$_tp_opts" ] || { fn_uvar_ "$1_SERVICE_OPTS"; _tp_opts=$R; }
   [ -n "$_tp_opts" ] || { fn_envprefix "$1" "${2:-}" "allow auth deny prepend proto register strip"; _tp_opts=$R; }
-  _tp_uris=
-  for _tp_e in ${3:-}; do fn_uvar_ "$1_SERVICE_${2:-}_$_tp_e"; _tp_uris="${_tp_uris:+$_tp_uris }$R"; done
-  fn_strip "$_tp_uris"; _tp_uris=$R
-  [ -n "$_tp_uris" ] || { fn_uvar_ "$1_SERVICE_${2:-}_URIS"; _tp_uris=$R; }
-  [ -n "$_tp_uris" ] || { fn_uri "$1" "${2:-}"; _tp_uris=$R; }
+  fn_routeuris_ "$1" "${2:-}" "${3:-}"; _tp_uris=$R
   fn_urlprefix "$_tp_path" "$_tp_opts" "$_tp_uris"
+}
+fn_dotesc_() { # HOST -> R: the dots escaped, for a traefik HostRegexp
+  R=; _de_rest=$1
+  while :; do
+    case $_de_rest in
+      *.*) R="$R${_de_rest%%.*}\\."; _de_rest=${_de_rest#*.} ;;
+      *)   R="$R$_de_rest"; break ;;
+    esac
+  done
+}
+fn_traefikrule() { # SVC PORT [ENVS]: the same route as a traefik rule
+  myos_var MYOS_ROUTER; case $R in traefik) ;; *) R=; return 0 ;; esac
+  fn_routepath_ "$1" "${2:-}"; _tf_path=$R
+  fn_routeuris_ "$1" "${2:-}" "${3:-}"; _tf_uris=$R
+  _tf_out=; set -f
+  for _tf_u in $_tf_uris; do
+    _tf_h=${_tf_u%%/*}
+    case $_tf_h in
+      ''|'*') continue ;;
+      # a wildcard is not a Host() in traefik v3, it is a regexp
+      \*.*) fn_dotesc_ "${_tf_h#\*.}"; _tf_m="HostRegexp(\`^.+\\.$R\$\`)" ;;
+      *)    _tf_m="Host(\`$_tf_h\`)" ;;
+    esac
+    _tf_out="${_tf_out:+$_tf_out || }$_tf_m"
+  done
+  set +f
+  [ -n "$_tf_out" ] || { R=; return 0; }
+  case $_tf_out in *' || '*) _tf_out="($_tf_out)" ;; esac
+  case $_tf_path in ''|/) _tf_path= ;; esac
+  R="$_tf_out${_tf_path:+ && PathPrefix(\`$_tf_path\`)}"
 }
 
 # Functions that run a subprocess (!name)

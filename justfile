@@ -88,6 +88,16 @@ clean *args:
 firewall *args:
     @sh "{{lib}}/main.sh" firewall "$@"
 
+# apply [--from <remote>/<ref>]: converge the checkout to git, gate it, deploy it
+[group('lifecycle')]
+apply *args:
+    @sh "{{lib}}/main.sh" apply "$@"
+
+# secrets [list]: the provider, the encrypted files and the names they define
+[group('stack')]
+secrets *args:
+    @sh "{{lib}}/main.sh" secrets "$@"
+
 # policy [audit]: what a stack asks of the host that a shared cluster cannot grant; --strict exits 4
 [group('lifecycle')]
 policy *args:

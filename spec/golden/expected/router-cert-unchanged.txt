@@ -1,0 +1,3 @@
+app.example.test
+*.alt.example.test wildcard
+[exit 0]

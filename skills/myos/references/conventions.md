@@ -45,7 +45,8 @@ ${space} ${comma} ${dollar}   the characters an argument can not hold
 $$                    a literal $
 ```
 
-Functions: `tagprefix SVC PORT [ENVS]`, `urlprefix PATH OPTS URIS`, `uri`,
+Functions: `tagprefix SVC PORT [ENVS]`, `traefikrule SVC PORT [ENVS]`,
+`urlprefix PATH OPTS URIS`, `uri`,
 `url`, `servicenvs`, `envprefix`, `patsubst`, `patsublist`, `subst`, `filter`,
 `filter-out`, `firstword`, `lastword`, `words`, `wordlist`, `strip`, `if`,
 `or`, `and`, `addprefix`, `addsuffix`, `dir`, `notdir`, `lower`, `upper`,
@@ -60,6 +61,15 @@ strip=]`, from `<SVC>_SERVICE_<port>_NAME`, `_PATH`, `_OPTS`, `_URIS` and the
 option settings. `myos cert` derives the certificates from those tags
 (`/host/certs/<name>-cert.pem` and `-key.pem` in the host volume, what fabio
 reads).
+
+The same declaration renders twice. `@traefikrule(<SVC>,<port>)` gives the
+route as a traefik rule -- `(Host(`a.example.org`) || HostRegexp(...)) &&
+PathPrefix(`/api`)`, a wildcard becoming a regexp because traefik v3 has no
+wildcard `Host`. `MYOS_ROUTER=fabio|traefik` says which one is live
+(`@traefikrule` is empty for another router, and `TRAEFIK_ENABLE` makes the
+labels inert), so the router is a choice of the `host/` stack rather than a
+property of every stack it serves. `@tagprefix` stays the canonical form
+whatever the router, because `cert` reads it.
 
 ## Networks and ports
 

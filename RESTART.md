@@ -10,16 +10,18 @@ Done: the model, the settings layer, `.env.dist` rendering, every compose
 verb, `bootstrap build install clean attach`, `status backup restore upgrade
 doctor firewall cert`, hooks, events, lock, the converter of the old
 catalogue (`share/tools/mk2settings.py`, applied to `spec/fixtures/catalogue`);
-then `--target` (`lib/target.sh`) and the swarm backend (`lib/verb/swarm.sh`),
-the first two pieces of the distributed plan below.
+then the distributed layer: `--target` (`lib/target.sh`), the swarm backend
+(`lib/verb/swarm.sh`), the policy gate (`lib/verb/policy.sh`), the sops secret
+layer (`lib/secrets.sh`) and `apply` (`lib/verb/apply.sh`), plus the second
+rendering of a route (`@traefikrule`, `MYOS_ROUTER`).
 
 Next, from the plan file `~/.wclaude/plans/on-va-deployer-une-merry-waterfall.md`
 (the deployment model for a multi-cluster Swarm PaaS, which is the "why" this
-engine exists): the policy gate generalised from `firewall audit` (it is what
-makes client self-service safe, because access to a manager's docker socket is
-root on the cluster), the sops/age secret layer in `lib/values.sh`, the `apply`
-verb the reconciler loops on, and `@tagprefix` gaining a second renderer so
-the router (fabio or traefik) becomes a choice of the `host/` stack.
+engine exists): the real catalogue converted to the swarm backend (labels move
+under `deploy:`, a placement constraint for every service with state), a
+single-node swarm on the workstation to try it against, and the bootstrap of
+the `hco` cluster -- Traefik behind a read-only socket proxy, then Forgejo
+deployed from a local clone, before anything depends on the forge.
 
 Left (plan file `~/.wclaude/plans/je-souhaite-creer-un-whimsical-treasure.md`):
 the real catalogue `myos-stacks` converted with the tool and its 85 `ports:`

@@ -1,0 +1,7 @@
+services:
+  app:
+    image: alpine:3.20
+    labels:
+    - SERVICE_80_TAGS=${APP_SERVICE_80_TAGS}
+    - traefik.enable=${TRAEFIK_ENABLE}
+    - traefik.http.routers.app.rule=${APP_SERVICE_80_RULE}

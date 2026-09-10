@@ -123,3 +123,21 @@ policy-json                     | hostile       | --json policy socket
 policy-enforce-blocks-up        | hostile       | up socket MYOS_POLICY_ENFORCE=true
 policy-host-stack               | catalogue     | policy host/nginx --strict
 policy-runner-socket            | catalogue     | policy drone/drone-runner-docker --strict
+# --- the encrypted store
+secrets-list                    | secrets       | secrets app
+secrets-value                   | secrets       | print-APP_TOKEN app
+secrets-cli-wins                | secrets       | print-APP_TOKEN app APP_TOKEN=from-the-command-line
+secrets-none                    | secrets       | secrets app MYOS_SECRETS=none
+secrets-undecryptable           | secrets       | secrets app MOCK_SOPS_FAIL=1
+secrets-unknown-provider        | secrets       | secrets app MYOS_SECRETS=openbao
+# --- apply, the verb a reconciler loops on
+apply-sane                      | hostile       | apply sane
+apply-denied                    | hostile       | apply socket
+apply-from-needs-git            | hostile       | apply sane --from origin/main
+# --- one route declaration, two renderings
+router-fabio-tags               | router        | print-APP_SERVICE_80_TAGS app
+router-fabio-rule               | router        | print-APP_SERVICE_80_RULE app
+router-traefik-tags             | router        | print-APP_SERVICE_80_TAGS app MYOS_ROUTER=traefik
+router-traefik-rule             | router        | print-APP_SERVICE_80_RULE app MYOS_ROUTER=traefik
+router-traefik-enable           | router        | print-TRAEFIK_ENABLE app MYOS_ROUTER=traefik
+router-cert-unchanged           | router        | cert list app MYOS_ROUTER=traefik

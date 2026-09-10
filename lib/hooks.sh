@@ -77,6 +77,8 @@ myos_hook_replace() {
 # myos_verb_with_hooks VERB DEFAULT_FN: pre hooks, the verb (hook or default), post hooks
 myos_verb_with_hooks() {
   myos_hooks "pre-$1" || return 1
-  if ! myos_hook_replace "$1"; then "$2" || { myos_hooks "on-fail-$1"; return 1; }; fi
+  # the code of the default is kept: 4 is an audit finding, not a failure, and
+  # a caller that reads exit codes must see the one the verb meant
+  if ! myos_hook_replace "$1"; then "$2" || { _wh_rc=$?; myos_hooks "on-fail-$1"; return "$_wh_rc"; }; fi
   myos_hooks "post-$1"
 }

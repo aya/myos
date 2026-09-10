@@ -110,7 +110,13 @@ A deployment created before this version keeps its names with
   needs `--wildcard` and a dns-01 hook. At bootstrap `myos cert host
   --self-signed` gives fabio something to start with.
 - Secrets belong in `$WORKDIR/.env` (rendered from `.env.dist`, owner only),
-  never in a compose file. `backup` copies it beside the archives.
+  never in a compose file. `backup` copies it beside the archives. What a
+  repository must carry encrypted goes in `secrets.env` (sops, one age key
+  pair per cluster); `myos secrets` lists the names, never the values.
+- `myos apply --from origin/main` is the deployment: converge the checkout to
+  git, run the gate, deploy, wait for healthy. A reconciler loops on it, and
+  you run the same command by hand when the forge is down — which is the point,
+  and the reason the engine never depends on a forge.
 - A stack of the catalogue is shared: change it in `myos-stacks`, not in place
   on a server.
 - Before upgrading myos on a machine that runs stacks, pin the naming, or

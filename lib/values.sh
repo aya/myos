@@ -4,19 +4,32 @@
 # defaults of the stacks and of the engine. A value already known is never
 # overwritten by a lower layer.
 
+# myos_values_absorb PREFIX TEXT: the KEY=VALUE lines of TEXT into <PREFIX><KEY>.
+# The first definition wins, as the files are read highest layer first; which
+# layer beats which is the business of myos_var, not of this.
+# The names it filled are appended to MYOS_ABSORBED.
+myos_values_absorb() {
+  _va_p=$1; _va_ifs=$IFS; IFS=$NL; set -f
+  for _va_line in $2; do
+    IFS=$_va_ifs; set +f
+    case $_va_line in ''|'#'*|export\ *) case $_va_line in export\ *) _va_line=${_va_line#export } ;; *) IFS=$NL; set -f; continue ;; esac ;; esac
+    case $_va_line in *=*) ;; *) IFS=$NL; set -f; continue ;; esac
+    _va_k=${_va_line%%=*}; _va_v=${_va_line#*=}
+    case $_va_k in *[!A-Za-z0-9_]*|'') IFS=$NL; set -f; continue ;; esac
+    case $_va_v in \"*\") _va_v=${_va_v#\"}; _va_v=${_va_v%\"} ;; \'*\') _va_v=${_va_v#\'}; _va_v=${_va_v%\'} ;; esac
+    eval "if [ -z \"\${$_va_p$_va_k+set}\" ]; then $_va_p$_va_k=\$_va_v; MYOS_ABSORBED=\"\$MYOS_ABSORBED \$_va_k\"; fi"
+    IFS=$NL; set -f
+  done
+  IFS=$_va_ifs; set +f
+}
+
 myos_values_load() {
-  MYOS_VALUES=
+  MYOS_VALUES=; MYOS_ABSORBED=
   for _vl_f in "$MYOS_WORKDIR/.env.$MYOS_ENV" "$MYOS_WORKDIR/.env"; do
     [ -f "$_vl_f" ] || continue
-    while IFS= read -r _vl_line || [ -n "$_vl_line" ]; do
-      case $_vl_line in ''|'#'*|export\ *) case $_vl_line in export\ *) _vl_line=${_vl_line#export } ;; *) continue ;; esac ;; esac
-      case $_vl_line in *=*) ;; *) continue ;; esac
-      _vl_k=${_vl_line%%=*}; _vl_v=${_vl_line#*=}
-      case $_vl_k in *[!A-Za-z0-9_]*|'') continue ;; esac
-      case $_vl_v in \"*\") _vl_v=${_vl_v#\"}; _vl_v=${_vl_v%\"} ;; \'*\') _vl_v=${_vl_v#\'}; _vl_v=${_vl_v%\'} ;; esac
-      eval "[ -n \"\${MYOS_CLI_$_vl_k+set}\" ] || [ -n \"\${$_vl_k+set}\" ] || [ -n \"\${MYOS_ENVFILE_$_vl_k+set}\" ] || MYOS_ENVFILE_$_vl_k=\$_vl_v"
-    done < "$_vl_f"
+    myos_values_absorb MYOS_ENVFILE_ "$(cat "$_vl_f")"
   done
+  myos_secrets_load
 }
 
 # myos_var NAME -> R (empty when unknown); origin in MYOS_ORIGIN
@@ -28,6 +41,7 @@ myos_var() {
   eval "if [ -n \"\${MYOS_CLI_$1+set}\" ]; then R=\$MYOS_CLI_$1; MYOS_ORIGIN=cli
         elif [ -n \"\${$1+set}\" ]; then R=\$$1; MYOS_ORIGIN=env
         elif [ -n \"\${MYOS_ENVFILE_$1+set}\" ]; then R=\$MYOS_ENVFILE_$1; MYOS_ORIGIN=.env
+        elif [ -n \"\${MYOS_SECRET_$1+set}\" ]; then R=\$MYOS_SECRET_$1; MYOS_ORIGIN=secrets
         else R=; fi"
   [ -n "$MYOS_ORIGIN" ] && return 0
   eval "if [ -n \"\${MYOS_MEMO_$1+set}\" ]; then R=\$MYOS_MEMO_$1; MYOS_ORIGIN=\$MYOS_MEMO_ORIGIN_$1; fi"

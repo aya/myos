@@ -1,0 +1,14 @@
+#!/bin/sh
+# Mock sops for the tests: decrypts a fixture by printing the plaintext the
+# fixture declares in clear after a marker, so that no real age key, and no
+# real ciphertext, has to live in the repository.
+#   MOCK_SOPS_FAIL=1   every decryption fails, as a missing key would
+# The file format the fixtures use: the encrypted lines are the ones after a
+# "#PLAINTEXT" marker; everything before it stands for the ciphertext.
+[ -n "${MOCK_SOPS_FAIL:-}" ] && exit 1
+file=
+for a in "$@"; do
+  case $a in -*) ;; *) file=$a ;; esac
+done
+[ -n "$file" ] && [ -f "$file" ] || exit 1
+awk 'p { print } /^#PLAINTEXT/ { p = 1 }' "$file"

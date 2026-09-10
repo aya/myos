@@ -132,7 +132,10 @@ myos_policy_findings() {
 # MYOS_POLICY_ENFORCE=true (and MYOS_POLICY_REQUIRE to what that cluster
 # demands) so a denied stack never reaches the docker socket it wants.
 myos_policy_enforce() {
-  myos_var MYOS_POLICY_ENFORCE; [ "$R" = true ] || return 0
+  myos_var MYOS_POLICY_ENFORCE; _pe_v=$R
+  # `apply` sets MYOS_POLICY_ON; MYOS_POLICY_ENFORCE=false still turns it off,
+  # so an operator keeps a way through on a cluster he owns
+  case $_pe_v in false) return 0 ;; true) ;; *) [ "${MYOS_POLICY_ON:-}" = true ] || return 0 ;; esac
   _pe_was=$MYOS_STRICT; MYOS_STRICT=1
   myos_verb_policy; _pe_rc=$?
   MYOS_STRICT=$_pe_was

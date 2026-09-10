@@ -1,0 +1,2 @@
+myos: --from origin/main needs a git checkout in @WD@
+[exit 1]

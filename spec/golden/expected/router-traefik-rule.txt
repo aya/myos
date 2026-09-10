@@ -1,0 +1,2 @@
+APP_SERVICE_80_RULE (Host(`app.example.test`) || HostRegexp(`^.+\.alt\.example\.test$`)) && PathPrefix(`/api`)
+[exit 0]

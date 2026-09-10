@@ -50,6 +50,24 @@ those recordings, and every intentional difference is in `spec/golden/DELTAS.md`
   `MYOS_POLICY_REQUIRE`). `--strict` exits 4; `MYOS_POLICY_ENFORCE=true` puts it
   in front of `up`. Access to a manager's docker socket is root on the cluster
   and swarm has no RBAC, so nothing below the engine refuses these
+- `secrets.<ENV>.env` / `secrets.env` are sops files, decrypted into a layer
+  between `$WORKDIR/.env` and the defaults of the stacks: one age key pair per
+  cluster, so a cluster cannot read the secrets of another and the private key
+  never leaves the machine that applies. `myos secrets` lists the provider, the
+  files and the names -- never the values. `MYOS_SECRETS` is the seam an
+  OpenBao provider would use
+- `apply` is the deployment verb: converge a checkout to `--from <remote>/<ref>`
+  (fetch, `git verify-commit` under `MYOS_APPLY_VERIFY`, hard reset), run the
+  policy gate, deploy, wait for healthy -- under the lock and the `*-apply`
+  hooks. A reconciler loops on it and an operator runs it by hand when the
+  forge is down: one execution path, several triggers. It refuses a dirty
+  checkout without `--force`
+- a service declares its route once and it renders twice: `@tagprefix` the
+  canonical `urlprefix-` form, `@traefikrule` the same route as a traefik rule,
+  selected by `MYOS_ROUTER`. `cert` reads the canonical form either way, so
+  certificates do not depend on which proxy is in front
+- `myos_verb_with_hooks` keeps the exit code of the verb instead of collapsing
+  every failure to 1: 4 is an audit finding, not a failure
 - gone: `apps-install`, `ssh*`, `deploy*`, `release*`, `subrepo*`, `git-*`
   (never used), the make include of a project, `setup-*` (system setup is not
   the job of a stack tool)

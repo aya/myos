@@ -33,3 +33,10 @@ USER_DOCKER_VOLUME     ?= ${USER_COMPOSE_PROJECT_NAME}
 MYOS_BIND_PUBLIC  ?= 0.0.0.0
 MYOS_BIND_PRIVATE ?= 127.0.0.1
 MYOS_BIND_MESH    ?=
+
+# which router reads the routes a stack declares: fabio (the consul tags of
+# @tagprefix) or traefik (the rule of @traefikrule). The declaration is the
+# same either way, so this is a choice of the host stack, not of the stacks it
+# serves. TRAEFIK_ENABLE is the label that makes the other one inert.
+MYOS_ROUTER    ?= fabio
+TRAEFIK_ENABLE ?= @if(@filter(traefik,${MYOS_ROUTER}),true,false)
