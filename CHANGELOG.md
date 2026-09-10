@@ -79,6 +79,10 @@ those recordings, and every intentional difference is in `spec/golden/DELTAS.md`
   vraiment le projet. `myos_project_name` lisait la variable du shell, jamais
   la couche `.env` où `migrate pin` l'écrit, donc le levier qui préserve les
   noms d'une flotte existante n'avait aucun effet tout en rapportant un succès
+- la configuration système est un repli de la machine et non un ordre : elle est
+  marquée (`MYOS_CONF_<nom>`) et classée sous le `.env` du projet, tout en
+  restant exportée pour le CLI docker. Un `DOMAIN=` de `/etc/default/myos`
+  écrasait le domaine que le projet déclare
 - gone: `apps-install`, `ssh*`, `deploy*`, `release*`, `subrepo*`, `git-*`
   (never used), the make include of a project, `setup-*` (system setup is not
   the job of a stack tool)

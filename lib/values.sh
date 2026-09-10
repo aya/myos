@@ -38,10 +38,15 @@ myos_var() {
   # a name built from a word that is not an identifier (*.ipns_SERVICE_NAME)
   # is simply unknown, as it was for make
   case $1 in *[!A-Za-z0-9_]*|'') R=; return 0 ;; esac
+  # A value the wrapper took from the system configuration is exported like any
+  # other (the docker CLI reads only the environment) but marked in
+  # MYOS_CONF_<name>: it is the fallback of the machine, so it ranks below the
+  # .env of the project rather than above it.
   eval "if [ -n \"\${MYOS_CLI_$1+set}\" ]; then R=\$MYOS_CLI_$1; MYOS_ORIGIN=cli
-        elif [ -n \"\${$1+set}\" ]; then R=\$$1; MYOS_ORIGIN=env
+        elif [ -n \"\${$1+set}\" ] && { [ -z \"\${MYOS_CONF_$1+set}\" ] || [ \"\$MYOS_CONF_$1\" != \"\$$1\" ]; }; then R=\$$1; MYOS_ORIGIN=env
         elif [ -n \"\${MYOS_ENVFILE_$1+set}\" ]; then R=\$MYOS_ENVFILE_$1; MYOS_ORIGIN=.env
         elif [ -n \"\${MYOS_SECRET_$1+set}\" ]; then R=\$MYOS_SECRET_$1; MYOS_ORIGIN=secrets
+        elif [ -n \"\${MYOS_CONF_$1+set}\" ]; then R=\$MYOS_CONF_$1; MYOS_ORIGIN=conf
         else R=; fi"
   [ -n "$MYOS_ORIGIN" ] && return 0
   eval "if [ -n \"\${MYOS_MEMO_$1+set}\" ]; then R=\$MYOS_MEMO_$1; MYOS_ORIGIN=\$MYOS_MEMO_ORIGIN_$1; fi"

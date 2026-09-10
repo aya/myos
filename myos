@@ -16,13 +16,19 @@ MYOS_CONF=${MYOS_CONF:-/etc/conf.d/myos}
 [ -r "$MYOS_CONF" ] || MYOS_CONF=/etc/default/myos
 if [ -r "$MYOS_CONF" ]; then
   # KEY=VALUE lines of the system configuration become defaults of the
-  # environment: what the environment already holds wins
+  # environment: what the environment already holds wins. It is exported
+  # because its job is to point the docker CLI somewhere (DOCKER_HOST,
+  # DOCKER_SOCKET_LOCATION), and a child process reads only the environment.
+  # Each one is also marked in MYOS_CONF_<name> so the engine can tell it apart
+  # from a variable the operator set: the machine's default is a fallback and
+  # must lose to the .env of a project, which is more specific than the host it
+  # is driven from.
   while IFS= read -r _line || [ -n "$_line" ]; do
     case $_line in ''|'#'*|*[!A-Za-z0-9_=]*=*|*=*) ;; *) continue ;; esac
     case $_line in ''|'#'*) continue ;; esac
     _k=${_line%%=*}; _v=${_line#*=}
     case $_k in *[!A-Za-z0-9_]*|'') continue ;; esac
-    eval "[ -n \"\${$_k+set}\" ] || { $_k=\$_v; export $_k; }"
+    eval "[ -n \"\${$_k+set}\" ] || { $_k=\$_v; export $_k; MYOS_CONF_$_k=\$_v; export MYOS_CONF_$_k; }"
   done < "$MYOS_CONF"
 fi
 exec sh "$MYOS/lib/main.sh" "$@"
