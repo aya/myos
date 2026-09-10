@@ -33,11 +33,18 @@ myos_compose_cmd() { # -> R: the command prefix, files and project included
   myos_compose_bin; R="${_c_t:+$_c_t }$R$_c_f -p $MYOS_PROJECT"
 }
 
-# myos_compose_env -> R: the values the files reference, as quoted assignments
+# myos_compose_env -> R: the values the files reference, as quoted assignments,
+# plus the docker knobs the engine has an opinion about
 myos_compose_env() {
-  myos_env_vars; _ce_pre=
+  myos_env_vars; _ce_names=$R
+  # BuildKit: docker's default builder for years, and the only one that reads
+  # `RUN --mount=`. Compose does not always choose it by itself -- over an ssh
+  # endpoint it was seen falling back to the classic builder, which fails such
+  # a Dockerfile. Say which one, rather than leave it to chance; DOCKER_BUILDKIT
+  # on the command line or in the environment still decides.
+  myos_var DOCKER_BUILDKIT; myos_shquote "DOCKER_BUILDKIT=$R"; _ce_pre=" $R"
   set -f
-  for _ce_v in $R; do
+  for _ce_v in $_ce_names; do
     myos_var "$_ce_v"; [ -n "$R" ] || continue
     myos_shquote "$_ce_v=$R"; _ce_pre="$_ce_pre $R"
   done

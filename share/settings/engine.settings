@@ -38,5 +38,9 @@ MYOS_BIND_MESH    ?=
 # @tagprefix) or traefik (the rule of @traefikrule). The declaration is the
 # same either way, so this is a choice of the host stack, not of the stacks it
 # serves. TRAEFIK_ENABLE is the label that makes the other one inert.
+# le builder demandé à compose : BuildKit, le défaut de docker et le seul qui
+# lise `RUN --mount=`. `DOCKER_BUILDKIT=0` rend le builder hérité.
+DOCKER_BUILDKIT ?= 1
+
 MYOS_ROUTER    ?= fabio
 TRAEFIK_ENABLE ?= @if(@filter(traefik,${MYOS_ROUTER}),true,false)
