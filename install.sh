@@ -10,7 +10,7 @@
 set -eu
 
 MYOS_REPOSITORY=${MYOS_REPOSITORY:-https://github.com/aya/myos}
-STACKS_REPOSITORY=${STACKS_REPOSITORY:-https://github.com/aya/myos-stacks}
+STACKS_REPOSITORY=${STACKS_REPOSITORY:-https://git.open.us.org/HCO/stack}
 REF=${MYOS_REF:-tdd}
 PREFIX=
 WITH_STACKS=false
@@ -59,7 +59,10 @@ ln -sf "$LIB/myos" "$BIN/myos"
 say "linked $BIN/myos"
 
 if [ "$WITH_STACKS" = true ]; then
-  SHARE=$PREFIX/share/myos
+  # the catalogue holds its stacks at its root, so it is cloned as the stack
+  # directory itself: <prefix>/share/myos/stack, which is on the path myos
+  # searches
+  SHARE=$PREFIX/share/myos/stack
   if [ -d "$SHARE/.git" ]; then say "updating the stack catalogue in $SHARE"; git -C "$SHARE" pull --quiet --ff-only
   else say "installing the stack catalogue into $SHARE"; mkdir -p "$(dirname "$SHARE")"; git clone --quiet "$STACKS_REPOSITORY" "$SHARE"; fi
 fi
