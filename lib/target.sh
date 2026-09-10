@@ -14,6 +14,21 @@
 # The assignment is written last on the docker call, so the target wins over a
 # value of the same name a stack may carry.
 
+# myos_target_hostname -> R: the name of the machine the target is, empty when
+# there is no target. Everything the model derives from the host -- the public
+# network, the project of a host stack, the certificates -- is named after it,
+# so taking the hostname of the workstation would put a deployment on a network
+# named after the laptop that ran the command, where nothing else can find it.
+# The name of the target is that name by convention; MYOS_TARGET_<NAME>_HOSTNAME
+# says otherwise, and `HOSTNAME=` on the command line still wins over both.
+myos_target_hostname() {
+  R=
+  [ -n "${MYOS_TARGET:-}" ] || return 0
+  fn_upper "$MYOS_TARGET"; _th_n=$R
+  myos_var "MYOS_TARGET_${_th_n}_HOSTNAME"
+  [ -n "$R" ] || R=$MYOS_TARGET
+}
+
 myos_docker() { # ARGS...: docker on the target, for the calls that are not compose
   myos_target_env
   if [ -n "$R" ]; then env "$R" docker "$@"; else docker "$@"; fi

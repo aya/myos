@@ -1,4 +1,4 @@
 DOCKER_HOST=ssh://ops@sonic.example.org docker --log-level=error network create --driver overlay --attachable tester-local
-DOCKER_HOST=ssh://ops@sonic.example.org docker --log-level=error network create --driver overlay --attachable testhost
-DOCKER_HOST=ssh://ops@sonic.example.org docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost config | DOCKER_HOST=ssh://ops@sonic.example.org docker --log-level=error stack deploy --with-registry-auth --detach=false -c - testhost
+DOCKER_HOST=ssh://ops@sonic.example.org docker --log-level=error network create --driver overlay --attachable sonic
+DOCKER_HOST=ssh://ops@sonic.example.org docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p sonic config | DOCKER_HOST=ssh://ops@sonic.example.org docker --log-level=error stack deploy --with-registry-auth --detach=false -c - sonic
 [exit 0]

@@ -1,4 +1,4 @@
 DOCKER_HOST=ssh://ops@sonic.example.org docker network create tester-local
-DOCKER_HOST=ssh://ops@sonic.example.org docker network create testhost
-DOCKER_HOST=ssh://ops@sonic.example.org docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost up -d
+DOCKER_HOST=ssh://ops@sonic.example.org docker network create sonic
+DOCKER_HOST=ssh://ops@sonic.example.org docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p sonic up -d
 [exit 0]

@@ -36,7 +36,9 @@ those recordings, and every intentional difference is in `spec/golden/DELTAS.md`
   `MYOS_TARGET_<NAME>` holds `ssh://user@host`, `tcp://...` or
   `context:<name>`, so a deployment declares the machine it goes to in the
   repository that holds the stacks. Resolved before anything runs; an
-  undeclared name exits 3
+  undeclared name exits 3. What the model derives from the host -- `HOSTNAME`,
+  the public network, the project of a host stack -- is named after the target,
+  not after the machine running the command
 - `--backend swarm` deploys to a Docker Swarm: the resolved files are rendered
   by `compose config` and piped into `docker stack deploy`, the networks are
   created as attachable overlays, `down` is `stack rm` and `ps` is `stack

@@ -92,8 +92,18 @@ MYOS_SERVICE=${SERVICE:-}; MYOS_NUM=${NUM:-}
 export MYOS MYOS_WORKDIR
 myos_values_load
 # the target is resolved before anything runs: a name nobody declared must not
-# fail halfway, with the networks of a deployment already created here
+# fail halfway, with the networks of a deployment already created here. And a
+# target is another machine, so what the model derives from the host is named
+# after it rather than after the workstation; HOSTNAME= on the command line
+# still wins. Read after the values, so the target may declare its own name.
 myos_target_env
+if [ -n "$MYOS_TARGET" ] && [ -z "${MYOS_CLI_HOSTNAME:-}" ]; then
+  myos_target_hostname
+  # HOSTNAME is exported with it: the environment layer sits above the engine,
+  # so leaving the workstation's name there would have ${HOSTNAME} in a stack
+  # disagree with the network the same run just named
+  [ -n "$R" ] && { myos_lower "$R"; MYOS_HOSTNAME=$R; HOSTNAME=$R; export HOSTNAME; }
+fi
 
 # the references: given, or the current directory. A reference names a
 # compose project (make: APP_NAME = its first path segment); a group is
