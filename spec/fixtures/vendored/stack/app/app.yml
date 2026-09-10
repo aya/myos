@@ -1,0 +1,4 @@
+services:
+  app:
+    ports: !override
+    - "${MYOS_BIND_PRIVATE:-127.0.0.1}::8080"

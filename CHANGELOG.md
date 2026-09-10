@@ -68,6 +68,11 @@ those recordings, and every intentional difference is in `spec/golden/DELTAS.md`
   certificates do not depend on which proxy is in front
 - `myos_verb_with_hooks` keeps the exit code of the verb instead of collapsing
   every failure to 1: 4 is an audit finding, not a failure
+- vendoring an upstream compose works as advertised: `firewall audit` honours
+  the merge tags (`ports: !override` in an overlay replaces the list rather
+  than adding to it), and a `.env.dist` line now initialises a name the engine
+  answers with a default of its own (`DOMAIN`, `ENV`, `USER`, `HOSTNAME`,
+  `DOCKER_IMAGE_TAG`) instead of being silently overwritten by that default
 - gone: `apps-install`, `ssh*`, `deploy*`, `release*`, `subrepo*`, `git-*`
   (never used), the make include of a project, `setup-*` (system setup is not
   the job of a stack tool)

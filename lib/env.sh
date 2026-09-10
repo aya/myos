@@ -55,8 +55,15 @@ myos_env_resolve() {
 
 # myos_env_lookup KEY -> R: a value of the run, or the resolved dist value
 myos_env_lookup() {
-  myos_var "$1"; [ -n "$MYOS_ORIGIN" ] && return 0
-  myos_env_dist_value "$1"; [ -n "$R" ] || return 0
+  # The fallback the engine holds for a name it always answers (DOMAIN
+  # localhost, ENV local, USER, HOSTNAME) is not a value anybody provided: a
+  # .env.dist line is exactly what initialises those, and treating the
+  # fallback as an answer wrote `DOMAIN=localhost` over `DOMAIN=example.org`
+  # without a word. Every other layer still wins, engine defaults being the
+  # lowest one.
+  myos_var "$1"; _el_engine=$R
+  case $MYOS_ORIGIN in ''|engine) ;; *) return 0 ;; esac
+  myos_env_dist_value "$1"; [ -n "$R" ] || { R=$_el_engine; return 0; }
   eval "[ -z \"\${MYOS_DIST_BUSY_$1:-}\" ]" || myos_die 2 ".env.dist: $1 refers to itself"
   eval "MYOS_DIST_BUSY_$1=1"; _el_raw=$R; myos_env_resolve "$_el_raw"; eval "unset MYOS_DIST_BUSY_$1"
 }

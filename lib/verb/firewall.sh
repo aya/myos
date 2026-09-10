@@ -20,14 +20,34 @@ myos_ports_raw() {
   R=; [ -n "$MYOS_STACK_FILES" ] || return 0
   _pr_ifs=$IFS; IFS=$NL; set -f
   # shellcheck disable=SC2086
+  # The files are read in the order compose merges them, and the merge tags are
+  # honoured: an overlay that writes `ports: !override` replaces the list of
+  # the file before it. Without this, vendoring an upstream compose untouched
+  # and binding its ports in the overlay -- the whole point of the overlay --
+  # would report the upstream binding for ever, and a --strict nobody can
+  # satisfy is a --strict that gets turned off.
   R=$(awk '
+    function see(s) { if (!(s in seen)) { seen[s] = 1; order[++o] = s } }
     /^services:/ {top="services"; next}
     /^[^ \t#]/ {top=$0; next}
     top != "services" {next}
-    /^  [A-Za-z0-9_.-]+:/ {svc=$0; sub(/^  /, "", svc); sub(/:.*/, "", svc); inports=0; next}
-    /^    ports:/ {inports=1; next}
+    /^  [A-Za-z0-9_.-]+:/ {svc=$0; sub(/^  /, "", svc); sub(/:.*/, "", svc); see(svc); inports=0; next}
+    /^    ports:/ {
+      inports=1
+      if ($0 ~ /![[:alpha:]]*(override|reset)/) pl[svc] = ""
+      next
+    }
     /^    [A-Za-z_]/ {inports=0}
-    inports && /^ +- / {p=$0; sub(/^ +- /, "", p); gsub(/^["'"'"']|["'"'"']$/, "", p); if (p ~ /^[^ ]/) print svc "\t" p}
+    inports && /^ +- / {
+      p=$0; sub(/^ +- /, "", p); gsub(/^["'"'"']|["'"'"']$/, "", p)
+      if (p ~ /^[^ ]/) pl[svc] = pl[svc] p "\n"
+    }
+    END {
+      for (i = 1; i <= o; i++) {
+        s = order[i]; n = split(pl[s], a, "\n")
+        for (j = 1; j <= n; j++) if (a[j] != "") print s "\t" a[j]
+      }
+    }
   ' $MYOS_STACK_FILES)
   IFS=$_pr_ifs; set +f
 }
