@@ -52,9 +52,14 @@ Verbs chain and stop at the first failure: `myos build up logs myapp`.
 "target","status","detail"}`) and ends with `{"verb","status","exit",
 "artifacts":[...]}`: read that, not the text.
 
-Exit codes: 0 ok, 1 failure, 2 usage or unknown verb, 3 unknown stack, 4 an
-audit found something (`doctor`, `--strict`), 5 the project is locked by
-another run.
+Exit codes: 0 ok, 1 failure, 2 usage or unknown verb, 3 unknown stack or
+unknown target, 4 an audit found something (`doctor`, `--strict`), 5 the
+project is locked by another run.
+
+`--target <name>` sends the run to another docker endpoint (the value
+`MYOS_TARGET_<NAME>` holds it) and `--backend swarm` deploys it to a Docker
+Swarm instead of compose. Both change the call, never the resolution: same
+references, same values, same overlays. See `references/commands.md`.
 
 ## Naming a stack
 

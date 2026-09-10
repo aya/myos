@@ -11,7 +11,7 @@
 set -u
 MYOS=${MYOS:-$(cd "$(dirname "$0")/.." && pwd -P)}
 MYOS_LIB=$MYOS/lib
-for _m_m in core path ref files stack values settings fn env events hooks lock; do . "$MYOS_LIB/$_m_m.sh"; done
+for _m_m in core path ref files stack values settings fn env target events hooks lock; do . "$MYOS_LIB/$_m_m.sh"; done
 for _m_m in "$MYOS_LIB"/verb/*.sh; do . "$_m_m"; done
 
 MYOS_VERSION=2.0.0-dev
@@ -23,6 +23,10 @@ MYOS_OUTPUT=text; MYOS_STRICT=; MYOS_WORKDIR=${WORKDIR:-$PWD}
 verbs=; refs=; MYOS_ARGS=; MYOS_IMAGE=; MYOS_BOOTSTRAP=; MYOS_YES=; MYOS_VERB=; _m_default_ref=.
 MYOS_FORCE=; MYOS_PAUSE=; MYOS_NO_BACKUP=; MYOS_KEEP=; MYOS_FROM=; MYOS_ARTIFACTS=; MYOS_LOCKED=
 MYOS_SUB=; MYOS_WILDCARD=; MYOS_SELF_SIGNED=; MYOS_CHECK=; MYOS_FIREWALL=${MYOS_FIREWALL:-}
+MYOS_TARGET=${MYOS_TARGET:-}; MYOS_BACKEND=${MYOS_BACKEND:-compose}; MYOS_PRUNE=
+# the verbs a swarm has no equivalent for: a swarm service is not a container
+# one can start, stop, scale in place or exec into by project name
+MYOS_SWARM_NO="build recreate restart start stop run scale connect exec attach install clean bootstrap backup restore upgrade shutdown"
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -43,8 +47,13 @@ while [ $# -gt 0 ]; do
     --wildcard) MYOS_WILDCARD=1 ;;
     --self-signed) MYOS_SELF_SIGNED=1 ;;
     --check) MYOS_CHECK=1 ;;
+    --target) shift; MYOS_TARGET=$1 ;;
+    --target=*) MYOS_TARGET=${1#--target=} ;;
+    --backend) shift; MYOS_BACKEND=$1 ;;
+    --backend=*) MYOS_BACKEND=${1#--backend=} ;;
+    --prune) MYOS_PRUNE=1 ;;
     --version) printf 'myos %s\n' "$MYOS_VERSION"; exit 0 ;;
-    -h|--help) printf 'usage: myos [-n] [-C DIR] VERB... [REF...] [KEY=VALUE...] [-- ARGS...]\nverbs: %s\n' "$MYOS_VERBS"; exit 0 ;;
+    -h|--help) printf 'usage: myos [-n] [-C DIR] [--target NAME] [--backend compose|swarm] VERB... [REF...] [KEY=VALUE...] [-- ARGS...]\nverbs: %s\n' "$MYOS_VERBS"; exit 0 ;;
     -*) myos_die 2 "unknown option $1" ;;
     [A-Za-z_]*=*)
       _m_k=${1%%=*}; _m_v=${1#*=}
@@ -68,6 +77,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 [ -n "$verbs" ] || myos_die 2 "unknown verb ${refs%% *} (myos -h lists the verbs)"
+case $MYOS_BACKEND in compose|swarm) ;; *) myos_die 2 "unknown backend $MYOS_BACKEND (compose or swarm)" ;; esac
 # SETUP_UFW=true (the old switch) asks for the ufw adapter
 [ "${SETUP_UFW:-}" = true ] && MYOS_FIREWALL=${MYOS_FIREWALL:-ufw}
 myos_realpath "$MYOS_WORKDIR" || :; [ -n "$R" ] && MYOS_WORKDIR=$R
@@ -79,6 +89,9 @@ MYOS_DOMAIN=${DOMAIN:-localhost}
 MYOS_SERVICE=${SERVICE:-}; MYOS_NUM=${NUM:-}
 export MYOS MYOS_WORKDIR
 myos_values_load
+# the target is resolved before anything runs: a name nobody declared must not
+# fail halfway, with the networks of a deployment already created here
+myos_target_env
 
 # the references: given, or the current directory. A reference names a
 # compose project (make: APP_NAME = its first path segment); a group is
@@ -166,6 +179,9 @@ myos_stacks_merge() {
 rc=0
 for verb in $verbs; do
   MYOS_VERB=$verb
+  if [ "$MYOS_BACKEND" = swarm ] && myos_has "$verb" "$MYOS_SWARM_NO"; then
+    myos_die 2 "verb $verb is not supported by the swarm backend"
+  fi
   case $verb in
     env-update) myos_for_refs myos_verb_env_update || rc=$? ;;
     print-*|context-*) myos_stacks_merge; myos_verb_print "${verb#*-}" ;;

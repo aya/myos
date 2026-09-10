@@ -1,0 +1,2 @@
+myos: logs on the swarm backend needs SERVICE=<name>: docker service logs takes one service
+[exit 2]

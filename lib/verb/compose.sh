@@ -23,7 +23,20 @@ myos_compose_cmd() { # -> R: the command prefix, files and project included
   _c_f=; _c_old=$IFS; IFS=$NL; set -f
   for _c_x in $MYOS_STACK_FILES; do _c_f="$_c_f -f $_c_x"; done
   IFS=$_c_old; set +f
-  myos_compose_bin; R="$R$_c_f -p $MYOS_PROJECT"
+  myos_target_env; _c_t=$R
+  myos_compose_bin; R="${_c_t:+$_c_t }$R$_c_f -p $MYOS_PROJECT"
+}
+
+# myos_compose_env -> R: the values the files reference, as quoted assignments
+myos_compose_env() {
+  myos_env_vars; _ce_pre=
+  set -f
+  for _ce_v in $R; do
+    myos_var "$_ce_v"; [ -n "$R" ] || continue
+    myos_shquote "$_ce_v=$R"; _ce_pre="$_ce_pre $R"
+  done
+  set +f
+  R=$_ce_pre
 }
 
 myos_run() { # COMMAND...: print under dry run, run otherwise
@@ -36,14 +49,10 @@ myos_compose() { # ARGS...
   myos_compose_cmd; _c_cmd=$R
   if [ "$MYOS_DRYRUN" = true ]; then printf '%s %s\n' "$_c_cmd" "$*"; return 0; fi
   # the exports and the command words are quoted one by one, so that env
-  # sees assignments, then the command, then the verb arguments as given
-  myos_env_vars; _c_pre=
-  set -f
-  for _c_v in $R; do
-    myos_var "$_c_v"; [ -n "$R" ] || continue
-    myos_shquote "$_c_v=$R"; _c_pre="$_c_pre $R"
-  done
-  set +f
+  # sees assignments, then the command, then the verb arguments as given.
+  # The target comes after them: it wins over a value of the same name.
+  myos_compose_env; _c_pre=$R
+  myos_target_env; [ -n "$R" ] && { myos_shquote "$R"; _c_pre="$_c_pre $R"; }
   myos_compose_bin; _c_pre="$_c_pre $R"
   _c_old=$IFS; IFS=$NL; set -f
   for _c_x in $MYOS_STACK_FILES; do myos_shquote "$_c_x"; _c_pre="$_c_pre -f $R"; done
@@ -55,24 +64,31 @@ myos_compose() { # ARGS...
 
 myos_networks_ensure() {
   _c_have=
-  [ "$MYOS_DRYRUN" = true ] || _c_have=$(docker network ls --format '{{.Name}}' 2>/dev/null)
+  myos_target_env; _c_t=$R   # the networks belong to the endpoint the stack goes to
+  [ "$MYOS_DRYRUN" = true ] || _c_have=$(myos_docker network ls --format '{{.Name}}' 2>/dev/null)
   for _c_n in "$MYOS_NETWORK_PRIVATE" "$MYOS_NETWORK_PUBLIC"; do
     case "$NL$_c_have$NL" in *"$NL$_c_n$NL"*) ;;
-      *) if [ "$MYOS_DRYRUN" = true ]; then printf 'docker network create %s\n' "$_c_n"; else docker network create "$_c_n" >/dev/null; fi ;;
+      *) if [ "$MYOS_DRYRUN" = true ]; then printf '%sdocker network create %s\n' "${_c_t:+$_c_t }" "$_c_n"; else myos_docker network create "$_c_n" >/dev/null; fi ;;
     esac
   done
 }
 
 myos_verb_up() {
-  if myos_up_needs_bootstrap; then myos_verb_bootstrap || return 1; else myos_networks_ensure; fi
-  myos_compose up -d ${MYOS_SERVICE:+"$MYOS_SERVICE"} || return 1
+  if [ "$MYOS_BACKEND" = swarm ]; then
+    # no build here: swarm ignores build:, the image is pushed before the deploy
+    myos_up_needs_bootstrap && { myos_verb_env_update || return 1; }
+    myos_swarm_up || return 1
+  else
+    if myos_up_needs_bootstrap; then myos_verb_bootstrap || return 1; else myos_networks_ensure; fi
+    myos_compose up -d ${MYOS_SERVICE:+"$MYOS_SERVICE"} || return 1
+  fi
   if [ -n "$MYOS_FIREWALL" ] && [ "$MYOS_STACK_SCOPE" = host ]; then MYOS_SUB=apply; myos_firewall_apply; fi
 }
-myos_verb_down()    { myos_compose down; }
+myos_verb_down()    { [ "$MYOS_BACKEND" = swarm ] && { myos_swarm_down; return $?; }; myos_compose down; }
 myos_verb_build()   { myos_compose build; }
 myos_verb_config()  { myos_compose config; }
-myos_verb_logs()    { myos_compose logs --follow --tail=100 ${MYOS_SERVICE:+"$MYOS_SERVICE"}; }
-myos_verb_ps()      { myos_compose ps; }
+myos_verb_logs()    { [ "$MYOS_BACKEND" = swarm ] && { myos_swarm_logs; return $?; }; myos_compose logs --follow --tail=100 ${MYOS_SERVICE:+"$MYOS_SERVICE"}; }
+myos_verb_ps()      { [ "$MYOS_BACKEND" = swarm ] && { myos_swarm_ps; return $?; }; myos_compose ps; }
 myos_verb_status()  { myos_compose ps; }
 myos_verb_restart() { myos_compose restart ${MYOS_SERVICE:+"$MYOS_SERVICE"}; }
 myos_verb_start()   { myos_compose start ${MYOS_SERVICE:+"$MYOS_SERVICE"}; }

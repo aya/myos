@@ -30,3 +30,17 @@ reason. A delta without a line here is a regression. A case listed in
 | `host-apps-install`, `mk-ssh-*`, `host-deploy` | `apps-install`, `ssh*`, `deploy*`, `release*`, `subrepo*`, `git-*` are gone: `unknown verb`, exit 2 | never used on the fleet (monorepo, aws and ansible era) |
 | `host-setup-ufw`, `host-up-ufw` | `setup-ufw` is `firewall apply` with the ufw adapter, `SETUP_UFW=true` makes `up` apply the rules of a host project; no clone or build of ufw-docker | the rules are derived from the published ports and the `<SVC>_FIREWALL` (or `_UFW_UPDATE`) settings; a stack that is not a host stack binds its ports on `${MYOS_BIND_PRIVATE}` instead |
 | `catalogue-host-up-letsencrypt` | `up` does not issue certificates; `cert` does (dehydrated, http-01; `--self-signed` at bootstrap) | four certificate mechanisms became one verb |
+
+## Behaviour with no make ancestor
+
+These cases record something the make engine never did, so they are not deltas
+from a recording: they are the first recording. They are listed here for the
+same reason as the table above — an expectation that moves without a line here
+is a regression.
+
+| Cases | Behaviour | Reason |
+|---|---|---|
+| `target-up-consul`, `target-context-up`, `target-unknown` | `--target NAME` writes `DOCKER_HOST=` (a `scheme://` endpoint) or `DOCKER_CONTEXT=` (`context:<name>`) in front of every docker call of the run, the networks included; the value comes from `MYOS_TARGET_<NAME>` through the usual layers; an undeclared name is exit 3, refused before the first network is created | a deployment names the machine it goes to in the repository that holds the stacks, not in a private inventory; and an empty value would silently mean "here" |
+| `swarm-up-consul`, `swarm-up-group`, `swarm-prune` | `--backend swarm` renders the resolved files with `compose config` and pipes them into `docker stack deploy --with-registry-auth --detach=false -c -`; the networks are created `--driver overlay --attachable`; `--prune` is passed only when asked | `stack deploy` reads one file, so the six layers of values and the overlays are applied by the renderer; pruning by default would remove the services of `host/fabio` when `up host/consul` is run on the same project |
+| `swarm-down-group`, `swarm-ps` | `down` is `docker stack rm <project>`, `ps` is `docker stack services <project>` | a swarm project is a stack, not a set of containers |
+| `swarm-unsupported-verb`, `swarm-logs-no-service` | `build recreate restart start stop run scale connect exec attach install clean bootstrap backup restore upgrade shutdown` are exit 2 under `--backend swarm`; `logs` without `SERVICE=` is exit 2 | a swarm service is not a container one can restart or exec into by project name, and `docker service logs` takes one service; saying so beats doing something else quietly |

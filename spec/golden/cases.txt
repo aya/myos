@@ -102,3 +102,15 @@ catalogue-host-up               | catalogue     | up STACK=host/consul
 # --- the migration of a deployment made with the make engine
 migrate-pin-dry                 | app-nogit     | -n migrate pin
 firewall-empty-port             | catalogue     | firewall x2go/vdi
+# --- the target and the swarm backend
+swarm-up-consul                 | host-project  | --backend swarm up STACK=host/consul
+swarm-up-group                  | host-project  | --backend swarm up STACK=host
+swarm-down-group                | host-project  | --backend swarm down STACK=host
+swarm-ps                        | host-project  | --backend swarm ps STACK=host/consul
+swarm-prune                     | host-project  | --backend swarm --prune up STACK=host/consul
+swarm-unsupported-verb          | host-project  | --backend swarm restart STACK=host/consul
+swarm-logs-no-service           | host-project  | --backend swarm logs STACK=host/consul
+target-up-consul                | host-project  | --target sonic up STACK=host/consul MYOS_TARGET_SONIC=ssh://ops@sonic.example.org
+target-context-up               | host-project  | --target hco up STACK=host/consul MYOS_TARGET_HCO=context:hco
+target-swarm-up                 | host-project  | --backend swarm --target sonic up STACK=host/consul MYOS_TARGET_SONIC=ssh://ops@sonic.example.org
+target-unknown                  | host-project  | --target nowhere up STACK=host/consul

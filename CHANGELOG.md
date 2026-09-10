@@ -32,6 +32,17 @@ those recordings, and every intentional difference is in `spec/golden/DELTAS.md`
 - an unknown verb exits 2, an unknown stack exits 3
 - default project name `<user>-<env>-<app>`; `MYOS_PROJECT_FORMAT=user-app-env`
   keeps the names of an existing deployment
+- `--target NAME` names the docker endpoint of a run: the value
+  `MYOS_TARGET_<NAME>` holds `ssh://user@host`, `tcp://...` or
+  `context:<name>`, so a deployment declares the machine it goes to in the
+  repository that holds the stacks. Resolved before anything runs; an
+  undeclared name exits 3
+- `--backend swarm` deploys to a Docker Swarm: the resolved files are rendered
+  by `compose config` and piped into `docker stack deploy`, the networks are
+  created as attachable overlays, `down` is `stack rm` and `ps` is `stack
+  services`. The resolution is untouched — same references, same values, same
+  overlays, and N references to one project are still one deployment. The verbs
+  a swarm service has no equivalent for exit 2 rather than do something else
 - gone: `apps-install`, `ssh*`, `deploy*`, `release*`, `subrepo*`, `git-*`
   (never used), the make include of a project, `setup-*` (system setup is not
   the job of a stack tool)

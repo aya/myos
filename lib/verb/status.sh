@@ -9,6 +9,12 @@ myos_ps() {
   R=$(printf '%s\n' "$_ps_json" | sed -n 's/.*"Service": *"\([^"]*\)".*"State": *"\([^"]*\)".*"Health": *"\([^"]*\)".*/\1 \2 \3/p')
 }
 myos_verb_status() {
+  if [ "$MYOS_BACKEND" = swarm ]; then
+    # the replica counts of `stack services` are not the state/health pairs the
+    # strict audit reads; saying so beats reporting a green that means nothing
+    [ -n "$MYOS_STRICT" ] && myos_die 2 "status --strict is not implemented for the swarm backend"
+    myos_swarm_ps; return $?
+  fi
   if [ "$MYOS_DRYRUN" = true ]; then myos_compose ps --format json; return 0; fi
   myos_ps; _st_rows=$R; _st_bad=
   _st_ifs=$IFS; IFS=$NL; set -f

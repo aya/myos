@@ -1,0 +1,2 @@
+myos: verb restart is not supported by the swarm backend
+[exit 2]

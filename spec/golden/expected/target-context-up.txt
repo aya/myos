@@ -1,0 +1,4 @@
+DOCKER_CONTEXT=hco docker network create tester-local
+DOCKER_CONTEXT=hco docker network create testhost
+DOCKER_CONTEXT=hco docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost up -d
+[exit 0]

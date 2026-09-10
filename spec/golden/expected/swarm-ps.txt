@@ -1,0 +1,2 @@
+docker --log-level=error stack services testhost
+[exit 0]

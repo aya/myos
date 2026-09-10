@@ -1,0 +1,4 @@
+docker --log-level=error network create --driver overlay --attachable tester-local
+docker --log-level=error network create --driver overlay --attachable testhost
+docker --log-level=error compose --ansi=auto -f @WD@/stack/host/consul.yml -f @MYOS@/share/compose/networks.yml -p testhost config | docker --log-level=error stack deploy --with-registry-auth --detach=false -c - testhost
+[exit 0]

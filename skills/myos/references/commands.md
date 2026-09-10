@@ -15,6 +15,9 @@ and stop at the first failure. No reference means the current directory.
 | `--pause`, `--keep N` | `backup`: pause the project around the archive; keep N backups |
 | `--from DIR\|latest`, `--no-backup`, `--force` | `restore` |
 | `--wildcard`, `--self-signed`, `--check` | `cert` |
+| `--target NAME`, `MYOS_TARGET=NAME` | the docker endpoint of the run: the value `MYOS_TARGET_<NAME>` holds `ssh://user@host`, `tcp://host:2376` (`DOCKER_HOST=`) or `context:<name>` (`DOCKER_CONTEXT=`). Declared in `$WORKDIR/.env` or the environment, not in a stack; an undeclared name is exit 3, before anything runs |
+| `--backend compose\|swarm`, `MYOS_BACKEND=` | which engine applies the resolved files: `compose` (the default) or a Docker Swarm |
+| `--prune` | `up --backend swarm`: pass `--prune` to `stack deploy`, removing the services the files no longer declare. Off by default, a project being deployed one reference at a time |
 | `SERVICE=x`, `NUM=n`, `ENV=e`, `-- args` | the service, the scale, the environment, the arguments of exec/run |
 
 ## Verbs
@@ -39,6 +42,37 @@ and stop at the first failure. No reference means the current directory.
 | `shutdown` | `down` of the host and user projects of this machine |
 | `install [URL [DIR]]` | clone a project, then bootstrap it |
 | `ls`, `env`, `print-NAME`, `--version`, `-h` | the path, stacks and groups; the exported values; one value; the version; the usage |
+
+## The swarm backend
+
+`--backend swarm` changes the call, never the resolution: the same references,
+the same path, the same six layers of values, the same overlays. `docker stack
+deploy` reads one file, so the resolved files are rendered first:
+
+```sh
+myos -n --backend swarm up host/consul
+# docker ... compose -f ... -p testhost config | docker ... stack deploy \
+#   --with-registry-auth --detach=false -c - testhost
+```
+
+| verb | swarm |
+|---|---|
+| `up` | render, then `stack deploy`; the networks are created `--driver overlay --attachable`; no build (swarm ignores `build:`, so the image must be pushed and pinned beforehand) |
+| `down` | `stack rm <project>` |
+| `ps` | `stack services <project>` |
+| `logs` | `service logs <project>_<service>`; `SERVICE=` is required |
+| `config` | the render — it is exactly what gets deployed |
+
+`build recreate restart start stop run scale connect exec attach install clean
+bootstrap backup restore upgrade shutdown` are exit 2 here: a swarm service is
+not a container one can restart or exec into by project name. `status
+--strict` too — the replica counts of `stack services` are not the
+state/health pairs the audit reads.
+
+What swarm silently drops from a compose file is not this backend's business:
+`build:`, `depends_on:`, `container_name:` and `restart:` (it reads
+`deploy.restart_policy`), and a named volume is local to the node the task
+lands on, so a service with state needs a placement constraint.
 
 ## What the make targets became
 

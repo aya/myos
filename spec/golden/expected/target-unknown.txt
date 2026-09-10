@@ -1,0 +1,2 @@
+myos: unknown target nowhere (declare MYOS_TARGET_NOWHERE)
+[exit 3]
