@@ -110,10 +110,10 @@ swarm-ps                        | host-project  | --backend swarm ps STACK=host/
 swarm-prune                     | host-project  | --backend swarm --prune up STACK=host/consul
 swarm-unsupported-verb          | host-project  | --backend swarm restart STACK=host/consul
 swarm-logs-no-service           | host-project  | --backend swarm logs STACK=host/consul
-target-up-consul                | host-project  | --target sonic up STACK=host/consul MYOS_TARGET_SONIC=ssh://ops@sonic.example.org
-target-context-up               | host-project  | --target hco up STACK=host/consul MYOS_TARGET_HCO=context:hco
-target-swarm-up                 | host-project  | --backend swarm --target sonic up STACK=host/consul MYOS_TARGET_SONIC=ssh://ops@sonic.example.org
-target-unknown                  | host-project  | --target nowhere up STACK=host/consul
+target-up-consul                | host-project  | --target sonic up STACK=host/consul
+target-context-up               | host-project  | --target context:hco up STACK=host/consul
+target-swarm-up                 | host-project  | --backend swarm --target ssh://ops@sonic up STACK=host/consul
+target-bad                      | host-project  | --target 'no such host!' up STACK=host/consul
 # --- the policy gate
 policy-escape                   | hostile       | policy escape --strict
 policy-socket                   | hostile       | policy socket --strict

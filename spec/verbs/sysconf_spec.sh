@@ -49,3 +49,41 @@ Describe 'the system configuration'
     The output should include '/run/somewhere.sock'
   End
 End
+
+# The machine's configuration describes the machine; everything the project
+# commits is more specific. So it is the lowest layer above the engine's own
+# defaults -- below the stack values a project versions, and below the
+# .env.dist line that initialises a name.
+Describe 'the system configuration against what a project commits'
+  setup() {
+    sb=$(myos_sandbox app-nogit)
+    conf=$sb/myos.conf
+    printf 'DOMAIN=from-the-system\n' > "$conf"
+  }
+  cleanup() { rm -rf "$sb"; }
+  BeforeEach setup
+  AfterEach cleanup
+
+  # shellcheck disable=SC2046
+  with_conf() {
+    ( cd "$sb/wd" && env -i \
+        $(myos_hermetic_env "$sb" | grep -vE '^(DOMAIN|DOCKER_SOCKET_LOCATION)=') \
+        MYOS_CONF="$conf" "$MYOS_ROOT/myos" "$@" 2>&1 )
+  }
+
+  It 'loses to a value the project versions in _stack.env'
+    mkdir -p "$sb/wd/stack"
+    printf 'DOMAIN=from-the-project-stack\n' > "$sb/wd/stack/_stack.env"
+    When call with_conf print-DOMAIN
+    The output should include 'from-the-project-stack'
+  End
+
+  It 'does not poison the .env rendered from a .env.dist'
+    printf 'DOMAIN=from-the-dist\n' > "$sb/wd/.env.dist"
+    ( cd "$sb/wd" && env -i \
+        $(myos_hermetic_env "$sb" | grep -vE '^(DOMAIN|DOCKER_SOCKET_LOCATION)=') \
+        MYOS_CONF="$conf" "$MYOS_ROOT/myos" env-update >/dev/null 2>&1 )
+    When call cat "$sb/wd/.env"
+    The output should include 'DOMAIN=from-the-dist'
+  End
+End

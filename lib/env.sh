@@ -55,14 +55,14 @@ myos_env_resolve() {
 
 # myos_env_lookup KEY -> R: a value of the run, or the resolved dist value
 myos_env_lookup() {
-  # The fallback the engine holds for a name it always answers (DOMAIN
-  # localhost, ENV local, USER, HOSTNAME) is not a value anybody provided: a
-  # .env.dist line is exactly what initialises those, and treating the
-  # fallback as an answer wrote `DOMAIN=localhost` over `DOMAIN=example.org`
-  # without a word. Every other layer still wins, engine defaults being the
-  # lowest one.
+  # Neither the engine's fallback for a name it always answers (DOMAIN
+  # localhost, ENV local, USER, HOSTNAME, DOCKER_IMAGE_TAG latest) nor the
+  # machine's own (the system configuration) is a value somebody provided: a
+  # .env.dist line is the project initialising that name, and the project wins.
+  # Treating those as answers wrote `DOMAIN=localhost` over `DOMAIN=hco.st`
+  # without a word. Every real layer still wins.
   myos_var "$1"; _el_engine=$R
-  case $MYOS_ORIGIN in ''|engine) ;; *) return 0 ;; esac
+  case $MYOS_ORIGIN in ''|engine|conf) ;; *) return 0 ;; esac
   myos_env_dist_value "$1"; [ -n "$R" ] || { R=$_el_engine; return 0; }
   eval "[ -z \"\${MYOS_DIST_BUSY_$1:-}\" ]" || myos_die 2 ".env.dist: $1 refers to itself"
   eval "MYOS_DIST_BUSY_$1=1"; _el_raw=$R; myos_env_resolve "$_el_raw"; eval "unset MYOS_DIST_BUSY_$1"
@@ -86,7 +86,11 @@ myos_env_render() {
   for _rn_l in $MYOS_DIST_LINES; do
     IFS=$_rn_ifs; set +f
     _rn_k=${_rn_l%%=*}
-    if myos_env_has "$_rn_k" "$_rn_env" || eval "[ -n \"\${$_rn_k+set}\" ]"; then IFS=$NL; set -f; continue; fi
+    # a key already in .env is never rewritten; a key set in the environment is
+    # taken as provided -- unless it is the machine's own fallback, which the
+    # wrapper had to export and which a .env.dist line is there to initialise
+    if myos_env_has "$_rn_k" "$_rn_env" ||
+       { eval "[ -n \"\${$_rn_k+set}\" ]" && ! myos_is_conf "$_rn_k"; }; then IFS=$NL; set -f; continue; fi
     case "$NL$_rn_new" in *"$NL$_rn_k="*) IFS=$NL; set -f; continue ;; esac
     myos_env_lookup "$_rn_k"
     _rn_new="$_rn_new$NL$_rn_k=$R"

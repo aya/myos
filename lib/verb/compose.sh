@@ -5,15 +5,21 @@
 # exported to it.
 
 # myos_compose_bin -> R: the compose command. DOCKER_COMPOSE when set; the
-# compose plugin when its file exists (no fork to find out); the
-# docker-compose binary otherwise
+# compose plugin when it answers; the docker-compose binary otherwise.
+# The plugin file being present is not enough: a binary the docker CLI cannot
+# load (wrong architecture, quarantined on macOS -- `failed to fetch metadata:
+# signal: killed`) sits in the right directory and never runs. So the plugin is
+# asked whether it answers. That costs one fork, memoised for the run, and it
+# buys the difference between a working default and a manual DOCKER_COMPOSE=.
 myos_compose_bin() {
   [ -n "${MYOS_COMPOSE_BIN:-}" ] && { R=$MYOS_COMPOSE_BIN; return 0; }
   if [ -n "${DOCKER_COMPOSE:-}" ]; then R=$DOCKER_COMPOSE
   else
     R=
     for _cb_p in "${HOME:-/nonexistent}/.docker/cli-plugins" /usr/local/lib/docker/cli-plugins /usr/lib/docker/cli-plugins /usr/libexec/docker/cli-plugins /opt/homebrew/lib/docker/cli-plugins "${DOCKER_CONFIG:-/nonexistent}/cli-plugins"; do
-      [ -x "$_cb_p/docker-compose" ] && { R="docker --log-level=error compose --ansi=auto"; break; }
+      [ -x "$_cb_p/docker-compose" ] || continue
+      docker compose version >/dev/null 2>&1 && R="docker --log-level=error compose --ansi=auto"
+      break
     done
     [ -n "$R" ] || { if command -v docker-compose >/dev/null 2>&1; then R=docker-compose; else R="docker --log-level=error compose --ansi=auto"; fi; }
   fi
