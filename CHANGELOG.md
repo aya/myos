@@ -75,6 +75,10 @@ those recordings, and every intentional difference is in `spec/golden/DELTAS.md`
   than adding to it), and a `.env.dist` line now initialises a name the engine
   answers with a default of its own (`DOMAIN`, `ENV`, `USER`, `HOSTNAME`,
   `DOCKER_IMAGE_TAG`) instead of being silently overwritten by that default
+- `migrate pin` fonctionne : le format de nommage écrit dans `.env` nomme
+  vraiment le projet. `myos_project_name` lisait la variable du shell, jamais
+  la couche `.env` où `migrate pin` l'écrit, donc le levier qui préserve les
+  noms d'une flotte existante n'avait aucun effet tout en rapportant un succès
 - gone: `apps-install`, `ssh*`, `deploy*`, `release*`, `subrepo*`, `git-*`
   (never used), the make include of a project, `setup-*` (system setup is not
   the job of a stack tool)

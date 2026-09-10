@@ -27,13 +27,22 @@ myos_resu() {
 }
 
 myos_project_name() { # SCOPE APP -> R
-  if [ -n "${DOCKER_COMPOSE_PROJECT_NAME:-}" ]; then R=$DOCKER_COMPOSE_PROJECT_NAME; return 0; fi
+  # These four are read through the layers, not from the shell: `migrate pin`
+  # writes MYOS_PROJECT_FORMAT into $WORKDIR/.env, and a value of .env lives in
+  # MYOS_ENVFILE_<name>. Reading `${MYOS_PROJECT_FORMAT:-}` saw only the
+  # environment, so the pin the fleet migration depends on did nothing at all
+  # while reporting success. The precedence is unchanged: command line, then
+  # environment, then .env.
+  myos_var DOCKER_COMPOSE_PROJECT_NAME
+  [ -n "$R" ] && return 0
   case $1 in
-    host) R=${HOST_COMPOSE_PROJECT_NAME:-$MYOS_HOSTNAME} ;;
-    user) if [ -n "${USER_COMPOSE_PROJECT_NAME:-}" ]; then R=$USER_COMPOSE_PROJECT_NAME; else myos_resu; R=$(printf '%s' "$R" | tr '.' '-'); fi ;;
+    host) myos_var HOST_COMPOSE_PROJECT_NAME; [ -n "$R" ] || R=$MYOS_HOSTNAME ;;
+    user) myos_var USER_COMPOSE_PROJECT_NAME
+          [ -n "$R" ] || { myos_resu; R=$(printf '%s' "$R" | tr '.' '-'); } ;;
     *)
       myos_name "$2"; _sr_n=$R
-      case ${MYOS_PROJECT_FORMAT:-user-env-app} in
+      myos_var MYOS_PROJECT_FORMAT; _sr_f=$R
+      case ${_sr_f:-user-env-app} in
         user-app-env) R=$MYOS_USER-$_sr_n-$MYOS_ENV ;;
         *)            R=$MYOS_USER-$MYOS_ENV-$_sr_n ;;
       esac
