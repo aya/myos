@@ -15,9 +15,9 @@ for _m_m in core path ref files stack values secrets settings fn env target even
 for _m_m in "$MYOS_LIB"/verb/*.sh; do . "$_m_m"; done
 
 MYOS_VERSION=2.0.0-dev
-MYOS_SETTINGS_LOADED=; MYOS_SET_NAMES=; MYOS_SET_EXPORT=; MYOS_MEMO_NAMES=; MYOS_DIST_LINES=; MYOS_ER_D=0; MYOS_COMPOSE_BIN=
+MYOS_SECRETS_LOADED=; MYOS_SETTINGS_LOADED=; MYOS_SET_NAMES=; MYOS_SET_EXPORT=; MYOS_MEMO_NAMES=; MYOS_DIST_LINES=; MYOS_ER_D=0; MYOS_COMPOSE_BIN=
 MYOS_VERBS="up apply down build config logs ps status restart start stop recreate connect exec run scale shutdown bootstrap install clean attach env-update backup restore upgrade doctor firewall policy cert secrets migrate ls env print"
-MYOS_SUBS="audit apply list issue renew pin"
+MYOS_SUBS="audit apply list issue renew pin pull"
 MYOS_DRYRUN=${DRYRUN:-false}
 MYOS_OUTPUT=text; MYOS_STRICT=; MYOS_WORKDIR=${WORKDIR:-$PWD}
 verbs=; refs=; MYOS_ARGS=; MYOS_IMAGE=; MYOS_BOOTSTRAP=; MYOS_YES=; MYOS_VERB=; _m_default_ref=.
@@ -84,13 +84,18 @@ case $MYOS_BACKEND in compose|swarm) ;; *) myos_die 2 "unknown backend $MYOS_BAC
 [ "${SETUP_UFW:-}" = true ] && MYOS_FIREWALL=${MYOS_FIREWALL:-ufw}
 myos_realpath "$MYOS_WORKDIR" || :; [ -n "$R" ] && MYOS_WORKDIR=$R
 MYOS_ENV=${ENV:-local}
-MYOS_USER=${USER:-$(id -un)}
 MYOS_HOSTNAME=${HOSTNAME:-$(hostname 2>/dev/null | sed 's/\..*//')}
 myos_lower "$MYOS_HOSTNAME"; MYOS_HOSTNAME=$R
 MYOS_DOMAIN=${DOMAIN:-localhost}
 MYOS_SERVICE=${SERVICE:-}; MYOS_NUM=${NUM:-}
 export MYOS MYOS_WORKDIR
 myos_values_load
+# who the deployment belongs to. The login name of whoever runs the command is
+# only a fallback: a project says so itself (MYOS_USER in its .env.dist), or a
+# deployment made from a laptop is named after the laptop's account and a
+# deployment made from CI after the CI's.
+myos_var MYOS_USER
+case $MYOS_ORIGIN in ''|engine) MYOS_USER=${USER:-$(id -un)} ;; *) MYOS_USER=$R ;; esac
 # the target is resolved before anything runs: a name nobody declared must not
 # fail halfway, with the networks of a deployment already created here. And a
 # target is another machine, so what the model derives from the host is named
@@ -136,6 +141,7 @@ myos_project_of() {
   myos_ref_parse "$1"; MYOS_STACK_APP=$MYOS_REF_APP
   myos_scope "$1"; MYOS_STACK_SCOPE=$R
   case $MYOS_STACK_SCOPE in host) MYOS_STACK_SCOPE_PREFIX=HOST_ ;; user) MYOS_STACK_SCOPE_PREFIX=USER_ ;; *) MYOS_STACK_SCOPE_PREFIX= ;; esac
+  myos_secrets_load    # the configuration repository, now that the app is known
   myos_project_name "$MYOS_STACK_SCOPE" "$MYOS_STACK_APP"; MYOS_PROJECT=$R
   MYOS_NETWORK_DEFAULT=${DOCKER_NETWORK_DEFAULT:-_$MYOS_PROJECT}
   MYOS_STACK=$1

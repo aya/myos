@@ -86,11 +86,17 @@ myos_env_render() {
   for _rn_l in $MYOS_DIST_LINES; do
     IFS=$_rn_ifs; set +f
     _rn_k=${_rn_l%%=*}
-    # a key already in .env is never rewritten; a key set in the environment is
-    # taken as provided -- unless it is the machine's own fallback, which the
-    # wrapper had to export and which a .env.dist line is there to initialise
-    if myos_env_has "$_rn_k" "$_rn_env" ||
-       { eval "[ -n \"\${$_rn_k+set}\" ]" && ! myos_is_conf "$_rn_k"; }; then IFS=$NL; set -f; continue; fi
+    # A key already in .env is never rewritten, and a key some real layer
+    # already answers is not written at all: the configuration repository holds
+    # its secrets encrypted, and copying them in clear into the .env of every
+    # machine that deploys would undo the point of encrypting them. The
+    # engine's own defaults, the machine's configuration and the .env.dist
+    # itself are not answers -- they are what this rendering is for.
+    myos_var "$_rn_k"
+    case $MYOS_ORIGIN in
+      cli|env|.env|secrets) IFS=$NL; set -f; continue ;;
+    esac
+    if myos_env_has "$_rn_k" "$_rn_env"; then IFS=$NL; set -f; continue; fi
     case "$NL$_rn_new" in *"$NL$_rn_k="*) IFS=$NL; set -f; continue ;; esac
     myos_env_lookup "$_rn_k"
     _rn_new="$_rn_new$NL$_rn_k=$R"

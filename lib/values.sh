@@ -29,7 +29,16 @@ myos_values_load() {
     [ -f "$_vl_f" ] || continue
     myos_values_absorb MYOS_ENVFILE_ "$(cat "$_vl_f")"
   done
-  myos_secrets_load
+  # the configuration repository is read once the reference names an app, in
+  # myos_project_of: its layout is per environment and per application
+  # The literals of .env.dist: a project declaring `MYOS_USER=hco` or
+  # `DOMAIN=hco.st` must be heard before the first bootstrap has rendered
+  # .env, or its very first deployment is named after whoever ran it. A value
+  # that has to be computed ($(command), ${reference}) is not a declaration:
+  # it stays what it is, a template rendered once.
+  [ -f "$MYOS_WORKDIR/.env.dist" ] &&
+    myos_values_absorb MYOS_DISTVAL_ "$(grep -v '\$[({]' "$MYOS_WORKDIR/.env.dist" 2>/dev/null)"
+  :
 }
 
 # myos_is_conf NAME: true when the environment value of NAME is the one the
@@ -55,6 +64,7 @@ myos_var() {
         elif [ -n \"\${$1+set}\" ] && ! myos_is_conf $1; then R=\$$1; MYOS_ORIGIN=env
         elif [ -n \"\${MYOS_ENVFILE_$1+set}\" ]; then R=\$MYOS_ENVFILE_$1; MYOS_ORIGIN=.env
         elif [ -n \"\${MYOS_SECRET_$1+set}\" ]; then R=\$MYOS_SECRET_$1; MYOS_ORIGIN=secrets
+        elif [ -n \"\${MYOS_DISTVAL_$1+set}\" ]; then R=\$MYOS_DISTVAL_$1; MYOS_ORIGIN=.env.dist
         else R=; fi"
   [ -n "$MYOS_ORIGIN" ] && return 0
   eval "if [ -n \"\${MYOS_MEMO_$1+set}\" ]; then R=\$MYOS_MEMO_$1; MYOS_ORIGIN=\$MYOS_MEMO_ORIGIN_$1; fi"

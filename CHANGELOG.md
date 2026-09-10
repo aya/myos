@@ -83,6 +83,13 @@ those recordings, and every intentional difference is in `spec/golden/DELTAS.md`
   marquée (`MYOS_CONF_<nom>`) et classée sous le `.env` du projet, tout en
   restant exportée pour le CLI docker. Un `DOMAIN=` de `/etc/default/myos`
   écrasait le domaine que le projet déclare
+- un dépôt de configuration alimente les valeurs (`<env>/<app>/.env` et
+  `secrets.env` chiffré, la disposition du moteur make), `myos secrets pull` le
+  clone ou le met à jour : une CI et un opérateur tapent la même commande et
+  obtiennent le même résultat. `env-update` n'écrit plus une clé qu'une couche
+  réelle fournit, les littéraux de `.env.dist` sont lus avant tout rendu, et
+  `MYOS_USER` dit à qui appartient un déploiement plutôt que le compte qui
+  lance la commande
 - gone: `apps-install`, `ssh*`, `deploy*`, `release*`, `subrepo*`, `git-*`
   (never used), the make include of a project, `setup-*` (system setup is not
   the job of a stack tool)
