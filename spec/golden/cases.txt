@@ -114,3 +114,12 @@ target-up-consul                | host-project  | --target sonic up STACK=host/c
 target-context-up               | host-project  | --target hco up STACK=host/consul MYOS_TARGET_HCO=context:hco
 target-swarm-up                 | host-project  | --backend swarm --target sonic up STACK=host/consul MYOS_TARGET_SONIC=ssh://ops@sonic.example.org
 target-unknown                  | host-project  | --target nowhere up STACK=host/consul
+# --- the policy gate
+policy-escape                   | hostile       | policy escape --strict
+policy-socket                   | hostile       | policy socket --strict
+policy-sane                     | hostile       | policy sane --strict
+policy-require                  | hostile       | policy socket --strict MYOS_POLICY_REQUIRE="limits healthcheck"
+policy-json                     | hostile       | --json policy socket
+policy-enforce-blocks-up        | hostile       | up socket MYOS_POLICY_ENFORCE=true
+policy-host-stack               | catalogue     | policy host/nginx --strict
+policy-runner-socket            | catalogue     | policy drone/drone-runner-docker --strict

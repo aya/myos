@@ -74,6 +74,7 @@ myos_networks_ensure() {
 }
 
 myos_verb_up() {
+  myos_policy_enforce || return $?
   if [ "$MYOS_BACKEND" = swarm ]; then
     # no build here: swarm ignores build:, the image is pushed before the deploy
     myos_up_needs_bootstrap && { myos_verb_env_update || return 1; }

@@ -1,0 +1,4 @@
+host/nginx nginx warn volume the docker socket is root on the node: use a read-only socket proxy
+host/nginx nginx warn no-healthcheck a rolling update calls the task healthy as soon as it starts
+host/nginx nginx warn no-limits no deploy.resources.limits: nothing bounds this service
+[exit 0]

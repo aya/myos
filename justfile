@@ -88,6 +88,11 @@ clean *args:
 firewall *args:
     @sh "{{lib}}/main.sh" firewall "$@"
 
+# policy [audit]: what a stack asks of the host that a shared cluster cannot grant; --strict exits 4
+[group('lifecycle')]
+policy *args:
+    @sh "{{lib}}/main.sh" policy "$@"
+
 # cert [list|issue] [--wildcard] [--self-signed] [--check]: the certificates the routes need
 [group('lifecycle')]
 cert *args:

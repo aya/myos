@@ -99,6 +99,12 @@ A deployment created before this version keeps its names with
   stacks may do that; the others bind `${MYOS_BIND_PRIVATE}:<port>:<port>`
   (or `${MYOS_BIND_MESH}` for the overlay network). `myos firewall <stack>
   --strict` enforces it; `myos firewall apply host` writes the host rules.
+- Access to the docker socket of a manager is root on the whole cluster, and
+  swarm has no RBAC: `myos policy <stack> --strict` is what refuses a stack
+  that asks to leave its container (`privileged`, `cap_add`, a host namespace,
+  a device, a bind mount of the host, the socket). It runs where the author of
+  the stack cannot edit it — on the machine that applies, never in the CI of
+  the project. `MYOS_POLICY_ENFORCE=true` puts it in front of `up`.
 - Certificates come from the routes: `myos cert list host` shows the names the
   `urlprefix-` tags need, `myos cert host` asks dehydrated for them, a wildcard
   needs `--wildcard` and a dns-01 hook. At bootstrap `myos cert host

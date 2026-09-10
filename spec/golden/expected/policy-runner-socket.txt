@@ -1,0 +1,5 @@
+drone/drone-runner-docker drone-runner-docker deny volume the docker socket is root on the node: use a read-only socket proxy
+drone/drone-runner-docker drone-runner-docker warn no-healthcheck a rolling update calls the task healthy as soon as it starts
+drone/drone-runner-docker drone-runner-docker warn no-limits no deploy.resources.limits: nothing bounds this service
+myos policy drone/drone-runner-docker audit fail (denied: drone-runner-docker:volume)
+[exit 4]

@@ -18,6 +18,8 @@ and stop at the first failure. No reference means the current directory.
 | `--target NAME`, `MYOS_TARGET=NAME` | the docker endpoint of the run: the value `MYOS_TARGET_<NAME>` holds `ssh://user@host`, `tcp://host:2376` (`DOCKER_HOST=`) or `context:<name>` (`DOCKER_CONTEXT=`). Declared in `$WORKDIR/.env` or the environment, not in a stack; an undeclared name is exit 3, before anything runs |
 | `--backend compose\|swarm`, `MYOS_BACKEND=` | which engine applies the resolved files: `compose` (the default) or a Docker Swarm |
 | `--prune` | `up --backend swarm`: pass `--prune` to `stack deploy`, removing the services the files no longer declare. Off by default, a project being deployed one reference at a time |
+| `MYOS_POLICY_REQUIRE="limits healthcheck"` | `policy`: turn those two warnings into denials, so a cluster tightens on its own schedule |
+| `MYOS_POLICY_ENFORCE=true` | run `policy --strict` before `up` and stop at exit 4 without deploying. Off by default; this is what the reconciler of a shared cluster sets |
 | `SERVICE=x`, `NUM=n`, `ENV=e`, `-- args` | the service, the scale, the environment, the arguments of exec/run |
 
 ## Verbs
@@ -35,6 +37,7 @@ and stop at the first failure. No reference means the current directory.
 | `restore --from` | refuses a manifest of another project (`--force`), needs `--yes` when not interactive, takes a safety backup (`--no-backup`), `down`, recreates the missing volumes, extracts, `up`, `post-restore` hooks |
 | `firewall [audit]` | every published port of the compose files: service, host port, scope (public/private/mesh/address), address; `--strict` exits 4 when a stack that is not a host stack publishes a public port |
 | `firewall apply` | the rules of a host stack (its public ports and `<SVC>_FIREWALL`, or the old `<SVC>_UFW_UPDATE`) through `MYOS_FIREWALL=auto\|ufw\|nftables\|pf\|none`; `-n` prints them |
+| `policy [audit]` | per service, what a shared cluster cannot grant: `privileged`, `cap_add`, a host namespace (`pid`, `ipc`, `userns_mode`, `network_mode`), `devices`, an unconfined `security_opt`, a bind mount of the host and the docker socket are `deny`; no `healthcheck` and no `deploy.resources.limits` are `warn`. `--strict` exits 4 on a denial. The escalations of a `host/` stack are warnings — it is the trusted layer, but a proxy reading the docker API still wants a read-only socket proxy |
 | `cert list` | the names the `urlprefix-` routes of the stacks need, wildcards marked |
 | `cert [issue]` | `domains.txt` into the host volume, `dehydrated -c` in the dehydrated service (http-01); `--wildcard` adds the wildcards through `actions/cert-dns` or `MYOS_CERT_DNS_HOOK` (dns-01); `--self-signed` an openssl certificate per name; `--check` the expiry |
 | `doctor` | docker, compose >= 2.21, just, jq, the path, `.env` against `.env.dist`, empty values the files reference, networks, locks, the `doctor` hooks of the stacks; exit 4 when a check fails |

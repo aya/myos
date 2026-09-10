@@ -16,7 +16,7 @@ for _m_m in "$MYOS_LIB"/verb/*.sh; do . "$_m_m"; done
 
 MYOS_VERSION=2.0.0-dev
 MYOS_SETTINGS_LOADED=; MYOS_SET_NAMES=; MYOS_SET_EXPORT=; MYOS_MEMO_NAMES=; MYOS_DIST_LINES=; MYOS_ER_D=0; MYOS_COMPOSE_BIN=
-MYOS_VERBS="up down build config logs ps status restart start stop recreate connect exec run scale shutdown bootstrap install clean attach env-update backup restore upgrade doctor firewall cert migrate ls env print"
+MYOS_VERBS="up down build config logs ps status restart start stop recreate connect exec run scale shutdown bootstrap install clean attach env-update backup restore upgrade doctor firewall policy cert migrate ls env print"
 MYOS_SUBS="audit apply list issue renew pin"
 MYOS_DRYRUN=${DRYRUN:-false}
 MYOS_OUTPUT=text; MYOS_STRICT=; MYOS_WORKDIR=${WORKDIR:-$PWD}
@@ -71,7 +71,7 @@ while [ $# -gt 0 ]; do
     stack-*-*) verbs="${verbs:+$verbs }$1" ;;
     *)
       if myos_has "$1" "$MYOS_VERBS"; then verbs="${verbs:+$verbs }$1"
-      elif myos_has "$1" "$MYOS_SUBS" && case " $verbs" in *" firewall"|*" cert"|*" migrate") true ;; *) false ;; esac; then MYOS_SUB=$1
+      elif myos_has "$1" "$MYOS_SUBS" && case " $verbs" in *" firewall"|*" policy"|*" cert"|*" migrate") true ;; *) false ;; esac; then MYOS_SUB=$1
       else refs="${refs:+$refs }$1"; fi ;;
   esac
   shift

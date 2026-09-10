@@ -43,6 +43,13 @@ those recordings, and every intentional difference is in `spec/golden/DELTAS.md`
   services`. The resolution is untouched — same references, same values, same
   overlays, and N references to one project are still one deployment. The verbs
   a swarm service has no equivalent for exit 2 rather than do something else
+- `policy [audit]` is the gate of a shared cluster: per service it reports what
+  cannot be granted -- `privileged`, `cap_add`, a host namespace, `devices`, an
+  unconfined `security_opt`, a bind mount of the host, the docker socket (deny),
+  and the missing `healthcheck` / `deploy.resources.limits` (warn, promoted by
+  `MYOS_POLICY_REQUIRE`). `--strict` exits 4; `MYOS_POLICY_ENFORCE=true` puts it
+  in front of `up`. Access to a manager's docker socket is root on the cluster
+  and swarm has no RBAC, so nothing below the engine refuses these
 - gone: `apps-install`, `ssh*`, `deploy*`, `release*`, `subrepo*`, `git-*`
   (never used), the make include of a project, `setup-*` (system setup is not
   the job of a stack tool)

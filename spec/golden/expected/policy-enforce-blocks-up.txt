@@ -1,0 +1,7 @@
+socket socket deny volume the docker socket is root on the node: use a read-only socket proxy
+socket socket deny volume bind mount of the host: @HOME@/.ssh
+socket socket warn no-healthcheck a rolling update calls the task healthy as soon as it starts
+socket socket warn no-limits no deploy.resources.limits: nothing bounds this service
+myos up socket audit fail (denied: socket:volume socket:volume)
+myos up socket policy fail (refused before the deploy)
+[exit 4]

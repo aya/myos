@@ -1,0 +1,6 @@
+{"verb":"policy","stack":"socket","service":"socket","severity":"deny","rule":"volume","detail":"the docker socket is root on the node: use a read-only socket proxy"}
+{"verb":"policy","stack":"socket","service":"socket","severity":"deny","rule":"volume","detail":"bind mount of the host: @HOME@/.ssh"}
+{"verb":"policy","stack":"socket","service":"socket","severity":"warn","rule":"no-healthcheck","detail":"a rolling update calls the task healthy as soon as it starts"}
+{"verb":"policy","stack":"socket","service":"socket","severity":"warn","rule":"no-limits","detail":"no deploy.resources.limits: nothing bounds this service"}
+{"verb":"policy","status":"ok","exit":0,"artifacts":[]}
+[exit 0]

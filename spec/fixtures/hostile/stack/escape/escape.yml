@@ -1,0 +1,18 @@
+services:
+  escape:
+    image: alpine:3.20
+    privileged: true
+    pid: host
+    network_mode: host
+    cap_add:
+    - SYS_ADMIN
+    - NET_ADMIN
+    security_opt:
+    - apparmor=unconfined
+    devices:
+    - /dev/fuse
+    volumes:
+    - /:/host
+    - escape:/data
+volumes:
+  escape:

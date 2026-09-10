@@ -1,0 +1,9 @@
+services:
+  socket:
+    image: alpine:3.20
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - ${HOME}/.ssh:/root/.ssh
+    - socket:/data
+volumes:
+  socket:

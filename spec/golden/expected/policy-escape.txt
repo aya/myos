@@ -1,0 +1,12 @@
+escape escape deny privileged privileged: true
+escape escape deny namespace pid: host
+escape escape deny namespace network_mode: host
+escape escape deny cap_add cap_add: SYS_ADMIN
+escape escape deny cap_add cap_add: NET_ADMIN
+escape escape deny security_opt security_opt: apparmor=unconfined
+escape escape deny devices devices: /dev/fuse
+escape escape deny volume bind mount of the host: /
+escape escape warn no-healthcheck a rolling update calls the task healthy as soon as it starts
+escape escape warn no-limits no deploy.resources.limits: nothing bounds this service
+myos policy escape audit fail (denied: escape:privileged escape:namespace escape:namespace escape:cap_add escape:cap_add escape:security_opt escape:devices escape:volume)
+[exit 4]

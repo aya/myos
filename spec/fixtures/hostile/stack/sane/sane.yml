@@ -1,0 +1,19 @@
+services:
+  sane:
+    image: alpine:3.20
+    command: sleep 3600
+    healthcheck:
+      test: ["CMD", "true"]
+      interval: 10s
+    deploy:
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
+    ports:
+    - "${MYOS_BIND_PRIVATE:-127.0.0.1}::8080"
+    volumes:
+    - sane:/data
+volumes:
+  sane:
