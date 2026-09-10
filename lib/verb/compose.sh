@@ -86,8 +86,16 @@ myos_networks_ensure() {
   done
 }
 
+# up runs the hooks of its stacks like every other lifecycle verb: it is the
+# verb one types most, and the one after which a stack has something to say to
+# the machine -- a route to register, a cache to prime. A `up` hook replaces
+# the default, as elsewhere.
 myos_verb_up() {
   myos_policy_enforce || return $?
+  myos_verb_with_hooks up myos_up_default
+}
+
+myos_up_default() {
   if [ "$MYOS_BACKEND" = swarm ]; then
     # no build here: swarm ignores build:, the image is pushed before the deploy
     myos_up_needs_bootstrap && { myos_verb_env_update || return 1; }

@@ -13,6 +13,11 @@ myos_hook_env() { # export what a hook (or compose) sees
   myos_nl_join "$MYOS_STACK_DIRS" ':'; MYOS_STACK_DIRS_PATH=$R; export MYOS_STACK_DIRS_PATH
   myos_nl_join "$MYOS_STACK_FILES" ':'; MYOS_COMPOSE_FILES=$R; export MYOS_COMPOSE_FILES
   myos_compose_cmd; MYOS_COMPOSE=$R; export MYOS_COMPOSE
+  # the endpoint of the run, so a hook that calls docker itself reaches the
+  # same machine as the verb it hangs off, and not the workstation
+  myos_target_env
+  case $R in DOCKER_HOST=*) DOCKER_HOST=${R#DOCKER_HOST=}; export DOCKER_HOST ;;
+             DOCKER_CONTEXT=*) DOCKER_CONTEXT=${R#DOCKER_CONTEXT=}; export DOCKER_CONTEXT ;; esac
   export MYOS_BACKUP_DIR="${MYOS_BACKUP_DIR:-}"
   myos_env_vars; set -f
   for _he_v in $R; do myos_var "$_he_v"; [ -n "$R" ] && { eval "$_he_v=\$R"; export "$_he_v"; }; done

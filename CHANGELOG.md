@@ -92,6 +92,9 @@ those recordings, and every intentional difference is in `spec/golden/DELTAS.md`
   lance la commande
 - le moteur demande BuildKit à compose (`DOCKER_BUILDKIT=1`, surchargeable) :
   c'est le builder par défaut de docker et le seul qui lise `RUN --mount=`
+- `up` exécute les hooks de ses stacks comme les autres verbes de cycle de vie,
+  et un hook reçoit l'endpoint du run, de sorte qu'un `post-up` qui appelle
+  docker parle à la cible et non au poste de travail
 - gone: `apps-install`, `ssh*`, `deploy*`, `release*`, `subrepo*`, `git-*`
   (never used), the make include of a project, `setup-*` (system setup is not
   the job of a stack tool)
