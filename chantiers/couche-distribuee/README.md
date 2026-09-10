@@ -117,7 +117,15 @@ il faut lire `docker service ps` et décider ce que « sain » veut dire.
 autour, plus : la clé age du cluster, la vérification de signature activée, et
 le renvoi des events NDJSON quelque part de consultable.
 
-### 8. Sauvegarde hors site et **répétition de restauration** — *urgent, indépendant*
+### 8. `doctor` devrait dire ce que la cible sait faire — *petit*
+
+Les `deploy.resources.limits` déclarées par une stack sont **jetées** par sonic
+(cgroup v1 sans contrôleur `memory`) : le gate valide la déclaration, la machine
+ignore l'effet. `doctor` rapporte ce qui manque à un hôte ; c'est exactement sa
+place. Voir
+`../../../infra/incidents/2026-09-10-limites-memoire-sans-effet.md`.
+
+### 9. Sauvegarde hors site et **répétition de restauration** — *urgent, indépendant*
 
 `MYOS_BACKUP_ENCRYPT` (age) n'est pas fait, l'expédition hors site non plus.
 `sonic` porte 460 Go de volumes locaux

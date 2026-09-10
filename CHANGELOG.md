@@ -90,6 +90,8 @@ those recordings, and every intentional difference is in `spec/golden/DELTAS.md`
   réelle fournit, les littéraux de `.env.dist` sont lus avant tout rendu, et
   `MYOS_USER` dit à qui appartient un déploiement plutôt que le compte qui
   lance la commande
+- le moteur demande BuildKit à compose (`DOCKER_BUILDKIT=1`, surchargeable) :
+  c'est le builder par défaut de docker et le seul qui lise `RUN --mount=`
 - gone: `apps-install`, `ssh*`, `deploy*`, `release*`, `subrepo*`, `git-*`
   (never used), the make include of a project, `setup-*` (system setup is not
   the job of a stack tool)
