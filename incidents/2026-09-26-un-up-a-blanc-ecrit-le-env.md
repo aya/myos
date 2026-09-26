@@ -53,6 +53,17 @@ jamais parcouru à blanc.
   coffre. À retirer (décision d'Yvv, c'est un fichier runtime) avant tout
   `myos --target sonic … twenty` lancé depuis ce poste.
 
+## Récidive 2026-09-26, 20:16 — poste d'aya, déplacement de twenty
+
+`myos -n --target sonic up twenty ENV=main`, lancé dans `infra/` pour lire le
+plan avant de déplacer le CRM sur `crm.holcommon.com`. Sortie :
+`env-update ok (2 keys added)`. `infra/.env` a été écrit (20:16:45) avec
+`DOMAIN` et `MYOS_CONFIG_REPOSITORY` seulement : le coffre étant déchiffrable
+ce jour-là (`sops` et la clé de sonic présents), `env-update` n'a écrit aucune
+des clés qu'il fournit. Sans effet cette fois. Non vérifié : sous
+`MYOS_SECRETS=none`, le même `-n` générerait vraisemblablement les trois
+`TWENTY_*`, comme sur le poste d'Yvv. Toujours ouvert.
+
 ## Playbook
 
 - Symptôme : `env-update ok (N keys added)` dans la sortie d'un `-n`.
