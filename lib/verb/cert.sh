@@ -11,7 +11,10 @@
 #                      need --wildcard and a dns-01 hook (actions/cert-dns
 #                      of a stack, or MYOS_CERT_DNS_HOOK)
 #   cert --self-signed a self-signed certificate per name (bootstrap)
-#   cert --check       the expiry of every certificate
+#   cert --check       the expiry of every certificate: exit 4 when one is
+#                      missing, expired, or within MYOS_CERT_WARN_DAYS (20)
+#                      of its end -- dehydrated renews at 30, so a certificate
+#                      that gets there is one whose renewal fails
 
 # myos_cert_names: MYOS_CERT_NAMES (concrete, sorted) and MYOS_CERT_WILDCARDS
 myos_cert_names() {
@@ -85,11 +88,22 @@ myos_cert_self_signed() {
 }
 
 myos_cert_check() {
-  myos_cert_volume; _cc_vol=$R; _cc_rc=0; set -f
+  myos_cert_volume; _cc_vol=$R; _cc_rc=0
+  myos_var MYOS_CERT_WARN_DAYS; _cc_days=${R:-20}
+  case $_cc_days in ''|*[!0-9]*) myos_die 2 "MYOS_CERT_WARN_DAYS is a number of days, not '$_cc_days'" ;; esac
+  set -f
   for _cc_n in $MYOS_CERT_NAMES; do
     set +f
-    _cc_end=$(docker run --rm -v "$_cc_vol:/host:ro" alpine sh -c "apk add -q openssl && openssl x509 -enddate -noout -in /host/certs/$_cc_n-cert.pem" 2>/dev/null)
-    if [ -n "$_cc_end" ]; then myos_event check "$_cc_n" ok "${_cc_end#notAfter=}"; else myos_event check "$_cc_n" fail "no certificate"; _cc_rc=4; fi
+    # the end date, then a word: expired, expiring (within the warning days,
+    # which dehydrated would have renewed at 30), or valid
+    _cc_out=$(docker run --rm -v "$_cc_vol:/host:ro" alpine sh -c "apk add -q openssl && f=/host/certs/$_cc_n-cert.pem && openssl x509 -enddate -noout -in \$f && if ! openssl x509 -checkend 0 -noout -in \$f >/dev/null; then echo expired; elif ! openssl x509 -checkend $((_cc_days * 86400)) -noout -in \$f >/dev/null; then echo expiring; else echo valid; fi" 2>/dev/null)
+    _cc_end=$(printf '%s\n' "$_cc_out" | sed -n 's/^notAfter=//p'); _cc_state=$(printf '%s\n' "$_cc_out" | tail -n 1)
+    case ${_cc_end:+$_cc_state} in
+      valid) myos_event check "$_cc_n" ok "$_cc_n until $_cc_end" ;;
+      expired) myos_event check "$_cc_n" fail "$_cc_n expired $_cc_end"; _cc_rc=4 ;;
+      expiring) myos_event check "$_cc_n" fail "$_cc_n expires $_cc_end, under $_cc_days days, renewal is failing"; _cc_rc=4 ;;
+      *) myos_event check "$_cc_n" fail "$_cc_n no certificate"; _cc_rc=4 ;;
+    esac
     set -f
   done
   set +f; return $_cc_rc

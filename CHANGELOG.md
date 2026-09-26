@@ -1,5 +1,15 @@
 # CHANGELOG
 
+## Unreleased
+
+- `cert --check` reads the expiry, not only the presence: exit 4 on a
+  certificate missing, expired, or within `MYOS_CERT_WARN_DAYS` (20) days of
+  its end, and every line names its certificate. It printed `ok` for an
+  expired one
+- renewal belongs to the dehydrated container of the catalogue, every
+  `HOST_DEHYDRATED_INTERVAL` seconds (12 hours): nothing renewed a certificate
+  once issued (ADR 0007)
+
 ## v2.0.0-dev - 2026-09-05
 
 The engine is rewritten in POSIX sh (`myos`, `lib/`), with `just` as the

@@ -104,7 +104,7 @@ myos_run_live() {
   _out=$(cd "$_sb/wd" && env -i $(myos_hermetic_env "$_sb") DRYRUN=false MYOS_CONF=/dev/null \
     MYOS_NOW=20260905-120000 MYOS_BACKUP_ROOT="$_sb/backup" MYOS_PROJECT_FORMAT=user-app-env \
     MOCK_VOLUMES="${MOCK_VOLUMES:-}" MOCK_NETWORKS="${MOCK_NETWORKS:-}" MOCK_PS_STATE="${MOCK_PS_STATE:-}" \
-    MYOS_HEALTH_TIMEOUT="${MYOS_HEALTH_TIMEOUT:-2}" \
+    MOCK_CERT_STATE="${MOCK_CERT_STATE:-}" MYOS_HEALTH_TIMEOUT="${MYOS_HEALTH_TIMEOUT:-2}" \
     "$MYOS_ROOT/myos" "$@" 2>&1 </dev/null); _rc=$?
   printf '%s\n[exit %s]\n' "$_out" "$_rc" | myos_normalize "$_sb"
 }
