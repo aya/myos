@@ -38,6 +38,21 @@ Describe 'restore'
     The result of function logged should include '-p tester-app-local up -d'
     The contents of file "$sb/wd/hook.log" should equal 'post-restore tester-app-local'
   End
+  # a backup of another project restored into this one (a copy): each volume
+  # of the manifest lands in the volume of this project with the same suffix,
+  # never in the volume of the project it came from, which may be running
+  It 'restores a backup of another project into the volumes of this one (--force)'
+    printf '{"project": "other-app-local", "volumes": [{"name": "other-app-local_data"}]}\n' > "$bk/manifest.json"
+    printf 'x' > "$bk/other-app-local_data.tar.gz"
+    MOCK_VOLUMES=""
+    When call myos_run_live "$sb" restore app --from latest --yes --no-backup --force
+    The output should include '[exit 0]'
+    The result of function logged should include 'docker volume create tester-app-local_data'
+    The result of function logged should include 'tester-app-local_data:/v'
+    The result of function logged should include 'tar xzf /b/other-app-local_data.tar.gz -C /v'
+    The result of function logged should not include 'other-app-local_data:/v'
+    The result of function logged should not include 'volume create other-app-local_data'
+  End
   It 'creates a volume the project no longer has'
     MOCK_VOLUMES=""
     When call myos_run_live "$sb" restore app --from latest --yes --no-backup

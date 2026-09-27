@@ -11,7 +11,8 @@ n'exerce.
 
 | Date | Incident | Portée |
 |---|---|---|
-| 2026-09-27 | [un hook de sauvegarde en échec archive tous les volumes, sur la cible, sous un chemin du poste](incidents/2026-09-27-un-hook-de-sauvegarde-en-echec-archive-tous-les-volumes.md) | openc, 2 corrigés, 1 ouvert |
+| 2026-09-27 | [un hook de sauvegarde en échec archive tous les volumes, sur la cible, sous un chemin du poste](incidents/2026-09-27-un-hook-de-sauvegarde-en-echec-archive-tous-les-volumes.md) | openc, 3 corrigés, 1 ouvert |
+| 2026-09-27 | [`restore --force` écrit dans les volumes du projet d'origine](incidents/2026-09-27-restore-force-ecrit-dans-les-volumes-de-la-source.md) | quasi-accident, corrigé |
 | 2026-09-27 | [`print` et `up` ne sont pas d'accord sur le nom du projet](incidents/2026-09-27-print-et-up-divergent-sur-le-nom-du-projet.md) | quasi-accident, ouvert |
 | 2026-09-26 | [`cert --check` répondait ok pour un certificat expiré, et rien ne renouvelait](incidents/2026-09-26-cert-check-ok-sur-un-certificat-expire.md) | v2, corrigé |
 | 2026-09-26 | [un `up` à blanc écrit le `.env` et y génère des secrets, qui masquent le coffre](incidents/2026-09-26-un-up-a-blanc-ecrit-le-env.md) | quasi-accident, ouvert |
