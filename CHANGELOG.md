@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- the wrapper reads `~/.config/myos/config` (`$XDG_CONFIG_HOME/myos/config`)
+  when the machine has no `/etc/conf.d/myos` nor `/etc/default/myos`: that is
+  where `install.sh --conf` writes without root, and nothing read it
+- `install.sh --help` works when the installer is piped to `sh`: it read its
+  usage from `$0`, which is then `sh`
 - `cert --check` reads the expiry, not only the presence: exit 4 on a
   certificate missing, expired, or within `MYOS_CERT_WARN_DAYS` (20) days of
   its end, and every line names its certificate. It printed `ok` for an

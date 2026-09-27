@@ -33,6 +33,8 @@ sudo git clone https://github.com/aya/myos-stacks /usr/local/share/myos   # the 
 
 Per-machine values go into `/etc/conf.d/myos` (or `/etc/default/myos`), one
 `KEY=value` per line: `DOMAIN=example.org`, `ENV=master`, `WORKDIR=/srv/myos`.
+Without root, `~/.config/myos/config` stands for them when the machine has
+neither (`install.sh --conf` writes it).
 
 ## Use
 

@@ -50,6 +50,42 @@ Describe 'the system configuration'
   End
 End
 
+# A user who installed myos without root (in ~/.local) has no /etc to write
+# to: ~/.config/myos/config stands for the machine, and only when the machine
+# says nothing itself.
+Describe 'the user configuration'
+  setup() {
+    sb=$(myos_sandbox app-nogit)
+    mkdir -p "$sb/home/.config/myos"
+    printf 'DOMAIN=from-the-user\n' > "$sb/home/.config/myos/config"
+  }
+  cleanup() { rm -rf "$sb"; }
+  BeforeEach setup
+  AfterEach cleanup
+
+  # shellcheck disable=SC2046
+  with_home() {
+    ( cd "$sb/wd" && env -i \
+        $(myos_hermetic_env "$sb" | grep -vE '^(DOMAIN|DOCKER_SOCKET_LOCATION)=') \
+        "$@" "$MYOS_ROOT/myos" print-DOMAIN 2>&1 )
+  }
+  machine_has_conf() { [ -r /etc/conf.d/myos ] || [ -r /etc/default/myos ]; }
+
+  Context 'on a machine without a system configuration'
+    Skip if 'this machine has /etc/conf.d/myos or /etc/default/myos' machine_has_conf
+    It 'answers for a name nobody else provides'
+      When call with_home
+      The output should include 'from-the-user'
+    End
+  End
+
+  It 'gives way to MYOS_CONF'
+    printf 'DOMAIN=from-myos-conf\n' > "$sb/myos.conf"
+    When call with_home MYOS_CONF="$sb/myos.conf"
+    The output should include 'from-myos-conf'
+  End
+End
+
 # The machine's configuration describes the machine; everything the project
 # commits is more specific. So it is the lowest layer above the engine's own
 # defaults -- below the stack values a project versions, and below the

@@ -14,6 +14,10 @@ MYOS=$(cd "$(dirname "$MYOS")" && pwd -P)
 export MYOS
 MYOS_CONF=${MYOS_CONF:-/etc/conf.d/myos}
 [ -r "$MYOS_CONF" ] || MYOS_CONF=/etc/default/myos
+# installed without root, a user has no /etc to write to: install.sh --conf
+# writes here instead, and it stands for the machine only when the machine
+# says nothing itself
+[ -r "$MYOS_CONF" ] || MYOS_CONF=${XDG_CONFIG_HOME:-${HOME:-}/.config}/myos/config
 if [ -r "$MYOS_CONF" ]; then
   # KEY=VALUE lines of the system configuration become defaults of the
   # environment: what the environment already holds wins. It is exported

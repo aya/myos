@@ -21,6 +21,26 @@ say()  { printf '%s\n' "$*"; }
 warn() { printf 'warning: %s\n' "$*" >&2; }
 die()  { printf 'error: %s\n' "$*" >&2; exit 1; }
 have() { command -v "$1" >/dev/null 2>&1; }
+usage() {
+  cat <<'EOF'
+myos installer.
+
+  curl -fsSL https://raw.githubusercontent.com/aya/myos/tdd/install.sh | sh
+  ... | sh -s -- --prefix ~/.local --with-stacks --with-just --conf
+
+Installs the framework into <prefix>/lib/myos, links <prefix>/bin/myos,
+optionally clones the stack catalogue into <prefix>/share/myos, downloads a
+static `just` into <prefix>/bin, and writes the machine configuration
+(~/.config/myos/config when not root).
+
+  --prefix DIR        /usr/local when writable, else ~/.local
+  --ref REF           the branch or tag to install (tdd)
+  --repository URL    where to clone myos from (any git URL, ssh included)
+  --with-stacks       clone the stack catalogue too (STACKS_REPOSITORY)
+  --with-just         install just
+  --conf              write the machine configuration if there is none
+EOF
+}
 
 while [ $# -gt 0 ]; do
   case $1 in
@@ -30,7 +50,8 @@ while [ $# -gt 0 ]; do
     --with-stacks) WITH_STACKS=true; shift ;;
     --with-just) WITH_JUST=true; shift ;;
     --conf) WRITE_CONF=true; shift ;;
-    -h|--help) sed -n '2,9p' "$0" | sed 's/^# \{0,1\}//'; exit 0 ;;
+    # piped to sh, $0 is `sh`: the usage cannot be read from this file
+    -h|--help) usage; exit 0 ;;
     *) die "unknown option: $1" ;;
   esac
 done
@@ -85,7 +106,8 @@ fi
 
 if [ "$WRITE_CONF" = true ]; then
   if [ -d /etc/conf.d ]; then CONF=/etc/conf.d/myos; else CONF=/etc/default/myos; fi
-  if [ "$(id -u)" != 0 ]; then CONF=$HOME/.config/myos/config; mkdir -p "$(dirname "$CONF")"; fi
+  # where the myos wrapper looks when the machine has no configuration
+  if [ "$(id -u)" != 0 ]; then CONF=${XDG_CONFIG_HOME:-$HOME/.config}/myos/config; mkdir -p "$(dirname "$CONF")"; fi
   if [ -f "$CONF" ]; then say "keeping the existing $CONF"
   else
     cat > "$CONF" <<CONFEOF
