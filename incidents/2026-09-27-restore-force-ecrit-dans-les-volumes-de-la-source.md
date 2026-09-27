@@ -66,7 +66,9 @@ vert. Il est rouge de nouveau quand on retire le correctif.
   pour une restauration sur `ENV=restau`. Le test d'infra
   (`stack/erpnext/tests/test-backup.sh`) refuse maintenant de restaurer
   quand le plan vise un volume de la source. Mettre à jour le binaire
-  installé revient à Yvv : d'autres sessions déploient avec lui.
+  installé revient à Yvv : d'autres sessions déploient avec lui. **Mis à jour
+  le 28/09** sur l'accord d'Yvv (`8912033`) : son plan à blanc vise
+  maintenant `hco-restau-erpnext_db-data`.
 - **Un `--from` relatif** part tel quel dans le montage
   (`-v backup/dry:/b:ro` dans le plan à blanc) : docker le lirait comme un
   nom de volume, pas comme un chemin. Vu à blanc seulement, pas reproduit
