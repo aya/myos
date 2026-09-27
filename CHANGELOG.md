@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- the names a `.settings` exports reach the hooks and compose, as documented:
+  only the names the compose files reference did
 - a hook replacing a verb (`actions/backup`...) that fails now fails the verb;
   it used to be read as "no hook", and the default ran in its place
 - `$MYOS_COMPOSE` in a hook no longer carries the `DOCKER_HOST=` prefix of a

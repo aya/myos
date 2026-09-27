@@ -36,6 +36,17 @@ Describe 'up and its hooks'
     When call myos_run_live "$sb" up app
     The output should include 'phase=post-up'
   End
+
+  # conventions.md: a hook runs "with every exported value", and what reaches
+  # compose includes "the names the settings export". Only the names the
+  # compose files reference got there: a value meant for a hook alone -- the
+  # legacy project a pre-upgrade hands over -- arrived empty.
+  It 'gives the hook a name the settings export, that no compose file references'
+    printf 'export APP_FOR_THE_HOOK\nAPP_FOR_THE_HOOK ?= from-the-settings\n' >> "$sb/wd/stack/app/app.settings"
+    hook post-up 'echo "valeur=${APP_FOR_THE_HOOK:-vide}"'
+    When call myos_run_live "$sb" up app
+    The output should include 'valeur=from-the-settings'
+  End
 End
 
 # A hook that talks to docker needs to reach the same endpoint as the verb it

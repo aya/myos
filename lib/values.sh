@@ -139,5 +139,7 @@ myos_env_vars() {
     _vl_v="$_vl_v $(sed 's/\$\$//g' $MYOS_STACK_FILES | grep -oE '\$\{?[A-Z0-9_]+' | tr -d '{$' | tr '\n' ' ')"
     IFS=$_vl_old; set +f
   fi
-  myos_sort_words "$_vl_v"
+  # and the names the settings export: a value meant for a hook alone, that no
+  # compose file references, reaches it too (conventions.md says so)
+  myos_sort_words "$_vl_v $MYOS_SET_EXPORT"
 }

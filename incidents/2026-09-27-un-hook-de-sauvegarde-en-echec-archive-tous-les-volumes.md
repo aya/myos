@@ -58,7 +58,20 @@ remplacer la sauvegarde par défaut : il demande au démon une archive de son
   archiver sur la cible puis rapatrier (`docker cp` depuis le conteneur
   jetable), ou refuser le verbe avec une cible.
 
+## Trouvé ensuite, en écrivant le hook de reprise de c411d
+
+4. **Un nom exporté par un `.settings` n'atteignait pas les hooks.**
+   `myos_env_vars` (`lib/values.sh`) ne retenait que les noms que les fichiers
+   compose référencent. `MYOS_SET_EXPORT`, que le compilateur de settings
+   produit, ne servait qu'à `cert`. Or `conventions.md` promet l'inverse :
+   « the names the settings `export` » atteignent compose, et un hook reçoit
+   « every exported value ». Le `pre-upgrade` de c411d aurait lu un projet
+   hérité vide et serait sorti sans rien reprendre. Corrigé : les noms exportés
+   rejoignent la liste. Spec : `up_hooks_spec.sh` (« gives the hook a name the
+   settings export… »), vue rouge avec le correctif neutralisé. Aucune
+   expectation golden n'a bougé.
+
 ## État
 
-1 et 2 corrigés, et prouvés. 3 ouvert. Nettoyage d'openc (`/Users` créé par
+1, 2 et 4 corrigés, et prouvés. 3 ouvert. Nettoyage d'openc (`/Users` créé par
 docker) : à faire par aya, en root.
