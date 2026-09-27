@@ -64,6 +64,25 @@ des clés qu'il fournit. Sans effet cette fois. Non vérifié : sous
 `MYOS_SECRETS=none`, le même `-n` générerait vraisemblablement les trois
 `TWENTY_*`, comme sur le poste d'Yvv. Toujours ouvert.
 
+## Récidive 2026-09-27, 19:48 — poste d'aya, workspace aya/infra
+
+Deux verbes à blanc, lancés dans `~/dev/aya/infra` pour préparer redroid sur
+aynic :
+
+- `myos --target aynic -n up redroid`, `.env.dist` ne portant que des
+  littéraux (`MYOS_USER=aya`, `ENV=main`) : `env-update ok (1 keys added)`,
+  `.env` écrit en 600 avec `ENV=main`. Donc même un `.env.dist` sans aucune
+  valeur calculée fait écrire le fichier. Le même `-n up` avant l'ajout
+  d'`ENV` (seul `MYOS_USER`) n'avait rien écrit.
+- `myos --target aynic -n backup redroid` : crée
+  `backup/aya-local-redroid/<date>/manifest.json`. `myos_backup_default`
+  (`lib/verb/backup.sh:16-17`) fait son `mkdir -p` et écrit le manifeste
+  sans regarder `MYOS_DRYRUN` ; seul `myos_volumes` (ligne 11) le respecte.
+
+Sans effet : les deux résidus ont été supprimés. Le test attendu s'étend :
+**tout** verbe à blanc laisse le répertoire de travail identique, pas seulement
+`up`.
+
 ## Playbook
 
 - Symptôme : `env-update ok (N keys added)` dans la sortie d'un `-n`.
