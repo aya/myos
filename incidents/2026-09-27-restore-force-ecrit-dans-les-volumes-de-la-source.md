@@ -57,3 +57,17 @@ vert. Il est rouge de nouveau quand on retire le correctif.
 - **Pas encore prouvé sur un vrai docker** : la répétition de restauration de
   l'ERPNext de HCO sur une copie en sera la preuve (`infra`, chantier
   `erpnext-hco`).
+
+## Constaté en passant, non corrigé
+
+- **Le `myos` installé sur le poste d'Yvv** (`~/.local/lib/myos`, clone de ce
+  dépôt) était en retard de 6 commits et n'a pas le correctif. Son plan à
+  blanc, sur la vraie recette ERPNext, montrait `-v hco-local-erpnext_db-data:/v`
+  pour une restauration sur `ENV=restau`. Le test d'infra
+  (`stack/erpnext/tests/test-backup.sh`) refuse maintenant de restaurer
+  quand le plan vise un volume de la source. Mettre à jour le binaire
+  installé revient à Yvv : d'autres sessions déploient avec lui.
+- **Un `--from` relatif** part tel quel dans le montage
+  (`-v backup/dry:/b:ro` dans le plan à blanc) : docker le lirait comme un
+  nom de volume, pas comme un chemin. Vu à blanc seulement, pas reproduit
+  sur un vrai docker. Ouvert.
