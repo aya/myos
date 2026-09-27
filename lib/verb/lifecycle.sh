@@ -35,7 +35,7 @@ myos_verb_build() {
       [ -f "$_bd_f" ] || continue
       _bd_rel=${_bd_f#"$_bd_dir"/}; _bd_rel=${_bd_rel%/Dockerfile}
       _bd_t=$_bd_tag; case $_bd_rel in docker/"$_bd_name"/*) _bd_t=${_bd_rel#docker/"$_bd_name"/} ;; esac
-      myos_run docker build --build-arg "DOCKER_BUILD_DIR=$_bd_rel" --build-arg "UID=$(id -u)" --build-arg "GID=$(id -g)" \
+      myos_run_target docker build --build-arg "DOCKER_BUILD_DIR=$_bd_rel" --build-arg "UID=$(id -u)" --build-arg "GID=$(id -g)" \
         --tag "$_bd_repo/$_bd_name:$_bd_t" -f "$_bd_f" "$_bd_dir" || return 1
     done
   done
@@ -67,5 +67,5 @@ myos_verb_clean() {
 
 # attach: the terminal of the container of SERVICE
 myos_verb_attach() {
-  myos_run docker attach "$MYOS_PROJECT-${MYOS_SERVICE:-$MYOS_STACK_NAME}-1"
+  myos_run_target docker attach "$MYOS_PROJECT-${MYOS_SERVICE:-$MYOS_STACK_NAME}-1"
 }

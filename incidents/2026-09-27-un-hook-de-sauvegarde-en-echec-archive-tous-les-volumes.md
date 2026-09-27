@@ -71,7 +71,26 @@ remplacer la sauvegarde par défaut : il demande au démon une archive de son
    settings export… »), vue rouge avec le correctif neutralisé. Aucune
    expectation golden n'a bougé.
 
+## Trouvé le 2026-09-28 : `build` ignorait la cible, et la famille entière
+
+5. **`myos --target aynic build redroid` construisait sur le poste**, et
+   échouait faute de démon local (`…/orbstack/run/docker.sock`). Le dry-run
+   l'affichait bien (`docker build …` sans `DOCKER_HOST=`), mais je l'avais
+   lu sans le voir. `build` et `attach` passaient par `myos_run docker`, qui
+   n'applique pas la cible. Corrigé par `myos_run_target` (`lib/target.sh`).
+   Spec : `target_build_spec.sh`, vue rouge avec le correctif neutralisé.
+   Contourné sur le moment par `DOCKER_HOST=ssh://aynic myos --target aynic
+   build redroid`.
+
+   La même recherche trouve `backup`, `restore` et `cert` : leurs `docker run`
+   n'appliquent pas la cible non plus. **Ils ne sont pas corrigés** : ils
+   montent un chemin du poste (`-v $MYOS_BACKUP_DIR:/b`), et les envoyer à la
+   cible reproduirait exactement le défaut 3. Le 2026-09-27 sur openc, c'est
+   un hook exécuté juste avant qui avait exporté `DOCKER_HOST` dans le shell de
+   myos, et le `tar` était parti vers la cible par accident. Ils relèvent du
+   défaut 3.
+
 ## État
 
-1, 2 et 4 corrigés, et prouvés. 3 ouvert. Nettoyage d'openc (`/Users` créé par
+1, 2, 4 et 5 corrigés, et prouvés. 3 ouvert, avec `backup`, `restore` et `cert` sous une cible. Nettoyage d'openc (`/Users` créé par
 docker) : à faire par aya, en root.

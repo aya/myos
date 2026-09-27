@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- `build` and `attach` run on the `--target`: they ran on the workstation
 - the names a `.settings` exports reach the hooks and compose, as documented:
   only the names the compose files reference did
 - a hook replacing a verb (`actions/backup`...) that fails now fails the verb;

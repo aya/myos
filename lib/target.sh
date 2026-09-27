@@ -47,3 +47,14 @@ myos_docker() { # ARGS...: docker on the target, for the calls that are not comp
   myos_target_env
   if [ -n "$R" ]; then env "$R" docker "$@"; else docker "$@"; fi
 }
+
+# myos_run_target CMD...: myos_run, on the target. A dry run prints the command
+# the way compose calls are printed, `DOCKER_HOST=... docker ...`. For the
+# docker calls that only talk to the engine (build, attach); a call that binds
+# a path of the workstation into a container cannot be sent there as it is.
+myos_run_target() {
+  myos_target_env
+  if [ "${MYOS_DRYRUN:-false}" = true ]; then printf '%s%s\n' "${R:+$R }" "$*"
+  elif [ -n "$R" ]; then env "$R" "$@"
+  else "$@"; fi
+}
