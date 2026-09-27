@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- a hook replacing a verb (`actions/backup`...) that fails now fails the verb;
+  it used to be read as "no hook", and the default ran in its place
+- `$MYOS_COMPOSE` in a hook no longer carries the `DOCKER_HOST=` prefix of a
+  target (exported as `DOCKER_HOST` instead): it was not executable
 - the wrapper reads `~/.config/myos/config` (`$XDG_CONFIG_HOME/myos/config`)
   when the machine has no `/etc/conf.d/myos` nor `/etc/default/myos`: that is
   where `install.sh --conf` writes without root, and nothing read it

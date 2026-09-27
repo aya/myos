@@ -54,3 +54,41 @@ Describe 'backup'
     The output should include "\"artifacts\":[\"@TMP@/backup/tester-app-local/20260905-120000\"]"
   End
 End
+
+# A backup hook replaces the default. When it fails, the backup has failed:
+# falling back to the default would archive every volume instead -- 128 GB of
+# downloads on openc, into a path of the workstation created on the target.
+Describe 'backup replaced by a hook'
+  setup() {
+    sb=$(myos_sandbox lifecycle); export MYOS_DOCKER_LOG=$sb/docker.log
+    mkdir -p "$sb/wd/stack/app/actions"
+  }
+  cleanup() { rm -rf "$sb"; }
+  BeforeEach setup
+  AfterEach cleanup
+  logged() { cat "$sb/docker.log" 2>/dev/null; }
+  hook() { printf '#!/bin/sh\n%s\n' "$1" > "$sb/wd/stack/app/actions/backup"; chmod +x "$sb/wd/stack/app/actions/backup"; }
+
+  It 'fails the verb when the hook fails, without running the default'
+    MOCK_VOLUMES="tester-app-local_data"
+    hook 'exit 3'
+    When call myos_run_live "$sb" backup app
+    The output should not include '[exit 0]'
+    The result of function logged should not include 'tar czf'
+  End
+  It 'leaves it to the default when the hook skips (75)'
+    MOCK_VOLUMES="tester-app-local_data"
+    hook 'exit 75'
+    When call myos_run_live "$sb" backup app
+    The output should include '[exit 0]'
+    The result of function logged should include 'tar czf'
+  End
+  It 'runs the hook instead of the default when it succeeds'
+    MOCK_VOLUMES="tester-app-local_data"
+    hook 'echo HOOK-BACKUP'
+    When call myos_run_live "$sb" backup app
+    The output should include 'HOOK-BACKUP'
+    The output should include '[exit 0]'
+    The result of function logged should not include 'tar czf'
+  End
+End

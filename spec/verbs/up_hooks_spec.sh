@@ -61,4 +61,15 @@ Describe 'a hook and the target'
     When call myos_run_live "$sb" up app
     The output should include 'endpoint=local'
   End
+
+  # $MYOS_COMPOSE is what a hook runs. With a target it carried a
+  # `DOCKER_HOST=ssh://...` prefix, which a shell never reads as an assignment
+  # once it comes out of a variable: the hook died on "not found", and a
+  # backup hook that died let the default archive every volume.
+  It 'can run $MYOS_COMPOSE as a command on a target'
+    printf '#!/bin/sh\n$MYOS_COMPOSE ps && echo COMPOSE-OK\n' > "$sb/wd/stack/app/actions/post-up"
+    When call myos_run_live "$sb" --target sonic up app
+    The output should include 'COMPOSE-OK'
+    The output should not include 'not found'
+  End
 End
