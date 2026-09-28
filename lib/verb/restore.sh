@@ -4,7 +4,8 @@
 # (--force otherwise, and the volumes of that project are then restored into
 # those of this one), a safety backup is taken first (--no-backup), and a
 # non-interactive run needs --yes. Steps: pre-restore hooks, down, one
-# volume at a time (created when missing), up, post-restore hooks.
+# volume at a time (created when missing), the networks (created when
+# missing), up, post-restore hooks.
 
 myos_verb_restore() {
   [ -n "${MYOS_FROM:-}" ] || myos_die 2 "restore needs --from DIR or --from latest"
@@ -49,5 +50,7 @@ myos_restore_default() {
     IFS=$NL; set -f
   done
   IFS=$_rd_ifs; set +f
+  # the networks, as up makes them: a copy or a new machine has none yet
+  myos_networks_ensure
   myos_compose up -d
 }

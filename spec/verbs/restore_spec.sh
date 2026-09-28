@@ -53,6 +53,15 @@ Describe 'restore'
     The result of function logged should not include 'other-app-local_data:/v'
     The result of function logged should not include 'volume create other-app-local_data'
   End
+  # the project's networks come back like its volumes: a restore onto a new
+  # machine or into a copy (another project, another env) finds none, and
+  # compose then refuses a network it declares external
+  It 'creates the networks the project needs before starting it again'
+    MOCK_VOLUMES="tester-app-local_data"; MOCK_NETWORKS=""
+    When call myos_run_live "$sb" restore app --from latest --yes --no-backup
+    The output should include '[exit 0]'
+    The result of function logged should include 'docker network create'
+  End
   It 'creates a volume the project no longer has'
     MOCK_VOLUMES=""
     When call myos_run_live "$sb" restore app --from latest --yes --no-backup
