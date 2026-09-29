@@ -83,6 +83,25 @@ Sans effet : les deux résidus ont été supprimés. Le test attendu s'étend :
 **tout** verbe à blanc laisse le répertoire de travail identique, pas seulement
 `up`.
 
+## Récidive 2026-09-30, vers 00:20 — poste d'Yvv, bankSync (chantier flux-de-gestion)
+
+La session bs-h (lot SB1, préparation de la stack bankSync) a lancé
+`myos -n up` pour lire les noms dérivés. Le `.env` a été **créé dans le clone
+principal de bankSync** (`HCO/bankSync/.env`, et non dans le worktree de
+travail), avec `DOMAIN` seul. La session l'a retiré aussitôt ; aucun secret
+généré, aucun effet.
+
+Ce que la récidive ajoute : appelé depuis un worktree, le verbe à blanc écrit
+**hors du répertoire où la session travaille**, dans un dépôt que d'autres
+sessions partagent. Le défaut reste **ouvert** ; le test attendu (tout verbe à
+blanc laisse le répertoire de travail identique) doit aussi couvrir le clone
+voisin d'un worktree.
+
+Pourquoi le filet a manqué, cette fois : l'incident était connu, mais rien
+n'empêche encore l'appel ; la parade reste la discipline, et la session ne
+l'avait pas lu. Rappel posé dans `bankSync/chantiers/flux-de-gestion/SB1.md`
+(section Pièges).
+
 ## Playbook
 
 - Symptôme : `env-update ok (N keys added)` dans la sortie d'un `-n`.
