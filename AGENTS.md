@@ -3,6 +3,12 @@
 myos runs docker compose stacks. `skills/myos/SKILL.md` explains how to *use*
 it; this file is about changing it.
 
+Work on the `tdd` branch: it carries the rewrite (`RESTART.md` says where it
+stands). The remote's default branch is still `develop`, so a fresh clone
+(`mani sync`) needs `git checkout tdd`. In the HCO workspace, the common
+rules (TDD, ADRs, incidents, production) are in `../AGENTS.md`; this file
+adds what is specific to the engine.
+
 ## Check your work
 
 ```sh
@@ -11,6 +17,10 @@ make lint              # shellcheck
 make test-portability  # the golden suite under the sh of Alpine and Debian (docker)
 spec/support/try.sh host-project -n up host   # one command on a fixture, normalized
 ```
+
+Three shellspec warnings pre-exist and make the suite exit with 101. Tell
+them from a regression on a clean copy of the head (a throwaway
+`git worktree add`), never with `git stash`.
 
 The golden suite (`spec/golden/`) is the contract: `cases.txt` lists commands,
 `expected/` their output. Never edit an expectation by hand: change the code,
