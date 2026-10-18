@@ -108,7 +108,13 @@ myos_up_default() {
 }
 myos_verb_down()    { [ "$MYOS_BACKEND" = swarm ] && { myos_swarm_down; return $?; }; myos_compose down; }
 myos_verb_build()   { myos_compose build; }
-myos_verb_config()  { myos_compose config; }
+# what follows -- goes to compose, split on blanks and never globbed:
+# `config -- --hash '*'` names every service, not the files of the directory
+myos_verb_config()  {
+  case $- in *f*) _cf_glob=off ;; *) _cf_glob=on ;; esac
+  set -f; set -- $MYOS_ARGS; [ "$_cf_glob" = on ] && set +f
+  myos_compose config "$@"
+}
 myos_verb_logs()    { [ "$MYOS_BACKEND" = swarm ] && { myos_swarm_logs; return $?; }; myos_compose logs --follow --tail=100 ${MYOS_SERVICE:+"$MYOS_SERVICE"}; }
 myos_verb_ps()      { [ "$MYOS_BACKEND" = swarm ] && { myos_swarm_ps; return $?; }; myos_compose ps; }
 myos_verb_status()  { myos_compose ps; }
