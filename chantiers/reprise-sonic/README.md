@@ -19,3 +19,23 @@ Ce qu'on sait, au 2026-10-18 :
 Prochain pas : pour chaque projet de l'inventaire lancé par un moteur myos,
 comparer `make config` (ancien) et `myos -n` (nouveau) — projet, fichiers et
 leur ordre, `config --hash`, images, réseaux (§5.4).
+
+## L'état réel de sonic, versionné (2026-10-18)
+
+Les trois checkouts du moteur Makefile sur sonic avaient des modifications
+jamais commitées. Elles sont maintenant sur `git.p2p.legal/aya/myos`
+(remote `upstream` de ces checkouts), sans secret : les mots de passe en dur
+sont passés dans leur `/.env`, et le rendu de `make config` a été vérifié
+identique avant et après. Ce sont les sources de vérité à comparer avec le
+nouveau moteur :
+
+| Checkout sur sonic | Branche | Commit |
+|---|---|---|
+| `~aya/Sources/myos` | `sonic` | `0e9af4f` (et `b2c7284` : restart always pour la stack host) |
+| `~aya/Sources/myos.gtest` | `sonic-gtest` | `a7ae0d5` |
+| `~aya/Applications/myos` | `sonic-applications` | `8092f9b` |
+
+Hors des commits : `.env.gtest` et `LocalSettings.php` (des secrets), les
+extensions MediaWiki (code tiers), et, dans `Applications/myos`, une image
+docker décompressée par erreur à la racine (`blobs/`, `oci-layout`…).
+
