@@ -11,6 +11,7 @@ n'exerce.
 
 | Date | Incident | Portée |
 |---|---|---|
+| 2026-10-18 | [les défauts du moteur trouvés en préparant la reprise de sonic](incidents/2026-10-18-defauts-trouves-en-preparant-la-reprise-de-sonic.md) | 9 défauts, contournés dans les dépôts, ouverts |
 | 2026-10-18 | [fabio se route vers lui-même quand un service perd son réseau](incidents/2026-10-18-fabio-se-route-vers-lui-meme.md) | sonic, moteur Makefile, ouvert |
 | 2026-10-18 | [ufw-docker ne gère plus les conteneurs de sonic](incidents/2026-10-18-ufw-docker-ne-gere-plus-les-conteneurs.md) | sonic, moteur Makefile, ouvert |
 | 2026-09-27 | [un hook de sauvegarde en échec archive tous les volumes, sur la cible, sous un chemin du poste](incidents/2026-09-27-un-hook-de-sauvegarde-en-echec-archive-tous-les-volumes.md) | openc, 4 corrigés, 1 ouvert |

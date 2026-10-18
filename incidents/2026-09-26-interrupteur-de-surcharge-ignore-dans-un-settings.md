@@ -41,3 +41,17 @@ Il faut veiller à la circularité : les `.settings` ne sont pas des fichiers
 compose, donc l'ordre de lecture ne devrait pas en créer, mais c'est à
 vérifier dans `lib/stack.sh`. Le contournement d'infra disparaîtra avec la
 correction.
+
+## Récidive 2026-10-18 — préparation de la reprise de sonic
+
+Trois dépôts d'user ont buté sur ce défaut : la stack host d'aya, gratewizard
+dans websites, librodrome dans lpk. Un `COMPOSE_FILE_<X>` (fabio, local)
+n'est lu que dans l'environnement ou sur la ligne de commande. Contournements
+posés, chacun différent :
+- un lien `docker-compose.labels.yml` (gratewizard) ;
+- un fichier renommé `docker-compose.main.yml` (librodrome) ;
+- des surcharges `<svc>.local.yml` (stack host).
+
+Constat de plus : les suffixes activés sont triés, alors que l'ancien moteur
+les chargeait dans l'ordre de ses fichiers. Toujours ouvert.
+

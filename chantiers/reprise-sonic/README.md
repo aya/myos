@@ -39,3 +39,10 @@ Hors des commits : `.env.gtest` et `LocalSettings.php` (des secrets), les
 extensions MediaWiki (code tiers), et, dans `Applications/myos`, une image
 docker décompressée par erreur à la racine (`blobs/`, `oci-layout`…).
 
+## Le plan
+
+[`plan.md`](plan.md) : la reprise préparée le 2026-10-18 au soir. Un dépôt
+par user sous `~/dev/<user>/infra`, l'empreinte de chaque service comparée à
+celle de son conteneur, les défauts du moteur trouvés en chemin, et l'ordre de
+la bascule.
+

@@ -102,6 +102,16 @@ n'empêche encore l'appel ; la parade reste la discipline, et la session ne
 l'avait pas lu. Rappel posé dans `bankSync/chantiers/flux-de-gestion/SB1.md`
 (section Pièges).
 
+## Récidive 2026-10-18, au soir — poste d'aya, préparation de la reprise de sonic
+
+Trois sessions qui préparaient chacune un dépôt d'user (`~/dev/websites/infra`,
+`~/dev/cdb/infra`, `~/dev/lpk/infra`) ont constaté qu'un `myos -n up` écrivait
+le `.env` du dépôt. C'étaient des dépôts neufs, sans coffre, avec
+`MYOS_SECRETS=none` : le cas que la récidive du 26/09 jugeait vraisemblable.
+Le `.env` est ignoré par git et n'a pas été commité ; les sessions ne l'ont
+pas relu pour vérifier s'il contenait des secrets générés. Toujours ouvert.
+(chantiers/reprise-sonic/plan.md)
+
 ## Playbook
 
 - Symptôme : `env-update ok (N keys added)` dans la sortie d'un `-n`.
